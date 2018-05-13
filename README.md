@@ -1,2 +1,5 @@
 # docker-image-explorer
-I'll probably rename this since it acronyms to D.I.E. ... details...
+```
+docker build -t . die-test:latest
+go run main.go
+```
