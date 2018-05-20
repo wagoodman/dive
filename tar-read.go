@@ -2,10 +2,12 @@ package main
 
 import (
 	"archive/tar"
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
 	"os"
+	"strings"
 )
 
 func main() {
@@ -47,6 +49,10 @@ func main() {
 			continue
 		case tar.TypeReg:
 			fmt.Println("File: ", name)
+			if strings.HasSuffix(name, "layer.tar") {
+				fmt.Println("Containing:")
+				printFilesInTar(tarReader, header)
+			}
 			// show the contents
 			// io.Copy(os.Stdout, tarReader)
 		default:
@@ -59,6 +65,49 @@ func main() {
 		}
 	}
 	fmt.Printf("%+v\n", m)
+}
+
+func printFilesInTar(parentReader *tar.Reader, h *tar.Header) {
+	size := h.Size
+	tarredBytes := make([]byte, size)
+	_, err := parentReader.Read(tarredBytes)
+	if err != nil {
+		panic(err)
+	}
+	r := bytes.NewReader(tarredBytes)
+	tarReader := tar.NewReader(r)
+	for {
+		header, err := tarReader.Next()
+
+		if err == io.EOF {
+			break
+		}
+
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+
+		name := header.Name
+
+		switch header.Typeflag {
+		case tar.TypeDir:
+			continue
+		case tar.TypeReg:
+			fmt.Println("	File: ", name)
+			// show the contents
+			// io.Copy(os.Stdout, tarReader)
+		case tar.TypeSymlink:
+			fmt.Println("	SymLink", name)
+		default:
+			fmt.Printf("%s : %c %s %s\n",
+				"hmmm?",
+				header.Typeflag,
+				"in file",
+				name,
+			)
+		}
+	}
 }
 
 type Manifest struct {
