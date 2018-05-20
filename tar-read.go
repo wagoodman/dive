@@ -2,6 +2,7 @@ package main
 
 import (
 	"archive/tar"
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -22,7 +23,8 @@ func main() {
 	// }
 
 	tarReader := tar.NewReader(f)
-
+	targetName := "manifest.json"
+	var m Manifest
 	for {
 		header, err := tarReader.Next()
 
@@ -36,6 +38,9 @@ func main() {
 		}
 
 		name := header.Name
+		if name == targetName {
+			m = handleManifest(tarReader, header)
+		}
 
 		switch header.Typeflag {
 		case tar.TypeDir:
@@ -53,4 +58,26 @@ func main() {
 			)
 		}
 	}
+	fmt.Printf("%+v\n", m)
+}
+
+type Manifest struct {
+	Config   string
+	RepoTags []string
+	Layers   []string
+}
+
+func handleManifest(r *tar.Reader, header *tar.Header) Manifest {
+	size := header.Size
+	manifestBytes := make([]byte, size)
+	_, err := r.Read(manifestBytes)
+	if err != nil {
+		panic(err)
+	}
+	var m [1]Manifest
+	err = json.Unmarshal(manifestBytes, &m)
+	if err != nil {
+		panic(err)
+	}
+	return m[0]
 }
