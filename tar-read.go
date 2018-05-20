@@ -3,6 +3,7 @@ package main
 import (
 	"archive/tar"
 	"bytes"
+	"crypto/md5"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -68,6 +69,7 @@ func main() {
 }
 
 func printFilesInTar(parentReader *tar.Reader, h *tar.Header) {
+	hasher := md5.New
 	size := h.Size
 	tarredBytes := make([]byte, size)
 	_, err := parentReader.Read(tarredBytes)
@@ -92,6 +94,7 @@ func printFilesInTar(parentReader *tar.Reader, h *tar.Header) {
 
 		switch header.Typeflag {
 		case tar.TypeDir:
+			fmt.Println("	Directory: ", name)
 			continue
 		case tar.TypeReg:
 			fmt.Println("	File: ", name)
@@ -108,6 +111,15 @@ func printFilesInTar(parentReader *tar.Reader, h *tar.Header) {
 			)
 		}
 	}
+}
+
+func makeEntry(r *tar.Reader, h *tar.Header) {
+
+}
+
+type FileChangeInfo struct {
+	typeflag int
+	md5sum   [16]byte
 }
 
 type Manifest struct {
