@@ -57,11 +57,13 @@ func (tree *Tree) RemovePath(path string) error {
 	nodeNames := strings.Split(path, "/")
 	node := tree.Root()
 	for _, name := range nodeNames {
-		if node.children[name] != nil {
-			node = node.children[name]
-		} else {
+		if name == "" {
+			continue
+		}
+		if node.children[name] == nil {
 			return errors.New("Path does not exist")
 		}
+		node = node.children[name]
 	}
 	// this node's parent should be a leaf
 	return node.Remove()
