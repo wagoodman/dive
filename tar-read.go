@@ -6,6 +6,7 @@ import (
 	"crypto/md5"
 	"encoding/json"
 	"fmt"
+	"hash"
 	"io"
 	"os"
 	"strings"
@@ -113,11 +114,13 @@ func printFilesInTar(parentReader *tar.Reader, h *tar.Header) {
 	}
 }
 
-func makeEntry(r *tar.Reader, h *tar.Header) {
+func makeEntry(r *tar.Reader, h *tar.Header, hasher *hash.Hash) FileChangeInfo {
+	fileBytes := make([]byte, h.Size)
 
 }
 
 type FileChangeInfo struct {
+	fileName string
 	typeflag int
 	md5sum   [16]byte
 }
