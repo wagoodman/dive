@@ -28,7 +28,8 @@ func main() {
 	tarReader := tar.NewReader(f)
 	targetName := "manifest.json"
 	var m Manifest
-	var trees []*Tree
+	var layerMap map[string]*Tree
+	layerMap = make(map[string]*Tree)
 	for {
 		header, err := tarReader.Next()
 
@@ -54,12 +55,13 @@ func main() {
 			if strings.HasSuffix(name, "layer.tar") {
 				fmt.Println("Containing:")
 				tree := NewTree()
-				tree.name = strings.TrimSuffix(name, "layer.tar")
+				tree.name = name
+				fmt.Printf("%s\n", tree.name)
 				fileInfos := getFileList(tarReader, header)
 				for _, element := range fileInfos {
 					tree.AddPath(element.path, element)
 				}
-				trees = append(trees, tree)
+				layerMap[tree.name] = tree
 			}
 		default:
 			fmt.Printf("%s : %c %s %s\n",
@@ -70,8 +72,26 @@ func main() {
 			)
 		}
 	}
-	fmt.Printf("%+v\n", m)
-	fmt.Printf("%+v\n", trees)
+	var trees []*Tree
+	trees = make([]*Tree, 0)
+	for _, treeName := range m.Layers {
+		fmt.Printf("%s\n", treeName)
+		trees = append(trees, layerMap[treeName])
+	}
+
+	for ix := range trees {
+		if ix > 0 {
+			trees[0].Stack(trees[ix])
+		}
+	}
+	// fmt.Printf("%+v\n", m)
+	// fmt.Printf("%+v\n", layerMap)
+	// fmt.Printf("%+v\n", trees)
+	// fmt.Printf("Tree 1 is: \n %+v\n", trees[1])
+	// fmt.Printf("Tree 2 is: \n %+v\n", trees[2])
+	// trees[1].Stack(trees[2])
+	// fmt.Printf("Tree 1 stacked with tree 2 is: \n %+v\n", trees[1])
+	fmt.Printf("The whle stack is \n %+v \n", trees[0])
 }
 
 func getFileList(parentReader *tar.Reader, h *tar.Header) []FileChangeInfo {
