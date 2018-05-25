@@ -16,6 +16,7 @@ const (
 type Tree struct {
 	root Node
 	size int
+	name string
 }
 
 type Node struct {
