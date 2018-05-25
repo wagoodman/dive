@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"sort"
 )
 
@@ -14,7 +13,7 @@ const (
 )
 
 type Tree struct {
-	root Node
+	root *Node
 	size int
 }
 
@@ -29,10 +28,9 @@ type Node struct {
 func NewTree() (tree *Tree) {
 	tree = new(Tree)
 	tree.size = 0
-	root := &tree.root
-	root.tree = tree
-	root.name = ""
-	root.children = make(map[string]*Node)
+	tree.root = new(Node)
+	tree.root.tree = tree
+	tree.root.children = make(map[string]*Node)
 	return tree
 }
 
@@ -47,17 +45,19 @@ func NewNode(parent *Node, name string, data interface{}) (node *Node) {
 }
 
 func (tree *Tree) Root() *Node {
-	return &tree.root
+	return tree.root
 }
 
-func (node *Node) AddChild(name string, data interface{}) (child *Node, error error) {
-	if node.children[name] != nil {
-		return nil, errors.New("Tree node already exists")
-	}
+func (node *Node) AddChild(name string, data interface{}) (child *Node) {
 	child = NewNode(node, name, data)
-	node.children[name] = child
-	node.tree.size++
-	return child, nil
+	if node.children[name] != nil {
+		// tree node already exists, replace the payload, keep the children
+		node.children[name].data = data
+	} else {
+		node.children[name] = child
+		node.tree.size++
+	}
+	return child
 }
 
 func (node *Node) Remove() error {
@@ -116,3 +116,23 @@ func (tree *Tree) String() string {
 
 	return "." + newLine + walkTree(tree.Root(), []bool{})
 }
+
+func (node *Node) Copy() *Node {
+	// newNode := new(Node)
+	// *newNode = *node
+	// return newNode
+	newNode := NewNode(node.parent, node.name, node.data)
+	for name, child := range node.children {
+		newNode.children[name] = child.Copy()
+	}
+	return newNode
+}
+
+func (tree *Tree) Copy() *Tree {
+	newTree := NewTree()
+	*newTree = *tree
+	newTree.root = tree.Root().Copy()
+
+	return newTree
+}
+

@@ -55,7 +55,7 @@ func saveImage(readCloser io.ReadCloser) {
 	}
 }
 
-func main() {
+func demo() {
 	ctx := context.Background()
 	cli, err := client.NewEnvClient()
 	if err != nil {

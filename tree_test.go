@@ -6,24 +6,14 @@ func TestAddChild(t *testing.T) {
 	var expected, actual int
 	tree := NewTree()
 
-	_, err := tree.Root().AddChild("first node!", 1)
-	if err != nil {
-		t.Errorf("Adding valued child should not result in error.")
-	}
+	one := tree.Root().AddChild("first node!", 1)
 
-	two, err := tree.Root().AddChild("nil node!", nil)
-	if err != nil {
-		t.Errorf("Adding nil child should not result in error.")
-	}
+	two := tree.Root().AddChild("nil node!", nil)
 
 	tree.Root().AddChild("third node!", 3)
 	two.AddChild("forth, one level down...", 4)
 	two.AddChild("fifth, one level down...", 5)
-
-	_, err = two.AddChild("fifth, one level down...", 5)
-	if err == nil {
-		t.Errorf("Expected an error when adding duplicate nodes, no error given.")
-	}
+	two.AddChild("fifth, one level down...", 5)
 
 	expected, actual = 5, tree.size
 	if expected != actual {
@@ -40,6 +30,15 @@ func TestAddChild(t *testing.T) {
 		t.Errorf("Expected 'twos' number of children to be %d got %d.", expected, actual)
 	}
 
+	if two.data != nil {
+		t.Errorf("Expected 'ones' payload to be nil got %d.", two.data)
+	}
+
+	expected, actual = 1, one.data.(int)
+	if expected != actual {
+		t.Errorf("Expected 'ones' payload to be %d got %d.", expected, actual)
+	}
+
 }
 
 func TestRemoveChild(t *testing.T) {
@@ -47,9 +46,9 @@ func TestRemoveChild(t *testing.T) {
 
 	tree := NewTree()
 	tree.Root().AddChild("first", 1)
-	two, _ := tree.Root().AddChild("nil", nil)
+	two := tree.Root().AddChild("nil", nil)
 	tree.Root().AddChild("third", 3)
-	forth, _ := two.AddChild("forth", 4)
+	forth := two.AddChild("forth", 4)
 	two.AddChild("fifth", 5)
 
 	forth.Remove()
@@ -79,7 +78,7 @@ func TestRemoveChild(t *testing.T) {
 func TestPrintTree(t *testing.T) {
 	tree := NewTree()
 	tree.Root().AddChild("first node!", nil)
-	two, _ := tree.Root().AddChild("second node!", nil)
+	two := tree.Root().AddChild("second node!", nil)
 	tree.Root().AddChild("third node!", nil)
 	two.AddChild("forth, one level down...", nil)
 
