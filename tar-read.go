@@ -28,7 +28,7 @@ func main() {
 	tarReader := tar.NewReader(f)
 	targetName := "manifest.json"
 	var m Manifest
-	var trees []*Tree
+	var trees []*FileTree
 	for {
 		header, err := tarReader.Next()
 
