@@ -6,7 +6,6 @@ import (
 	"crypto/md5"
 	"encoding/json"
 	"fmt"
-	"hash"
 	"io"
 	"os"
 	"strings"
@@ -29,6 +28,7 @@ func main() {
 	tarReader := tar.NewReader(f)
 	targetName := "manifest.json"
 	var m Manifest
+	var trees []*Tree
 	for {
 		header, err := tarReader.Next()
 
@@ -50,13 +50,17 @@ func main() {
 		case tar.TypeDir:
 			continue
 		case tar.TypeReg:
-			fmt.Println("File: ", name)
+			//fmt.Println("File: ", name)
 			if strings.HasSuffix(name, "layer.tar") {
 				fmt.Println("Containing:")
-				printFilesInTar(tarReader, header)
+				tree := NewTree()
+				tree.name = strings.TrimSuffix(name, "layer.tar")
+				fileInfos := getFileList(tarReader, header)
+				for _, element := range fileInfos {
+					tree.AddPath(element.path, element)
+				}
+				trees = append(trees, tree)
 			}
-			// show the contents
-			// io.Copy(os.Stdout, tarReader)
 		default:
 			fmt.Printf("%s : %c %s %s\n",
 				"hmmm?",
@@ -67,10 +71,11 @@ func main() {
 		}
 	}
 	fmt.Printf("%+v\n", m)
+	fmt.Printf("%+v\n", trees)
 }
 
-func printFilesInTar(parentReader *tar.Reader, h *tar.Header) {
-	hasher := md5.New
+func getFileList(parentReader *tar.Reader, h *tar.Header) []FileChangeInfo {
+	var files []FileChangeInfo
 	size := h.Size
 	tarredBytes := make([]byte, size)
 	_, err := parentReader.Read(tarredBytes)
@@ -95,14 +100,12 @@ func printFilesInTar(parentReader *tar.Reader, h *tar.Header) {
 
 		switch header.Typeflag {
 		case tar.TypeDir:
-			fmt.Println("	Directory: ", name)
-			continue
+			files = append(files, makeEntry(tarReader, header, name))
 		case tar.TypeReg:
-			fmt.Println("	File: ", name)
-			// show the contents
-			// io.Copy(os.Stdout, tarReader)
+			files = append(files, makeEntry(tarReader, header, name))
+			continue
 		case tar.TypeSymlink:
-			fmt.Println("	SymLink", name)
+			files = append(files, makeEntry(tarReader, header, name))
 		default:
 			fmt.Printf("%s : %c %s %s\n",
 				"hmmm?",
@@ -112,16 +115,35 @@ func printFilesInTar(parentReader *tar.Reader, h *tar.Header) {
 			)
 		}
 	}
+	return files
 }
 
-func makeEntry(r *tar.Reader, h *tar.Header, hasher *hash.Hash) FileChangeInfo {
+func makeEntry(r *tar.Reader, h *tar.Header, path string) FileChangeInfo {
+	if h.Typeflag == tar.TypeDir {
+		return FileChangeInfo{
+			path:     path,
+			typeflag: h.Typeflag,
+			md5sum:   zeros,
+		}
+	}
 	fileBytes := make([]byte, h.Size)
-
+	_, err := r.Read(fileBytes)
+	if err != nil && err != io.EOF {
+		panic(err)
+	}
+	hash := md5.Sum(fileBytes)
+	return FileChangeInfo{
+		path:     path,
+		typeflag: h.Typeflag,
+		md5sum:   hash,
+	}
 }
+
+var zeros = [16]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
 
 type FileChangeInfo struct {
-	fileName string
-	typeflag int
+	path     string
+	typeflag byte
 	md5sum   [16]byte
 }
 
