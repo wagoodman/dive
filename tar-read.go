@@ -86,12 +86,12 @@ func main() {
 	}
 	// fmt.Printf("%+v\n", m)
 	// fmt.Printf("%+v\n", layerMap)
-	// fmt.Printf("%+v\n", trees)
+	fmt.Printf("%+v\n", trees)
 	// fmt.Printf("Tree 1 is: \n %+v\n", trees[1])
 	// fmt.Printf("Tree 2 is: \n %+v\n", trees[2])
 	// trees[1].Stack(trees[2])
 	// fmt.Printf("Tree 1 stacked with tree 2 is: \n %+v\n", trees[1])
-	fmt.Printf("The whle stack is \n %+v \n", trees[0])
+	// fmt.Printf("The whle stack is \n %+v \n", trees[0])
 }
 
 func getFileList(parentReader *tar.Reader, h *tar.Header) []FileChangeInfo {
