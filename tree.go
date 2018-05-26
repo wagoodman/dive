@@ -2,32 +2,45 @@ package main
 
 import (
 	"sort"
+	"strings"
+	"fmt"
+	"errors"
 )
 
 const (
-	newLine      = "\n"
-	emptySpace   = "    "
-	middleItem   = "├── "
-	continueItem = "│   "
-	lastItem     = "└── "
+	newLine        = "\n"
+	emptySpace     = "    "
+	middleItem     = "├── "
+	continueItem   = "│   "
+	lastItem       = "└── "
+	whiteoutPrefix = ".wh."
 )
 
-type Tree struct {
+//type FileTree interface {
+//	AddPath(string, interface{}) *Node
+//	RemovePath(string) error
+//	Visit(Visiter) error
+//	// Diff(*FileTree) error
+//	Stack(*FileTree) (FileTree, error)
+//}
+
+
+type FileTree struct {
 	root *Node
 	size int
 	name string
 }
 
 type Node struct {
-	tree     *Tree
+	tree     *FileTree
 	parent   *Node
 	name     string
 	data     interface{}
 	children map[string]*Node
 }
 
-func NewTree() (tree *Tree) {
-	tree = new(Tree)
+func NewTree() (tree *FileTree) {
+	tree = new(FileTree)
 	tree.size = 0
 	tree.root = new(Node)
 	tree.root.tree = tree
@@ -45,7 +58,7 @@ func NewNode(parent *Node, name string, data interface{}) (node *Node) {
 	return node
 }
 
-func (tree *Tree) Root() *Node {
+func (tree *FileTree) Root() *Node {
 	return tree.root
 }
 
@@ -74,7 +87,7 @@ func (node *Node) String() string {
 	return node.name
 }
 
-func (tree *Tree) String() string {
+func (tree *FileTree) String() string {
 	var renderLine func(string, []bool, bool) string
 	var walkTree func(*Node, []bool) string
 
@@ -129,11 +142,120 @@ func (node *Node) Copy() *Node {
 	return newNode
 }
 
-func (tree *Tree) Copy() *Tree {
+func (tree *FileTree) Copy() *FileTree {
 	newTree := NewTree()
 	*newTree = *tree
 	newTree.root = tree.Root().Copy()
 
 	return newTree
 }
+
+type Visiter func(*Node) error
+
+func (tree *FileTree) Visit(visiter Visiter) error {
+	return tree.root.Visit(visiter)
+}
+
+func (node *Node) Visit(visiter Visiter) error {
+	for _, child := range node.children {
+		err := child.Visit(visiter)
+		if err != nil {
+			return err
+		}
+	}
+	return visiter(node)
+}
+
+func (node *Node) IsWhiteout() bool {
+	return strings.HasPrefix(node.name, whiteoutPrefix)
+}
+
+func (node *Node) Path() string {
+	path := []string{}
+	curNode := node
+	for {
+		if curNode.parent == nil{
+			break
+		}
+
+		name := curNode.name
+		if curNode == node {
+			// white out prefixes are fictitious on leaf nodes
+			name = strings.TrimPrefix(name, whiteoutPrefix)
+		}
+
+		path = append([]string{name}, path...)
+		curNode = curNode.parent
+	}
+	return "/" + strings.Join(path, "/")
+}
+
+
+
+func (tree *FileTree) Stack(upper *FileTree) (error) {
+	graft := func(node *Node) error {
+		if node.IsWhiteout() {
+			err := tree.RemovePath(node.Path())
+			if err != nil {
+				return fmt.Errorf("Cannot remove node %s: %v", node.Path(), err.Error())
+			}
+		} else {
+			newNode, err := tree.AddPath(node.Path(), node.data)
+			if err != nil {
+				return fmt.Errorf("Cannot add node %s: %v", newNode.Path(), err.Error())
+			}
+		}
+		return nil
+	}
+	return upper.Visit(graft)
+}
+
+func (tree *FileTree) GetNode(path string) (*Node, error) {
+	nodeNames := strings.Split(path, "/")
+	node := tree.Root()
+	for _, name := range nodeNames {
+		if name == "" {
+			continue
+		}
+		if node.children[name] == nil {
+			return nil, errors.New("Path does not exist")
+		}
+		node = node.children[name]
+	}
+	return node, nil
+}
+
+func (tree *FileTree) AddPath(path string, data interface{}) (*Node, error) {
+	nodeNames := strings.Split(path, "/")
+	node := tree.Root()
+	for idx, name := range nodeNames {
+		if name == "" {
+			continue
+		}
+		// find or create node
+		if node.children[name] != nil {
+			node = node.children[name]
+		} else {
+			// don't attach the payload. The payload is destined for the
+			// path's end node, not any intermediary node.
+			node = node.AddChild(name, nil)
+		}
+
+		// attach payload to the last specified node
+		if idx == len(nodeNames)-1 {
+			node.data = data
+		}
+
+	}
+	return node, nil
+}
+
+func (tree *FileTree) RemovePath(path string) error {
+	node, err := tree.GetNode(path)
+	if err != nil {
+		return err
+	}
+	return node.Remove()
+}
+
 

@@ -28,8 +28,9 @@ func main() {
 	tarReader := tar.NewReader(f)
 	targetName := "manifest.json"
 	var m Manifest
-	var layerMap map[string]*Tree
-	layerMap = make(map[string]*Tree)
+	var layerMap map[string]*FileTree
+	layerMap = make(map[string]*FileTree)
+	// var trees []*FileTree
 	for {
 		header, err := tarReader.Next()
 
@@ -72,8 +73,8 @@ func main() {
 			)
 		}
 	}
-	var trees []*Tree
-	trees = make([]*Tree, 0)
+	var trees []*FileTree
+	trees = make([]*FileTree, 0)
 	for _, treeName := range m.Layers {
 		fmt.Printf("%s\n", treeName)
 		trees = append(trees, layerMap[treeName])
