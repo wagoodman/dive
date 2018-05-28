@@ -48,7 +48,7 @@ func compareNodes(a *Node, b *Node) DiffType {
 	return getDiffType(a.data, b.data)
 }
 
-func getDiffType(a interface{}, b interface{}) DiffType {
+func getDiffType(a *FileChangeInfo, b *FileChangeInfo) DiffType {
 	// they have different types
 	if a == nil && b == nil {
 		return Unchanged
@@ -56,17 +56,9 @@ func getDiffType(a interface{}, b interface{}) DiffType {
 	if a == nil || b == nil {
 		return Changed
 	}
-	aData, ok := a.(FileChangeInfo)
-	if !ok {
-		panic(fmt.Errorf("Expected FileChangeInfo but got %+v", aData))
-	}
-	bData, ok := b.(FileChangeInfo)
-	if !ok {
-		panic(fmt.Errorf("Expected FileChangeInfo but got %+v", bData))
-	}
-	if aData.typeflag == bData.typeflag {
+	if a.typeflag == b.typeflag {
 		// compare hashes
-		if bytes.Compare(aData.md5sum[:], bData.md5sum[:]) == 0 {
+		if bytes.Compare(a.md5sum[:], b.md5sum[:]) == 0 {
 			return Unchanged
 		}
 	}
@@ -101,12 +93,14 @@ func (tree *FileTree) compareTo(upper *FileTree) error {
 			existingNode, _ := tree.GetNode(node.Path())
 			if existingNode == nil {
 				newNode, err := tree.AddPath(node.Path(), node.data)
+				fmt.Printf("added new node at %s\n", newNode.Path())
 				if err != nil {
-					return fmt.Errorf("Cannot remove node %s: %v", node.Path(), err.Error())
+					return fmt.Errorf("Cannot add new node %s: %v", node.Path(), err.Error())
 				}
 				newNode.AssignDiffType(Added)
 			} else {
 				diffType := compareNodes(existingNode, node)
+				fmt.Printf("found existing node at %s\n", existingNode.Path())
 				node.DiffTypeFromChildren(diffType)
 			}
 		}
