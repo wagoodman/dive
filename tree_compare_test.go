@@ -75,11 +75,51 @@ func TestCompareWithAdds(t *testing.T) {
 		if p == "/" {
 			return nil
 		}
-		if p == "/usr/bin" || p == "/usr/bin/bash" {
+		if p == "/usr/bin/bash" {
 			return AssertDiffType(n, Added, t)
 		} else {
 			return AssertDiffType(n, Unchanged, t)
 		}
+	}
+	err := lowerTree.Visit(asserter)
+	if err != nil {
+		t.Error(err)
+	}
+}
+
+func TestCompareWithChanges(t *testing.T) {
+	lowerTree := NewTree()
+	upperTree := NewTree()
+	lowerPaths := [...]string{"/etc", "/etc/sudoers", "/usr", "/etc/hosts", "/usr/bin"}
+	upperPaths := [...]string{"/etc", "/etc/sudoers", "/usr", "/etc/hosts", "/usr/bin"}
+
+	for _, value := range lowerPaths {
+		fakeData := FileChangeInfo{
+			path:     value,
+			typeflag: 1,
+			md5sum:   [16]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+			diffType: nil,
+		}
+		lowerTree.AddPath(value, &fakeData)
+	}
+
+	for _, value := range upperPaths {
+		fakeData := FileChangeInfo{
+			path:     value,
+			typeflag: 1,
+			md5sum:   [16]byte{1, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0},
+			diffType: nil,
+		}
+		upperTree.AddPath(value, &fakeData)
+	}
+
+	lowerTree.compareTo(upperTree)
+	asserter := func(n *Node) error {
+		p := n.Path()
+		if p == "/" {
+			return nil
+		}
+		return AssertDiffType(n, Changed, t)
 	}
 	err := lowerTree.Visit(asserter)
 	if err != nil {
@@ -93,10 +133,10 @@ func AssertDiffType(node *Node, expectedDiffType DiffType, t *testing.T) error {
 		return fmt.Errorf("expected *FileChangeInfo but got nil at path %s", node.Path())
 	}
 	if node.data.diffType == nil {
-		t.Errorf("Expected node at %s to have DiffType Added, but had nil", node.Path())
+		t.Errorf("Expected node at %s to have DiffType %v, but had nil", node.Path(), expectedDiffType)
 		return fmt.Errorf("Assertion failed")
 	} else if *(node.data.diffType) != expectedDiffType {
-		t.Errorf("Expecting node at %s to have DiffType Added, but had %v", node.Path(), *node.data.diffType)
+		t.Errorf("Expecting node at %s to have DiffType %v, but had %v", node.Path(), expectedDiffType, *node.data.diffType)
 		return fmt.Errorf("Assertion failed")
 	}
 	return nil
