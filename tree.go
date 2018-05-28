@@ -50,6 +50,9 @@ func NewTree() (tree *FileTree) {
 func NewNode(parent *Node, name string, data *FileChangeInfo) (node *Node) {
 	node = new(Node)
 	node.name = name
+	if data == nil {
+		data = &FileChangeInfo{}
+	}
 	node.data = data
 	node.children = make(map[string]*Node)
 	node.parent = parent
