@@ -43,14 +43,30 @@ func compareNodes(a *Node, b *Node) DiffType {
 	if a.name != b.name {
 		panic("comparing mismatched nodes")
 	}
-	return getDiffType(a.data.(FileChangeInfo), b.data.(FileChangeInfo))
+	// TODO: fails on nil
+
+	return getDiffType(a.data, b.data)
 }
 
-func getDiffType(a FileChangeInfo, b FileChangeInfo) DiffType {
+func getDiffType(a interface{}, b interface{}) DiffType {
 	// they have different types
-	if a.typeflag == b.typeflag {
+	if a == nil && b == nil {
+		return Unchanged
+	}
+	if a == nil || b == nil {
+		return Changed
+	}
+	aData, ok := a.(FileChangeInfo)
+	if !ok {
+		panic(fmt.Errorf("Expected FileChangeInfo but got %+v", aData))
+	}
+	bData, ok := b.(FileChangeInfo)
+	if !ok {
+		panic(fmt.Errorf("Expected FileChangeInfo but got %+v", bData))
+	}
+	if aData.typeflag == bData.typeflag {
 		// compare hashes
-		if bytes.Compare(a.md5sum[:], b.md5sum[:]) == 0 {
+		if bytes.Compare(aData.md5sum[:], bData.md5sum[:]) == 0 {
 			return Unchanged
 		}
 	}

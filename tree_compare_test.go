@@ -2,7 +2,7 @@ package main
 
 import "testing"
 
-func compareToTest(t *testing.T) {
+func TestCompareToTest(t *testing.T) {
 	lowerTree := NewTree()
 	upperTree := NewTree()
 	paths := [5]string{"/etc", "/etc/sudoers", "/etc/hosts", "/usr/bin", "/usr/bin/bash"}
@@ -21,14 +21,17 @@ func compareToTest(t *testing.T) {
 	}
 	lowerTree.compareTo(upperTree)
 	asserter := func(n *Node) error {
-		data := n.data.(FileChangeInfo)
+		data, ok := n.data.(FileChangeInfo)
+		if !ok {
+			t.Errorf("Expecting node with data at %s, but got %+v", n.Path(), n.data)
+		}
 		if data.diffType == nil {
 			t.Errorf("Expected node at %s to have DiffType unchanged, but had nil", n.Path())
-		}
-		if *data.diffType != Unchanged {
+		} else if *data.diffType != Unchanged {
 			t.Errorf("Expecting node at %s to have DiffType unchanged, but had %v", n.Path(), *data.diffType)
 		}
 		return nil
 	}
+	t.Fail()
 	lowerTree.Visit(asserter)
 }
