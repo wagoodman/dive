@@ -166,6 +166,7 @@ type FileChangeInfo struct {
 	path     string
 	typeflag byte
 	md5sum   [16]byte
+	diffType *DiffType
 }
 
 type Manifest struct {
