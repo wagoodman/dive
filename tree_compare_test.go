@@ -32,6 +32,5 @@ func TestCompareToTest(t *testing.T) {
 		}
 		return nil
 	}
-	t.Fail()
 	lowerTree.Visit(asserter)
 }
