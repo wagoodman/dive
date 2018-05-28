@@ -90,8 +90,8 @@ func TestCompareWithAdds(t *testing.T) {
 func TestCompareWithChanges(t *testing.T) {
 	lowerTree := NewTree()
 	upperTree := NewTree()
-	lowerPaths := [...]string{"/etc", "/etc/sudoers", "/usr", "/etc/hosts", "/usr/bin"}
-	upperPaths := [...]string{"/etc", "/etc/sudoers", "/usr", "/etc/hosts", "/usr/bin"}
+	lowerPaths := [...]string{"/etc", "/usr", "/etc/hosts", "/etc/sudoers", "/usr/bin"}
+	upperPaths := [...]string{"/etc", "/usr", "/etc/hosts", "/etc/sudoers", "/usr/bin"}
 
 	for _, value := range lowerPaths {
 		fakeData := FileChangeInfo{
@@ -129,10 +129,37 @@ func TestCompareWithChanges(t *testing.T) {
 
 func TestAssignDiffType(t *testing.T) {
 	tree := NewTree()
-	tree.AddPath("/usr", BlankFileChangeInfo("/usr"))
-	tree.root.children["usr"].AssignDiffType(Changed)
+	tree.AddPath("/usr", BlankFileChangeInfo("/usr", Changed))
 	if *tree.root.children["usr"].data.diffType != Changed {
 		t.Fail()
+	}
+}
+
+func TestMergeDiffTypes(t *testing.T) {
+	a := Unchanged
+	b := Unchanged
+	merged := mergeDiffTypes(a, b)
+	if merged != Unchanged {
+		t.Errorf("Expected Unchaged (0) but got %v", merged)
+	}
+	a = Changed
+	b = Unchanged
+	merged = mergeDiffTypes(a, b)
+	if merged != Changed {
+		t.Errorf("Expected Unchaged (0) but got %v", merged)
+	}
+}
+
+func TestDiffTypeFromChildren(t *testing.T) {
+	tree := NewTree()
+	tree.AddPath("/usr", BlankFileChangeInfo("/usr", Unchanged))
+	info1 := BlankFileChangeInfo("/usr/bin", Added)
+	tree.AddPath("/usr/bin", info1)
+	info2 := BlankFileChangeInfo("/usr/bin2", Removed)
+	tree.AddPath("/usr/bin2", info2)
+	tree.root.children["usr"].DiffTypeFromChildren(Unchanged)
+	if *tree.root.children["usr"].data.diffType != Changed {
+		t.Errorf("Expected Changed but got %v", *tree.root.children["usr"].data.diffType)
 	}
 }
 
@@ -151,11 +178,12 @@ func AssertDiffType(node *Node, expectedDiffType DiffType, t *testing.T) error {
 	return nil
 }
 
-func BlankFileChangeInfo(path string) (f *FileChangeInfo) {
-	return &FileChangeInfo{
+func BlankFileChangeInfo(path string, diffType DiffType) (f *FileChangeInfo) {
+	result := FileChangeInfo{
 		path:     path,
 		typeflag: 1,
 		md5sum:   [16]byte{1, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0},
-		diffType: nil,
+		diffType: &diffType,
 	}
+	return &result
 }
