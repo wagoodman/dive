@@ -83,6 +83,14 @@ func mergeDiffTypes(a DiffType, b DiffType) DiffType {
 func (tree *FileTree) compareTo(upper *FileTree) error {
 
 	// TODO mark all as unchanged
+	markAllUnchanged := func(node *Node) error {
+		return node.AssignDiffType(Unchanged)
+	}
+	err := tree.Visit(markAllUnchanged)
+	if err != nil {
+		panic(err)
+		return err
+	}
 	graft := func(node *Node) error {
 		if node.IsWhiteout() {
 			err := tree.MarkRemoved(node.Path())
@@ -142,9 +150,13 @@ func (node *Node) DiffTypeFromChildren(diffType DiffType) error {
 }
 
 func (node *Node) AssignDiffType(diffType DiffType) error {
+	if node.Path() == "/" {
+		return nil
+	}
 	f, ok := node.data.(FileChangeInfo)
 	if ok {
 		f.diffType = &diffType
+		return nil
 	}
 	return fmt.Errorf("Cannot assign diffType on %v because a type assertion failed", node.data)
 }

@@ -5,7 +5,7 @@ import "testing"
 func TestCompareToTest(t *testing.T) {
 	lowerTree := NewTree()
 	upperTree := NewTree()
-	paths := [5]string{"/etc", "/etc/sudoers", "/etc/hosts", "/usr/bin", "/usr/bin/bash"}
+	paths := [...]string{"/etc", "/etc/sudoers", "/etc/hosts", "/usr/bin", "/usr/bin/bash", "/usr"}
 	var zeros = [16]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
 
 	for _, value := range paths {
