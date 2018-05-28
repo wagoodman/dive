@@ -138,8 +138,8 @@ func (node *Node) DiffTypeFromChildren(diffType DiffType) error {
 	myDiffType := diffType
 
 	for _, v := range node.children {
-		vData, ok := v.data.(FileChangeInfo)
-		if ok && vData.diffType != nil {
+		vData := v.data
+		if vData.diffType != nil {
 			myDiffType = mergeDiffTypes(myDiffType, *vData.diffType)
 		} else {
 			return fmt.Errorf("Could not read diffType for node at %s", v.Path())
@@ -153,10 +153,6 @@ func (node *Node) AssignDiffType(diffType DiffType) error {
 	if node.Path() == "/" {
 		return nil
 	}
-	f, ok := node.data.(FileChangeInfo)
-	if ok {
-		f.diffType = &diffType
-		return nil
-	}
-	return fmt.Errorf("Cannot assign diffType on %v because a type assertion failed", node.data)
+	node.data.diffType = &diffType
+	return nil
 }

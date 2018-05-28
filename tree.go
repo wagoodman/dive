@@ -1,10 +1,10 @@
 package main
 
 import (
+	"errors"
+	"fmt"
 	"sort"
 	"strings"
-	"fmt"
-	"errors"
 )
 
 const (
@@ -24,7 +24,6 @@ const (
 //	Stack(*FileTree) (FileTree, error)
 //}
 
-
 type FileTree struct {
 	root *Node
 	size int
@@ -35,7 +34,7 @@ type Node struct {
 	tree     *FileTree
 	parent   *Node
 	name     string
-	data     interface{}
+	data     *FileChangeInfo
 	children map[string]*Node
 }
 
@@ -48,7 +47,7 @@ func NewTree() (tree *FileTree) {
 	return tree
 }
 
-func NewNode(parent *Node, name string, data interface{}) (node *Node) {
+func NewNode(parent *Node, name string, data *FileChangeInfo) (node *Node) {
 	node = new(Node)
 	node.name = name
 	node.data = data
@@ -62,7 +61,7 @@ func (tree *FileTree) Root() *Node {
 	return tree.root
 }
 
-func (node *Node) AddChild(name string, data interface{}) (child *Node) {
+func (node *Node) AddChild(name string, data *FileChangeInfo) (child *Node) {
 	child = NewNode(node, name, data)
 	if node.children[name] != nil {
 		// tree node already exists, replace the payload, keep the children
@@ -174,7 +173,7 @@ func (node *Node) Path() string {
 	path := []string{}
 	curNode := node
 	for {
-		if curNode.parent == nil{
+		if curNode.parent == nil {
 			break
 		}
 
@@ -190,9 +189,7 @@ func (node *Node) Path() string {
 	return "/" + strings.Join(path, "/")
 }
 
-
-
-func (tree *FileTree) Stack(upper *FileTree) (error) {
+func (tree *FileTree) Stack(upper *FileTree) error {
 	graft := func(node *Node) error {
 		if node.IsWhiteout() {
 			err := tree.RemovePath(node.Path())
@@ -225,7 +222,7 @@ func (tree *FileTree) GetNode(path string) (*Node, error) {
 	return node, nil
 }
 
-func (tree *FileTree) AddPath(path string, data interface{}) (*Node, error) {
+func (tree *FileTree) AddPath(path string, data *FileChangeInfo) (*Node, error) {
 	nodeNames := strings.Split(path, "/")
 	node := tree.Root()
 	for idx, name := range nodeNames {
@@ -257,5 +254,3 @@ func (tree *FileTree) RemovePath(path string) error {
 	}
 	return node.Remove()
 }
-
-

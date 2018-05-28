@@ -60,7 +60,7 @@ func main() {
 				fmt.Printf("%s\n", tree.name)
 				fileInfos := getFileList(tarReader, header)
 				for _, element := range fileInfos {
-					tree.AddPath(element.path, element)
+					tree.AddPath(element.path, &element)
 				}
 				layerMap[tree.name] = tree
 			}

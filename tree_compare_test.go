@@ -16,15 +16,12 @@ func TestCompareToTest(t *testing.T) {
 			diffType: nil,
 		}
 
-		lowerTree.AddPath(value, fakeData)
-		upperTree.AddPath(value, fakeData)
+		lowerTree.AddPath(value, &fakeData)
+		upperTree.AddPath(value, &fakeData)
 	}
 	lowerTree.compareTo(upperTree)
 	asserter := func(n *Node) error {
-		data, ok := n.data.(FileChangeInfo)
-		if !ok {
-			t.Errorf("Expecting node with data at %s, but got %+v", n.Path(), n.data)
-		}
+		data := n.data
 		if data.diffType == nil {
 			t.Errorf("Expected node at %s to have DiffType unchanged, but had nil", n.Path())
 		} else if *data.diffType != Unchanged {
