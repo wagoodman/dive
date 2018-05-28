@@ -57,6 +57,13 @@ func getDiffType(a FileChangeInfo, b FileChangeInfo) DiffType {
 	return Changed
 }
 
+func mergeDiffTypes(a DiffType, b DiffType) DiffType {
+	if a == b {
+		return a
+	}
+	return Changed
+}
+
 func (tree *FileTree) compareTo(upper *FileTree) error {
 
 	// TODO mark all as unchanged
@@ -68,16 +75,15 @@ func (tree *FileTree) compareTo(upper *FileTree) error {
 			}
 		} else {
 			existingNode, _ := tree.GetNode(node.Path())
-			diffType := compareNodes(existingNode, node)
-			if node.IsLeaf() {
-				node.AssignDiffType(diffType)
+			if existingNode == nil {
+				newNode, err := tree.AddPath(node.Path(), node.data)
+				if err != nil {
+					return fmt.Errorf("Cannot remove node %s: %v", node.Path(), err.Error())
+				}
+				newNode.AssignDiffType(Added)
 			} else {
-				node.DiffTypeFromChildren()
-			}
-			// TODO mark diff type
-			newNode, err := tree.AddPath(node.Path(), node.data)
-			if err != nil {
-				return fmt.Errorf("Cannot add node %s: %v", newNode.Path(), err.Error())
+				diffType := compareNodes(existingNode, node)
+				node.DiffTypeFromChildren(diffType)
 			}
 		}
 		return nil
@@ -96,17 +102,27 @@ func (tree *FileTree) MarkRemoved(path string) error {
 	return node.AssignDiffType(Removed)
 }
 
-func (node *Node) IsEmpty() bool {
+func (node *Node) IsLeaf() bool {
 	return len(node.children) == 0
 }
 
-func (node *Node) DiffTypeFromChildren() {
-
-	for i := 2; i < n; i++ {
-		ins[0] = out
-		ins[1] = in.Index(i)
-		out = fn.Call(ins[:])[0]
+func (node *Node) DiffTypeFromChildren(diffType DiffType) error {
+	if node.IsLeaf() {
+		node.AssignDiffType(diffType)
+		return nil
 	}
+	myDiffType := diffType
+
+	for _, v := range node.children {
+		vData, ok := v.data.(FileChangeInfo)
+		if ok && vData.diffType != nil {
+			myDiffType = mergeDiffTypes(myDiffType, *vData.diffType)
+		} else {
+			return fmt.Errorf("Could not read diffType for node at %s", v.Path())
+		}
+	}
+	node.AssignDiffType(myDiffType)
+	return nil
 }
 
 func (node *Node) AssignDiffType(diffType DiffType) error {
@@ -115,10 +131,4 @@ func (node *Node) AssignDiffType(diffType DiffType) error {
 		f.diffType = &diffType
 	}
 	return fmt.Errorf("Cannot assign diffType on %v because a type assertion failed", node.data)
-}
-
-type DiffTree struct {
-	root *Node
-	size int
-	name string
 }
