@@ -127,6 +127,15 @@ func TestCompareWithChanges(t *testing.T) {
 	}
 }
 
+func TestAssignDiffType(t *testing.T) {
+	tree := NewTree()
+	tree.AddPath("/usr", BlankFileChangeInfo("/usr"))
+	tree.root.children["usr"].AssignDiffType(Changed)
+	if *tree.root.children["usr"].data.diffType != Changed {
+		t.Fail()
+	}
+}
+
 func AssertDiffType(node *Node, expectedDiffType DiffType, t *testing.T) error {
 	if node.data == nil {
 		t.Errorf("Expected *FileChangeInfo but got nil at path %s", node.Path())
@@ -140,4 +149,13 @@ func AssertDiffType(node *Node, expectedDiffType DiffType, t *testing.T) error {
 		return fmt.Errorf("Assertion failed")
 	}
 	return nil
+}
+
+func BlankFileChangeInfo(path string) (f *FileChangeInfo) {
+	return &FileChangeInfo{
+		path:     path,
+		typeflag: 1,
+		md5sum:   [16]byte{1, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0},
+		diffType: nil,
+	}
 }
