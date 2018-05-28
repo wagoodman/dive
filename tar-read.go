@@ -11,7 +11,7 @@ import (
 	"strings"
 )
 
-func main() {
+func tarReadDemo() {
 	f, err := os.Open("image/cache.tar")
 	if err != nil {
 		fmt.Println(err)

@@ -30,7 +30,7 @@ type Node struct {
 	parent    *Node
 	name      string
 	collapsed bool
-	data      interface{}
+	data       *FileChangeInfo
 	children  map[string]*Node
 }
 
@@ -124,7 +124,8 @@ func (tree *FileTree) String() string {
 		for idx, name := range keys {
 			child := node.children[name]
 			last := idx == (len(node.children) - 1)
-			result += renderLine(child.String(), spaces, last, child.collapsed)
+			showCollapsed := child.collapsed && len(child.children) > 0
+			result += renderLine(child.String(), spaces, last, showCollapsed)
 			if len(child.children) > 0 && !child.collapsed {
 				spacesChild := append(spaces, last)
 				result += walkTree(child, spacesChild, depth+1)
@@ -156,19 +157,54 @@ func (tree *FileTree) Copy() *FileTree {
 }
 
 type Visiter func(*Node) error
+type VisitEvaluator func(*Node) bool
 
 func (tree *FileTree) Visit(visiter Visiter) error {
 	return tree.root.Visit(visiter)
 }
 
+func (tree *FileTree) VisitDepthParentFirst(visiter Visiter, evaluator VisitEvaluator) error {
+	return tree.root.VisitDepthParentFirst(visiter, evaluator)
+}
+
 func (node *Node) Visit(visiter Visiter) error {
-	for _, child := range node.children {
+	var keys []string
+	for key := range node.children {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+	for _, name := range keys {
+		child := node.children[name]
 		err := child.Visit(visiter)
 		if err != nil {
 			return err
 		}
 	}
 	return visiter(node)
+}
+
+func (node *Node) VisitDepthParentFirst(visiter Visiter, evaluator VisitEvaluator) error {
+	err := visiter(node)
+	if err != nil {
+		return err
+	}
+
+	var keys []string
+	for key := range node.children {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+	for _, name := range keys {
+		child := node.children[name]
+		if evaluator == nil || !evaluator(node) {
+			continue
+		}
+		err = child.VisitDepthParentFirst(visiter, evaluator)
+		if err != nil {
+			return err
+		}
+	}
+	return err
 }
 
 func (node *Node) IsWhiteout() bool {
