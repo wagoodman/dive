@@ -23,6 +23,21 @@ const (
 	Removed
 )
 
+func (d DiffType) String() string {
+	switch d {
+	case Unchanged:
+		return "Unchanged"
+	case Changed:
+		return "Changed"
+	case Added:
+		return "Added"
+	case Removed:
+		return "Removed"
+	default:
+		return fmt.Sprintf("%d", int(d))
+	}
+}
+
 func compareNodes(a *Node, b *Node) DiffType {
 	if a == nil && b == nil {
 		return Unchanged
@@ -49,7 +64,6 @@ func compareNodes(a *Node, b *Node) DiffType {
 }
 
 func getDiffType(a *FileChangeInfo, b *FileChangeInfo) DiffType {
-	// they have different types
 	if a == nil && b == nil {
 		return Unchanged
 	}
@@ -57,7 +71,6 @@ func getDiffType(a *FileChangeInfo, b *FileChangeInfo) DiffType {
 		return Changed
 	}
 	if a.typeflag == b.typeflag {
-		// compare hashes
 		if bytes.Compare(a.md5sum[:], b.md5sum[:]) == 0 {
 			return Unchanged
 		}
@@ -101,7 +114,7 @@ func (tree *FileTree) compareTo(upper *FileTree) error {
 			} else {
 				diffType := compareNodes(existingNode, node)
 				fmt.Printf("found existing node at %s\n", existingNode.Path())
-				node.DiffTypeFromChildren(diffType)
+				existingNode.DiffTypeFromChildren(diffType)
 			}
 		}
 		return nil
