@@ -93,7 +93,6 @@ func (tree *FileTree) compareTo(upper *FileTree) error {
 	}
 	err := tree.Visit(markAllUnchanged)
 	if err != nil {
-		panic(err)
 		return err
 	}
 	graft := func(node *Node) error {
@@ -146,11 +145,8 @@ func (node *Node) DiffTypeFromChildren(diffType DiffType) error {
 
 	for _, v := range node.children {
 		vData := v.data
-		if vData.diffType != nil {
-			myDiffType = mergeDiffTypes(myDiffType, *vData.diffType)
-		} else {
-			return fmt.Errorf("Could not read diffType for node at %s", v.Path())
-		}
+		myDiffType = mergeDiffTypes(myDiffType, vData.diffType)
+
 	}
 	node.AssignDiffType(myDiffType)
 	return nil
@@ -160,6 +156,6 @@ func (node *Node) AssignDiffType(diffType DiffType) error {
 	if node.Path() == "/" {
 		return nil
 	}
-	node.data.diffType = &diffType
+	node.data.diffType = diffType
 	return nil
 }

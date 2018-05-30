@@ -157,6 +157,7 @@ func makeEntry(r *tar.Reader, h *tar.Header, path string) FileChangeInfo {
 		path:     path,
 		typeflag: h.Typeflag,
 		md5sum:   hash,
+		diffType: Unchanged,
 	}
 }
 
@@ -166,7 +167,7 @@ type FileChangeInfo struct {
 	path     string
 	typeflag byte
 	md5sum   [16]byte
-	diffType *DiffType
+	diffType DiffType
 }
 
 type Manifest struct {

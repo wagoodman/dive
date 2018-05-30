@@ -15,7 +15,7 @@ func TestCompareWithNoChanges(t *testing.T) {
 			path:     value,
 			typeflag: 1,
 			md5sum:   [16]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-			diffType: nil,
+			diffType: Unchanged,
 		}
 		lowerTree.AddPath(value, &fakeData)
 		upperTree.AddPath(value, &fakeData)
@@ -29,10 +29,8 @@ func TestCompareWithNoChanges(t *testing.T) {
 			t.Errorf("Expected *FileChangeInfo but got nil")
 			return fmt.Errorf("expected *FileChangeInfo but got nil")
 		}
-		if n.data.diffType == nil {
-			t.Errorf("Expected node at %s to have DiffType unchanged, but had nil", n.Path())
-		} else if *(n.data.diffType) != Unchanged {
-			t.Errorf("Expecting node at %s to have DiffType unchanged, but had %v", n.Path(), *n.data.diffType)
+		if (n.data.diffType) != Unchanged {
+			t.Errorf("Expecting node at %s to have DiffType unchanged, but had %v", n.Path(), n.data.diffType)
 		}
 		return nil
 	}
@@ -53,7 +51,7 @@ func TestCompareWithAdds(t *testing.T) {
 			path:     value,
 			typeflag: 1,
 			md5sum:   [16]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-			diffType: nil,
+			diffType: Unchanged,
 		}
 		lowerTree.AddPath(value, &fakeData)
 	}
@@ -63,7 +61,7 @@ func TestCompareWithAdds(t *testing.T) {
 			path:     value,
 			typeflag: 1,
 			md5sum:   [16]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-			diffType: nil,
+			diffType: Unchanged,
 		}
 		upperTree.AddPath(value, &fakeData)
 	}
@@ -104,7 +102,7 @@ func TestCompareWithChanges(t *testing.T) {
 			path:     value,
 			typeflag: 1,
 			md5sum:   [16]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-			diffType: nil,
+			diffType: Unchanged,
 		}
 		lowerTree.AddPath(value, &fakeData)
 	}
@@ -114,7 +112,7 @@ func TestCompareWithChanges(t *testing.T) {
 			path:     value,
 			typeflag: 1,
 			md5sum:   [16]byte{1, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0},
-			diffType: nil,
+			diffType: Unchanged,
 		}
 		upperTree.AddPath(value, &fakeData)
 	}
@@ -136,7 +134,7 @@ func TestCompareWithChanges(t *testing.T) {
 func TestAssignDiffType(t *testing.T) {
 	tree := NewTree()
 	tree.AddPath("/usr", BlankFileChangeInfo("/usr", Changed))
-	if *tree.root.children["usr"].data.diffType != Changed {
+	if tree.root.children["usr"].data.diffType != Changed {
 		t.Fail()
 	}
 }
@@ -164,8 +162,8 @@ func TestDiffTypeFromChildren(t *testing.T) {
 	info2 := BlankFileChangeInfo("/usr/bin2", Removed)
 	tree.AddPath("/usr/bin2", info2)
 	tree.root.children["usr"].DiffTypeFromChildren(Unchanged)
-	if *tree.root.children["usr"].data.diffType != Changed {
-		t.Errorf("Expected Changed but got %v", *tree.root.children["usr"].data.diffType)
+	if tree.root.children["usr"].data.diffType != Changed {
+		t.Errorf("Expected Changed but got %v", tree.root.children["usr"].data.diffType)
 	}
 }
 
@@ -174,11 +172,8 @@ func AssertDiffType(node *Node, expectedDiffType DiffType, t *testing.T) error {
 		t.Errorf("Expected *FileChangeInfo but got nil at path %s", node.Path())
 		return fmt.Errorf("expected *FileChangeInfo but got nil at path %s", node.Path())
 	}
-	if node.data.diffType == nil {
-		t.Errorf("Expected node at %s to have DiffType %v, but had nil", node.Path(), expectedDiffType)
-		return fmt.Errorf("Assertion failed")
-	} else if *(node.data.diffType) != expectedDiffType {
-		t.Errorf("Expecting node at %s to have DiffType %v, but had %v", node.Path(), expectedDiffType, *node.data.diffType)
+	if node.data.diffType != expectedDiffType {
+		t.Errorf("Expecting node at %s to have DiffType %v, but had %v", node.Path(), expectedDiffType, node.data.diffType)
 		return fmt.Errorf("Assertion failed")
 	}
 	return nil
@@ -189,7 +184,7 @@ func BlankFileChangeInfo(path string, diffType DiffType) (f *FileChangeInfo) {
 		path:     path,
 		typeflag: 1,
 		md5sum:   [16]byte{1, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0},
-		diffType: &diffType,
+		diffType: diffType,
 	}
 	return &result
 }
