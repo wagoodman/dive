@@ -75,11 +75,17 @@ func TestCompareWithAdds(t *testing.T) {
 		if p == "/" {
 			return nil
 		}
+		// Adding a file changes the folders it's in
 		if p == "/usr/bin/bash" {
 			return AssertDiffType(n, Added, t)
-		} else {
-			return AssertDiffType(n, Unchanged, t)
 		}
+		if p == "/usr/bin" {
+			return AssertDiffType(n, Changed, t)
+		}
+		if p == "/usr" {
+			return AssertDiffType(n, Changed, t)
+		}
+		return AssertDiffType(n, Unchanged, t)
 	}
 	err := lowerTree.Visit(asserter)
 	if err != nil {
