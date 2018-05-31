@@ -105,7 +105,6 @@ func TestPrintTree(t *testing.T) {
 
 }
 
-
 func TestAddPath(t *testing.T) {
 	tree := NewTree()
 	tree.AddPath("/etc/nginx/nginx.conf", nil)
@@ -189,7 +188,6 @@ func TestIsWhiteout(t *testing.T) {
 	}
 }
 
-
 func TestStack(t *testing.T) {
 	payloadKey := "/var/run/systemd"
 	payloadValue := FileChangeInfo{
@@ -239,6 +237,37 @@ func TestStack(t *testing.T) {
 	}
 
 	actual := tree1.String()
+
+	if expected != actual {
+		t.Errorf("Expected tree string:\n--->%s<---\nGot:\n--->%s<---", expected, actual)
+	}
+
+}
+
+func TestCopy(t *testing.T) {
+	tree := NewTree()
+	tree.AddPath("/etc/nginx/nginx.conf", nil)
+	tree.AddPath("/etc/nginx/public", nil)
+	tree.AddPath("/var/run/systemd", nil)
+	tree.AddPath("/var/run/bashful", nil)
+	tree.AddPath("/tmp", nil)
+	tree.AddPath("/tmp/nonsense", nil)
+
+	tree.RemovePath("/var/run/bashful")
+	tree.RemovePath("/tmp")
+
+	expected := `.
+├── etc
+│   └── nginx
+│       ├── nginx.conf
+│       └── public
+└── var
+    └── run
+        └── systemd
+`
+
+	newTree := tree.Copy()
+	actual := newTree.String()
 
 	if expected != actual {
 		t.Errorf("Expected tree string:\n--->%s<---\nGot:\n--->%s<---", expected, actual)
