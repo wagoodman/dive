@@ -6,14 +6,18 @@ func TestAddChild(t *testing.T) {
 	var expected, actual int
 	tree := NewTree()
 
-	one := tree.Root().AddChild("first node!", 1)
+	payload := FileChangeInfo{
+		path: "stufffffs",
+	}
+
+	one := tree.Root().AddChild("first node!", &payload)
 
 	two := tree.Root().AddChild("nil node!", nil)
 
-	tree.Root().AddChild("third node!", 3)
-	two.AddChild("forth, one level down...", 4)
-	two.AddChild("fifth, one level down...", 5)
-	two.AddChild("fifth, one level down...", 5)
+	tree.Root().AddChild("third node!", nil)
+	two.AddChild("forth, one level down...", nil)
+	two.AddChild("fifth, one level down...", nil)
+	two.AddChild("fifth, one level down...", nil)
 
 	expected, actual = 5, tree.size
 	if expected != actual {
@@ -30,14 +34,19 @@ func TestAddChild(t *testing.T) {
 		t.Errorf("Expected 'twos' number of children to be %d got %d.", expected, actual)
 	}
 
-	if two.data != nil {
-		t.Errorf("Expected 'ones' payload to be nil got %d.", two.data)
+	expectedFC := &FileChangeInfo{
+		path: "stufffffs",
+	}
+	actualFC := one.data
+	if *expectedFC != *actualFC {
+		t.Errorf("Expected 'ones' payload to be %+v got %+v.", expectedFC, actualFC)
 	}
 
-	expected, actual = 1, one.data.(int)
-	if expected != actual {
-		t.Errorf("Expected 'ones' payload to be %d got %d.", expected, actual)
+	if *two.data != *new(FileChangeInfo) {
+		t.Errorf("Expected 'twos' payload to be nil got %d.", two.data)
 	}
+
+
 
 }
 
@@ -45,11 +54,11 @@ func TestRemoveChild(t *testing.T) {
 	var expected, actual int
 
 	tree := NewTree()
-	tree.Root().AddChild("first", 1)
+	tree.Root().AddChild("first", nil)
 	two := tree.Root().AddChild("nil", nil)
-	tree.Root().AddChild("third", 3)
-	forth := two.AddChild("forth", 4)
-	two.AddChild("fifth", 5)
+	tree.Root().AddChild("third", nil)
+	forth := two.AddChild("forth", nil)
+	two.AddChild("fifth", nil)
 
 	forth.Remove()
 
@@ -99,12 +108,12 @@ func TestPrintTree(t *testing.T) {
 
 func TestAddPath(t *testing.T) {
 	tree := NewTree()
-	tree.AddPath("/etc/nginx/nginx.conf", 1)
-	tree.AddPath("/etc/nginx/public", 2)
-	tree.AddPath("/var/run/systemd", 3)
-	tree.AddPath("/var/run/bashful", 4)
-	tree.AddPath("/tmp", 5)
-	tree.AddPath("/tmp/nonsense", 6)
+	tree.AddPath("/etc/nginx/nginx.conf", nil)
+	tree.AddPath("/etc/nginx/public", nil)
+	tree.AddPath("/var/run/systemd", nil)
+	tree.AddPath("/var/run/bashful", nil)
+	tree.AddPath("/tmp", nil)
+	tree.AddPath("/tmp/nonsense", nil)
 
 	expected := `.
 ├── etc
@@ -128,12 +137,12 @@ func TestAddPath(t *testing.T) {
 
 func TestRemovePath(t *testing.T) {
 	tree := NewTree()
-	tree.AddPath("/etc/nginx/nginx.conf", 1)
-	tree.AddPath("/etc/nginx/public", 2)
-	tree.AddPath("/var/run/systemd", 3)
-	tree.AddPath("/var/run/bashful", 4)
-	tree.AddPath("/tmp", 5)
-	tree.AddPath("/tmp/nonsense", 6)
+	tree.AddPath("/etc/nginx/nginx.conf", nil)
+	tree.AddPath("/etc/nginx/public", nil)
+	tree.AddPath("/var/run/systemd", nil)
+	tree.AddPath("/var/run/bashful", nil)
+	tree.AddPath("/tmp", nil)
+	tree.AddPath("/tmp/nonsense", nil)
 
 	tree.RemovePath("/var/run/bashful")
 	tree.RemovePath("/tmp")
@@ -168,8 +177,8 @@ func TestPath(t *testing.T) {
 
 func TestIsWhiteout(t *testing.T) {
 	tree1 := NewTree()
-	p1, _ := tree1.AddPath("/etc/nginx/public1", 2)
-	p2, _ := tree1.AddPath("/etc/nginx/.wh.public2", 2)
+	p1, _ := tree1.AddPath("/etc/nginx/public1", nil)
+	p2, _ := tree1.AddPath("/etc/nginx/.wh.public2", nil)
 
 	if p1.IsWhiteout() != false {
 		t.Errorf("Expected path '%s' to **not** be a whiteout file", p1.name)
@@ -183,21 +192,23 @@ func TestIsWhiteout(t *testing.T) {
 
 func TestStack(t *testing.T) {
 	payloadKey := "/var/run/systemd"
-	payloadValue := 1263487
+	payloadValue := FileChangeInfo{
+		path: "yup",
+	}
 
 	tree1 := NewTree()
 
-	tree1.AddPath("/etc/nginx/public", 2)
-	tree1.AddPath(payloadKey, 3)
-	tree1.AddPath("/var/run/bashful", 4)
-	tree1.AddPath("/tmp", 5)
-	tree1.AddPath("/tmp/nonsense", 6)
+	tree1.AddPath("/etc/nginx/public", nil)
+	tree1.AddPath(payloadKey, nil)
+	tree1.AddPath("/var/run/bashful", nil)
+	tree1.AddPath("/tmp", nil)
+	tree1.AddPath("/tmp/nonsense", nil)
 
 	tree2 := NewTree()
 	// add new files
-	tree2.AddPath("/etc/nginx/nginx.conf", 1)
+	tree2.AddPath("/etc/nginx/nginx.conf", nil)
 	// modify current files
-	tree2.AddPath(payloadKey, payloadValue)
+	tree2.AddPath(payloadKey, &payloadValue)
 	// whiteout the following files
 	tree2.AddPath("/var/run/.wh.bashful", nil)
 	tree2.AddPath("/.wh.tmp", nil)
@@ -223,8 +234,8 @@ func TestStack(t *testing.T) {
 		t.Errorf("Expected '%s' to still exist, but it doesn't", payloadKey)
 	}
 
-	if node.data != payloadValue {
-		t.Errorf("Expected '%s' value to be %d but got %d", payloadKey, payloadValue, node.data.(int))
+	if *node.data != payloadValue {
+		t.Errorf("Expected '%s' value to be %+v but got %+v", payloadKey, payloadValue, node.data)
 	}
 
 	actual := tree1.String()
