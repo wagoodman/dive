@@ -8,21 +8,16 @@ import (
 )
 
 const (
-	newLine        = "\n"
-	emptySpace     = "    "
-	middleItem     = "├── "
-	continueItem   = "│   "
-	lastItem       = "└── "
-	whiteoutPrefix = ".wh."
+	newLine         = "\n"
+	noBranchSpace   = "    "
+	branchSpace     = "│   "
+	middleItem      = "├─"
+	lastItem        = "└─"
+	whiteoutPrefix  = ".wh."
+	uncollapsedItem = "─ "
+	collapsedItem   = "⊕ "
 )
 
-//type FileTree interface {
-//	AddPath(string, interface{}) *Node
-//	RemovePath(string) error
-//	Visit(Visiter) error
-//	// Diff(*FileTree) error
-//	Stack(*FileTree) (FileTree, error)
-//}
 
 type FileTree struct {
 	root *Node
@@ -31,11 +26,12 @@ type FileTree struct {
 }
 
 type Node struct {
-	tree     *FileTree
-	parent   *Node
-	name     string
-	data     *FileChangeInfo
-	children map[string]*Node
+	tree      *FileTree
+	parent    *Node
+	name      string
+	collapsed bool
+	data      interface{}
+	children  map[string]*Node
 }
 
 func NewTree() (tree *FileTree) {
@@ -92,28 +88,33 @@ func (node *Node) String() string {
 }
 
 func (tree *FileTree) String() string {
-	var renderLine func(string, []bool, bool) string
-	var walkTree func(*Node, []bool) string
+	var renderLine func(string, []bool, bool, bool) string
+	var walkTree func(*Node, []bool, int) string
 
-	renderLine = func(text string, spaces []bool, last bool) string {
-		var result string
+	renderLine = func(nodeText string, spaces []bool, last bool, collapsed bool) string {
+		var otherBranches string
 		for _, space := range spaces {
 			if space {
-				result += emptySpace
+				otherBranches += noBranchSpace
 			} else {
-				result += continueItem
+				otherBranches += branchSpace
 			}
 		}
 
-		indicator := middleItem
+		thisBranch := middleItem
 		if last {
-			indicator = lastItem
+			thisBranch = lastItem
 		}
 
-		return result + indicator + text + newLine
+		collapsedIndicator := uncollapsedItem
+		if collapsed {
+			collapsedIndicator = collapsedItem
+		}
+
+		return otherBranches + thisBranch + collapsedIndicator + nodeText + newLine
 	}
 
-	walkTree = func(node *Node, spaces []bool) string {
+	walkTree = func(node *Node, spaces []bool, depth int) string {
 		var result string
 		var keys []string
 		for key := range node.children {
@@ -123,16 +124,16 @@ func (tree *FileTree) String() string {
 		for idx, name := range keys {
 			child := node.children[name]
 			last := idx == (len(node.children) - 1)
-			result += renderLine(child.String(), spaces, last)
-			if len(child.children) > 0 {
+			result += renderLine(child.String(), spaces, last, child.collapsed)
+			if len(child.children) > 0 && !child.collapsed {
 				spacesChild := append(spaces, last)
-				result += walkTree(child, spacesChild)
+				result += walkTree(child, spacesChild, depth+1)
 			}
 		}
 		return result
 	}
 
-	return "." + newLine + walkTree(tree.Root(), []bool{})
+	return "." + newLine + walkTree(tree.Root(), []bool{}, 0)
 }
 
 func (node *Node) Copy() *Node {
