@@ -20,76 +20,27 @@ const (
 
 
 type FileTree struct {
-	root *Node
+	root *FileNode
 	size int
 	name string
-}
-
-type Node struct {
-	tree      *FileTree
-	parent    *Node
-	name      string
-	collapsed bool
-	data       *FileChangeInfo
-	children  map[string]*Node
 }
 
 func NewTree() (tree *FileTree) {
 	tree = new(FileTree)
 	tree.size = 0
-	tree.root = new(Node)
+	tree.root = new(FileNode)
 	tree.root.tree = tree
-	tree.root.children = make(map[string]*Node)
+	tree.root.children = make(map[string]*FileNode)
 	return tree
 }
 
-func NewNode(parent *Node, name string, data *FileChangeInfo) (node *Node) {
-	node = new(Node)
-	node.name = name
-	if data == nil {
-		data = &FileChangeInfo{}
-	}
-	node.data = data
-	node.children = make(map[string]*Node)
-	node.parent = parent
-	if parent != nil {
-		node.tree = parent.tree
-	}
-	return node
-}
-
-func (tree *FileTree) Root() *Node {
+func (tree *FileTree) Root() *FileNode {
 	return tree.root
-}
-
-func (node *Node) AddChild(name string, data *FileChangeInfo) (child *Node) {
-	child = NewNode(node, name, data)
-	if node.children[name] != nil {
-		// tree node already exists, replace the payload, keep the children
-		node.children[name].data = data
-	} else {
-		node.children[name] = child
-		node.tree.size++
-	}
-	return child
-}
-
-func (node *Node) Remove() error {
-	for _, child := range node.children {
-		child.Remove()
-	}
-	delete(node.parent.children, node.name)
-	node.tree.size--
-	return nil
-}
-
-func (node *Node) String() string {
-	return node.name
 }
 
 func (tree *FileTree) String() string {
 	var renderLine func(string, []bool, bool, bool) string
-	var walkTree func(*Node, []bool, int) string
+	var walkTree func(*FileNode, []bool, int) string
 
 	renderLine = func(nodeText string, spaces []bool, last bool, collapsed bool) string {
 		var otherBranches string
@@ -114,7 +65,7 @@ func (tree *FileTree) String() string {
 		return otherBranches + thisBranch + collapsedIndicator + nodeText + newLine
 	}
 
-	walkTree = func(node *Node, spaces []bool, depth int) string {
+	walkTree = func(node *FileNode, spaces []bool, depth int) string {
 		var result string
 		var keys []string
 		for key := range node.children {
@@ -137,16 +88,6 @@ func (tree *FileTree) String() string {
 	return "." + newLine + walkTree(tree.Root(), []bool{}, 0)
 }
 
-func (node *Node) Copy() *Node {
-	// newNode := new(Node)
-	// *newNode = *node
-	// return newNode
-	newNode := NewNode(node.parent, node.name, node.data)
-	for name, child := range node.children {
-		newNode.children[name] = child.Copy()
-	}
-	return newNode
-}
 
 func (tree *FileTree) Copy() *FileTree {
 	newTree := NewTree()
@@ -156,8 +97,8 @@ func (tree *FileTree) Copy() *FileTree {
 	return newTree
 }
 
-type Visiter func(*Node) error
-type VisitEvaluator func(*Node) bool
+type Visiter func(*FileNode) error
+type VisitEvaluator func(*FileNode) bool
 
 func (tree *FileTree) Visit(visiter Visiter) error {
 	return tree.root.Visit(visiter)
@@ -167,72 +108,8 @@ func (tree *FileTree) VisitDepthParentFirst(visiter Visiter, evaluator VisitEval
 	return tree.root.VisitDepthParentFirst(visiter, evaluator)
 }
 
-func (node *Node) Visit(visiter Visiter) error {
-	var keys []string
-	for key := range node.children {
-		keys = append(keys, key)
-	}
-	sort.Strings(keys)
-	for _, name := range keys {
-		child := node.children[name]
-		err := child.Visit(visiter)
-		if err != nil {
-			return err
-		}
-	}
-	return visiter(node)
-}
-
-func (node *Node) VisitDepthParentFirst(visiter Visiter, evaluator VisitEvaluator) error {
-	err := visiter(node)
-	if err != nil {
-		return err
-	}
-
-	var keys []string
-	for key := range node.children {
-		keys = append(keys, key)
-	}
-	sort.Strings(keys)
-	for _, name := range keys {
-		child := node.children[name]
-		if evaluator == nil || !evaluator(node) {
-			continue
-		}
-		err = child.VisitDepthParentFirst(visiter, evaluator)
-		if err != nil {
-			return err
-		}
-	}
-	return err
-}
-
-func (node *Node) IsWhiteout() bool {
-	return strings.HasPrefix(node.name, whiteoutPrefix)
-}
-
-func (node *Node) Path() string {
-	path := []string{}
-	curNode := node
-	for {
-		if curNode.parent == nil {
-			break
-		}
-
-		name := curNode.name
-		if curNode == node {
-			// white out prefixes are fictitious on leaf nodes
-			name = strings.TrimPrefix(name, whiteoutPrefix)
-		}
-
-		path = append([]string{name}, path...)
-		curNode = curNode.parent
-	}
-	return "/" + strings.Join(path, "/")
-}
-
 func (tree *FileTree) Stack(upper *FileTree) error {
-	graft := func(node *Node) error {
+	graft := func(node *FileNode) error {
 		if node.IsWhiteout() {
 			err := tree.RemovePath(node.Path())
 			if err != nil {
@@ -249,7 +126,7 @@ func (tree *FileTree) Stack(upper *FileTree) error {
 	return upper.Visit(graft)
 }
 
-func (tree *FileTree) GetNode(path string) (*Node, error) {
+func (tree *FileTree) GetNode(path string) (*FileNode, error) {
 	nodeNames := strings.Split(path, "/")
 	node := tree.Root()
 	for _, name := range nodeNames {
@@ -264,7 +141,7 @@ func (tree *FileTree) GetNode(path string) (*Node, error) {
 	return node, nil
 }
 
-func (tree *FileTree) AddPath(path string, data *FileChangeInfo) (*Node, error) {
+func (tree *FileTree) AddPath(path string, data *FileChangeInfo) (*FileNode, error) {
 	nodeNames := strings.Split(path, "/")
 	node := tree.Root()
 	for idx, name := range nodeNames {
@@ -295,4 +172,40 @@ func (tree *FileTree) RemovePath(path string) error {
 		return err
 	}
 	return node.Remove()
+}
+
+
+func (tree *FileTree) compare(upper *FileTree) error {
+	graft := func(node *FileNode) error {
+		if node.IsWhiteout() {
+			err := tree.MarkRemoved(node.Path())
+			if err != nil {
+				return fmt.Errorf("Cannot remove node %s: %v", node.Path(), err.Error())
+			}
+		} else {
+			existingNode, _ := tree.GetNode(node.Path())
+			if existingNode == nil {
+				newNode, err := tree.AddPath(node.Path(), node.data)
+				fmt.Printf("added new node at %s\n", newNode.Path())
+				if err != nil {
+					return fmt.Errorf("Cannot add new node %s: %v", node.Path(), err.Error())
+				}
+				newNode.AssignDiffType(Added)
+			} else {
+				diffType := existingNode.compare(node)
+				fmt.Printf("found existing node at %s\n", existingNode.Path())
+				existingNode.deriveDiffType(diffType)
+			}
+		}
+		return nil
+	}
+	return upper.Visit(graft)
+}
+
+func (tree *FileTree) MarkRemoved(path string) error {
+	node, err := tree.GetNode(path)
+	if err != nil {
+		return err
+	}
+	return node.AssignDiffType(Removed)
 }

@@ -124,12 +124,12 @@ func demo() {
 
 
 
-func getAbsPositionNode() (node *Node) {
-	var visiter func(*Node) error
-	var evaluator func(*Node) bool
+func getAbsPositionNode() (node *FileNode) {
+	var visiter func(*FileNode) error
+	var evaluator func(*FileNode) bool
 	var dfsCounter uint
 
-	visiter = func(curNode *Node) error {
+	visiter = func(curNode *FileNode) error {
 		if dfsCounter == data.absPosition {
 			node = curNode
 		}
@@ -137,7 +137,7 @@ func getAbsPositionNode() (node *Node) {
 		return nil
 	}
 
-	evaluator = func(curNode *Node) bool {
+	evaluator = func(curNode *FileNode) bool {
 		return !curNode.collapsed
 	}
 
@@ -154,7 +154,7 @@ func showCurNodeInSideBar(g *gocui.Gui, v *gocui.View) error {
 		v, _ := g.View("side")
 		// todo: handle above error.
 		v.Clear()
-		_, err := fmt.Fprintf(v, "Node:\n%+v\n", getAbsPositionNode())
+		_, err := fmt.Fprintf(v, "FileNode:\n%+v\n", getAbsPositionNode())
 		return err
 	})
 	// todo: blerg
