@@ -56,7 +56,9 @@ func NewNode(parent *Node, name string, data *FileChangeInfo) (node *Node) {
 	node.data = data
 	node.children = make(map[string]*Node)
 	node.parent = parent
-	node.tree = parent.tree // TODO: during copy, SIGSEGV here
+	if parent != nil {
+		node.tree = parent.tree
+	}
 	return node
 }
 
