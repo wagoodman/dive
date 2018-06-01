@@ -19,18 +19,12 @@ func tarReadDemo() {
 	}
 	defer f.Close()
 
-	// gzf, err := gzip.NewReader(f)
-	// if err != nil {
-	// 	fmt.Println(err)
-	// 	os.Exit(1)
-	// }
-
 	tarReader := tar.NewReader(f)
 	targetName := "manifest.json"
 	var m Manifest
 	var layerMap map[string]*FileTree
 	layerMap = make(map[string]*FileTree)
-	// var trees []*FileTree
+
 	for {
 		header, err := tarReader.Next()
 
@@ -52,7 +46,7 @@ func tarReadDemo() {
 		case tar.TypeDir:
 			continue
 		case tar.TypeReg:
-			//fmt.Println("File: ", name)
+
 			if strings.HasSuffix(name, "layer.tar") {
 				fmt.Println("Containing:")
 				tree := NewTree()
@@ -144,7 +138,7 @@ func makeEntry(r *tar.Reader, h *tar.Header, path string) FileChangeInfo {
 		return FileChangeInfo{
 			path:     path,
 			typeflag: h.Typeflag,
-			md5sum:   zeros,
+			md5sum:   [16]byte{},
 		}
 	}
 	fileBytes := make([]byte, h.Size)
@@ -160,9 +154,6 @@ func makeEntry(r *tar.Reader, h *tar.Header, path string) FileChangeInfo {
 		diffType: Unchanged,
 	}
 }
-
-var zeros = [16]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
-
 
 
 type Manifest struct {
