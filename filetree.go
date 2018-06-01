@@ -209,3 +209,11 @@ func (tree *FileTree) MarkRemoved(path string) error {
 	}
 	return node.AssignDiffType(Removed)
 }
+
+func StackRange(trees []*FileTree, index int) *FileTree {
+	tree := trees[0].Copy()
+	for idx := 1; idx < index; idx++ {
+		tree.Stack(trees[idx])
+	}
+	return tree
+}

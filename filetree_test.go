@@ -110,7 +110,7 @@ func TestStack(t *testing.T) {
 	err := tree1.Stack(tree2)
 
 	if err != nil {
-		t.Errorf("Could not stack trees: %v", err)
+		t.Errorf("Could not stack refTrees: %v", err)
 	}
 
 	expected := `.

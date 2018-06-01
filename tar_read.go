@@ -70,18 +70,12 @@ func initialize() {
 	var trees []*FileTree
 	trees = make([]*FileTree, 0)
 	for _, treeName := range manifest.Layers {
-		fmt.Printf("%s\n", treeName)
 		trees = append(trees, layerMap[treeName])
 	}
 
-	for ix := range trees {
-		if ix > 0 {
-			trees[0].Stack(trees[ix])
-		}
-	}
-	fmt.Printf("Manifest is %+v\n\n", manifest)
 	data.manifest = &manifest
-	data.tree = trees[0]
+	data.refTrees = trees
+	data.tree = StackRange(trees, 0)
 }
 
 func getFileList(parentReader *tar.Reader, h *tar.Header) []FileChangeInfo {
