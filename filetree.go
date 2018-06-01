@@ -93,6 +93,10 @@ func (tree *FileTree) Copy() *FileTree {
 	newTree := NewTree()
 	*newTree = *tree
 	newTree.root = tree.Root().Copy()
+	newTree.Visit(func(node *FileNode) error {
+		node.tree = newTree
+		return nil
+	})
 
 	return newTree
 }
