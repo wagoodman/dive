@@ -18,8 +18,8 @@ var data struct {
 	tree            *FileTree
 	refTrees        []*FileTree
 	manifest        *Manifest
-	absDFSTreeIndex int
-	layerIndex      int
+	absDFSTreeIndex uint
+	layerIndex      uint
 }
 
 func check(e error) {
@@ -118,7 +118,7 @@ func demo() {
 func getAbsPositionNode() (node *FileNode) {
 	var visiter func(*FileNode) error
 	var evaluator func(*FileNode) bool
-	var dfsCounter int
+	var dfsCounter uint
 
 	visiter = func(curNode *FileNode) error {
 		if dfsCounter == data.absDFSTreeIndex {
