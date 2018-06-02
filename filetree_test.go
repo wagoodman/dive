@@ -1,8 +1,8 @@
 package main
 
 import (
-	"testing"
 	"fmt"
+	"testing"
 )
 
 func TestPrintTree(t *testing.T) {
@@ -171,8 +171,6 @@ func TestCopy(t *testing.T) {
 
 }
 
-
-
 func TestCompareWithNoChanges(t *testing.T) {
 	lowerTree := NewTree()
 	upperTree := NewTree()
@@ -299,3 +297,42 @@ func TestCompareWithChanges(t *testing.T) {
 	}
 }
 
+func TestStackRange(t *testing.T) {
+	tree := NewTree()
+	tree.AddPath("/etc/nginx/nginx.conf", nil)
+	tree.AddPath("/etc/nginx/public", nil)
+	tree.AddPath("/var/run/systemd", nil)
+	tree.AddPath("/var/run/bashful", nil)
+	tree.AddPath("/tmp", nil)
+	tree.AddPath("/tmp/nonsense", nil)
+
+	tree.RemovePath("/var/run/bashful")
+	tree.RemovePath("/tmp")
+
+	lowerTree := NewTree()
+	upperTree := NewTree()
+	lowerPaths := [...]string{"/etc", "/usr", "/etc/hosts", "/etc/sudoers", "/usr/bin"}
+	upperPaths := [...]string{"/etc", "/usr", "/etc/hosts", "/etc/sudoers", "/usr/bin"}
+
+	for _, value := range lowerPaths {
+		fakeData := FileChangeInfo{
+			path:     value,
+			typeflag: 1,
+			md5sum:   [16]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+			diffType: Unchanged,
+		}
+		lowerTree.AddPath(value, &fakeData)
+	}
+
+	for _, value := range upperPaths {
+		fakeData := FileChangeInfo{
+			path:     value,
+			typeflag: 1,
+			md5sum:   [16]byte{1, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0},
+			diffType: Unchanged,
+		}
+		upperTree.AddPath(value, &fakeData)
+	}
+	trees := []*FileTree{lowerTree, upperTree, tree}
+	StackRange(trees, 2)
+}
