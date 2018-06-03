@@ -149,7 +149,6 @@ func nextView(g *gocui.Gui, v *gocui.View) error {
 	return err
 }
 
-
 func showCurNodeInSideBar(g *gocui.Gui, v *gocui.View) error {
 	g.Update(func(g *gocui.Gui) error {
 		v, _ := g.View("side")
@@ -197,7 +196,7 @@ func cursorUp(g *gocui.Gui, v *gocui.View) error {
 }
 
 func cursorDownLayers(g *gocui.Gui, v *gocui.View) error {
-	if v != nil {
+	if v != nil && int(data.layerIndex) < len(data.manifest.Layers) {
 		cursorDown(g, v)
 		data.layerIndex++
 		showCurNodeInSideBar(g, v)
@@ -208,7 +207,7 @@ func cursorDownLayers(g *gocui.Gui, v *gocui.View) error {
 }
 
 func cursorUpLayers(g *gocui.Gui, v *gocui.View) error {
-	if v != nil {
+	if v != nil && int(data.layerIndex) > 0 {
 		cursorUp(g, v)
 		data.layerIndex--
 		showCurNodeInSideBar(g, v)
@@ -317,7 +316,7 @@ func layout(g *gocui.Gui) error {
 }
 
 func main() {
-	//demo()
+	demo()
 	initialize()
 
 	g, err := gocui.NewGui(gocui.OutputNormal)
