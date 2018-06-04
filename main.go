@@ -19,10 +19,9 @@ var data struct {
 	manifest *Manifest
 }
 
-var view struct {
-	treeView *FileTreeView
-	// layerView   *LayerView
-	layerIndex uint
+var views struct {
+	treeView  *FileTreeView
+	layerView *LayerView
 }
 
 func check(e error) {
@@ -119,11 +118,11 @@ func demo() {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 func nextView(g *gocui.Gui, v *gocui.View) error {
-	if v == nil || v.Name() == "side" {
-		_, err := g.SetCurrentView("main")
+	if v == nil || v.Name() == views.layerView.name {
+		_, err := g.SetCurrentView(views.treeView.name)
 		return err
 	}
-	_, err := g.SetCurrentView("side")
+	_, err := g.SetCurrentView(views.layerView.name)
 	return err
 }
 
@@ -175,12 +174,6 @@ func keybindings(g *gocui.Gui) error {
 	if err := g.SetKeybinding("main", gocui.KeyCtrlSpace, gocui.ModNone, nextView); err != nil {
 		return err
 	}
-	if err := g.SetKeybinding("side", gocui.KeyArrowDown, gocui.ModNone, cursorDownLayers); err != nil {
-		return err
-	}
-	if err := g.SetKeybinding("side", gocui.KeyArrowUp, gocui.ModNone, cursorUpLayers); err != nil {
-		return err
-	}
 
 	return nil
 }
@@ -192,21 +185,19 @@ func layout(g *gocui.Gui) error {
 		if err != gocui.ErrUnknownView {
 			return err
 		}
-		v.Wrap = true
-		v.Highlight = true
-		v.SelBgColor = gocui.ColorGreen
-		v.SelFgColor = gocui.ColorBlack
-		renderSideBar(g, v)
+		views.layerView = NewLayerView("side", g, v, data.manifest)
+		views.layerView.keybindings()
+
 	}
 	if v, err := g.SetView("main", splitCol, -1, maxX, maxY); err != nil {
 		if err != gocui.ErrUnknownView {
 			return err
 		}
 
-		view.treeView = NewFileTreeView("main", g, v, StackRange(data.refTrees, 0))
-		view.treeView.keybindings()
+		views.treeView = NewFileTreeView("main", g, v, StackRange(data.refTrees, 0))
+		views.treeView.keybindings()
 
-		if _, err := g.SetCurrentView("main"); err != nil {
+		if _, err := g.SetCurrentView(views.treeView.name); err != nil {
 			return err
 		}
 	}

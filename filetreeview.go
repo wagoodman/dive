@@ -35,50 +35,50 @@ func NewFileTreeView(name string, gui *gocui.Gui, view *gocui.View, tree *FileTr
 	return treeview
 }
 
-func (treeview *FileTreeView) keybindings() error {
-	if err := treeview.gui.SetKeybinding(treeview.name, gocui.KeyArrowDown, gocui.ModNone, func(*gocui.Gui, *gocui.View) error { return treeview.cursorDown() }); err != nil {
+func (view *FileTreeView) keybindings() error {
+	if err := view.gui.SetKeybinding(view.name, gocui.KeyArrowDown, gocui.ModNone, func(*gocui.Gui, *gocui.View) error { return view.cursorDown() }); err != nil {
 		return err
 	}
-	if err := treeview.gui.SetKeybinding(treeview.name, gocui.KeyArrowUp, gocui.ModNone, func(*gocui.Gui, *gocui.View) error { return treeview.cursorUp() }); err != nil {
+	if err := view.gui.SetKeybinding(view.name, gocui.KeyArrowUp, gocui.ModNone, func(*gocui.Gui, *gocui.View) error { return view.cursorUp() }); err != nil {
 		return err
 	}
-	if err := treeview.gui.SetKeybinding(treeview.name, gocui.KeySpace, gocui.ModNone, func(*gocui.Gui, *gocui.View) error { return treeview.toggleCollapse() }); err != nil {
+	if err := view.gui.SetKeybinding(view.name, gocui.KeySpace, gocui.ModNone, func(*gocui.Gui, *gocui.View) error { return view.toggleCollapse() }); err != nil {
 		return err
 	}
 	return nil
 }
 
 // Mehh, this is just a bad method
-func (treeview *FileTreeView) reset(tree *FileTree) error {
-	treeview.tree = tree
-	treeview.view.SetCursor(0, 0)
-	treeview.absTreeIndex = 0
-	return treeview.render()
+func (view *FileTreeView) reset(tree *FileTree) error {
+	view.tree = tree
+	view.view.SetCursor(0, 0)
+	view.absTreeIndex = 0
+	return view.render()
 }
 
-func (treeview *FileTreeView) cursorDown() error {
-	err := cursorDown(treeview.gui, treeview.view)
+func (view *FileTreeView) cursorDown() error {
+	err := cursorDown(view.gui, view.view)
 	if err == nil {
-		treeview.absTreeIndex++
+		view.absTreeIndex++
 	}
 	return nil
 }
 
-func (treeview *FileTreeView) cursorUp() error {
-	err := cursorUp(treeview.gui, treeview.view)
+func (view *FileTreeView) cursorUp() error {
+	err := cursorUp(view.gui, view.view)
 	if err == nil {
-		treeview.absTreeIndex--
+		view.absTreeIndex--
 	}
 	return nil
 }
 
-func (treeview *FileTreeView) getAbsPositionNode() (node *FileNode) {
+func (view *FileTreeView) getAbsPositionNode() (node *FileNode) {
 	var visiter func(*FileNode) error
 	var evaluator func(*FileNode) bool
 	var dfsCounter uint
 
 	visiter = func(curNode *FileNode) error {
-		if dfsCounter == treeview.absTreeIndex {
+		if dfsCounter == view.absTreeIndex {
 			node = curNode
 		}
 		dfsCounter++
@@ -89,7 +89,7 @@ func (treeview *FileTreeView) getAbsPositionNode() (node *FileNode) {
 		return !curNode.collapsed
 	}
 
-	err := treeview.tree.VisitDepthParentFirst(visiter, evaluator)
+	err := view.tree.VisitDepthParentFirst(visiter, evaluator)
 	if err != nil {
 		// todo: you guessed it, check errors
 	}
@@ -97,17 +97,17 @@ func (treeview *FileTreeView) getAbsPositionNode() (node *FileNode) {
 	return node
 }
 
-func (treeview *FileTreeView) toggleCollapse() error {
-	node := treeview.getAbsPositionNode()
+func (view *FileTreeView) toggleCollapse() error {
+	node := view.getAbsPositionNode()
 	node.collapsed = !node.collapsed
-	return treeview.render()
+	return view.render()
 }
 
-func (treeview *FileTreeView) render() error {
-	renderString := treeview.tree.String()
-	treeview.gui.Update(func(g *gocui.Gui) error {
-		treeview.view.Clear()
-		_, err := fmt.Fprintln(treeview.view, renderString)
+func (view *FileTreeView) render() error {
+	renderString := view.tree.String()
+	view.gui.Update(func(g *gocui.Gui) error {
+		view.view.Clear()
+		_, err := fmt.Fprintln(view.view, renderString)
 		return err
 	})
 	return nil
