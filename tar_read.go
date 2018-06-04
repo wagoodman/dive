@@ -11,7 +11,7 @@ import (
 	"strings"
 )
 
-func initialize() {
+func initializeData() {
 	f, err := os.Open("image/cache.tar")
 	if err != nil {
 		fmt.Println(err)
@@ -75,7 +75,6 @@ func initialize() {
 
 	data.manifest = &manifest
 	data.refTrees = trees
-	data.tree = StackRange(trees, 0)
 }
 
 func getFileList(parentReader *tar.Reader, h *tar.Header) []FileChangeInfo {

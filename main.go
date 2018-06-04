@@ -15,11 +15,14 @@ import (
 )
 
 var data struct {
-	tree            *FileTree
-	refTrees        []*FileTree
-	manifest        *Manifest
-	absDFSTreeIndex uint
-	layerIndex      uint
+	refTrees []*FileTree
+	manifest *Manifest
+}
+
+var view struct {
+	treeView *FileTreeView
+	// layerView   *LayerView
+	layerIndex uint
 }
 
 func check(e error) {
@@ -115,31 +118,6 @@ func demo() {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-func getAbsPositionNode() (node *FileNode) {
-	var visiter func(*FileNode) error
-	var evaluator func(*FileNode) bool
-	var dfsCounter uint
-
-	visiter = func(curNode *FileNode) error {
-		if dfsCounter == data.absDFSTreeIndex {
-			node = curNode
-		}
-		dfsCounter++
-		return nil
-	}
-
-	evaluator = func(curNode *FileNode) bool {
-		return !curNode.collapsed
-	}
-
-	err := data.tree.VisitDepthParentFirst(visiter, evaluator)
-	if err != nil {
-		// todo: you guessed it, check errors
-	}
-
-	return node
-}
-
 func nextView(g *gocui.Gui, v *gocui.View) error {
 	if v == nil || v.Name() == "side" {
 		_, err := g.SetCurrentView("main")
@@ -147,21 +125,6 @@ func nextView(g *gocui.Gui, v *gocui.View) error {
 	}
 	_, err := g.SetCurrentView("side")
 	return err
-}
-
-func showCurNodeInSideBar(g *gocui.Gui, v *gocui.View) error {
-	g.Update(func(g *gocui.Gui) error {
-		v, _ := g.View("side")
-		// todo: handle above error.
-		v.Clear()
-		//_, err := fmt.Fprintf(v, "FileNode:\n%+v\n\n", getAbsPositionNode())
-		for ix, layerName := range data.manifest.Layers {
-			fmt.Fprintf(v, "%d: %s\n", ix+1, layerName[0:25])
-		}
-		return nil
-	})
-	// todo: blerg
-	return nil
 }
 
 func cursorDown(g *gocui.Gui, v *gocui.View) error {
@@ -195,61 +158,6 @@ func cursorUp(g *gocui.Gui, v *gocui.View) error {
 	return nil
 }
 
-func cursorDownLayers(g *gocui.Gui, v *gocui.View) error {
-	if v != nil && int(data.layerIndex) < len(data.manifest.Layers) {
-		cursorDown(g, v)
-		data.layerIndex++
-		showCurNodeInSideBar(g, v)
-		data.tree = StackRange(data.refTrees, data.layerIndex)
-		drawTree(g, v)
-	}
-	return nil
-}
-
-func cursorUpLayers(g *gocui.Gui, v *gocui.View) error {
-	if v != nil && int(data.layerIndex) > 0 {
-		cursorUp(g, v)
-		data.layerIndex--
-		showCurNodeInSideBar(g, v)
-		data.tree = StackRange(data.refTrees, data.layerIndex)
-		drawTree(g, v)
-	}
-	return nil
-}
-
-func cursorDownTree(g *gocui.Gui, v *gocui.View) error {
-	if v != nil {
-		cursorDown(g, v)
-		data.absDFSTreeIndex++
-	}
-	return nil
-}
-
-func cursorUpTree(g *gocui.Gui, v *gocui.View) error {
-	if v != nil {
-		cursorUp(g, v)
-		data.absDFSTreeIndex--
-	}
-	return nil
-}
-
-func toggleCollapse(g *gocui.Gui, v *gocui.View) error {
-	node := getAbsPositionNode()
-	node.collapsed = !node.collapsed
-	return drawTree(g, v)
-}
-
-func drawTree(g *gocui.Gui, v *gocui.View) error {
-	g.Update(func(g *gocui.Gui) error {
-		v, _ := g.View("main")
-		// todo: handle above error.
-		v.Clear()
-		_, err := fmt.Fprintln(v, data.tree.String())
-		return err
-	})
-	return nil
-}
-
 func quit(g *gocui.Gui, v *gocui.View) error {
 	return gocui.ErrQuit
 }
@@ -273,15 +181,7 @@ func keybindings(g *gocui.Gui) error {
 	if err := g.SetKeybinding("side", gocui.KeyArrowUp, gocui.ModNone, cursorUpLayers); err != nil {
 		return err
 	}
-	if err := g.SetKeybinding("main", gocui.KeyArrowDown, gocui.ModNone, cursorDownTree); err != nil {
-		return err
-	}
-	if err := g.SetKeybinding("main", gocui.KeyArrowUp, gocui.ModNone, cursorUpTree); err != nil {
-		return err
-	}
-	if err := g.SetKeybinding("main", gocui.KeySpace, gocui.ModNone, toggleCollapse); err != nil {
-		return err
-	}
+
 	return nil
 }
 
@@ -296,28 +196,26 @@ func layout(g *gocui.Gui) error {
 		v.Highlight = true
 		v.SelBgColor = gocui.ColorGreen
 		v.SelFgColor = gocui.ColorBlack
-		showCurNodeInSideBar(g, v)
+		renderSideBar(g, v)
 	}
 	if v, err := g.SetView("main", splitCol, -1, maxX, maxY); err != nil {
 		if err != gocui.ErrUnknownView {
 			return err
 		}
-		v.Editable = false
-		v.Wrap = false
-		v.Highlight = true
-		v.SelBgColor = gocui.ColorGreen
-		v.SelFgColor = gocui.ColorBlack
+
+		view.treeView = NewFileTreeView("main", g, v, StackRange(data.refTrees, 0))
+		view.treeView.keybindings()
+
 		if _, err := g.SetCurrentView("main"); err != nil {
 			return err
 		}
-		drawTree(g, v)
 	}
 	return nil
 }
 
 func main() {
 	demo()
-	initialize()
+	initializeData()
 
 	g, err := gocui.NewGui(gocui.OutputNormal)
 	if err != nil {
