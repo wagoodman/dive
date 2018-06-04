@@ -10,7 +10,7 @@ type FileNode struct {
 	parent    *FileNode
 	name      string
 	collapsed bool
-	data       *FileChangeInfo
+	data      *FileChangeInfo
 	children  map[string]*FileNode
 }
 
@@ -39,7 +39,6 @@ func (node *FileNode) Copy() *FileNode {
 	}
 	return newNode
 }
-
 
 func (node *FileNode) AddChild(name string, data *FileChangeInfo) (child *FileNode) {
 	child = NewNode(node, name, data)
@@ -81,7 +80,6 @@ func (node *FileNode) Visit(visiter Visiter) error {
 	}
 	return visiter(node)
 }
-
 
 func (node *FileNode) VisitDepthParentFirst(visiter Visiter, evaluator VisitEvaluator) error {
 	err := visiter(node)
@@ -130,7 +128,6 @@ func (node *FileNode) Path() string {
 	}
 	return "/" + strings.Join(path, "/")
 }
-
 
 func (node *FileNode) IsLeaf() bool {
 	return len(node.children) == 0

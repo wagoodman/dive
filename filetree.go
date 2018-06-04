@@ -18,7 +18,6 @@ const (
 	collapsedItem   = "⊕ "
 )
 
-
 type FileTree struct {
 	root *FileNode
 	size int
@@ -87,7 +86,6 @@ func (tree *FileTree) String() string {
 
 	return "." + newLine + walkTree(tree.Root(), []bool{}, 0)
 }
-
 
 func (tree *FileTree) Copy() *FileTree {
 	newTree := NewTree()
@@ -177,7 +175,6 @@ func (tree *FileTree) RemovePath(path string) error {
 	}
 	return node.Remove()
 }
-
 
 func (tree *FileTree) compare(upper *FileTree) error {
 	graft := func(node *FileNode) error {

@@ -1,8 +1,8 @@
 package main
 
 import (
-	"fmt"
 	"bytes"
+	"fmt"
 )
 
 type FileChangeInfo struct {
@@ -58,5 +58,3 @@ func (a *FileChangeInfo) getDiffType(b *FileChangeInfo) DiffType {
 	}
 	return Changed
 }
-
-

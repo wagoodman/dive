@@ -2,7 +2,6 @@ package main
 
 import "testing"
 
-
 func TestAddChild(t *testing.T) {
 	var expected, actual int
 	tree := NewTree()
