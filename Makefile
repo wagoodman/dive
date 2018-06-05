@@ -13,7 +13,7 @@ install: deps
 
 deps:
 	command -v dep >/dev/null || go get -u github.com/golang/dep/cmd/dep
-	dep ensure
+	$(GOPATH)/bin/dep ensure
 
 test: build
 	@! git grep tcell -- ':!tui/' ':!Gopkg.lock' ':!Gopkg.toml' ':!Makefile'
