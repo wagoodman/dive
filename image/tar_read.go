@@ -1,4 +1,4 @@
-package main
+package image
 
 import (
 	"archive/tar"
@@ -9,10 +9,12 @@ import (
 	"io"
 	"os"
 	"strings"
+
+	"github.com/wagoodman/docker-image-explorer/filetree"
 )
 
-func initializeData() {
-	f, err := os.Open("image/cache.tar")
+func InitializeData() (*Manifest, []*filetree.FileTree) {
+	f, err := os.Open("./.image/cache.tar")
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
@@ -22,8 +24,8 @@ func initializeData() {
 	tarReader := tar.NewReader(f)
 	targetName := "manifest.json"
 	var manifest Manifest
-	var layerMap map[string]*FileTree
-	layerMap = make(map[string]*FileTree)
+	var layerMap map[string]*filetree.FileTree
+	layerMap = make(map[string]*filetree.FileTree)
 
 	for {
 		header, err := tarReader.Next()
@@ -49,14 +51,14 @@ func initializeData() {
 
 			if strings.HasSuffix(name, "layer.tar") {
 				fmt.Println("Containing:")
-				tree := NewTree()
-				tree.name = name
-				fmt.Printf("%s\n", tree.name)
+				tree := filetree.NewFileTree()
+				tree.Name = name
+				fmt.Printf("%s\n", tree.Name)
 				fileInfos := getFileList(tarReader, header)
 				for _, element := range fileInfos {
-					tree.AddPath(element.path, &element)
+					tree.AddPath(element.Path, &element)
 				}
-				layerMap[tree.name] = tree
+				layerMap[tree.Name] = tree
 			}
 		default:
 			fmt.Printf("%s : %c %s %s\n",
@@ -67,18 +69,17 @@ func initializeData() {
 			)
 		}
 	}
-	var trees []*FileTree
-	trees = make([]*FileTree, 0)
+	var trees []*filetree.FileTree
+	trees = make([]*filetree.FileTree, 0)
 	for _, treeName := range manifest.Layers {
 		trees = append(trees, layerMap[treeName])
 	}
 
-	data.manifest = &manifest
-	data.refTrees = trees
+	return &manifest, trees
 }
 
-func getFileList(parentReader *tar.Reader, h *tar.Header) []FileChangeInfo {
-	var files []FileChangeInfo
+func getFileList(parentReader *tar.Reader, h *tar.Header) []filetree.FileChangeInfo {
+	var files []filetree.FileChangeInfo
 	size := h.Size
 	tarredBytes := make([]byte, size)
 	_, err := parentReader.Read(tarredBytes)
@@ -121,12 +122,12 @@ func getFileList(parentReader *tar.Reader, h *tar.Header) []FileChangeInfo {
 	return files
 }
 
-func makeEntry(r *tar.Reader, h *tar.Header, path string) FileChangeInfo {
+func makeEntry(r *tar.Reader, h *tar.Header, path string) filetree.FileChangeInfo {
 	if h.Typeflag == tar.TypeDir {
-		return FileChangeInfo{
-			path:     path,
-			typeflag: h.Typeflag,
-			md5sum:   [16]byte{},
+		return filetree.FileChangeInfo{
+			Path:     path,
+			Typeflag: h.Typeflag,
+			MD5sum:   [16]byte{},
 		}
 	}
 	fileBytes := make([]byte, h.Size)
@@ -135,11 +136,11 @@ func makeEntry(r *tar.Reader, h *tar.Header, path string) FileChangeInfo {
 		panic(err)
 	}
 	hash := md5.Sum(fileBytes)
-	return FileChangeInfo{
-		path:     path,
-		typeflag: h.Typeflag,
-		md5sum:   hash,
-		diffType: Unchanged,
+	return filetree.FileChangeInfo{
+		Path:     path,
+		Typeflag: h.Typeflag,
+		MD5sum:   hash,
+		DiffType: filetree.Unchanged,
 	}
 }
 

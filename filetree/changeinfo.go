@@ -1,4 +1,4 @@
-package main
+package filetree
 
 import (
 	"bytes"
@@ -6,10 +6,10 @@ import (
 )
 
 type FileChangeInfo struct {
-	path     string
-	typeflag byte
-	md5sum   [16]byte
-	diffType DiffType
+	Path     string
+	Typeflag byte
+	MD5sum   [16]byte
+	DiffType DiffType
 }
 
 type DiffType int
@@ -51,8 +51,8 @@ func (a *FileChangeInfo) getDiffType(b *FileChangeInfo) DiffType {
 	if a == nil || b == nil {
 		return Changed
 	}
-	if a.typeflag == b.typeflag {
-		if bytes.Compare(a.md5sum[:], b.md5sum[:]) == 0 {
+	if a.Typeflag == b.Typeflag {
+		if bytes.Compare(a.MD5sum[:], b.MD5sum[:]) == 0 {
 			return Unchanged
 		}
 	}

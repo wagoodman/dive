@@ -1,4 +1,4 @@
-package main
+package filetree
 
 import (
 	"errors"
@@ -19,22 +19,18 @@ const (
 )
 
 type FileTree struct {
-	root *FileNode
-	size int
-	name string
+	Root *FileNode
+	Size int
+	Name string
 }
 
-func NewTree() (tree *FileTree) {
+func NewFileTree() (tree *FileTree) {
 	tree = new(FileTree)
-	tree.size = 0
-	tree.root = new(FileNode)
-	tree.root.tree = tree
-	tree.root.children = make(map[string]*FileNode)
+	tree.Size = 0
+	tree.Root = new(FileNode)
+	tree.Root.Tree = tree
+	tree.Root.Children = make(map[string]*FileNode)
 	return tree
-}
-
-func (tree *FileTree) Root() *FileNode {
-	return tree.root
 }
 
 func (tree *FileTree) String() string {
@@ -67,16 +63,16 @@ func (tree *FileTree) String() string {
 	walkTree = func(node *FileNode, spaces []bool, depth int) string {
 		var result string
 		var keys []string
-		for key := range node.children {
+		for key := range node.Children {
 			keys = append(keys, key)
 		}
 		sort.Strings(keys)
 		for idx, name := range keys {
-			child := node.children[name]
-			last := idx == (len(node.children) - 1)
-			showCollapsed := child.collapsed && len(child.children) > 0
+			child := node.Children[name]
+			last := idx == (len(node.Children) - 1)
+			showCollapsed := child.Collapsed && len(child.Children) > 0
 			result += renderLine(child.String(), spaces, last, showCollapsed)
-			if len(child.children) > 0 && !child.collapsed {
+			if len(child.Children) > 0 && !child.Collapsed {
 				spacesChild := append(spaces, last)
 				result += walkTree(child, spacesChild, depth+1)
 			}
@@ -84,15 +80,15 @@ func (tree *FileTree) String() string {
 		return result
 	}
 
-	return "." + newLine + walkTree(tree.Root(), []bool{}, 0)
+	return "." + newLine + walkTree(tree.Root, []bool{}, 0)
 }
 
 func (tree *FileTree) Copy() *FileTree {
-	newTree := NewTree()
+	newTree := NewFileTree()
 	*newTree = *tree
-	newTree.root = tree.Root().Copy()
+	newTree.Root = tree.Root.Copy()
 	newTree.Visit(func(node *FileNode) error {
-		node.tree = newTree
+		node.Tree = newTree
 		return nil
 	})
 
@@ -103,11 +99,11 @@ type Visiter func(*FileNode) error
 type VisitEvaluator func(*FileNode) bool
 
 func (tree *FileTree) Visit(visiter Visiter) error {
-	return tree.root.Visit(visiter)
+	return tree.Root.Visit(visiter)
 }
 
 func (tree *FileTree) VisitDepthParentFirst(visiter Visiter, evaluator VisitEvaluator) error {
-	return tree.root.VisitDepthParentFirst(visiter, evaluator)
+	return tree.Root.VisitDepthParentFirst(visiter, evaluator)
 }
 
 func (tree *FileTree) Stack(upper *FileTree) error {
@@ -118,7 +114,7 @@ func (tree *FileTree) Stack(upper *FileTree) error {
 				return fmt.Errorf("Cannot remove node %s: %v", node.Path(), err.Error())
 			}
 		} else {
-			newNode, err := tree.AddPath(node.Path(), node.data)
+			newNode, err := tree.AddPath(node.Path(), node.Data)
 			if err != nil {
 				return fmt.Errorf("Cannot add node %s: %v", newNode.Path(), err.Error())
 			}
@@ -130,38 +126,38 @@ func (tree *FileTree) Stack(upper *FileTree) error {
 
 func (tree *FileTree) GetNode(path string) (*FileNode, error) {
 	nodeNames := strings.Split(path, "/")
-	node := tree.Root()
+	node := tree.Root
 	for _, name := range nodeNames {
 		if name == "" {
 			continue
 		}
-		if node.children[name] == nil {
+		if node.Children[name] == nil {
 			return nil, errors.New("Path does not exist")
 		}
-		node = node.children[name]
+		node = node.Children[name]
 	}
 	return node, nil
 }
 
 func (tree *FileTree) AddPath(path string, data *FileChangeInfo) (*FileNode, error) {
 	nodeNames := strings.Split(path, "/")
-	node := tree.Root()
+	node := tree.Root
 	for idx, name := range nodeNames {
 		if name == "" {
 			continue
 		}
 		// find or create node
-		if node.children[name] != nil {
-			node = node.children[name]
+		if node.Children[name] != nil {
+			node = node.Children[name]
 		} else {
 			// don't attach the payload. The payload is destined for the
-			// path's end node, not any intermediary node.
+			// Path's end node, not any intermediary node.
 			node = node.AddChild(name, nil)
 		}
 
 		// attach payload to the last specified node
 		if idx == len(nodeNames)-1 {
-			node.data = data
+			node.Data = data
 		}
 
 	}
@@ -186,7 +182,7 @@ func (tree *FileTree) compare(upper *FileTree) error {
 		} else {
 			existingNode, _ := tree.GetNode(node.Path())
 			if existingNode == nil {
-				newNode, err := tree.AddPath(node.Path(), node.data)
+				newNode, err := tree.AddPath(node.Path(), node.Data)
 				fmt.Printf("added new node at %s\n", newNode.Path())
 				if err != nil {
 					return fmt.Errorf("Cannot add new node %s: %v", node.Path(), err.Error())

@@ -1,4 +1,4 @@
-package main
+package filetree
 
 import (
 	"fmt"
@@ -6,10 +6,10 @@ import (
 )
 
 func TestPrintTree(t *testing.T) {
-	tree := NewTree()
-	tree.Root().AddChild("first node!", nil)
-	two := tree.Root().AddChild("second node!", nil)
-	tree.Root().AddChild("third node!", nil)
+	tree := NewFileTree()
+	tree.Root.AddChild("first node!", nil)
+	two := tree.Root.AddChild("second node!", nil)
+	tree.Root.AddChild("third node!", nil)
 	two.AddChild("forth, one level down...", nil)
 
 	expected := `.
@@ -27,7 +27,7 @@ func TestPrintTree(t *testing.T) {
 }
 
 func TestAddPath(t *testing.T) {
-	tree := NewTree()
+	tree := NewFileTree()
 	tree.AddPath("/etc/nginx/nginx.conf", nil)
 	tree.AddPath("/etc/nginx/public", nil)
 	tree.AddPath("/var/run/systemd", nil)
@@ -56,7 +56,7 @@ func TestAddPath(t *testing.T) {
 }
 
 func TestRemovePath(t *testing.T) {
-	tree := NewTree()
+	tree := NewFileTree()
 	tree.AddPath("/etc/nginx/nginx.conf", nil)
 	tree.AddPath("/etc/nginx/public", nil)
 	tree.AddPath("/var/run/systemd", nil)
@@ -87,10 +87,10 @@ func TestRemovePath(t *testing.T) {
 func TestStack(t *testing.T) {
 	payloadKey := "/var/run/systemd"
 	payloadValue := FileChangeInfo{
-		path: "yup",
+		Path: "yup",
 	}
 
-	tree1 := NewTree()
+	tree1 := NewFileTree()
 
 	tree1.AddPath("/etc/nginx/public", nil)
 	tree1.AddPath(payloadKey, nil)
@@ -98,7 +98,7 @@ func TestStack(t *testing.T) {
 	tree1.AddPath("/tmp", nil)
 	tree1.AddPath("/tmp/nonsense", nil)
 
-	tree2 := NewTree()
+	tree2 := NewFileTree()
 	// add new files
 	tree2.AddPath("/etc/nginx/nginx.conf", nil)
 	// modify current files
@@ -128,8 +128,8 @@ func TestStack(t *testing.T) {
 		t.Errorf("Expected '%s' to still exist, but it doesn't", payloadKey)
 	}
 
-	if *node.data != payloadValue {
-		t.Errorf("Expected '%s' value to be %+v but got %+v", payloadKey, payloadValue, node.data)
+	if *node.Data != payloadValue {
+		t.Errorf("Expected '%s' value to be %+v but got %+v", payloadKey, payloadValue, node.Data)
 	}
 
 	actual := tree1.String()
@@ -141,7 +141,7 @@ func TestStack(t *testing.T) {
 }
 
 func TestCopy(t *testing.T) {
-	tree := NewTree()
+	tree := NewFileTree()
 	tree.AddPath("/etc/nginx/nginx.conf", nil)
 	tree.AddPath("/etc/nginx/public", nil)
 	tree.AddPath("/var/run/systemd", nil)
@@ -162,8 +162,8 @@ func TestCopy(t *testing.T) {
         └── systemd
 `
 
-	newTree := tree.Copy()
-	actual := newTree.String()
+	NewFileTree := tree.Copy()
+	actual := NewFileTree.String()
 
 	if expected != actual {
 		t.Errorf("Expected tree string:\n--->%s<---\nGot:\n--->%s<---", expected, actual)
@@ -172,16 +172,16 @@ func TestCopy(t *testing.T) {
 }
 
 func TestCompareWithNoChanges(t *testing.T) {
-	lowerTree := NewTree()
-	upperTree := NewTree()
+	lowerTree := NewFileTree()
+	upperTree := NewFileTree()
 	paths := [...]string{"/etc", "/etc/sudoers", "/etc/hosts", "/usr/bin", "/usr/bin/bash", "/usr"}
 
 	for _, value := range paths {
 		fakeData := FileChangeInfo{
-			path:     value,
-			typeflag: 1,
-			md5sum:   [16]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-			diffType: Unchanged,
+			Path:     value,
+			Typeflag: 1,
+			MD5sum:   [16]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+			DiffType: Unchanged,
 		}
 		lowerTree.AddPath(value, &fakeData)
 		upperTree.AddPath(value, &fakeData)
@@ -191,12 +191,12 @@ func TestCompareWithNoChanges(t *testing.T) {
 		if n.Path() == "/" {
 			return nil
 		}
-		if n.data == nil {
+		if n.Data == nil {
 			t.Errorf("Expected *FileChangeInfo but got nil")
 			return fmt.Errorf("expected *FileChangeInfo but got nil")
 		}
-		if (n.data.diffType) != Unchanged {
-			t.Errorf("Expecting node at %s to have DiffType unchanged, but had %v", n.Path(), n.data.diffType)
+		if (n.Data.DiffType) != Unchanged {
+			t.Errorf("Expecting node at %s to have DiffType unchanged, but had %v", n.Path(), n.Data.DiffType)
 		}
 		return nil
 	}
@@ -207,27 +207,27 @@ func TestCompareWithNoChanges(t *testing.T) {
 }
 
 func TestCompareWithAdds(t *testing.T) {
-	lowerTree := NewTree()
-	upperTree := NewTree()
+	lowerTree := NewFileTree()
+	upperTree := NewFileTree()
 	lowerPaths := [...]string{"/etc", "/etc/sudoers", "/usr", "/etc/hosts", "/usr/bin"}
 	upperPaths := [...]string{"/etc", "/etc/sudoers", "/usr", "/etc/hosts", "/usr/bin", "/usr/bin/bash"}
 
 	for _, value := range lowerPaths {
 		fakeData := FileChangeInfo{
-			path:     value,
-			typeflag: 1,
-			md5sum:   [16]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-			diffType: Unchanged,
+			Path:     value,
+			Typeflag: 1,
+			MD5sum:   [16]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+			DiffType: Unchanged,
 		}
 		lowerTree.AddPath(value, &fakeData)
 	}
 
 	for _, value := range upperPaths {
 		fakeData := FileChangeInfo{
-			path:     value,
-			typeflag: 1,
-			md5sum:   [16]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-			diffType: Unchanged,
+			Path:     value,
+			Typeflag: 1,
+			MD5sum:   [16]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+			DiffType: Unchanged,
 		}
 		upperTree.AddPath(value, &fakeData)
 	}
@@ -258,27 +258,27 @@ func TestCompareWithAdds(t *testing.T) {
 }
 
 func TestCompareWithChanges(t *testing.T) {
-	lowerTree := NewTree()
-	upperTree := NewTree()
+	lowerTree := NewFileTree()
+	upperTree := NewFileTree()
 	lowerPaths := [...]string{"/etc", "/usr", "/etc/hosts", "/etc/sudoers", "/usr/bin"}
 	upperPaths := [...]string{"/etc", "/usr", "/etc/hosts", "/etc/sudoers", "/usr/bin"}
 
 	for _, value := range lowerPaths {
 		fakeData := FileChangeInfo{
-			path:     value,
-			typeflag: 1,
-			md5sum:   [16]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-			diffType: Unchanged,
+			Path:     value,
+			Typeflag: 1,
+			MD5sum:   [16]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+			DiffType: Unchanged,
 		}
 		lowerTree.AddPath(value, &fakeData)
 	}
 
 	for _, value := range upperPaths {
 		fakeData := FileChangeInfo{
-			path:     value,
-			typeflag: 1,
-			md5sum:   [16]byte{1, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0},
-			diffType: Unchanged,
+			Path:     value,
+			Typeflag: 1,
+			MD5sum:   [16]byte{1, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0},
+			DiffType: Unchanged,
 		}
 		upperTree.AddPath(value, &fakeData)
 	}
@@ -298,7 +298,7 @@ func TestCompareWithChanges(t *testing.T) {
 }
 
 func TestStackRange(t *testing.T) {
-	tree := NewTree()
+	tree := NewFileTree()
 	tree.AddPath("/etc/nginx/nginx.conf", nil)
 	tree.AddPath("/etc/nginx/public", nil)
 	tree.AddPath("/var/run/systemd", nil)
@@ -309,27 +309,27 @@ func TestStackRange(t *testing.T) {
 	tree.RemovePath("/var/run/bashful")
 	tree.RemovePath("/tmp")
 
-	lowerTree := NewTree()
-	upperTree := NewTree()
+	lowerTree := NewFileTree()
+	upperTree := NewFileTree()
 	lowerPaths := [...]string{"/etc", "/usr", "/etc/hosts", "/etc/sudoers", "/usr/bin"}
 	upperPaths := [...]string{"/etc", "/usr", "/etc/hosts", "/etc/sudoers", "/usr/bin"}
 
 	for _, value := range lowerPaths {
 		fakeData := FileChangeInfo{
-			path:     value,
-			typeflag: 1,
-			md5sum:   [16]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-			diffType: Unchanged,
+			Path:     value,
+			Typeflag: 1,
+			MD5sum:   [16]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+			DiffType: Unchanged,
 		}
 		lowerTree.AddPath(value, &fakeData)
 	}
 
 	for _, value := range upperPaths {
 		fakeData := FileChangeInfo{
-			path:     value,
-			typeflag: 1,
-			md5sum:   [16]byte{1, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0},
-			diffType: Unchanged,
+			Path:     value,
+			Typeflag: 1,
+			MD5sum:   [16]byte{1, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0},
+			DiffType: Unchanged,
 		}
 		upperTree.AddPath(value, &fakeData)
 	}

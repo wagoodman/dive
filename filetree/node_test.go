@@ -1,49 +1,49 @@
-package main
+package filetree
 
 import "testing"
 
 func TestAddChild(t *testing.T) {
 	var expected, actual int
-	tree := NewTree()
+	tree := NewFileTree()
 
 	payload := FileChangeInfo{
-		path: "stufffffs",
+		Path: "stufffffs",
 	}
 
-	one := tree.Root().AddChild("first node!", &payload)
+	one := tree.Root.AddChild("first node!", &payload)
 
-	two := tree.Root().AddChild("nil node!", nil)
+	two := tree.Root.AddChild("nil node!", nil)
 
-	tree.Root().AddChild("third node!", nil)
+	tree.Root.AddChild("third node!", nil)
 	two.AddChild("forth, one level down...", nil)
 	two.AddChild("fifth, one level down...", nil)
 	two.AddChild("fifth, one level down...", nil)
 
-	expected, actual = 5, tree.size
+	expected, actual = 5, tree.Size
 	if expected != actual {
 		t.Errorf("Expected a tree size of %d got %d.", expected, actual)
 	}
 
-	expected, actual = 2, len(two.children)
+	expected, actual = 2, len(two.Children)
 	if expected != actual {
 		t.Errorf("Expected 'twos' number of children to be %d got %d.", expected, actual)
 	}
 
-	expected, actual = 3, len(tree.Root().children)
+	expected, actual = 3, len(tree.Root.Children)
 	if expected != actual {
 		t.Errorf("Expected 'twos' number of children to be %d got %d.", expected, actual)
 	}
 
 	expectedFC := &FileChangeInfo{
-		path: "stufffffs",
+		Path: "stufffffs",
 	}
-	actualFC := one.data
+	actualFC := one.Data
 	if *expectedFC != *actualFC {
 		t.Errorf("Expected 'ones' payload to be %+v got %+v.", expectedFC, actualFC)
 	}
 
-	if *two.data != *new(FileChangeInfo) {
-		t.Errorf("Expected 'twos' payload to be nil got %d.", two.data)
+	if *two.Data != *new(FileChangeInfo) {
+		t.Errorf("Expected 'twos' payload to be nil got %d.", two.Data)
 	}
 
 }
@@ -51,32 +51,32 @@ func TestAddChild(t *testing.T) {
 func TestRemoveChild(t *testing.T) {
 	var expected, actual int
 
-	tree := NewTree()
-	tree.Root().AddChild("first", nil)
-	two := tree.Root().AddChild("nil", nil)
-	tree.Root().AddChild("third", nil)
+	tree := NewFileTree()
+	tree.Root.AddChild("first", nil)
+	two := tree.Root.AddChild("nil", nil)
+	tree.Root.AddChild("third", nil)
 	forth := two.AddChild("forth", nil)
 	two.AddChild("fifth", nil)
 
 	forth.Remove()
 
-	expected, actual = 4, tree.size
+	expected, actual = 4, tree.Size
 	if expected != actual {
 		t.Errorf("Expected a tree size of %d got %d.", expected, actual)
 	}
 
-	if tree.Root().children["forth"] != nil {
+	if tree.Root.Children["forth"] != nil {
 		t.Errorf("Expected 'forth' node to be deleted.")
 	}
 
 	two.Remove()
 
-	expected, actual = 2, tree.size
+	expected, actual = 2, tree.Size
 	if expected != actual {
 		t.Errorf("Expected a tree size of %d got %d.", expected, actual)
 	}
 
-	if tree.Root().children["nil"] != nil {
+	if tree.Root.Children["nil"] != nil {
 		t.Errorf("Expected 'nil' node to be deleted.")
 	}
 
@@ -84,25 +84,25 @@ func TestRemoveChild(t *testing.T) {
 
 func TestPath(t *testing.T) {
 	expected := "/etc/nginx/nginx.conf"
-	tree := NewTree()
+	tree := NewFileTree()
 	node, _ := tree.AddPath(expected, nil)
 
 	actual := node.Path()
 	if expected != actual {
-		t.Errorf("Expected path '%s' got '%s'", expected, actual)
+		t.Errorf("Expected Path '%s' got '%s'", expected, actual)
 	}
 }
 
 func TestIsWhiteout(t *testing.T) {
-	tree1 := NewTree()
+	tree1 := NewFileTree()
 	p1, _ := tree1.AddPath("/etc/nginx/public1", nil)
 	p2, _ := tree1.AddPath("/etc/nginx/.wh.public2", nil)
 
 	if p1.IsWhiteout() != false {
-		t.Errorf("Expected path '%s' to **not** be a whiteout file", p1.name)
+		t.Errorf("Expected Path '%s' to **not** be a whiteout file", p1.Name)
 	}
 
 	if p2.IsWhiteout() != true {
-		t.Errorf("Expected path '%s' to be a whiteout file", p2.name)
+		t.Errorf("Expected Path '%s' to be a whiteout file", p2.Name)
 	}
 }

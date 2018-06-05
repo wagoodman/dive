@@ -1,4 +1,4 @@
-package main
+package filetree
 
 import (
 	"sort"
@@ -6,25 +6,25 @@ import (
 )
 
 type FileNode struct {
-	tree      *FileTree
-	parent    *FileNode
-	name      string
-	collapsed bool
-	data      *FileChangeInfo
-	children  map[string]*FileNode
+	Tree      *FileTree
+	Parent    *FileNode
+	Name      string
+	Collapsed bool
+	Data      *FileChangeInfo
+	Children  map[string]*FileNode
 }
 
 func NewNode(parent *FileNode, name string, data *FileChangeInfo) (node *FileNode) {
 	node = new(FileNode)
-	node.name = name
+	node.Name = name
 	if data == nil {
 		data = &FileChangeInfo{}
 	}
-	node.data = data
-	node.children = make(map[string]*FileNode)
-	node.parent = parent
+	node.Data = data
+	node.Children = make(map[string]*FileNode)
+	node.Parent = parent
 	if parent != nil {
-		node.tree = parent.tree
+		node.Tree = parent.Tree
 	}
 	return node
 }
@@ -33,46 +33,46 @@ func (node *FileNode) Copy() *FileNode {
 	// newNode := new(FileNode)
 	// *newNode = *node
 	// return newNode
-	newNode := NewNode(node.parent, node.name, node.data)
-	for name, child := range node.children {
-		newNode.children[name] = child.Copy()
+	newNode := NewNode(node.Parent, node.Name, node.Data)
+	for name, child := range node.Children {
+		newNode.Children[name] = child.Copy()
 	}
 	return newNode
 }
 
 func (node *FileNode) AddChild(name string, data *FileChangeInfo) (child *FileNode) {
 	child = NewNode(node, name, data)
-	if node.children[name] != nil {
+	if node.Children[name] != nil {
 		// tree node already exists, replace the payload, keep the children
-		node.children[name].data = data
+		node.Children[name].Data = data
 	} else {
-		node.children[name] = child
-		node.tree.size++
+		node.Children[name] = child
+		node.Tree.Size++
 	}
 	return child
 }
 
 func (node *FileNode) Remove() error {
-	for _, child := range node.children {
+	for _, child := range node.Children {
 		child.Remove()
 	}
-	delete(node.parent.children, node.name)
-	node.tree.size--
+	delete(node.Parent.Children, node.Name)
+	node.Tree.Size--
 	return nil
 }
 
 func (node *FileNode) String() string {
-	return node.name
+	return node.Name
 }
 
 func (node *FileNode) Visit(visiter Visiter) error {
 	var keys []string
-	for key := range node.children {
+	for key := range node.Children {
 		keys = append(keys, key)
 	}
 	sort.Strings(keys)
 	for _, name := range keys {
-		child := node.children[name]
+		child := node.Children[name]
 		err := child.Visit(visiter)
 		if err != nil {
 			return err
@@ -88,12 +88,12 @@ func (node *FileNode) VisitDepthParentFirst(visiter Visiter, evaluator VisitEval
 	}
 
 	var keys []string
-	for key := range node.children {
+	for key := range node.Children {
 		keys = append(keys, key)
 	}
 	sort.Strings(keys)
 	for _, name := range keys {
-		child := node.children[name]
+		child := node.Children[name]
 		if evaluator == nil || !evaluator(node) {
 			continue
 		}
@@ -106,31 +106,31 @@ func (node *FileNode) VisitDepthParentFirst(visiter Visiter, evaluator VisitEval
 }
 
 func (node *FileNode) IsWhiteout() bool {
-	return strings.HasPrefix(node.name, whiteoutPrefix)
+	return strings.HasPrefix(node.Name, whiteoutPrefix)
 }
 
 func (node *FileNode) Path() string {
 	path := []string{}
 	curNode := node
 	for {
-		if curNode.parent == nil {
+		if curNode.Parent == nil {
 			break
 		}
 
-		name := curNode.name
+		name := curNode.Name
 		if curNode == node {
 			// white out prefixes are fictitious on leaf nodes
 			name = strings.TrimPrefix(name, whiteoutPrefix)
 		}
 
 		path = append([]string{name}, path...)
-		curNode = curNode.parent
+		curNode = curNode.Parent
 	}
 	return "/" + strings.Join(path, "/")
 }
 
 func (node *FileNode) IsLeaf() bool {
-	return len(node.children) == 0
+	return len(node.Children) == 0
 }
 
 func (node *FileNode) deriveDiffType(diffType DiffType) error {
@@ -143,9 +143,9 @@ func (node *FileNode) deriveDiffType(diffType DiffType) error {
 	}
 	myDiffType := diffType
 
-	for _, v := range node.children {
-		vData := v.data
-		myDiffType = myDiffType.merge(vData.diffType)
+	for _, v := range node.Children {
+		vData := v.Data
+		myDiffType = myDiffType.merge(vData.DiffType)
 
 	}
 	node.AssignDiffType(myDiffType)
@@ -156,7 +156,7 @@ func (node *FileNode) AssignDiffType(diffType DiffType) error {
 	if node.Path() == "/" {
 		return nil
 	}
-	node.data.diffType = diffType
+	node.Data.DiffType = diffType
 	return nil
 }
 
@@ -177,10 +177,10 @@ func (a *FileNode) compare(b *FileNode) DiffType {
 	if b.IsWhiteout() {
 		return Removed
 	}
-	if a.name != b.name {
+	if a.Name != b.Name {
 		panic("comparing mismatched nodes")
 	}
 	// TODO: fails on nil
 
-	return a.data.getDiffType(b.data)
+	return a.Data.getDiffType(b.Data)
 }
