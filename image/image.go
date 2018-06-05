@@ -92,7 +92,7 @@ func WriteImage() {
 
 		fmt.Printf("Image: %s\nId: %s\nParent: %s\nLayers: %d\n%sHistory: %s\n", imageID, inspect.ID, inspect.Parent, len(inspect.RootFS.Layers), layerStr, historyStr)
 
-		fmt.Println("\n")
+		fmt.Println("")
 
 		if inspect.Parent == "" {
 			break
