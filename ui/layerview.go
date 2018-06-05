@@ -5,9 +5,7 @@ import (
 
 	"github.com/jroimartin/gocui"
 	"github.com/wagoodman/docker-image-explorer/image"
-	"github.com/wagoodman/docker-image-explorer/filetree"
 )
-
 
 type LayerView struct {
 	Name       string
@@ -67,8 +65,7 @@ func (view *LayerView) CursorDown() error {
 		CursorDown(view.gui, view.view)
 		view.LayerIndex++
 		view.Render()
-		// this line is evil
-		Views.Tree.reset(filetree.StackRange(Views.Tree.RefTrees, view.LayerIndex))
+		Views.Tree.setLayer(view.LayerIndex)
 	}
 	return nil
 }
@@ -79,7 +76,7 @@ func (view *LayerView) CursorUp() error {
 		view.LayerIndex--
 		view.Render()
 		// this line is evil
-		Views.Tree.reset(filetree.StackRange(Views.Tree.RefTrees, view.LayerIndex))
+		Views.Tree.setLayer(view.LayerIndex)
 	}
 	return nil
 }

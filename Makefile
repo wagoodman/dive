@@ -5,7 +5,7 @@ all: clean build
 run: build
 	./build/$(BIN)
 
-build: deps
+build: #deps
 	go build -o build/$(BIN) ./cmd/...
 
 install: deps

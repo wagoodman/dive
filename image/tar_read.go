@@ -103,20 +103,12 @@ func getFileList(parentReader *tar.Reader, h *tar.Header) []filetree.FileChangeI
 		name := header.Name
 
 		switch header.Typeflag {
-		case tar.TypeDir:
-			files = append(files, makeEntry(tarReader, header, name))
-		case tar.TypeReg:
-			files = append(files, makeEntry(tarReader, header, name))
-			continue
-		case tar.TypeSymlink:
-			files = append(files, makeEntry(tarReader, header, name))
+		case tar.TypeXGlobalHeader:
+			fmt.Printf("ERRG: GlobalHeader: %v: %s\n", header.Typeflag, name)
+		case tar.TypeXHeader:
+			fmt.Printf("ERRG: GlobalHeader: %v: %s\n", header.Typeflag, name)
 		default:
-			fmt.Printf("%s : %c %s %s\n",
-				"hmmm?",
-				header.Typeflag,
-				"in file",
-				name,
-			)
+			files = append(files, makeEntry(tarReader, header, name))
 		}
 	}
 	return files

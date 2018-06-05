@@ -1,9 +1,10 @@
 package ui
 
 import (
+	"log"
+
 	"github.com/jroimartin/gocui"
 	"github.com/wagoodman/docker-image-explorer/filetree"
-	"log"
 	"github.com/wagoodman/docker-image-explorer/image"
 )
 
@@ -76,14 +77,15 @@ func keybindings(g *gocui.Gui) error {
 func layout(g *gocui.Gui) error {
 	maxX, maxY := g.Size()
 	splitCol := 50
-	if view, err := g.SetView("side", -1, -1, splitCol, maxY); err != nil {
+	debugCol := maxX - 100
+	if view, err := g.SetView(Views.Layer.Name, -1, -1, splitCol, maxY); err != nil {
 		if err != gocui.ErrUnknownView {
 			return err
 		}
 		Views.Layer.Setup(view)
 
 	}
-	if view, err := g.SetView("main", splitCol, -1, maxX, maxY); err != nil {
+	if view, err := g.SetView(Views.Tree.Name, splitCol, -1, debugCol, maxY); err != nil {
 		if err != gocui.ErrUnknownView {
 			return err
 		}
@@ -94,6 +96,12 @@ func layout(g *gocui.Gui) error {
 			return err
 		}
 	}
+	if _, err := g.SetView("debug", debugCol, -1, maxX, maxY); err != nil {
+		if err != gocui.ErrUnknownView {
+			return err
+		}
+	}
+
 	return nil
 }
 

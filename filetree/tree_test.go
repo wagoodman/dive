@@ -186,7 +186,7 @@ func TestCompareWithNoChanges(t *testing.T) {
 		lowerTree.AddPath(value, &fakeData)
 		upperTree.AddPath(value, &fakeData)
 	}
-	lowerTree.compare(upperTree)
+	lowerTree.Compare(upperTree)
 	asserter := func(n *FileNode) error {
 		if n.Path() == "/" {
 			return nil
@@ -232,7 +232,7 @@ func TestCompareWithAdds(t *testing.T) {
 		upperTree.AddPath(value, &fakeData)
 	}
 
-	lowerTree.compare(upperTree)
+	lowerTree.Compare(upperTree)
 	asserter := func(n *FileNode) error {
 
 		p := n.Path()
@@ -283,7 +283,7 @@ func TestCompareWithChanges(t *testing.T) {
 		upperTree.AddPath(value, &fakeData)
 	}
 
-	lowerTree.compare(upperTree)
+	lowerTree.Compare(upperTree)
 	asserter := func(n *FileNode) error {
 		p := n.Path()
 		if p == "/" {
