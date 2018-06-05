@@ -12,7 +12,7 @@ install: deps
 	go install ./...
 
 deps:
-	command -v dep >/dev/null || go get -u github.com/golang/dep/cmd/dep
+	command -v $(GOPATH)/bin/dep >/dev/null || go get -u github.com/golang/dep/cmd/dep
 	$(GOPATH)/bin/dep ensure
 
 test: build
