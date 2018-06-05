@@ -43,7 +43,7 @@ func TestAddChild(t *testing.T) {
 	}
 
 	if *two.Data != *new(FileChangeInfo) {
-		t.Errorf("Expected 'twos' payload to be nil got %d.", two.Data)
+		t.Errorf("Expected 'twos' payload to be nil got %+v.", two.Data)
 	}
 
 }
