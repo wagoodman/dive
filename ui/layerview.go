@@ -36,10 +36,10 @@ func (view *LayerView) Setup(v *gocui.View) error {
 	view.view.SelFgColor = gocui.ColorBlack
 
 	// set keybindings
-	if err := view.gui.SetKeybinding("side", gocui.KeyArrowDown, gocui.ModNone, func(*gocui.Gui, *gocui.View) error { return view.CursorDown() }); err != nil {
+	if err := view.gui.SetKeybinding(view.Name, gocui.KeyArrowDown, gocui.ModNone, func(*gocui.Gui, *gocui.View) error { return view.CursorDown() }); err != nil {
 		return err
 	}
-	if err := view.gui.SetKeybinding("side", gocui.KeyArrowUp, gocui.ModNone, func(*gocui.Gui, *gocui.View) error { return view.CursorUp() }); err != nil {
+	if err := view.gui.SetKeybinding(view.Name, gocui.KeyArrowUp, gocui.ModNone, func(*gocui.Gui, *gocui.View) error { return view.CursorUp() }); err != nil {
 		return err
 	}
 
