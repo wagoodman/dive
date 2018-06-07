@@ -1,8 +1,11 @@
 package filetree
 
 import (
+	"archive/tar"
 	"bytes"
+	"crypto/md5"
 	"fmt"
+	"io"
 )
 
 type FileChangeInfo struct {
@@ -21,6 +24,27 @@ const (
 	Added
 	Removed
 )
+
+func NewFileChangeInfo(reader *tar.Reader, header *tar.Header, path string) FileChangeInfo {
+	if header.Typeflag == tar.TypeDir {
+		return FileChangeInfo{
+			Path:     path,
+			Typeflag: header.Typeflag,
+			MD5sum:   [16]byte{},
+		}
+	}
+	fileBytes := make([]byte, header.Size)
+	_, err := reader.Read(fileBytes)
+	if err != nil && err != io.EOF {
+		panic(err)
+	}
+	return FileChangeInfo{
+		Path:     path,
+		Typeflag: header.Typeflag,
+		MD5sum:   md5.Sum(fileBytes),
+		DiffType: Unchanged,
+	}
+}
 
 func (d DiffType) String() string {
 	switch d {

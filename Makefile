@@ -3,7 +3,7 @@ BIN = die
 all: clean build
 
 run: build
-	./build/$(BIN)
+	./build/$(BIN) die-test
 
 build: #deps
 	go build -o build/$(BIN) ./cmd/...

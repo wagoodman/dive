@@ -12,10 +12,10 @@ type LayerView struct {
 	gui        *gocui.Gui
 	view       *gocui.View
 	LayerIndex uint
-	Manifest   *image.Manifest
+	Manifest   *image.ImageManifest
 }
 
-func NewLayerView(name string, gui *gocui.Gui, manifest *image.Manifest) (layerview *LayerView) {
+func NewLayerView(name string, gui *gocui.Gui, manifest *image.ImageManifest) (layerview *LayerView) {
 	layerview = new(LayerView)
 
 	// populate main fields

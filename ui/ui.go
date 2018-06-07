@@ -105,7 +105,7 @@ func layout(g *gocui.Gui) error {
 	return nil
 }
 
-func Run(manifest *image.Manifest, refTrees []*filetree.FileTree) {
+func Run(manifest *image.ImageManifest, refTrees []*filetree.FileTree) {
 
 	g, err := gocui.NewGui(gocui.OutputNormal)
 	if err != nil {
