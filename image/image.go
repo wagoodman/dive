@@ -12,7 +12,9 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
+	humanize "github.com/dustin/go-humanize"
 	"github.com/wagoodman/docker-image-explorer/filetree"
 	"golang.org/x/net/context"
 )
@@ -24,9 +26,9 @@ func check(e error) {
 }
 
 type ImageManifest struct {
-	Config   string
-	RepoTags []string
-	Layers   []string
+	ConfigPath    string   `json:"Config"`
+	RepoTags      []string `json:"RepoTags"`
+	LayerTarPaths []string `json:"Layers"`
 }
 
 func NewManifest(reader *tar.Reader, header *tar.Header) ImageManifest {
@@ -44,24 +46,37 @@ func NewManifest(reader *tar.Reader, header *tar.Header) ImageManifest {
 	return m[0]
 }
 
-func InitializeData(imageID string) (*ImageManifest, []*filetree.FileTree) {
-	imageTarPath, tmpDir := saveImage(imageID)
+type Layer struct {
+	TarPath string
+	History types.ImageHistory
+}
 
-	f, err := os.Open(imageTarPath)
+func (layer *Layer) String() string {
+	id := layer.History.ID[0:25]
+	if len(layer.History.Tags) > 0 {
+		id = "[" + strings.Join(layer.History.Tags, ",") + "]"
+	}
+	return fmt.Sprintf("%25s %7s %s", id, humanize.Bytes(uint64(layer.History.Size)), layer.History.CreatedBy)
+}
+
+func InitializeData(imageID string) ([]*Layer, []*filetree.FileTree) {
+	var manifest ImageManifest
+	var layerMap = make(map[string]*filetree.FileTree)
+	var trees []*filetree.FileTree = make([]*filetree.FileTree, 0)
+
+	// save this image to disk temporarily to get the content info
+	imageTarPath, tmpDir := saveImage(imageID)
+	defer os.RemoveAll(tmpDir)
+
+	// read through the image contents and build a tree
+	tarFile, err := os.Open(imageTarPath)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
+	defer tarFile.Close()
 
-	defer f.Close()
-	defer os.RemoveAll(tmpDir)
-
-	tarReader := tar.NewReader(f)
-	targetName := "manifest.json"
-	var manifest ImageManifest
-	var layerMap map[string]*filetree.FileTree
-	layerMap = make(map[string]*filetree.FileTree)
-
+	tarReader := tar.NewReader(tarFile)
 	for {
 		header, err := tarReader.Next()
 
@@ -75,7 +90,7 @@ func InitializeData(imageID string) (*ImageManifest, []*filetree.FileTree) {
 		}
 
 		name := header.Name
-		if name == targetName {
+		if name == "manifest.json" {
 			manifest = NewManifest(tarReader, header)
 		}
 
@@ -96,13 +111,30 @@ func InitializeData(imageID string) (*ImageManifest, []*filetree.FileTree) {
 			fmt.Printf("ERRG: unknown tar entry: %v: %s\n", header.Typeflag, name)
 		}
 	}
-	var trees []*filetree.FileTree
-	trees = make([]*filetree.FileTree, 0)
-	for _, treeName := range manifest.Layers {
+
+	// build the content tree
+	for _, treeName := range manifest.LayerTarPaths {
 		trees = append(trees, layerMap[treeName])
 	}
 
-	return &manifest, trees
+	// get the history of this image
+	ctx := context.Background()
+	dockerClient, err := client.NewEnvClient()
+	if err != nil {
+		panic(err)
+	}
+
+	history, err := dockerClient.ImageHistory(ctx, imageID)
+
+	// build the layers array
+	layers := make([]*Layer, len(history)-1)
+	for idx := 0; idx < len(layers); idx++ {
+		layers[idx] = new(Layer)
+		layers[idx].History = history[idx]
+		layers[idx].TarPath = manifest.LayerTarPaths[idx]
+	}
+
+	return layers, trees
 }
 
 func saveImage(imageID string) (string, string) {
@@ -154,14 +186,14 @@ func saveImage(imageID string) (string, string) {
 
 func getFileList(parentReader *tar.Reader, h *tar.Header) []filetree.FileChangeInfo {
 	var files []filetree.FileChangeInfo
-	size := h.Size
-	tarredBytes := make([]byte, size)
+	var tarredBytes = make([]byte, h.Size)
+
 	_, err := parentReader.Read(tarredBytes)
 	if err != nil {
 		panic(err)
 	}
-	r := bytes.NewReader(tarredBytes)
-	tarReader := tar.NewReader(r)
+	reader := bytes.NewReader(tarredBytes)
+	tarReader := tar.NewReader(reader)
 	for {
 		header, err := tarReader.Next()
 

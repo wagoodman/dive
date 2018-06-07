@@ -76,8 +76,8 @@ func keybindings(g *gocui.Gui) error {
 
 func layout(g *gocui.Gui) error {
 	maxX, maxY := g.Size()
-	splitCol := 50
-	debugCol := maxX - 100
+	splitCol := 100
+	debugCol := maxX - 70
 	if view, err := g.SetView(Views.Layer.Name, -1, -1, splitCol, maxY); err != nil {
 		if err != gocui.ErrUnknownView {
 			return err
@@ -105,7 +105,7 @@ func layout(g *gocui.Gui) error {
 	return nil
 }
 
-func Run(manifest *image.ImageManifest, refTrees []*filetree.FileTree) {
+func Run(layers []*image.Layer, refTrees []*filetree.FileTree) {
 
 	g, err := gocui.NewGui(gocui.OutputNormal)
 	if err != nil {
@@ -113,7 +113,7 @@ func Run(manifest *image.ImageManifest, refTrees []*filetree.FileTree) {
 	}
 	defer g.Close()
 
-	Views.Layer = NewLayerView("side", g, manifest)
+	Views.Layer = NewLayerView("side", g, layers)
 	Views.Tree = NewFileTreeView("main", g, filetree.StackRange(refTrees, 0), refTrees)
 
 	g.Cursor = false

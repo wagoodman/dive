@@ -11,7 +11,7 @@ type FileTreeView struct {
 	Name      string
 	gui       *gocui.Gui
 	view      *gocui.View
-	TreeIndex uint
+	TreeIndex int
 	Tree      *filetree.FileTree
 	RefTrees  []*filetree.FileTree
 }
@@ -54,7 +54,7 @@ func (view *FileTreeView) Setup(v *gocui.View) error {
 	return nil
 }
 
-func (view *FileTreeView) setLayer(layerIndex uint) error {
+func (view *FileTreeView) setLayer(layerIndex int) error {
 	view.Tree = filetree.StackRange(view.RefTrees, layerIndex-1)
 	view.Tree.Compare(view.RefTrees[layerIndex])
 	v, _ := view.gui.View("debug")
@@ -84,7 +84,7 @@ func (view *FileTreeView) CursorUp() error {
 func (view *FileTreeView) getAbsPositionNode() (node *filetree.FileNode) {
 	var visiter func(*filetree.FileNode) error
 	var evaluator func(*filetree.FileNode) bool
-	var dfsCounter uint
+	var dfsCounter int
 
 	visiter = func(curNode *filetree.FileNode) error {
 		if dfsCounter == view.TreeIndex {

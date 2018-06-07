@@ -11,17 +11,17 @@ type LayerView struct {
 	Name       string
 	gui        *gocui.Gui
 	view       *gocui.View
-	LayerIndex uint
-	Manifest   *image.ImageManifest
+	LayerIndex int
+	Layers     []*image.Layer
 }
 
-func NewLayerView(name string, gui *gocui.Gui, manifest *image.ImageManifest) (layerview *LayerView) {
+func NewLayerView(name string, gui *gocui.Gui, layers []*image.Layer) (layerview *LayerView) {
 	layerview = new(LayerView)
 
 	// populate main fields
 	layerview.Name = name
 	layerview.gui = gui
-	layerview.Manifest = manifest
+	layerview.Layers = layers
 
 	return layerview
 }
@@ -30,7 +30,7 @@ func (view *LayerView) Setup(v *gocui.View) error {
 
 	// set view options
 	view.view = v
-	view.view.Wrap = true
+	view.view.Wrap = false
 	view.view.Highlight = true
 	view.view.SelBgColor = gocui.ColorGreen
 	view.view.SelFgColor = gocui.ColorBlack
@@ -51,8 +51,9 @@ func (view *LayerView) Setup(v *gocui.View) error {
 func (view *LayerView) Render() error {
 	view.gui.Update(func(g *gocui.Gui) error {
 		view.view.Clear()
-		for ix, layerName := range view.Manifest.Layers {
-			fmt.Fprintf(view.view, "%d: %s\n", ix+1, layerName[0:25])
+		for idx := len(view.Layers) - 1; idx >= 0; idx-- {
+			layer := view.Layers[idx]
+			fmt.Fprintln(view.view, layer.String())
 		}
 		return nil
 	})
@@ -61,22 +62,25 @@ func (view *LayerView) Render() error {
 }
 
 func (view *LayerView) CursorDown() error {
-	if int(view.LayerIndex) < len(view.Manifest.Layers) {
-		CursorDown(view.gui, view.view)
-		view.LayerIndex++
-		view.Render()
-		Views.Tree.setLayer(view.LayerIndex)
+	if int(view.LayerIndex) < len(view.Layers) {
+		err := CursorDown(view.gui, view.view)
+		if err == nil {
+			view.LayerIndex++
+			view.Render()
+			Views.Tree.setLayer(view.LayerIndex)
+		}
 	}
 	return nil
 }
 
 func (view *LayerView) CursorUp() error {
 	if int(view.LayerIndex) > 0 {
-		CursorUp(view.gui, view.view)
-		view.LayerIndex--
-		view.Render()
-		// this line is evil
-		Views.Tree.setLayer(view.LayerIndex)
+		err := CursorUp(view.gui, view.view)
+		if err == nil {
+			view.LayerIndex--
+			view.Render()
+			Views.Tree.setLayer(view.LayerIndex)
+		}
 	}
 	return nil
 }
