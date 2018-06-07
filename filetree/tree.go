@@ -140,6 +140,7 @@ func (tree *FileTree) GetNode(path string) (*FileNode, error) {
 }
 
 func (tree *FileTree) AddPath(path string, data *FileChangeInfo) (*FileNode, error) {
+	// fmt.Printf("ADDPATH: %s %+v\n", path, data)
 	nodeNames := strings.Split(path, "/")
 	node := tree.Root
 	for idx, name := range nodeNames {
@@ -172,7 +173,7 @@ func (tree *FileTree) RemovePath(path string) error {
 	return node.Remove()
 }
 
-func (tree *FileTree) compare(upper *FileTree) error {
+func (tree *FileTree) Compare(upper *FileTree) error {
 	graft := func(node *FileNode) error {
 		if node.IsWhiteout() {
 			err := tree.MarkRemoved(node.Path())
@@ -183,14 +184,14 @@ func (tree *FileTree) compare(upper *FileTree) error {
 			existingNode, _ := tree.GetNode(node.Path())
 			if existingNode == nil {
 				newNode, err := tree.AddPath(node.Path(), node.Data)
-				fmt.Printf("added new node at %s\n", newNode.Path())
+				// fmt.Printf("added new node at %s\n", newNode.Path())
 				if err != nil {
 					return fmt.Errorf("Cannot add new node %s: %v", node.Path(), err.Error())
 				}
 				newNode.AssignDiffType(Added)
 			} else {
 				diffType := existingNode.compare(node)
-				fmt.Printf("found existing node at %s\n", existingNode.Path())
+				// fmt.Printf("found existing node at %s\n", existingNode.Path())
 				existingNode.deriveDiffType(diffType)
 			}
 		}
@@ -209,7 +210,7 @@ func (tree *FileTree) MarkRemoved(path string) error {
 
 func StackRange(trees []*FileTree, index uint) *FileTree {
 	tree := trees[1].Copy()
-	for idx := uint(2); idx < index; idx++ {
+	for idx := uint(1); idx <= index; idx++ {
 		tree.Stack(trees[idx])
 	}
 	return tree

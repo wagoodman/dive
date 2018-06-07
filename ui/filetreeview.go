@@ -7,14 +7,13 @@ import (
 	"github.com/wagoodman/docker-image-explorer/filetree"
 )
 
-
 type FileTreeView struct {
-	Name         string
-	gui          *gocui.Gui
-	view         *gocui.View
+	Name      string
+	gui       *gocui.Gui
+	view      *gocui.View
 	TreeIndex uint
-	Tree         *filetree.FileTree
-	RefTrees []*filetree.FileTree
+	Tree      *filetree.FileTree
+	RefTrees  []*filetree.FileTree
 }
 
 func NewFileTreeView(name string, gui *gocui.Gui, tree *filetree.FileTree, refTrees []*filetree.FileTree) (treeview *FileTreeView) {
@@ -55,9 +54,12 @@ func (view *FileTreeView) Setup(v *gocui.View) error {
 	return nil
 }
 
-// Mehh, this is just a bad method
-func (view *FileTreeView) reset(tree *filetree.FileTree) error {
-	view.Tree = tree
+func (view *FileTreeView) setLayer(layerIndex uint) error {
+	view.Tree = filetree.StackRange(view.RefTrees, layerIndex-1)
+	view.Tree.Compare(view.RefTrees[layerIndex])
+	v, _ := view.gui.View("debug")
+	v.Clear()
+	_, _ = fmt.Fprintln(v, view.RefTrees[layerIndex])
 	view.view.SetCursor(0, 0)
 	view.TreeIndex = 0
 	return view.Render()

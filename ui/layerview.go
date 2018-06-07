@@ -5,19 +5,17 @@ import (
 
 	"github.com/jroimartin/gocui"
 	"github.com/wagoodman/docker-image-explorer/image"
-	"github.com/wagoodman/docker-image-explorer/filetree"
 )
-
 
 type LayerView struct {
 	Name       string
 	gui        *gocui.Gui
 	view       *gocui.View
 	LayerIndex uint
-	Manifest   *image.Manifest
+	Manifest   *image.ImageManifest
 }
 
-func NewLayerView(name string, gui *gocui.Gui, manifest *image.Manifest) (layerview *LayerView) {
+func NewLayerView(name string, gui *gocui.Gui, manifest *image.ImageManifest) (layerview *LayerView) {
 	layerview = new(LayerView)
 
 	// populate main fields
@@ -38,10 +36,10 @@ func (view *LayerView) Setup(v *gocui.View) error {
 	view.view.SelFgColor = gocui.ColorBlack
 
 	// set keybindings
-	if err := view.gui.SetKeybinding("side", gocui.KeyArrowDown, gocui.ModNone, func(*gocui.Gui, *gocui.View) error { return view.CursorDown() }); err != nil {
+	if err := view.gui.SetKeybinding(view.Name, gocui.KeyArrowDown, gocui.ModNone, func(*gocui.Gui, *gocui.View) error { return view.CursorDown() }); err != nil {
 		return err
 	}
-	if err := view.gui.SetKeybinding("side", gocui.KeyArrowUp, gocui.ModNone, func(*gocui.Gui, *gocui.View) error { return view.CursorUp() }); err != nil {
+	if err := view.gui.SetKeybinding(view.Name, gocui.KeyArrowUp, gocui.ModNone, func(*gocui.Gui, *gocui.View) error { return view.CursorUp() }); err != nil {
 		return err
 	}
 
@@ -67,8 +65,7 @@ func (view *LayerView) CursorDown() error {
 		CursorDown(view.gui, view.view)
 		view.LayerIndex++
 		view.Render()
-		// this line is evil
-		Views.Tree.reset(filetree.StackRange(Views.Tree.RefTrees, view.LayerIndex))
+		Views.Tree.setLayer(view.LayerIndex)
 	}
 	return nil
 }
@@ -79,7 +76,7 @@ func (view *LayerView) CursorUp() error {
 		view.LayerIndex--
 		view.Render()
 		// this line is evil
-		Views.Tree.reset(filetree.StackRange(Views.Tree.RefTrees, view.LayerIndex))
+		Views.Tree.setLayer(view.LayerIndex)
 	}
 	return nil
 }

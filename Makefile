@@ -3,9 +3,9 @@ BIN = die
 all: clean build
 
 run: build
-	./build/$(BIN)
+	./build/$(BIN) die-test
 
-build: deps
+build: #deps
 	go build -o build/$(BIN) ./cmd/...
 
 install: deps
