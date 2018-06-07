@@ -57,9 +57,9 @@ func (view *FileTreeView) Setup(v *gocui.View) error {
 func (view *FileTreeView) setLayer(layerIndex int) error {
 	view.Tree = filetree.StackRange(view.RefTrees, layerIndex-1)
 	view.Tree.Compare(view.RefTrees[layerIndex])
-	v, _ := view.gui.View("debug")
-	v.Clear()
-	_, _ = fmt.Fprintln(v, view.RefTrees[layerIndex])
+	// v, _ := view.gui.View("debug")
+	// v.Clear()
+	// _, _ = fmt.Fprintln(v, view.RefTrees[layerIndex])
 	view.view.SetCursor(0, 0)
 	view.TreeIndex = 0
 	return view.Render()

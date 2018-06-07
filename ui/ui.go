@@ -76,8 +76,8 @@ func keybindings(g *gocui.Gui) error {
 
 func layout(g *gocui.Gui) error {
 	maxX, maxY := g.Size()
-	splitCol := 100
-	debugCol := maxX - 70
+	splitCol := maxX / 2
+	debugCol := maxX - 0
 	if view, err := g.SetView(Views.Layer.Name, -1, -1, splitCol, maxY); err != nil {
 		if err != gocui.ErrUnknownView {
 			return err
@@ -96,11 +96,11 @@ func layout(g *gocui.Gui) error {
 			return err
 		}
 	}
-	if _, err := g.SetView("debug", debugCol, -1, maxX, maxY); err != nil {
-		if err != gocui.ErrUnknownView {
-			return err
-		}
-	}
+	// if _, err := g.SetView("debug", debugCol, -1, maxX, maxY); err != nil {
+	// 	if err != gocui.ErrUnknownView {
+	// 		return err
+	// 	}
+	// }
 
 	return nil
 }
