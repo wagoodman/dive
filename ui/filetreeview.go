@@ -55,13 +55,26 @@ func (view *FileTreeView) Setup(v *gocui.View) error {
 }
 
 func (view *FileTreeView) setLayer(layerIndex int) error {
-	view.Tree = filetree.StackRange(view.RefTrees, layerIndex-1)
-	view.Tree.Compare(view.RefTrees[layerIndex])
+	newTree := filetree.StackRange(view.RefTrees, layerIndex-1)
+	newTree.Compare(view.RefTrees[layerIndex])
+
+	visitor := func(node *filetree.FileNode) error {
+		if node.Collapsed {
+			newNode, err := newTree.GetNode(node.Path())
+			if err == nil {
+				newNode.Collapsed = true
+			}
+		}
+		return nil
+	}
+	view.Tree.Visit(visitor)
+
 	// v, _ := view.gui.View("debug")
 	// v.Clear()
 	// _, _ = fmt.Fprintln(v, view.RefTrees[layerIndex])
 	view.view.SetCursor(0, 0)
 	view.TreeIndex = 0
+	view.Tree = newTree
 	return view.Render()
 }
 

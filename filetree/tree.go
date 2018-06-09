@@ -209,9 +209,8 @@ func (tree *FileTree) MarkRemoved(path string) error {
 }
 
 func StackRange(trees []*FileTree, index int) *FileTree {
-	// TMP TMP TMP: TODO: later change the index of both of these to 0
-	tree := trees[1].Copy()
-	for idx := 1; idx <= index; idx++ {
+	tree := trees[0].Copy()
+	for idx := 0; idx <= index; idx++ {
 		tree.Stack(trees[idx])
 	}
 	return tree
