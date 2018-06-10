@@ -69,6 +69,9 @@ func (tree *FileTree) String() string {
 		sort.Strings(keys)
 		for idx, name := range keys {
 			child := node.Children[name]
+			if child.Hidden {
+				continue
+			}
 			last := idx == (len(node.Children) - 1)
 			showCollapsed := child.Collapsed && len(child.Children) > 0
 			result += renderLine(child.String(), spaces, last, showCollapsed)

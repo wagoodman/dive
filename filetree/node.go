@@ -10,6 +10,7 @@ type FileNode struct {
 	Parent    *FileNode
 	Name      string
 	Collapsed bool
+	Hidden    bool
 	Data      *FileChangeInfo
 	Children  map[string]*FileNode
 }

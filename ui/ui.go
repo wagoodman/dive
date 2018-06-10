@@ -9,8 +9,16 @@ import (
 )
 
 var Views struct {
-	Tree  *FileTreeView
-	Layer *LayerView
+	Tree   *FileTreeView
+	Layer  *LayerView
+	Status *StatusView
+}
+
+type View interface {
+	Setup(*gocui.View) error
+	CursorDown() error
+	CursorUp() error
+	Render() error
 }
 
 func nextView(g *gocui.Gui, v *gocui.View) error {
@@ -76,16 +84,17 @@ func keybindings(g *gocui.Gui) error {
 
 func layout(g *gocui.Gui) error {
 	maxX, maxY := g.Size()
-	splitCol := maxX / 2
-	debugCol := maxX - 0
-	if view, err := g.SetView(Views.Layer.Name, -1, -1, splitCol, maxY); err != nil {
+	splitCols := maxX / 2
+	debugCols := maxX - 0
+	bottomRows := 1
+	if view, err := g.SetView(Views.Layer.Name, -1, -1, splitCols, maxY-bottomRows); err != nil {
 		if err != gocui.ErrUnknownView {
 			return err
 		}
 		Views.Layer.Setup(view)
 
 	}
-	if view, err := g.SetView(Views.Tree.Name, splitCol, -1, debugCol, maxY); err != nil {
+	if view, err := g.SetView(Views.Tree.Name, splitCols, -1, debugCols, maxY-bottomRows); err != nil {
 		if err != gocui.ErrUnknownView {
 			return err
 		}
@@ -96,7 +105,15 @@ func layout(g *gocui.Gui) error {
 			return err
 		}
 	}
-	// if _, err := g.SetView("debug", debugCol, -1, maxX, maxY); err != nil {
+	if view, err := g.SetView(Views.Status.Name, -1, maxY-bottomRows-1, maxX, maxY); err != nil {
+		if err != gocui.ErrUnknownView {
+			return err
+		}
+		Views.Status.Setup(view)
+
+	}
+
+	// if _, err := g.SetView("debug", debugCol, -1, maxX, maxY-bottomRows); err != nil {
 	// 	if err != gocui.ErrUnknownView {
 	// 		return err
 	// 	}
@@ -115,6 +132,7 @@ func Run(layers []*image.Layer, refTrees []*filetree.FileTree) {
 
 	Views.Layer = NewLayerView("side", g, layers)
 	Views.Tree = NewFileTreeView("main", g, filetree.StackRange(refTrees, 0), refTrees)
+	Views.Status = NewStatusView("status", g)
 
 	g.Cursor = false
 	//g.Mouse = true

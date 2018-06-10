@@ -34,6 +34,7 @@ func (view *LayerView) Setup(v *gocui.View) error {
 	view.view.Highlight = true
 	view.view.SelBgColor = gocui.ColorGreen
 	view.view.SelFgColor = gocui.ColorBlack
+	view.view.Frame = false
 
 	// set keybindings
 	if err := view.gui.SetKeybinding(view.Name, gocui.KeyArrowDown, gocui.ModNone, func(*gocui.Gui, *gocui.View) error { return view.CursorDown() }); err != nil {
