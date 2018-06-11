@@ -66,6 +66,11 @@ func (node *FileNode) Remove() error {
 
 func (node *FileNode) String() string {
 	var style *color.Color
+	if node == nil {
+		return ""
+	} else if node.Data == nil {
+		return node.Name
+	}
 	switch node.Data.DiffType {
 	case Added:
 		style = color.New(color.FgGreen)
