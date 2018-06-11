@@ -3,6 +3,8 @@ package filetree
 import (
 	"sort"
 	"strings"
+
+	"github.com/fatih/color"
 )
 
 type FileNode struct {
@@ -63,7 +65,20 @@ func (node *FileNode) Remove() error {
 }
 
 func (node *FileNode) String() string {
-	return node.Name
+	var style *color.Color
+	switch node.Data.DiffType {
+	case Added:
+		style = color.New(color.FgGreen)
+	case Removed:
+		style = color.New(color.FgRed)
+	case Changed:
+		style = color.New(color.FgYellow)
+	case Unchanged:
+		style = color.New(color.Reset)
+	default:
+		style = color.New(color.BgMagenta)
+	}
+	return style.Sprint(node.Name)
 }
 
 func (node *FileNode) Visit(visiter Visiter) error {
