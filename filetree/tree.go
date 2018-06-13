@@ -195,7 +195,7 @@ func (tree *FileTree) Compare(upper *FileTree) error {
 			} else {
 				diffType := existingNode.compare(node)
 				// fmt.Printf("found existing node at %s\n", existingNode.Path())
-				existingNode.deriveDiffType(diffType)
+				return existingNode.deriveDiffType(diffType)
 			}
 		}
 		return nil

@@ -90,9 +90,12 @@ func (view *FileTreeView) setLayer(layerIndex int) error {
 	// now that the tree has been rebuilt, keep the view seleciton in parity with the previous selection
 	view.setHiddenFromDiffTypes()
 
-	// v, _ := view.gui.View("debug")
-	// v.Clear()
-	// _, _ = fmt.Fprintln(v, view.RefTrees[layerIndex])
+	if debug {
+		v, _ := view.gui.View("debug")
+		v.Clear()
+		_, _ = fmt.Fprintln(v, view.RefTrees[layerIndex])
+	}
+
 	view.view.SetCursor(0, 0)
 	view.TreeIndex = 0
 	view.Tree = newTree

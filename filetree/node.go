@@ -174,10 +174,24 @@ func (node *FileNode) deriveDiffType(diffType DiffType) error {
 }
 
 func (node *FileNode) AssignDiffType(diffType DiffType) error {
+	var err error
+
+	// todo, this is an indicator that the root node approach isn't working
 	if node.Path() == "/" {
 		return nil
 	}
+
 	node.Data.DiffType = diffType
+
+	// if we've removed this node, then all children have been removed as well
+	if diffType == Removed {
+		for _, child := range node.Children {
+			err = child.AssignDiffType(diffType)
+			if err != nil {
+				return err
+			}
+		}
+	}
 	return nil
 }
 

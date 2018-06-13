@@ -8,6 +8,8 @@ import (
 	"github.com/wagoodman/docker-image-explorer/image"
 )
 
+const debug = true
+
 var Views struct {
 	Tree   *FileTreeView
 	Layer  *LayerView
@@ -85,7 +87,11 @@ func keybindings(g *gocui.Gui) error {
 func layout(g *gocui.Gui) error {
 	maxX, maxY := g.Size()
 	splitCols := maxX / 2
-	debugCols := maxX - 0
+	debugWidth := 0
+	if debug {
+		debugWidth = maxX / 4
+	}
+	debugCols := maxX - debugWidth
 	bottomRows := 1
 	if view, err := g.SetView(Views.Layer.Name, -1, -1, splitCols, maxY-bottomRows); err != nil {
 		if err != gocui.ErrUnknownView {
@@ -105,6 +111,13 @@ func layout(g *gocui.Gui) error {
 			return err
 		}
 	}
+	if debug {
+		if _, err := g.SetView("debug", debugCols, -1, maxX, maxY-bottomRows); err != nil {
+			if err != gocui.ErrUnknownView {
+				return err
+			}
+		}
+	}
 	if view, err := g.SetView(Views.Status.Name, -1, maxY-bottomRows-1, maxX, maxY); err != nil {
 		if err != gocui.ErrUnknownView {
 			return err
@@ -112,12 +125,6 @@ func layout(g *gocui.Gui) error {
 		Views.Status.Setup(view)
 
 	}
-
-	// if _, err := g.SetView("debug", debugCol, -1, maxX, maxY-bottomRows); err != nil {
-	// 	if err != gocui.ErrUnknownView {
-	// 		return err
-	// 	}
-	// }
 
 	return nil
 }
