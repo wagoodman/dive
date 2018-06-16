@@ -81,11 +81,11 @@ func (view *FileTreeView) setLayer(layerIndex int) error {
 	visitor := func(node *filetree.FileNode) error {
 		newNode, err := newTree.GetNode(node.Path())
 		if err == nil {
-			newNode.Collapsed = node.Collapsed
+			newNode.Data.ViewInfo.Collapsed = node.Data.ViewInfo.Collapsed
 		}
 		return nil
 	}
-	view.Tree.Visit(visitor)
+	view.Tree.VisitDepthChildFirst(visitor)
 
 	// now that the tree has been rebuilt, keep the view seleciton in parity with the previous selection
 	view.setHiddenFromDiffTypes()
@@ -132,7 +132,7 @@ func (view *FileTreeView) getAbsPositionNode() (node *filetree.FileNode) {
 	}
 
 	evaluator = func(curNode *filetree.FileNode) bool {
-		return !curNode.Collapsed && !curNode.Hidden
+		return !curNode.Data.ViewInfo.Collapsed && !curNode.Data.ViewInfo.Hidden
 	}
 
 	err := view.Tree.VisitDepthParentFirst(visiter, evaluator)
@@ -145,16 +145,16 @@ func (view *FileTreeView) getAbsPositionNode() (node *filetree.FileNode) {
 
 func (view *FileTreeView) toggleCollapse() error {
 	node := view.getAbsPositionNode()
-	node.Collapsed = !node.Collapsed
+	node.Data.ViewInfo.Collapsed = !node.Data.ViewInfo.Collapsed
 	return view.Render()
 }
 
 func (view *FileTreeView) setHiddenFromDiffTypes() error {
 	visitor := func(node *filetree.FileNode) error {
-		node.Hidden = view.HiddenDiffTypes[node.Data.DiffType]
+		node.Data.ViewInfo.Hidden = view.HiddenDiffTypes[node.Data.DiffType]
 		return nil
 	}
-	view.Tree.Visit(visitor)
+	view.Tree.VisitDepthChildFirst(visitor)
 	return view.Render()
 }
 

@@ -184,8 +184,8 @@ func saveImage(imageID string) (string, string) {
 	return imageTarPath, tmpDir
 }
 
-func getFileList(parentReader *tar.Reader, h *tar.Header) []filetree.FileChangeInfo {
-	var files []filetree.FileChangeInfo
+func getFileList(parentReader *tar.Reader, h *tar.Header) []filetree.FileInfo {
+	var files []filetree.FileInfo
 	var tarredBytes = make([]byte, h.Size)
 
 	_, err := parentReader.Read(tarredBytes)
@@ -214,7 +214,7 @@ func getFileList(parentReader *tar.Reader, h *tar.Header) []filetree.FileChangeI
 		case tar.TypeXHeader:
 			fmt.Printf("ERRG: XHeader: %v: %s\n", header.Typeflag, name)
 		default:
-			files = append(files, filetree.NewFileChangeInfo(tarReader, header, name))
+			files = append(files, filetree.NewFileInfo(tarReader, header, name))
 		}
 	}
 	return files

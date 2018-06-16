@@ -1,12 +1,14 @@
 package filetree
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestAddChild(t *testing.T) {
 	var expected, actual int
 	tree := NewFileTree()
 
-	payload := FileChangeInfo{
+	payload := FileInfo{
 		Path: "stufffffs",
 	}
 
@@ -34,16 +36,16 @@ func TestAddChild(t *testing.T) {
 		t.Errorf("Expected 'twos' number of children to be %d got %d.", expected, actual)
 	}
 
-	expectedFC := &FileChangeInfo{
+	expectedFC := &FileInfo{
 		Path: "stufffffs",
 	}
-	actualFC := one.Data
+	actualFC := one.Data.FileInfo
 	if *expectedFC != *actualFC {
 		t.Errorf("Expected 'ones' payload to be %+v got %+v.", expectedFC, actualFC)
 	}
 
-	if *two.Data != *new(FileChangeInfo) {
-		t.Errorf("Expected 'twos' payload to be nil got %+v.", two.Data)
+	if two.Data.FileInfo != nil {
+		t.Errorf("Expected 'twos' payload to be nil got %+v.", two.Data.FileInfo)
 	}
 
 }
@@ -104,5 +106,22 @@ func TestIsWhiteout(t *testing.T) {
 
 	if p2.IsWhiteout() != true {
 		t.Errorf("Expected Path '%s' to be a whiteout file", p2.Name)
+	}
+}
+
+func TestDiffTypeFromChildren(t *testing.T) {
+	tree := NewFileTree()
+	tree.AddPath("/usr", BlankFileChangeInfo("/usr", Unchanged))
+
+	info1 := BlankFileChangeInfo("/usr/bin", Added)
+	tree.AddPath("/usr/bin", info1)
+
+	info2 := BlankFileChangeInfo("/usr/bin2", Removed)
+	tree.AddPath("/usr/bin2", info2)
+
+	tree.Root.Children["usr"].deriveDiffType(Unchanged)
+
+	if tree.Root.Children["usr"].Data.DiffType != Changed {
+		t.Errorf("Expected Changed but got %v", tree.Root.Children["usr"].Data.DiffType)
 	}
 }

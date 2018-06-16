@@ -11,19 +11,17 @@ type FileNode struct {
 	Tree      *FileTree
 	Parent    *FileNode
 	Name      string
-	Collapsed bool
-	Hidden    bool
-	Data      *FileChangeInfo
+	Data      NodeData
 	Children  map[string]*FileNode
 }
 
-func NewNode(parent *FileNode, name string, data *FileChangeInfo) (node *FileNode) {
+func NewNode(parent *FileNode, name string, data *FileInfo) (node *FileNode) {
 	node = new(FileNode)
 	node.Name = name
-	if data == nil {
-		data = &FileChangeInfo{}
+	node.Data = *NewNodeData()
+	if data != nil {
+		node.Data.FileInfo = data.Copy()
 	}
-	node.Data = data
 	node.Children = make(map[string]*FileNode)
 	node.Parent = parent
 	if parent != nil {
@@ -33,21 +31,19 @@ func NewNode(parent *FileNode, name string, data *FileChangeInfo) (node *FileNod
 }
 
 func (node *FileNode) Copy() *FileNode {
-	// newNode := new(FileNode)
-	// *newNode = *node
-	// return newNode
-	newNode := NewNode(node.Parent, node.Name, node.Data)
+	newNode := NewNode(node.Parent, node.Name, node.Data.FileInfo)
 	for name, child := range node.Children {
 		newNode.Children[name] = child.Copy()
+		child.Parent = newNode
 	}
 	return newNode
 }
 
-func (node *FileNode) AddChild(name string, data *FileChangeInfo) (child *FileNode) {
+func (node *FileNode) AddChild(name string, data *FileInfo) (child *FileNode) {
 	child = NewNode(node, name, data)
 	if node.Children[name] != nil {
 		// tree node already exists, replace the payload, keep the children
-		node.Children[name].Data = data
+		node.Children[name].Data.FileInfo = data.Copy()
 	} else {
 		node.Children[name] = child
 		node.Tree.Size++
@@ -68,7 +64,7 @@ func (node *FileNode) String() string {
 	var style *color.Color
 	if node == nil {
 		return ""
-	} else if node.Data == nil {
+	} else if node.Data.FileInfo == nil {
 		return node.Name
 	}
 	switch node.Data.DiffType {
@@ -86,7 +82,7 @@ func (node *FileNode) String() string {
 	return style.Sprint(node.Name)
 }
 
-func (node *FileNode) Visit(visiter Visiter) error {
+func (node *FileNode) VisitDepthChildFirst(visiter Visiter) error {
 	var keys []string
 	for key := range node.Children {
 		keys = append(keys, key)
@@ -94,7 +90,7 @@ func (node *FileNode) Visit(visiter Visiter) error {
 	sort.Strings(keys)
 	for _, name := range keys {
 		child := node.Children[name]
-		err := child.Visit(visiter)
+		err := child.VisitDepthChildFirst(visiter)
 		if err != nil {
 			return err
 		}
@@ -165,8 +161,7 @@ func (node *FileNode) deriveDiffType(diffType DiffType) error {
 	myDiffType := diffType
 
 	for _, v := range node.Children {
-		vData := v.Data
-		myDiffType = myDiffType.merge(vData.DiffType)
+		myDiffType = myDiffType.merge(v.Data.DiffType)
 
 	}
 	node.AssignDiffType(myDiffType)
@@ -217,5 +212,5 @@ func (a *FileNode) compare(b *FileNode) DiffType {
 	}
 	// TODO: fails on nil
 
-	return a.Data.getDiffType(b.Data)
+	return a.Data.FileInfo.getDiffType(b.Data.FileInfo)
 }

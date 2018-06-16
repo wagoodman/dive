@@ -86,7 +86,7 @@ func TestRemovePath(t *testing.T) {
 
 func TestStack(t *testing.T) {
 	payloadKey := "/var/run/systemd"
-	payloadValue := FileChangeInfo{
+	payloadValue := FileInfo{
 		Path: "yup",
 	}
 
@@ -128,8 +128,8 @@ func TestStack(t *testing.T) {
 		t.Errorf("Expected '%s' to still exist, but it doesn't", payloadKey)
 	}
 
-	if *node.Data != payloadValue {
-		t.Errorf("Expected '%s' value to be %+v but got %+v", payloadKey, payloadValue, node.Data)
+	if *node.Data.FileInfo != payloadValue {
+		t.Errorf("Expected '%s' value to be %+v but got %+v", payloadKey, payloadValue, node.Data.FileInfo)
 	}
 
 	actual := tree1.String()
@@ -177,11 +177,10 @@ func TestCompareWithNoChanges(t *testing.T) {
 	paths := [...]string{"/etc", "/etc/sudoers", "/etc/hosts", "/usr/bin", "/usr/bin/bash", "/usr"}
 
 	for _, value := range paths {
-		fakeData := FileChangeInfo{
+		fakeData := FileInfo{
 			Path:     value,
 			Typeflag: 1,
 			MD5sum:   [16]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-			DiffType: Unchanged,
 		}
 		lowerTree.AddPath(value, &fakeData)
 		upperTree.AddPath(value, &fakeData)
@@ -191,16 +190,16 @@ func TestCompareWithNoChanges(t *testing.T) {
 		if n.Path() == "/" {
 			return nil
 		}
-		if n.Data == nil {
-			t.Errorf("Expected *FileChangeInfo but got nil")
-			return fmt.Errorf("expected *FileChangeInfo but got nil")
+		if n.Data.FileInfo == nil {
+			t.Errorf("Expected *FileInfo but got nil")
+			return fmt.Errorf("expected *FileInfo but got nil")
 		}
 		if (n.Data.DiffType) != Unchanged {
 			t.Errorf("Expecting node at %s to have DiffType unchanged, but had %v", n.Path(), n.Data.DiffType)
 		}
 		return nil
 	}
-	err := lowerTree.Visit(asserter)
+	err := lowerTree.VisitDepthChildFirst(asserter)
 	if err != nil {
 		t.Error(err)
 	}
@@ -213,21 +212,19 @@ func TestCompareWithAdds(t *testing.T) {
 	upperPaths := [...]string{"/etc", "/etc/sudoers", "/usr", "/etc/hosts", "/usr/bin", "/usr/bin/bash"}
 
 	for _, value := range lowerPaths {
-		fakeData := FileChangeInfo{
+		fakeData := FileInfo{
 			Path:     value,
 			Typeflag: 1,
 			MD5sum:   [16]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-			DiffType: Unchanged,
 		}
 		lowerTree.AddPath(value, &fakeData)
 	}
 
 	for _, value := range upperPaths {
-		fakeData := FileChangeInfo{
+		fakeData := FileInfo{
 			Path:     value,
 			Typeflag: 1,
 			MD5sum:   [16]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-			DiffType: Unchanged,
 		}
 		upperTree.AddPath(value, &fakeData)
 	}
@@ -251,7 +248,7 @@ func TestCompareWithAdds(t *testing.T) {
 		}
 		return AssertDiffType(n, Unchanged, t)
 	}
-	err := lowerTree.Visit(asserter)
+	err := lowerTree.VisitDepthChildFirst(asserter)
 	if err != nil {
 		t.Error(err)
 	}
@@ -264,21 +261,19 @@ func TestCompareWithChanges(t *testing.T) {
 	upperPaths := [...]string{"/etc", "/usr", "/etc/hosts", "/etc/sudoers", "/usr/bin"}
 
 	for _, value := range lowerPaths {
-		fakeData := FileChangeInfo{
+		fakeData := FileInfo{
 			Path:     value,
 			Typeflag: 1,
 			MD5sum:   [16]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-			DiffType: Unchanged,
 		}
 		lowerTree.AddPath(value, &fakeData)
 	}
 
 	for _, value := range upperPaths {
-		fakeData := FileChangeInfo{
+		fakeData := FileInfo{
 			Path:     value,
 			Typeflag: 1,
 			MD5sum:   [16]byte{1, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0},
-			DiffType: Unchanged,
 		}
 		upperTree.AddPath(value, &fakeData)
 	}
@@ -291,7 +286,7 @@ func TestCompareWithChanges(t *testing.T) {
 		}
 		return AssertDiffType(n, Changed, t)
 	}
-	err := lowerTree.Visit(asserter)
+	err := lowerTree.VisitDepthChildFirst(asserter)
 	if err != nil {
 		t.Error(err)
 	}
@@ -315,21 +310,19 @@ func TestStackRange(t *testing.T) {
 	upperPaths := [...]string{"/etc", "/usr", "/etc/hosts", "/etc/sudoers", "/usr/bin"}
 
 	for _, value := range lowerPaths {
-		fakeData := FileChangeInfo{
+		fakeData := FileInfo{
 			Path:     value,
 			Typeflag: 1,
 			MD5sum:   [16]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-			DiffType: Unchanged,
 		}
 		lowerTree.AddPath(value, &fakeData)
 	}
 
 	for _, value := range upperPaths {
-		fakeData := FileChangeInfo{
+		fakeData := FileInfo{
 			Path:     value,
 			Typeflag: 1,
 			MD5sum:   [16]byte{1, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0},
-			DiffType: Unchanged,
 		}
 		upperTree.AddPath(value, &fakeData)
 	}

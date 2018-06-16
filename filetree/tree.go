@@ -69,13 +69,13 @@ func (tree *FileTree) String() string {
 		sort.Strings(keys)
 		for idx, name := range keys {
 			child := node.Children[name]
-			if child.Hidden {
+			if child.Data.ViewInfo.Hidden {
 				continue
 			}
 			last := idx == (len(node.Children) - 1)
-			showCollapsed := child.Collapsed && len(child.Children) > 0
+			showCollapsed := child.Data.ViewInfo.Collapsed && len(child.Children) > 0
 			result += renderLine(child.String(), spaces, last, showCollapsed)
-			if len(child.Children) > 0 && !child.Collapsed {
+			if len(child.Children) > 0 && !child.Data.ViewInfo.Collapsed {
 				spacesChild := append(spaces, last)
 				result += walkTree(child, spacesChild, depth+1)
 			}
@@ -90,7 +90,7 @@ func (tree *FileTree) Copy() *FileTree {
 	newTree := NewFileTree()
 	*newTree = *tree
 	newTree.Root = tree.Root.Copy()
-	newTree.Visit(func(node *FileNode) error {
+	newTree.VisitDepthChildFirst(func(node *FileNode) error {
 		node.Tree = newTree
 		return nil
 	})
@@ -101,10 +101,12 @@ func (tree *FileTree) Copy() *FileTree {
 type Visiter func(*FileNode) error
 type VisitEvaluator func(*FileNode) bool
 
-func (tree *FileTree) Visit(visiter Visiter) error {
-	return tree.Root.Visit(visiter)
+// DFS bubble up
+func (tree *FileTree) VisitDepthChildFirst(visiter Visiter) error {
+	return tree.Root.VisitDepthChildFirst(visiter)
 }
 
+// DFS sink down
 func (tree *FileTree) VisitDepthParentFirst(visiter Visiter, evaluator VisitEvaluator) error {
 	return tree.Root.VisitDepthParentFirst(visiter, evaluator)
 }
@@ -117,14 +119,14 @@ func (tree *FileTree) Stack(upper *FileTree) error {
 				return fmt.Errorf("Cannot remove node %s: %v", node.Path(), err.Error())
 			}
 		} else {
-			newNode, err := tree.AddPath(node.Path(), node.Data)
+			newNode, err := tree.AddPath(node.Path(), node.Data.FileInfo)
 			if err != nil {
 				return fmt.Errorf("Cannot add node %s: %v", newNode.Path(), err.Error())
 			}
 		}
 		return nil
 	}
-	return upper.Visit(graft)
+	return upper.VisitDepthChildFirst(graft)
 }
 
 func (tree *FileTree) GetNode(path string) (*FileNode, error) {
@@ -142,7 +144,7 @@ func (tree *FileTree) GetNode(path string) (*FileNode, error) {
 	return node, nil
 }
 
-func (tree *FileTree) AddPath(path string, data *FileChangeInfo) (*FileNode, error) {
+func (tree *FileTree) AddPath(path string, data *FileInfo) (*FileNode, error) {
 	// fmt.Printf("ADDPATH: %s %+v\n", path, data)
 	nodeNames := strings.Split(path, "/")
 	node := tree.Root
@@ -161,7 +163,7 @@ func (tree *FileTree) AddPath(path string, data *FileChangeInfo) (*FileNode, err
 
 		// attach payload to the last specified node
 		if idx == len(nodeNames)-1 {
-			node.Data = data
+			node.Data.FileInfo = data
 		}
 
 	}
@@ -186,7 +188,7 @@ func (tree *FileTree) Compare(upper *FileTree) error {
 		} else {
 			existingNode, _ := tree.GetNode(node.Path())
 			if existingNode == nil {
-				newNode, err := tree.AddPath(node.Path(), node.Data)
+				newNode, err := tree.AddPath(node.Path(), node.Data.FileInfo)
 				// fmt.Printf("added new node at %s\n", newNode.Path())
 				if err != nil {
 					return fmt.Errorf("Cannot add new node %s: %v", node.Path(), err.Error())
@@ -200,7 +202,7 @@ func (tree *FileTree) Compare(upper *FileTree) error {
 		}
 		return nil
 	}
-	return upper.Visit(graft)
+	return upper.VisitDepthChildFirst(graft)
 }
 
 func (tree *FileTree) MarkRemoved(path string) error {
