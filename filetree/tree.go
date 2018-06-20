@@ -93,7 +93,7 @@ func (tree *FileTree) Copy() *FileTree {
 	newTree.VisitDepthChildFirst(func(node *FileNode) error {
 		node.Tree = newTree
 		return nil
-	})
+	}, nil)
 
 	return newTree
 }
@@ -102,8 +102,8 @@ type Visiter func(*FileNode) error
 type VisitEvaluator func(*FileNode) bool
 
 // DFS bubble up
-func (tree *FileTree) VisitDepthChildFirst(visiter Visiter) error {
-	return tree.Root.VisitDepthChildFirst(visiter)
+func (tree *FileTree) VisitDepthChildFirst(visiter Visiter, evaluator VisitEvaluator) error {
+	return tree.Root.VisitDepthChildFirst(visiter, evaluator)
 }
 
 // DFS sink down
@@ -126,7 +126,7 @@ func (tree *FileTree) Stack(upper *FileTree) error {
 		}
 		return nil
 	}
-	return upper.VisitDepthChildFirst(graft)
+	return upper.VisitDepthChildFirst(graft, nil)
 }
 
 func (tree *FileTree) GetNode(path string) (*FileNode, error) {
@@ -179,30 +179,30 @@ func (tree *FileTree) RemovePath(path string) error {
 }
 
 func (tree *FileTree) Compare(upper *FileTree) error {
-	graft := func(node *FileNode) error {
-		if node.IsWhiteout() {
-			err := tree.MarkRemoved(node.Path())
+	graft := func(upperNode *FileNode) error {
+		if upperNode.IsWhiteout() {
+			err := tree.MarkRemoved(upperNode.Path())
 			if err != nil {
-				return fmt.Errorf("Cannot remove node %s: %v", node.Path(), err.Error())
+				 return fmt.Errorf("Cannot remove upperNode %s: %v", upperNode.Path(), err.Error())
 			}
 		} else {
-			existingNode, _ := tree.GetNode(node.Path())
-			if existingNode == nil {
-				newNode, err := tree.AddPath(node.Path(), node.Data.FileInfo)
-				// fmt.Printf("added new node at %s\n", newNode.Path())
+			lowerNode, _ := tree.GetNode(upperNode.Path())
+			if lowerNode == nil {
+				newNode, err := tree.AddPath(upperNode.Path(), upperNode.Data.FileInfo)
+				// fmt.Printf("added new upperNode at %s\n", newNode.Path())
 				if err != nil {
-					return fmt.Errorf("Cannot add new node %s: %v", node.Path(), err.Error())
+					 return fmt.Errorf("Cannot add new upperNode %s: %v", upperNode.Path(), err.Error())
 				}
 				newNode.AssignDiffType(Added)
 			} else {
-				diffType := existingNode.compare(node)
-				// fmt.Printf("found existing node at %s\n", existingNode.Path())
-				return existingNode.deriveDiffType(diffType)
+				diffType := lowerNode.compare(upperNode)
+				// fmt.Printf("found existing upperNode at %s\n", lowerNode.Path())
+				return lowerNode.deriveDiffType(diffType)
 			}
 		}
 		return nil
 	}
-	return upper.VisitDepthChildFirst(graft)
+	return upper.VisitDepthChildFirst(graft, nil)
 }
 
 func (tree *FileTree) MarkRemoved(path string) error {

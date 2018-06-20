@@ -64,8 +64,6 @@ func (node *FileNode) String() string {
 	var style *color.Color
 	if node == nil {
 		return ""
-	} else if node.Data.FileInfo == nil {
-		return node.Name
 	}
 	switch node.Data.DiffType {
 	case Added:
@@ -82,15 +80,20 @@ func (node *FileNode) String() string {
 	return style.Sprint(node.Name)
 }
 
-func (node *FileNode) VisitDepthChildFirst(visiter Visiter) error {
+func (node *FileNode) VisitDepthChildFirst(visiter Visiter, evaluator VisitEvaluator) error {
 	var keys []string
 	for key := range node.Children {
 		keys = append(keys, key)
 	}
 	sort.Strings(keys)
 	for _, name := range keys {
+		if evaluator != nil {
+			if !evaluator(node) {
+				continue
+			}
+		}
 		child := node.Children[name]
-		err := child.VisitDepthChildFirst(visiter)
+		err := child.VisitDepthChildFirst(visiter, evaluator)
 		if err != nil {
 			return err
 		}
@@ -110,10 +113,12 @@ func (node *FileNode) VisitDepthParentFirst(visiter Visiter, evaluator VisitEval
 	}
 	sort.Strings(keys)
 	for _, name := range keys {
-		child := node.Children[name]
-		if evaluator == nil || !evaluator(node) {
-			continue
+		if evaluator != nil {
+			if !evaluator(node) {
+				continue
+			}
 		}
+		child := node.Children[name]
 		err = child.VisitDepthParentFirst(visiter, evaluator)
 		if err != nil {
 			return err
@@ -155,8 +160,7 @@ func (node *FileNode) deriveDiffType(diffType DiffType) error {
 	// THE CONTENTS ARE THE BYTES OF A FILE OR THE CHILDREN OF A DIRECTORY
 
 	if node.IsLeaf() {
-		node.AssignDiffType(diffType)
-		return nil
+		return node.AssignDiffType(diffType)
 	}
 	myDiffType := diffType
 
@@ -164,8 +168,8 @@ func (node *FileNode) deriveDiffType(diffType DiffType) error {
 		myDiffType = myDiffType.merge(v.Data.DiffType)
 
 	}
-	node.AssignDiffType(myDiffType)
-	return nil
+
+	return 	node.AssignDiffType(myDiffType)
 }
 
 func (node *FileNode) AssignDiffType(diffType DiffType) error {

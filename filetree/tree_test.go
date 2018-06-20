@@ -5,6 +5,25 @@ import (
 	"testing"
 )
 
+func stringInSlice(a string, list []string) bool {
+	for _, b := range list {
+		if b == a {
+			return true
+		}
+	}
+	return false
+}
+
+func AssertDiffType(node *FileNode, expectedDiffType DiffType) error {
+	if node.Data.FileInfo == nil {
+		return fmt.Errorf("expected *FileInfo but got nil at Path %s", node.Path())
+	}
+	if node.Data.DiffType != expectedDiffType {
+		return fmt.Errorf("Expecting node at %s to have DiffType %v, but had %v", node.Path(), expectedDiffType, node.Data.DiffType)
+	}
+	return nil
+}
+
 func TestPrintTree(t *testing.T) {
 	tree := NewFileTree()
 	tree.Root.AddChild("first node!", nil)
@@ -199,7 +218,7 @@ func TestCompareWithNoChanges(t *testing.T) {
 		}
 		return nil
 	}
-	err := lowerTree.VisitDepthChildFirst(asserter)
+	err := lowerTree.VisitDepthChildFirst(asserter, nil)
 	if err != nil {
 		t.Error(err)
 	}
@@ -212,53 +231,116 @@ func TestCompareWithAdds(t *testing.T) {
 	upperPaths := [...]string{"/etc", "/etc/sudoers", "/usr", "/etc/hosts", "/usr/bin", "/usr/bin/bash"}
 
 	for _, value := range lowerPaths {
-		fakeData := FileInfo{
+		lowerTree.AddPath(value, &FileInfo{
 			Path:     value,
 			Typeflag: 1,
 			MD5sum:   [16]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-		}
-		lowerTree.AddPath(value, &fakeData)
+		})
 	}
 
 	for _, value := range upperPaths {
-		fakeData := FileInfo{
+		upperTree.AddPath(value, &FileInfo{
 			Path:     value,
 			Typeflag: 1,
 			MD5sum:   [16]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-		}
-		upperTree.AddPath(value, &fakeData)
+		})
 	}
 
-	lowerTree.Compare(upperTree)
+	failedAssertions := []error{}
+	err := lowerTree.Compare(upperTree)
+	if err != nil {
+		t.Errorf("Expected tree compare to have no errors, got: %v", err)
+	}
 	asserter := func(n *FileNode) error {
 
 		p := n.Path()
 		if p == "/" {
 			return nil
+		} else if stringInSlice(p,[]string{"/usr/bin/bash"}) {
+			if err := AssertDiffType(n, Added); err != nil {
+				failedAssertions = append(failedAssertions, err)
+			}
+		} else if stringInSlice(p,[]string{"/usr/bin", "/usr"}) {
+			if err := AssertDiffType(n, Changed); err != nil {
+				failedAssertions = append(failedAssertions, err)
+			}
+		} else {
+			if err := AssertDiffType(n, Unchanged); err != nil {
+				failedAssertions = append(failedAssertions, err)
+			}
 		}
-		// Adding a file changes the folders it's in
-		if p == "/usr/bin/bash" {
-			return AssertDiffType(n, Added, t)
-		}
-		if p == "/usr/bin" {
-			return AssertDiffType(n, Changed, t)
-		}
-		if p == "/usr" {
-			return AssertDiffType(n, Changed, t)
-		}
-		return AssertDiffType(n, Unchanged, t)
+		return nil
 	}
-	err := lowerTree.VisitDepthChildFirst(asserter)
+	err = lowerTree.VisitDepthChildFirst(asserter, nil)
 	if err != nil {
-		t.Error(err)
+		t.Errorf("Expected no errors when visiting nodes, got: %+v", err)
+	}
+
+	if len(failedAssertions) > 0 {
+		str := "\n"
+		for _, value := range failedAssertions {
+			str += fmt.Sprintf("  - %s\n", value.Error())
+		}
+		t.Errorf("Expected no errors when evaluating nodes, got: %s", str)
 	}
 }
 
 func TestCompareWithChanges(t *testing.T) {
 	lowerTree := NewFileTree()
 	upperTree := NewFileTree()
-	lowerPaths := [...]string{"/etc", "/usr", "/etc/hosts", "/etc/sudoers", "/usr/bin"}
-	upperPaths := [...]string{"/etc", "/usr", "/etc/hosts", "/etc/sudoers", "/usr/bin"}
+	paths := [...]string{"/etc", "/usr", "/etc/hosts", "/etc/sudoers", "/usr/bin"}
+
+	for _, value := range paths {
+		lowerTree.AddPath(value, &FileInfo{
+			Path:     value,
+			Typeflag: 1,
+			MD5sum:   [16]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+		})
+		upperTree.AddPath(value, &FileInfo{
+			Path:     value,
+			Typeflag: 1,
+			MD5sum:   [16]byte{1, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0},
+		})
+	}
+
+
+	lowerTree.Compare(upperTree)
+	failedAssertions := []error{}
+	asserter := func(n *FileNode) error {
+		p := n.Path()
+		if p == "/" {
+			return nil
+		} else if stringInSlice(p, []string{"/etc", "/usr", "/etc/hosts", "/etc/sudoers", "/usr/bin"}) {
+			if err := AssertDiffType(n, Changed); err != nil {
+				failedAssertions = append(failedAssertions, err)
+			}
+		} else {
+			if err := AssertDiffType(n, Unchanged); err != nil {
+				failedAssertions = append(failedAssertions, err)
+			}
+		}
+		return nil
+	}
+	err := lowerTree.VisitDepthChildFirst(asserter, nil)
+	if err != nil {
+		t.Errorf("Expected no errors when visiting nodes, got: %+v", err)
+	}
+
+	if len(failedAssertions) > 0 {
+		str := "\n"
+		for _, value := range failedAssertions {
+			str += fmt.Sprintf("  - %s\n", value.Error())
+		}
+		t.Errorf("Expected no errors when evaluating nodes, got: %s", str)
+	}
+}
+
+
+func TestCompareWithRemoves(t *testing.T) {
+	lowerTree := NewFileTree()
+	upperTree := NewFileTree()
+	lowerPaths := [...]string{"/etc", "/usr", "/etc/hosts", "/etc/sudoers", "/usr/bin", "/root", "/root/example", "/root/example/some1", "/root/example/some2"}
+	upperPaths := [...]string{"/.wh.etc", "/usr", "/usr/.wh.bin", "/root/.wh.example"}
 
 	for _, value := range lowerPaths {
 		fakeData := FileInfo{
@@ -273,22 +355,43 @@ func TestCompareWithChanges(t *testing.T) {
 		fakeData := FileInfo{
 			Path:     value,
 			Typeflag: 1,
-			MD5sum:   [16]byte{1, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0},
+			MD5sum:   [16]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 		}
 		upperTree.AddPath(value, &fakeData)
 	}
 
 	lowerTree.Compare(upperTree)
+	failedAssertions := []error{}
 	asserter := func(n *FileNode) error {
 		p := n.Path()
 		if p == "/" {
 			return nil
+		} else if stringInSlice(p,[]string{"/etc", "/usr/bin", "/etc/hosts", "/etc/sudoers", "/root/example/some1", "/root/example/some2", "/root/example"}) {
+			if err := AssertDiffType(n, Removed); err != nil {
+				failedAssertions = append(failedAssertions, err)
+			}
+		} else if stringInSlice(p,[]string{"/usr", "/root"}) {
+			if err := AssertDiffType(n, Changed); err != nil {
+				failedAssertions = append(failedAssertions, err)
+			}
+		} else {
+			if err := AssertDiffType(n, Unchanged); err != nil {
+				failedAssertions = append(failedAssertions, err)
+			}
 		}
-		return AssertDiffType(n, Changed, t)
+		return nil
 	}
-	err := lowerTree.VisitDepthChildFirst(asserter)
+	err := lowerTree.VisitDepthChildFirst(asserter, nil)
 	if err != nil {
-		t.Error(err)
+		t.Errorf("Expected no errors when visiting nodes, got: %+v", err)
+	}
+
+	if len(failedAssertions) > 0 {
+		str := "\n"
+		for _, value := range failedAssertions {
+			str += fmt.Sprintf("  - %s\n", value.Error())
+		}
+		t.Errorf("Expected no errors when evaluating nodes, got: %s", str)
 	}
 }
 

@@ -1,13 +1,16 @@
 package filetree
 
 import (
-	"fmt"
 	"testing"
 )
 
 func TestAssignDiffType(t *testing.T) {
 	tree := NewFileTree()
-	tree.AddPath("/usr", BlankFileChangeInfo("/usr", Changed))
+	node, err := tree.AddPath("/usr", BlankFileChangeInfo("/usr"))
+	if err != nil {
+		t.Errorf("Expected no error from fetching path. got: %v", err)
+	}
+	node.Data.DiffType = Changed
 	if tree.Root.Children["usr"].Data.DiffType != Changed {
 		t.Fail()
 	}
@@ -28,19 +31,7 @@ func TestMergeDiffTypes(t *testing.T) {
 	}
 }
 
-func AssertDiffType(node *FileNode, expectedDiffType DiffType, t *testing.T) error {
-	if node.Data.FileInfo == nil {
-		t.Errorf("Expected *FileInfo but got nil at Path %s", node.Path())
-		return fmt.Errorf("expected *FileInfo but got nil at Path %s", node.Path())
-	}
-	if node.Data.DiffType != expectedDiffType {
-		t.Errorf("Expecting node at %s to have DiffType %v, but had %v", node.Path(), expectedDiffType, node.Data.DiffType)
-		return fmt.Errorf("Assertion failed")
-	}
-	return nil
-}
-
-func BlankFileChangeInfo(path string, diffType DiffType) (f *FileInfo) {
+func BlankFileChangeInfo(path string) (f *FileInfo) {
 	result := FileInfo{
 		Path:     path,
 		Typeflag: 1,

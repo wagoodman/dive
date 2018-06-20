@@ -85,7 +85,7 @@ func (view *FileTreeView) setLayer(layerIndex int) error {
 		}
 		return nil
 	}
-	view.Tree.VisitDepthChildFirst(visitor)
+	view.Tree.VisitDepthChildFirst(visitor, nil)
 
 	// now that the tree has been rebuilt, keep the view seleciton in parity with the previous selection
 	view.setHiddenFromDiffTypes()
@@ -154,7 +154,7 @@ func (view *FileTreeView) setHiddenFromDiffTypes() error {
 		node.Data.ViewInfo.Hidden = view.HiddenDiffTypes[node.Data.DiffType]
 		return nil
 	}
-	view.Tree.VisitDepthChildFirst(visitor)
+	view.Tree.VisitDepthChildFirst(visitor, nil)
 	return view.Render()
 }
 

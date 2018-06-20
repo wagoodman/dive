@@ -109,19 +109,41 @@ func TestIsWhiteout(t *testing.T) {
 	}
 }
 
-func TestDiffTypeFromChildren(t *testing.T) {
+func TestDiffTypeFromAddedChildren(t *testing.T) {
 	tree := NewFileTree()
-	tree.AddPath("/usr", BlankFileChangeInfo("/usr", Unchanged))
+	node, _ := tree.AddPath("/usr", BlankFileChangeInfo("/usr"))
+	node.Data.DiffType = Unchanged
 
-	info1 := BlankFileChangeInfo("/usr/bin", Added)
-	tree.AddPath("/usr/bin", info1)
+	info1 := BlankFileChangeInfo("/usr/bin")
+	node, _ = tree.AddPath("/usr/bin", info1)
+	node.Data.DiffType = Added
 
-	info2 := BlankFileChangeInfo("/usr/bin2", Removed)
-	tree.AddPath("/usr/bin2", info2)
+	info2 := BlankFileChangeInfo("/usr/bin2")
+	node, _ = tree.AddPath("/usr/bin2", info2)
+	node.Data.DiffType = Removed
 
 	tree.Root.Children["usr"].deriveDiffType(Unchanged)
 
 	if tree.Root.Children["usr"].Data.DiffType != Changed {
 		t.Errorf("Expected Changed but got %v", tree.Root.Children["usr"].Data.DiffType)
 	}
+}
+func TestDiffTypeFromRemovedChildren(t *testing.T) {
+	tree := NewFileTree()
+	node, _ := tree.AddPath("/usr", BlankFileChangeInfo("/usr"))
+
+	info1 := BlankFileChangeInfo("/usr/.wh.bin")
+	node, _ = tree.AddPath("/usr/.wh.bin", info1)
+	node.Data.DiffType = Removed
+
+	info2 := BlankFileChangeInfo("/usr/.wh.bin2")
+	node, _ = tree.AddPath("/usr/.wh.bin2", info2)
+	node.Data.DiffType = Removed
+
+	tree.Root.Children["usr"].deriveDiffType(Unchanged)
+
+	if tree.Root.Children["usr"].Data.DiffType != Changed {
+		t.Errorf("Expected Changed but got %v", tree.Root.Children["usr"].Data.DiffType)
+	}
+
 }
