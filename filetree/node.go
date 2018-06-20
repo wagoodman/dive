@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/fatih/color"
+	"fmt"
 )
 
 type FileNode struct {
@@ -30,10 +31,12 @@ func NewNode(parent *FileNode, name string, data *FileInfo) (node *FileNode) {
 	return node
 }
 
-func (node *FileNode) Copy() *FileNode {
-	newNode := NewNode(node.Parent, node.Name, node.Data.FileInfo)
+func (node *FileNode) Copy(parent *FileNode) *FileNode {
+	newNode := NewNode(parent, node.Name, node.Data.FileInfo)
+	newNode.Data.ViewInfo = node.Data.ViewInfo
+	newNode.Data.DiffType = node.Data.DiffType
 	for name, child := range node.Children {
-		newNode.Children[name] = child.Copy()
+		newNode.Children[name] = child.Copy(newNode)
 		child.Parent = newNode
 	}
 	return newNode
@@ -52,6 +55,9 @@ func (node *FileNode) AddChild(name string, data *FileInfo) (child *FileNode) {
 }
 
 func (node *FileNode) Remove() error {
+	if node == node.Tree.Root {
+		return fmt.Errorf("cannot remove the tree root")
+	}
 	for _, child := range node.Children {
 		child.Remove()
 	}
@@ -87,24 +93,37 @@ func (node *FileNode) VisitDepthChildFirst(visiter Visiter, evaluator VisitEvalu
 	}
 	sort.Strings(keys)
 	for _, name := range keys {
-		if evaluator != nil {
-			if !evaluator(node) {
-				continue
-			}
-		}
 		child := node.Children[name]
 		err := child.VisitDepthChildFirst(visiter, evaluator)
 		if err != nil {
 			return err
 		}
 	}
-	return visiter(node)
+	// never visit the root node
+	if node == node.Tree.Root {
+		return nil
+	} else if evaluator != nil && evaluator(node) || evaluator == nil {
+		return visiter(node)
+	}
+
+	return nil
 }
 
 func (node *FileNode) VisitDepthParentFirst(visiter Visiter, evaluator VisitEvaluator) error {
-	err := visiter(node)
-	if err != nil {
-		return err
+	var err error
+
+	doVisit := evaluator != nil && evaluator(node) || evaluator == nil
+
+	if !doVisit {
+		return nil
+	}
+
+	// never visit the root node
+	if node != node.Tree.Root{
+		err = visiter(node)
+		if err != nil {
+			return err
+		}
 	}
 
 	var keys []string
@@ -113,11 +132,6 @@ func (node *FileNode) VisitDepthParentFirst(visiter Visiter, evaluator VisitEval
 	}
 	sort.Strings(keys)
 	for _, name := range keys {
-		if evaluator != nil {
-			if !evaluator(node) {
-				continue
-			}
-		}
 		child := node.Children[name]
 		err = child.VisitDepthParentFirst(visiter, evaluator)
 		if err != nil {

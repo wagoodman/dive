@@ -13,7 +13,8 @@ type FileTreeView struct {
 	gui             *gocui.Gui
 	view            *gocui.View
 	TreeIndex       int
-	Tree            *filetree.FileTree
+	ModelTree       *filetree.FileTree
+	ViewTree        *filetree.FileTree
 	RefTrees        []*filetree.FileTree
 	HiddenDiffTypes []bool
 }
@@ -24,7 +25,7 @@ func NewFileTreeView(name string, gui *gocui.Gui, tree *filetree.FileTree, refTr
 	// populate main fields
 	treeview.Name = name
 	treeview.gui = gui
-	treeview.Tree = tree
+	treeview.ModelTree = tree
 	treeview.RefTrees = refTrees
 	treeview.HiddenDiffTypes = make([]bool, 4)
 
@@ -65,6 +66,7 @@ func (view *FileTreeView) Setup(v *gocui.View) error {
 		return err
 	}
 
+	view.updateViewTree()
 	view.Render()
 
 	return nil
@@ -81,14 +83,11 @@ func (view *FileTreeView) setLayer(layerIndex int) error {
 	visitor := func(node *filetree.FileNode) error {
 		newNode, err := newTree.GetNode(node.Path())
 		if err == nil {
-			newNode.Data.ViewInfo.Collapsed = node.Data.ViewInfo.Collapsed
+			newNode.Data.ViewInfo = node.Data.ViewInfo
 		}
 		return nil
 	}
-	view.Tree.VisitDepthChildFirst(visitor, nil)
-
-	// now that the tree has been rebuilt, keep the view seleciton in parity with the previous selection
-	view.setHiddenFromDiffTypes()
+	view.ModelTree.VisitDepthChildFirst(visitor, nil)
 
 	if debug {
 		v, _ := view.gui.View("debug")
@@ -96,9 +95,11 @@ func (view *FileTreeView) setLayer(layerIndex int) error {
 		_, _ = fmt.Fprintln(v, view.RefTrees[layerIndex])
 	}
 
+
 	view.view.SetCursor(0, 0)
 	view.TreeIndex = 0
-	view.Tree = newTree
+	view.ModelTree = newTree
+	view.updateViewTree()
 	return view.Render()
 }
 
@@ -115,6 +116,8 @@ func (view *FileTreeView) CursorUp() error {
 	if err == nil {
 		view.TreeIndex--
 	}
+	// tmp tmp tmp
+	view.getAbsPositionNode()
 	return nil
 }
 
@@ -123,21 +126,26 @@ func (view *FileTreeView) getAbsPositionNode() (node *filetree.FileNode) {
 	var evaluator func(*filetree.FileNode) bool
 	var dfsCounter int
 
+	// special case: the root node is never visited
+	if view.TreeIndex == 0 {
+		return view.ModelTree.Root
+	}
+
 	visiter = func(curNode *filetree.FileNode) error {
+		dfsCounter++
 		if dfsCounter == view.TreeIndex {
 			node = curNode
 		}
-		dfsCounter++
 		return nil
 	}
 
 	evaluator = func(curNode *filetree.FileNode) bool {
-		return !curNode.Data.ViewInfo.Collapsed && !curNode.Data.ViewInfo.Hidden
+		return !curNode.Parent.Data.ViewInfo.Collapsed && !curNode.Data.ViewInfo.Hidden
 	}
 
-	err := view.Tree.VisitDepthParentFirst(visiter, evaluator)
+	err := view.ModelTree.VisitDepthParentFirst(visiter, evaluator)
 	if err != nil {
-		// todo: you guessed it, check errors
+		panic(err)
 	}
 
 	return node
@@ -146,25 +154,39 @@ func (view *FileTreeView) getAbsPositionNode() (node *filetree.FileNode) {
 func (view *FileTreeView) toggleCollapse() error {
 	node := view.getAbsPositionNode()
 	node.Data.ViewInfo.Collapsed = !node.Data.ViewInfo.Collapsed
-	return view.Render()
-}
-
-func (view *FileTreeView) setHiddenFromDiffTypes() error {
-	visitor := func(node *filetree.FileNode) error {
-		node.Data.ViewInfo.Hidden = view.HiddenDiffTypes[node.Data.DiffType]
-		return nil
-	}
-	view.Tree.VisitDepthChildFirst(visitor, nil)
+	view.updateViewTree()
 	return view.Render()
 }
 
 func (view *FileTreeView) toggleShowDiffType(diffType filetree.DiffType) error {
 	view.HiddenDiffTypes[diffType] = !view.HiddenDiffTypes[diffType]
-	return view.setHiddenFromDiffTypes()
+
+	view.view.SetCursor(0, 0)
+	view.TreeIndex = 0
+	view.updateViewTree()
+	return view.Render()
+}
+
+func (view *FileTreeView) updateViewTree() {
+	// keep the view selection in parity with the current DiffType selection
+	view.ModelTree.VisitDepthChildFirst(func(node *filetree.FileNode) error {
+		node.Data.ViewInfo.Hidden = view.HiddenDiffTypes[node.Data.DiffType]
+		return nil
+	}, nil)
+
+	// make a new tree with only visible nodes
+	view.ViewTree = view.ModelTree.Copy()
+	view.ViewTree.VisitDepthParentFirst(func(node *filetree.FileNode) error {
+		if node.Data.ViewInfo.Hidden {
+			view.ViewTree.RemovePath(node.Path())
+		}
+		return nil
+	}, nil)
 }
 
 func (view *FileTreeView) Render() error {
-	renderString := view.Tree.String()
+	// print the tree to the view
+	renderString := view.ViewTree.String()
 	view.gui.Update(func(g *gocui.Gui) error {
 		view.view.Clear()
 		_, err := fmt.Fprintln(view.view, renderString)

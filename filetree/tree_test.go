@@ -432,3 +432,41 @@ func TestStackRange(t *testing.T) {
 	trees := []*FileTree{lowerTree, upperTree, tree}
 	StackRange(trees, 2)
 }
+
+
+func TestRemoveOnIterate(t *testing.T) {
+
+	tree := NewFileTree()
+	paths := [...]string{"/etc", "/usr", "/etc/hosts", "/etc/sudoers", "/usr/bin", "/usr/something"}
+
+	for _, value := range paths {
+		fakeData := FileInfo{
+			Path:     value,
+			Typeflag: 1,
+			MD5sum:   [16]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+		}
+		node, err := tree.AddPath(value, &fakeData)
+		if err == nil && stringInSlice(node.Path(), []string{"/etc"}) {
+			node.Data.ViewInfo.Hidden = true
+		}
+	}
+
+	tree.VisitDepthChildFirst(func(node *FileNode) error {
+		if node.Data.ViewInfo.Hidden {
+			tree.RemovePath(node.Path())
+		}
+		return nil
+	}, nil)
+
+	expected := `.
+└── usr
+    ├── bin
+    └── something
+`
+	actual := tree.String()
+	if expected != actual {
+		t.Errorf("Expected tree string:\n--->%s<---\nGot:\n--->%s<---", expected, actual)
+	}
+
+}
+

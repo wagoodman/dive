@@ -1,7 +1,6 @@
 package filetree
 
 import (
-	"errors"
 	"fmt"
 	"sort"
 	"strings"
@@ -88,8 +87,10 @@ func (tree *FileTree) String() string {
 
 func (tree *FileTree) Copy() *FileTree {
 	newTree := NewFileTree()
-	*newTree = *tree
-	newTree.Root = tree.Root.Copy()
+	newTree.Size = tree.Size
+	newTree.Root = tree.Root.Copy(newTree.Root)
+
+	// update the tree pointers
 	newTree.VisitDepthChildFirst(func(node *FileNode) error {
 		node.Tree = newTree
 		return nil
@@ -116,12 +117,12 @@ func (tree *FileTree) Stack(upper *FileTree) error {
 		if node.IsWhiteout() {
 			err := tree.RemovePath(node.Path())
 			if err != nil {
-				return fmt.Errorf("Cannot remove node %s: %v", node.Path(), err.Error())
+				return fmt.Errorf("cannot remove node %s: %v", node.Path(), err.Error())
 			}
 		} else {
 			newNode, err := tree.AddPath(node.Path(), node.Data.FileInfo)
 			if err != nil {
-				return fmt.Errorf("Cannot add node %s: %v", newNode.Path(), err.Error())
+				return fmt.Errorf("cannot add node %s: %v", newNode.Path(), err.Error())
 			}
 		}
 		return nil
@@ -137,7 +138,7 @@ func (tree *FileTree) GetNode(path string) (*FileNode, error) {
 			continue
 		}
 		if node.Children[name] == nil {
-			return nil, errors.New("Path does not exist")
+			return nil, fmt.Errorf("path does not exist: %s", path)
 		}
 		node = node.Children[name]
 	}
@@ -183,7 +184,7 @@ func (tree *FileTree) Compare(upper *FileTree) error {
 		if upperNode.IsWhiteout() {
 			err := tree.MarkRemoved(upperNode.Path())
 			if err != nil {
-				 return fmt.Errorf("Cannot remove upperNode %s: %v", upperNode.Path(), err.Error())
+				 return fmt.Errorf("cannot remove upperNode %s: %v", upperNode.Path(), err.Error())
 			}
 		} else {
 			lowerNode, _ := tree.GetNode(upperNode.Path())
@@ -191,7 +192,7 @@ func (tree *FileTree) Compare(upper *FileTree) error {
 				newNode, err := tree.AddPath(upperNode.Path(), upperNode.Data.FileInfo)
 				// fmt.Printf("added new upperNode at %s\n", newNode.Path())
 				if err != nil {
-					 return fmt.Errorf("Cannot add new upperNode %s: %v", upperNode.Path(), err.Error())
+					 return fmt.Errorf("cannot add new upperNode %s: %v", upperNode.Path(), err.Error())
 				}
 				newNode.AssignDiffType(Added)
 			} else {
