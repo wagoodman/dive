@@ -6,6 +6,8 @@ import (
 
 	"github.com/jroimartin/gocui"
 	"github.com/wagoodman/docker-image-explorer/filetree"
+	"github.com/fatih/color"
+	"strings"
 )
 
 type FileTreeView struct {
@@ -38,9 +40,9 @@ func (view *FileTreeView) Setup(v *gocui.View) error {
 	view.view = v
 	view.view.Editable = false
 	view.view.Wrap = false
-	view.view.Highlight = true
-	view.view.SelBgColor = gocui.ColorGreen
-	view.view.SelFgColor = gocui.ColorBlack
+	//view.view.Highlight = true
+	//view.view.SelBgColor = gocui.ColorGreen
+	//view.view.SelFgColor = gocui.ColorBlack
 	view.view.Frame = true
 
 	// set keybindings
@@ -108,7 +110,7 @@ func (view *FileTreeView) CursorDown() error {
 	if err == nil {
 		view.TreeIndex++
 	}
-	return nil
+	return view.Render()
 }
 
 func (view *FileTreeView) CursorUp() error {
@@ -116,9 +118,7 @@ func (view *FileTreeView) CursorUp() error {
 	if err == nil {
 		view.TreeIndex--
 	}
-	// tmp tmp tmp
-	view.getAbsPositionNode()
-	return nil
+	return view.Render()
 }
 
 func (view *FileTreeView) getAbsPositionNode() (node *filetree.FileNode) {
@@ -184,13 +184,29 @@ func (view *FileTreeView) updateViewTree() {
 	}, nil)
 }
 
+func (view *FileTreeView) KeyHelp() string {
+	control := color.New(color.Bold).SprintFunc()
+	return  control("[Space]") + ": Collapse dir " +
+	        control("[^A]") + ": Added files " +
+			control("[^R]") + ": Removed files " +
+			control("[^M]") + ": Modified files " +
+			control("[^U]") + ": Unmodified files"
+}
+
 func (view *FileTreeView) Render() error {
 	// print the tree to the view
-	renderString := view.ViewTree.String()
+	lines := strings.Split(view.ViewTree.String(), "\n")
 	view.gui.Update(func(g *gocui.Gui) error {
 		view.view.Clear()
-		_, err := fmt.Fprintln(view.view, renderString)
-		return err
+		for idx, line := range lines {
+			if idx == view.TreeIndex {
+				fmt.Fprintln(view.view, Formatting.Header(line))
+			} else {
+				fmt.Fprintln(view.view, line)
+			}
+		}
+		// todo: should we check error on the view println?
+		return nil
 	})
 	return nil
 }

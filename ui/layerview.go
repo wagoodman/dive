@@ -31,9 +31,9 @@ func (view *LayerView) Setup(v *gocui.View) error {
 	// set view options
 	view.view = v
 	view.view.Wrap = false
-	view.view.Highlight = true
-	view.view.SelBgColor = gocui.ColorGreen
-	view.view.SelFgColor = gocui.ColorBlack
+	//view.view.Highlight = true
+	//view.view.SelBgColor = gocui.ColorGreen
+	//view.view.SelFgColor = gocui.ColorBlack
 	view.view.Frame = false
 
 	// set keybindings
@@ -52,9 +52,16 @@ func (view *LayerView) Setup(v *gocui.View) error {
 func (view *LayerView) Render() error {
 	view.gui.Update(func(g *gocui.Gui) error {
 		view.view.Clear()
-		for idx := len(view.Layers) - 1; idx >= 0; idx-- {
-			layer := view.Layers[idx]
-			fmt.Fprintln(view.view, layer.String())
+		for revIdx := len(view.Layers) - 1; revIdx >= 0; revIdx-- {
+			layer := view.Layers[revIdx]
+			idx := (len(view.Layers)-1) - revIdx
+
+			if idx == view.LayerIndex {
+				fmt.Fprintln(view.view, Formatting.Header(layer.String()))
+			} else {
+				fmt.Fprintln(view.view, layer.String())
+			}
+
 		}
 		return nil
 	})
@@ -84,4 +91,8 @@ func (view *LayerView) CursorUp() error {
 		}
 	}
 	return nil
+}
+
+func (view *LayerView) KeyHelp() string {
+	return "blerg"
 }

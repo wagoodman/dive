@@ -6,14 +6,20 @@ import (
 	"github.com/jroimartin/gocui"
 	"github.com/wagoodman/docker-image-explorer/filetree"
 	"github.com/wagoodman/docker-image-explorer/image"
+	"github.com/fatih/color"
 )
 
-const debug = true
+const debug = false
+
+var Formatting struct {
+	Header func(...interface{})(string)
+}
 
 var Views struct {
 	Tree   *FileTreeView
 	Layer  *LayerView
 	Status *StatusView
+	lookup map[string]View
 }
 
 type View interface {
@@ -21,14 +27,17 @@ type View interface {
 	CursorDown() error
 	CursorUp() error
 	Render() error
+	KeyHelp() string
 }
 
-func nextView(g *gocui.Gui, v *gocui.View) error {
+func toggleView(g *gocui.Gui, v *gocui.View) error {
 	if v == nil || v.Name() == Views.Layer.Name {
 		_, err := g.SetCurrentView(Views.Tree.Name)
+		Render()
 		return err
 	}
 	_, err := g.SetCurrentView(Views.Layer.Name)
+	Render()
 	return err
 }
 
@@ -74,10 +83,10 @@ func keybindings(g *gocui.Gui) error {
 	//if err := g.SetKeybinding("main", gocui.MouseLeft, gocui.ModNone, toggleCollapse); err != nil {
 	//	return err
 	//}
-	if err := g.SetKeybinding("side", gocui.KeyCtrlSpace, gocui.ModNone, nextView); err != nil {
+	if err := g.SetKeybinding("side", gocui.KeyCtrlSpace, gocui.ModNone, toggleView); err != nil {
 		return err
 	}
-	if err := g.SetKeybinding("main", gocui.KeyCtrlSpace, gocui.ModNone, nextView); err != nil {
+	if err := g.SetKeybinding("main", gocui.KeyCtrlSpace, gocui.ModNone, toggleView); err != nil {
 		return err
 	}
 
@@ -99,6 +108,10 @@ func layout(g *gocui.Gui) error {
 		}
 		Views.Layer.Setup(view)
 
+		if _, err := g.SetCurrentView(Views.Layer.Name); err != nil {
+			return err
+		}
+
 	}
 	if view, err := g.SetView(Views.Tree.Name, splitCols, -1, debugCols, maxY-bottomRows); err != nil {
 		if err != gocui.ErrUnknownView {
@@ -106,10 +119,6 @@ func layout(g *gocui.Gui) error {
 		}
 
 		Views.Tree.Setup(view)
-
-		if _, err := g.SetCurrentView(Views.Tree.Name); err != nil {
-			return err
-		}
 	}
 	if debug {
 		if _, err := g.SetView("debug", debugCols, -1, maxX, maxY-bottomRows); err != nil {
@@ -129,7 +138,14 @@ func layout(g *gocui.Gui) error {
 	return nil
 }
 
+func Render() {
+	for _, view := range Views.lookup {
+		view.Render()
+	}
+}
+
 func Run(layers []*image.Layer, refTrees []*filetree.FileTree) {
+	Formatting.Header = color.New(color.ReverseVideo, color.Bold).SprintFunc()
 
 	g, err := gocui.NewGui(gocui.OutputNormal)
 	if err != nil {
@@ -137,9 +153,16 @@ func Run(layers []*image.Layer, refTrees []*filetree.FileTree) {
 	}
 	defer g.Close()
 
+	Views.lookup = make(map[string]View)
+
 	Views.Layer = NewLayerView("side", g, layers)
+	Views.lookup[Views.Layer.Name] = Views.Layer
+
 	Views.Tree = NewFileTreeView("main", g, filetree.StackRange(refTrees, 0), refTrees)
+	Views.lookup[Views.Tree.Name] = Views.Tree
+
 	Views.Status = NewStatusView("status", g)
+	Views.lookup[Views.Status.Name] = Views.Status
 
 	g.Cursor = false
 	//g.Mouse = true

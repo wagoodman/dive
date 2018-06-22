@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/jroimartin/gocui"
+	"github.com/fatih/color"
 )
 
 type StatusView struct {
@@ -42,10 +43,26 @@ func (view *StatusView) Setup(v *gocui.View) error {
 	return nil
 }
 
+
+func (view *StatusView) CursorDown() error {
+	return nil
+}
+
+func (view *StatusView) CursorUp() error {
+	return nil
+}
+
+func (view *StatusView) KeyHelp() string {
+	control := color.New(color.Bold).SprintFunc()
+	return  control("[^C]") + ": Quit " +
+		control("[^Space]") + ": Switch View "
+
+}
+
 func (view *StatusView) Render() error {
 	view.gui.Update(func(g *gocui.Gui) error {
 		view.view.Clear()
-		fmt.Fprintln(view.view, "[Ctrl+C]: Quit [Ctrl+Space]: Switch View | [Space]: Toggle dir collapse [A]: Added files [R]: Removed files [M]: Modified files [U]: Unmodified files")
+		fmt.Fprintln(view.view, view.KeyHelp() + " | " + Views.lookup[view.gui.CurrentView().Name()].KeyHelp())
 
 		return nil
 	})
