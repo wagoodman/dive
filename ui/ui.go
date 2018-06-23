@@ -3,23 +3,24 @@ package ui
 import (
 	"log"
 
+	"github.com/fatih/color"
 	"github.com/jroimartin/gocui"
 	"github.com/wagoodman/docker-image-explorer/filetree"
 	"github.com/wagoodman/docker-image-explorer/image"
-	"github.com/fatih/color"
 )
 
 const debug = false
 
 var Formatting struct {
-	Header func(...interface{})(string)
+	Header func(...interface{}) string
 }
 
 var Views struct {
-	Tree   *FileTreeView
-	Layer  *LayerView
-	Status *StatusView
-	lookup map[string]View
+	Tree    *FileTreeView
+	Layer   *LayerView
+	Status  *StatusView
+	Command *CommandView
+	lookup  map[string]View
 }
 
 type View interface {
@@ -89,6 +90,9 @@ func keybindings(g *gocui.Gui) error {
 	if err := g.SetKeybinding("main", gocui.KeyCtrlSpace, gocui.ModNone, toggleView); err != nil {
 		return err
 	}
+	if err := g.SetKeybinding("command", gocui.KeyCtrlSlash, gocui.ModNone, toggleView); err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -134,6 +138,13 @@ func layout(g *gocui.Gui) error {
 		Views.Status.Setup(view)
 
 	}
+	if view, err := g.SetView(Views.Command.Name, -1, maxY-bottomRows-2, maxX, maxY-1); err != nil {
+		if err != gocui.ErrUnknownView {
+			return err
+		}
+		Views.Command.Setup(view)
+
+	}
 
 	return nil
 }
@@ -163,6 +174,9 @@ func Run(layers []*image.Layer, refTrees []*filetree.FileTree) {
 
 	Views.Status = NewStatusView("status", g)
 	Views.lookup[Views.Status.Name] = Views.Status
+
+	Views.Command = NewCommandView("command", g)
+	Views.lookup[Views.Command.Name] = Views.Command
 
 	g.Cursor = false
 	//g.Mouse = true

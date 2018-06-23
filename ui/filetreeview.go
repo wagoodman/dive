@@ -4,10 +4,11 @@ import (
 	"errors"
 	"fmt"
 
+	"strings"
+
+	"github.com/fatih/color"
 	"github.com/jroimartin/gocui"
 	"github.com/wagoodman/docker-image-explorer/filetree"
-	"github.com/fatih/color"
-	"strings"
 )
 
 type FileTreeView struct {
@@ -67,6 +68,9 @@ func (view *FileTreeView) Setup(v *gocui.View) error {
 	if err := view.gui.SetKeybinding(view.Name, gocui.KeyCtrlU, gocui.ModNone, func(*gocui.Gui, *gocui.View) error { return view.toggleShowDiffType(filetree.Unchanged) }); err != nil {
 		return err
 	}
+	if err := view.gui.SetKeybinding(view.Name, gocui.KeyCtrlSlash, gocui.ModNone, func(*gocui.Gui, *gocui.View) error { return nil }); err != nil {
+		return err
+	}
 
 	view.updateViewTree()
 	view.Render()
@@ -96,7 +100,6 @@ func (view *FileTreeView) setLayer(layerIndex int) error {
 		v.Clear()
 		_, _ = fmt.Fprintln(v, view.RefTrees[layerIndex])
 	}
-
 
 	view.view.SetCursor(0, 0)
 	view.TreeIndex = 0
@@ -186,11 +189,11 @@ func (view *FileTreeView) updateViewTree() {
 
 func (view *FileTreeView) KeyHelp() string {
 	control := color.New(color.Bold).SprintFunc()
-	return  control("[Space]") + ": Collapse dir " +
-	        control("[^A]") + ": Added files " +
-			control("[^R]") + ": Removed files " +
-			control("[^M]") + ": Modified files " +
-			control("[^U]") + ": Unmodified files"
+	return control("[Space]") + ": Collapse dir " +
+		control("[^A]") + ": Added files " +
+		control("[^R]") + ": Removed files " +
+		control("[^M]") + ": Modified files " +
+		control("[^U]") + ": Unmodified files"
 }
 
 func (view *FileTreeView) Render() error {
