@@ -36,9 +36,11 @@ func (view *CommandView) Setup(v *gocui.View, header *gocui.View) error {
 
 	// set view options
 	view.view = v
+	view.maxLength = 200
 	view.view.Frame = false
 	view.view.BgColor = gocui.ColorDefault + gocui.AttrReverse
 	view.view.Editable = true
+	view.view.Editor = view
 	// set keybindings
 	// if err := view.gui.SetKeybinding(view.Name, gocui.KeyArrowDown, gocui.ModNone, func(*gocui.Gui, *gocui.View) error { return view.CursorDown() }); err != nil {
 	// 	return err
@@ -71,6 +73,10 @@ func (i *CommandView) Edit(v *gocui.View, key gocui.Key, ch rune, mod gocui.Modi
 		v.EditWrite(' ')
 	case key == gocui.KeyBackspace || key == gocui.KeyBackspace2:
 		v.EditDelete(true)
+	}
+	if Views.Tree != nil {
+		debugPrint("Edit() calls Views.Tree.Render()")
+		Views.Tree.ReRender()
 	}
 }
 

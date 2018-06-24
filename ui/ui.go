@@ -55,7 +55,6 @@ func returnToTreeView(g *gocui.Gui, v *gocui.View) error {
 	debugPrint("returnToTreeView()")
 	_, err := g.SetCurrentView(Views.Tree.Name)
 	if Views.Tree != nil {
-		debugPrint("returnToTreeView calls Views.Tree.Render()")
 		Views.Tree.ReRender()
 	}
 	return err
