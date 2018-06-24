@@ -75,7 +75,6 @@ func (i *CommandView) Edit(v *gocui.View, key gocui.Key, ch rune, mod gocui.Modi
 		v.EditDelete(true)
 	}
 	if Views.Tree != nil {
-		debugPrint("Edit() calls Views.Tree.Render()")
 		Views.Tree.ReRender()
 	}
 }

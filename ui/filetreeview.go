@@ -190,43 +190,25 @@ func (view *FileTreeView) toggleShowDiffType(diffType filetree.DiffType) error {
 }
 
 func filterRegex() *regexp.Regexp {
-	debugPrint("Entered filterRegex()")
 	if Views.Command == nil || Views.Command.view == nil {
 		return nil
 	}
 	filterString := strings.TrimSpace(Views.Command.view.Buffer())
 	if len(filterString) < 1 {
-		debugPrint(fmt.Sprintf("returing nil from fitlerRegex() because string is too short (%s)", filterString))
 		return nil
 	}
 
-	debugPrint("Compiling regex from " + filterString)
 	regex, err := regexp.Compile(filterString)
 	if err != nil {
-		debugPrint("Returning nil from filterRegex")
 		return nil
 	}
 
 	return regex
 }
 
-func debugPrint(s string) {
-	if debug && Views.Tree != nil && Views.Tree.gui != nil {
-		v, _ := Views.Tree.gui.View("debug")
-		if v != nil {
-			if len(v.ViewBuffer()) > 100 {
-				v.Clear()
-			}
-			_, _ = fmt.Fprintln(v, s)
-		}
-	}
-}
-
 func (view *FileTreeView) updateViewTree() {
 	regex := filterRegex()
-	if regex == nil {
-		debugPrint("Nil regex in updateViewTree()")
-	}
+
 	// keep the view selection in parity with the current DiffType selection
 	view.ModelTree.VisitDepthChildFirst(func(node *filetree.FileNode) error {
 		node.Data.ViewInfo.Hidden = view.HiddenDiffTypes[node.Data.DiffType]
@@ -239,12 +221,6 @@ func (view *FileTreeView) updateViewTree() {
 		if regex != nil && !visibleChild {
 			match := regex.FindString(node.Path())
 			node.Data.ViewInfo.Hidden = len(match) == 0
-			debugPrint(fmt.Sprintf("Not nil regex, match was %s", string(match)))
-			if len(match) == 0 {
-				debugPrint(fmt.Sprintf("Hiding '%s' because of failure to match /%v/", node.Path(), regex))
-			} else {
-				debugPrint(fmt.Sprintf("Showing '%s' because of matching /%v/", node.Path(), regex))
-			}
 		}
 		return nil
 	}, nil)
@@ -284,4 +260,9 @@ func (view *FileTreeView) Render() error {
 		return nil
 	})
 	return nil
+}
+
+func (view *FileTreeView) ReRender() error {
+	view.updateViewTree()
+	return view.Render()
 }

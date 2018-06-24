@@ -2,6 +2,7 @@ package ui
 
 import (
 	"errors"
+	"fmt"
 	"log"
 
 	"github.com/fatih/color"
@@ -11,6 +12,18 @@ import (
 )
 
 const debug = true
+
+func debugPrint(s string) {
+	if debug && Views.Tree != nil && Views.Tree.gui != nil {
+		v, _ := Views.Tree.gui.View("debug")
+		if v != nil {
+			if len(v.BufferLines()) > 20 {
+				v.Clear()
+			}
+			_, _ = fmt.Fprintln(v, s)
+		}
+	}
+}
 
 var Formatting struct {
 	Header    func(...interface{}) string
@@ -45,14 +58,12 @@ func toggleView(g *gocui.Gui, v *gocui.View) error {
 }
 
 func focusFilterView(g *gocui.Gui, v *gocui.View) error {
-	debugPrint("focusFilterView()")
 	_, err := g.SetCurrentView(Views.Command.Name)
 	Render()
 	return err
 }
 
 func returnToTreeView(g *gocui.Gui, v *gocui.View) error {
-	debugPrint("returnToTreeView()")
 	_, err := g.SetCurrentView(Views.Tree.Name)
 	if Views.Tree != nil {
 		Views.Tree.ReRender()
