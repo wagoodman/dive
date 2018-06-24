@@ -32,7 +32,7 @@ func NewCommandView(name string, gui *gocui.Gui) (commandview *CommandView) {
 	return commandview
 }
 
-func (view *CommandView) Setup(v *gocui.View) error {
+func (view *CommandView) Setup(v *gocui.View, header *gocui.View) error {
 
 	// set view options
 	view.view = v
@@ -80,8 +80,7 @@ func (view *CommandView) KeyHelp() string {
 
 func (view *CommandView) Render() error {
 	view.gui.Update(func(g *gocui.Gui) error {
-		view.view.Clear()
-		fmt.Fprintln(view.view, "Filter: ")
+		fmt.Fprintln(view.view, "")
 
 		return nil
 	})

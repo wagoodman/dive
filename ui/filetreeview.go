@@ -4,9 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
-
-	"strings"
-
 	"strings"
 
 	"github.com/fatih/color"
@@ -108,12 +105,6 @@ func (view *FileTreeView) setLayer(layerIndex int) error {
 	}
 	view.ModelTree.VisitDepthChildFirst(visitor, nil)
 
-	if debug {
-		v, _ := view.gui.View("debug")
-		v.Clear()
-		_, _ = fmt.Fprintln(v, view.RefTrees[layerIndex])
-	}
-
 	view.view.SetCursor(0, 0)
 	view.TreeIndex = 0
 	view.ModelTree = newTree
@@ -197,31 +188,61 @@ func (view *FileTreeView) toggleShowDiffType(diffType filetree.DiffType) error {
 }
 
 func filterRegex() *regexp.Regexp {
+	debugPrint("Entered filterRegex()")
 	if Views.Command == nil || Views.Command.view == nil {
 		return nil
 	}
-	var filterBytes []byte
-	read, err := Views.Command.view.Read(filterBytes)
-	if read > 0 && err == nil {
-		regex, err := regexp.Compile(string(filterBytes))
-		if err == nil {
-			return regex
+	filterString := strings.TrimSpace(Views.Command.view.Buffer())
+	if len(filterString) < 1 {
+		debugPrint(fmt.Sprintf("returing nil from fitlerRegex() because string is too short (%s)", filterString))
+		return nil
+	}
+
+	debugPrint("Compiling regex from " + filterString)
+	regex, err := regexp.Compile(filterString)
+	if err != nil {
+		debugPrint("Returning nil from filterRegex")
+		return nil
+	}
+
+	return regex
+}
+
+func debugPrint(s string) {
+	if debug && Views.Tree != nil && Views.Tree.gui != nil {
+		v, _ := Views.Tree.gui.View("debug")
+		if v != nil {
+			if len(v.ViewBuffer()) > 100 {
+				v.Clear()
+			}
+			_, _ = fmt.Fprintln(v, s)
 		}
 	}
-	if read > 0 && err != nil {
-		panic(err)
-	}
-	return nil
 }
 
 func (view *FileTreeView) updateViewTree() {
 	regex := filterRegex()
+	if regex == nil {
+		debugPrint("Nil regex in updateViewTree()")
+	}
 	// keep the view selection in parity with the current DiffType selection
 	view.ModelTree.VisitDepthChildFirst(func(node *filetree.FileNode) error {
 		node.Data.ViewInfo.Hidden = view.HiddenDiffTypes[node.Data.DiffType]
-		if regex != nil {
-			match := regex.Find([]byte(node.Path()))
-			node.Data.ViewInfo.Hidden = match != nil
+		visibleChild := false
+		for _, child := range node.Children {
+			if !child.Data.ViewInfo.Hidden {
+				visibleChild = true
+			}
+		}
+		if regex != nil && !visibleChild {
+			match := regex.FindString(node.Path())
+			node.Data.ViewInfo.Hidden = len(match) == 0
+			debugPrint(fmt.Sprintf("Not nil regex, match was %s", string(match)))
+			if len(match) == 0 {
+				debugPrint(fmt.Sprintf("Hiding '%s' because of failure to match /%v/", node.Path(), regex))
+			} else {
+				debugPrint(fmt.Sprintf("Showing '%s' because of matching /%v/", node.Path(), regex))
+			}
 		}
 		return nil
 	}, nil)

@@ -10,7 +10,7 @@ import (
 	"github.com/wagoodman/docker-image-explorer/image"
 )
 
-const debug = false
+const debug = true
 
 var Formatting struct {
 	Header    func(...interface{}) string
@@ -45,12 +45,14 @@ func toggleView(g *gocui.Gui, v *gocui.View) error {
 }
 
 func focusFilterView(g *gocui.Gui, v *gocui.View) error {
+	debugPrint("focusFilterView()")
 	_, err := g.SetCurrentView(Views.Command.Name)
 	Render()
 	return err
 }
 
 func returnToTreeView(g *gocui.Gui, v *gocui.View) error {
+	debugPrint("returnToTreeView()")
 	_, err := g.SetCurrentView(Views.Tree.Name)
 	Render()
 	return err
@@ -177,7 +179,7 @@ func layout(g *gocui.Gui) error {
 		if err != gocui.ErrUnknownView {
 			return err
 		}
-		Views.Command.Setup(view)
+		Views.Command.Setup(view, nil)
 
 	}
 
