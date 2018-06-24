@@ -42,6 +42,18 @@ func toggleView(g *gocui.Gui, v *gocui.View) error {
 	return err
 }
 
+func focusFilterView(g *gocui.Gui, v *gocui.View) error {
+	_, err := g.SetCurrentView(Views.Command.Name)
+	Render()
+	return err
+}
+
+func returnToTreeView(g *gocui.Gui, v *gocui.View) error {
+	_, err := g.SetCurrentView(Views.Tree.Name)
+	Render()
+	return err
+}
+
 func CursorDown(g *gocui.Gui, v *gocui.View) error {
 	cx, cy := v.Cursor()
 
@@ -90,7 +102,10 @@ func keybindings(g *gocui.Gui) error {
 	if err := g.SetKeybinding("main", gocui.KeyCtrlSpace, gocui.ModNone, toggleView); err != nil {
 		return err
 	}
-	if err := g.SetKeybinding("command", gocui.KeyCtrlSlash, gocui.ModNone, toggleView); err != nil {
+	if err := g.SetKeybinding("", gocui.KeyCtrlSlash, gocui.ModNone, focusFilterView); err != nil {
+		return err
+	}
+	if err := g.SetKeybinding("command", gocui.KeyEnter, gocui.ModNone, returnToTreeView); err != nil {
 		return err
 	}
 

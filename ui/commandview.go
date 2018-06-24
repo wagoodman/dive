@@ -3,7 +3,6 @@ package ui
 import (
 	"fmt"
 
-	"github.com/fatih/color"
 	"github.com/jroimartin/gocui"
 )
 
@@ -39,7 +38,7 @@ func (view *CommandView) Setup(v *gocui.View) error {
 	view.view = v
 	view.view.Frame = false
 	view.view.BgColor = gocui.ColorDefault + gocui.AttrReverse
-
+	view.view.Editable = true
 	// set keybindings
 	// if err := view.gui.SetKeybinding(view.Name, gocui.KeyArrowDown, gocui.ModNone, func(*gocui.Gui, *gocui.View) error { return view.CursorDown() }); err != nil {
 	// 	return err
@@ -76,10 +75,7 @@ func (i *CommandView) Edit(v *gocui.View, key gocui.Key, ch rune, mod gocui.Modi
 }
 
 func (view *CommandView) KeyHelp() string {
-	control := color.New(color.Bold).SprintFunc()
-	return control("[^C]") + ": Quit " +
-		control("[^Space]") + ": Switch View "
-
+	return "Type string to filter"
 }
 
 func (view *CommandView) Render() error {
