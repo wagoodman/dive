@@ -136,16 +136,11 @@ func (view *FileTreeView) getAbsPositionNode() (node *filetree.FileNode) {
 	var evaluator func(*filetree.FileNode) bool
 	var dfsCounter int
 
-	// special case: the root node is never visited
-	if view.TreeIndex == 0 {
-		return view.ModelTree.Root
-	}
-
 	visiter = func(curNode *filetree.FileNode) error {
-		dfsCounter++
 		if dfsCounter == view.TreeIndex {
 			node = curNode
 		}
+		dfsCounter++
 		return nil
 	}
 
@@ -205,7 +200,7 @@ func (view *FileTreeView) KeyHelp() string {
 
 func (view *FileTreeView) Render() error {
 	// print the tree to the view
-	lines := strings.Split(view.ViewTree.String(), "\n")
+	lines := strings.Split(view.ViewTree.String(true), "\n")
 	view.gui.Update(func(g *gocui.Gui) error {
 		view.view.Clear()
 		for idx, line := range lines {

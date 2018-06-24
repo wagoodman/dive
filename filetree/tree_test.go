@@ -15,9 +15,6 @@ func stringInSlice(a string, list []string) bool {
 }
 
 func AssertDiffType(node *FileNode, expectedDiffType DiffType) error {
-	if node.Data.FileInfo == nil {
-		return fmt.Errorf("expected *FileInfo but got nil at Path %s", node.Path())
-	}
 	if node.Data.DiffType != expectedDiffType {
 		return fmt.Errorf("Expecting node at %s to have DiffType %v, but had %v", node.Path(), expectedDiffType, node.Data.DiffType)
 	}
@@ -26,18 +23,18 @@ func AssertDiffType(node *FileNode, expectedDiffType DiffType) error {
 
 func TestPrintTree(t *testing.T) {
 	tree := NewFileTree()
-	tree.Root.AddChild("first node!", nil)
-	two := tree.Root.AddChild("second node!", nil)
-	tree.Root.AddChild("third node!", nil)
-	two.AddChild("forth, one level down...", nil)
+	tree.Root.AddChild("first node!", FileInfo{})
+	two := tree.Root.AddChild("second node!", FileInfo{})
+	tree.Root.AddChild("third node!", FileInfo{})
+	two.AddChild("forth, one level down...", FileInfo{})
 
-	expected := `.
-├── first node!
+	expected :=
+`├── first node!
 ├── second node!
 │   └── forth, one level down...
 └── third node!
 `
-	actual := tree.String()
+	actual := tree.String(false)
 
 	if expected != actual {
 		t.Errorf("Expected tree string:\n--->%s<---\nGot:\n--->%s<---", expected, actual)
@@ -47,15 +44,15 @@ func TestPrintTree(t *testing.T) {
 
 func TestAddPath(t *testing.T) {
 	tree := NewFileTree()
-	tree.AddPath("/etc/nginx/nginx.conf", nil)
-	tree.AddPath("/etc/nginx/public", nil)
-	tree.AddPath("/var/run/systemd", nil)
-	tree.AddPath("/var/run/bashful", nil)
-	tree.AddPath("/tmp", nil)
-	tree.AddPath("/tmp/nonsense", nil)
+	tree.AddPath("/etc/nginx/nginx.conf", FileInfo{})
+	tree.AddPath("/etc/nginx/public", FileInfo{})
+	tree.AddPath("/var/run/systemd", FileInfo{})
+	tree.AddPath("/var/run/bashful", FileInfo{})
+	tree.AddPath("/tmp", FileInfo{})
+	tree.AddPath("/tmp/nonsense", FileInfo{})
 
-	expected := `.
-├── etc
+	expected :=
+`├── etc
 │   └── nginx
 │       ├── nginx.conf
 │       └── public
@@ -66,7 +63,7 @@ func TestAddPath(t *testing.T) {
         ├── bashful
         └── systemd
 `
-	actual := tree.String()
+	actual := tree.String(false)
 
 	if expected != actual {
 		t.Errorf("Expected tree string:\n--->%s<---\nGot:\n--->%s<---", expected, actual)
@@ -76,18 +73,18 @@ func TestAddPath(t *testing.T) {
 
 func TestRemovePath(t *testing.T) {
 	tree := NewFileTree()
-	tree.AddPath("/etc/nginx/nginx.conf", nil)
-	tree.AddPath("/etc/nginx/public", nil)
-	tree.AddPath("/var/run/systemd", nil)
-	tree.AddPath("/var/run/bashful", nil)
-	tree.AddPath("/tmp", nil)
-	tree.AddPath("/tmp/nonsense", nil)
+	tree.AddPath("/etc/nginx/nginx.conf", FileInfo{})
+	tree.AddPath("/etc/nginx/public", FileInfo{})
+	tree.AddPath("/var/run/systemd", FileInfo{})
+	tree.AddPath("/var/run/bashful", FileInfo{})
+	tree.AddPath("/tmp", FileInfo{})
+	tree.AddPath("/tmp/nonsense", FileInfo{})
 
 	tree.RemovePath("/var/run/bashful")
 	tree.RemovePath("/tmp")
 
-	expected := `.
-├── etc
+	expected :=
+`├── etc
 │   └── nginx
 │       ├── nginx.conf
 │       └── public
@@ -95,7 +92,7 @@ func TestRemovePath(t *testing.T) {
     └── run
         └── systemd
 `
-	actual := tree.String()
+	actual := tree.String(false)
 
 	if expected != actual {
 		t.Errorf("Expected tree string:\n--->%s<---\nGot:\n--->%s<---", expected, actual)
@@ -111,20 +108,20 @@ func TestStack(t *testing.T) {
 
 	tree1 := NewFileTree()
 
-	tree1.AddPath("/etc/nginx/public", nil)
-	tree1.AddPath(payloadKey, nil)
-	tree1.AddPath("/var/run/bashful", nil)
-	tree1.AddPath("/tmp", nil)
-	tree1.AddPath("/tmp/nonsense", nil)
+	tree1.AddPath("/etc/nginx/public", FileInfo{})
+	tree1.AddPath(payloadKey, FileInfo{})
+	tree1.AddPath("/var/run/bashful", FileInfo{})
+	tree1.AddPath("/tmp", FileInfo{})
+	tree1.AddPath("/tmp/nonsense", FileInfo{})
 
 	tree2 := NewFileTree()
 	// add new files
-	tree2.AddPath("/etc/nginx/nginx.conf", nil)
+	tree2.AddPath("/etc/nginx/nginx.conf", FileInfo{})
 	// modify current files
-	tree2.AddPath(payloadKey, &payloadValue)
+	tree2.AddPath(payloadKey, payloadValue)
 	// whiteout the following files
-	tree2.AddPath("/var/run/.wh.bashful", nil)
-	tree2.AddPath("/.wh.tmp", nil)
+	tree2.AddPath("/var/run/.wh.bashful", FileInfo{})
+	tree2.AddPath("/.wh.tmp", FileInfo{})
 
 	err := tree1.Stack(tree2)
 
@@ -132,8 +129,8 @@ func TestStack(t *testing.T) {
 		t.Errorf("Could not stack refTrees: %v", err)
 	}
 
-	expected := `.
-├── etc
+	expected :=
+`├── etc
 │   └── nginx
 │       ├── nginx.conf
 │       └── public
@@ -147,11 +144,11 @@ func TestStack(t *testing.T) {
 		t.Errorf("Expected '%s' to still exist, but it doesn't", payloadKey)
 	}
 
-	if *node.Data.FileInfo != payloadValue {
+	if node.Data.FileInfo.Path != payloadValue.Path {
 		t.Errorf("Expected '%s' value to be %+v but got %+v", payloadKey, payloadValue, node.Data.FileInfo)
 	}
 
-	actual := tree1.String()
+	actual := tree1.String(false)
 
 	if expected != actual {
 		t.Errorf("Expected tree string:\n--->%s<---\nGot:\n--->%s<---", expected, actual)
@@ -161,18 +158,18 @@ func TestStack(t *testing.T) {
 
 func TestCopy(t *testing.T) {
 	tree := NewFileTree()
-	tree.AddPath("/etc/nginx/nginx.conf", nil)
-	tree.AddPath("/etc/nginx/public", nil)
-	tree.AddPath("/var/run/systemd", nil)
-	tree.AddPath("/var/run/bashful", nil)
-	tree.AddPath("/tmp", nil)
-	tree.AddPath("/tmp/nonsense", nil)
+	tree.AddPath("/etc/nginx/nginx.conf", FileInfo{})
+	tree.AddPath("/etc/nginx/public", FileInfo{})
+	tree.AddPath("/var/run/systemd", FileInfo{})
+	tree.AddPath("/var/run/bashful", FileInfo{})
+	tree.AddPath("/tmp", FileInfo{})
+	tree.AddPath("/tmp/nonsense", FileInfo{})
 
 	tree.RemovePath("/var/run/bashful")
 	tree.RemovePath("/tmp")
 
-	expected := `.
-├── etc
+	expected :=
+`├── etc
 │   └── nginx
 │       ├── nginx.conf
 │       └── public
@@ -182,7 +179,7 @@ func TestCopy(t *testing.T) {
 `
 
 	NewFileTree := tree.Copy()
-	actual := NewFileTree.String()
+	actual := NewFileTree.String(false)
 
 	if expected != actual {
 		t.Errorf("Expected tree string:\n--->%s<---\nGot:\n--->%s<---", expected, actual)
@@ -201,17 +198,13 @@ func TestCompareWithNoChanges(t *testing.T) {
 			Typeflag: 1,
 			MD5sum:   [16]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 		}
-		lowerTree.AddPath(value, &fakeData)
-		upperTree.AddPath(value, &fakeData)
+		lowerTree.AddPath(value, fakeData)
+		upperTree.AddPath(value, fakeData)
 	}
 	lowerTree.Compare(upperTree)
 	asserter := func(n *FileNode) error {
 		if n.Path() == "/" {
 			return nil
-		}
-		if n.Data.FileInfo == nil {
-			t.Errorf("Expected *FileInfo but got nil")
-			return fmt.Errorf("expected *FileInfo but got nil")
 		}
 		if (n.Data.DiffType) != Unchanged {
 			t.Errorf("Expecting node at %s to have DiffType unchanged, but had %v", n.Path(), n.Data.DiffType)
@@ -231,7 +224,7 @@ func TestCompareWithAdds(t *testing.T) {
 	upperPaths := [...]string{"/etc", "/etc/sudoers", "/usr", "/etc/hosts", "/usr/bin", "/usr/bin/bash"}
 
 	for _, value := range lowerPaths {
-		lowerTree.AddPath(value, &FileInfo{
+		lowerTree.AddPath(value, FileInfo{
 			Path:     value,
 			Typeflag: 1,
 			MD5sum:   [16]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
@@ -239,7 +232,7 @@ func TestCompareWithAdds(t *testing.T) {
 	}
 
 	for _, value := range upperPaths {
-		upperTree.AddPath(value, &FileInfo{
+		upperTree.AddPath(value, FileInfo{
 			Path:     value,
 			Typeflag: 1,
 			MD5sum:   [16]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
@@ -291,12 +284,12 @@ func TestCompareWithChanges(t *testing.T) {
 	paths := [...]string{"/etc", "/usr", "/etc/hosts", "/etc/sudoers", "/usr/bin"}
 
 	for _, value := range paths {
-		lowerTree.AddPath(value, &FileInfo{
+		lowerTree.AddPath(value, FileInfo{
 			Path:     value,
 			Typeflag: 1,
 			MD5sum:   [16]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 		})
-		upperTree.AddPath(value, &FileInfo{
+		upperTree.AddPath(value, FileInfo{
 			Path:     value,
 			Typeflag: 1,
 			MD5sum:   [16]byte{1, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0},
@@ -348,7 +341,7 @@ func TestCompareWithRemoves(t *testing.T) {
 			Typeflag: 1,
 			MD5sum:   [16]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 		}
-		lowerTree.AddPath(value, &fakeData)
+		lowerTree.AddPath(value, fakeData)
 	}
 
 	for _, value := range upperPaths {
@@ -357,7 +350,7 @@ func TestCompareWithRemoves(t *testing.T) {
 			Typeflag: 1,
 			MD5sum:   [16]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 		}
-		upperTree.AddPath(value, &fakeData)
+		upperTree.AddPath(value, fakeData)
 	}
 
 	lowerTree.Compare(upperTree)
@@ -397,12 +390,12 @@ func TestCompareWithRemoves(t *testing.T) {
 
 func TestStackRange(t *testing.T) {
 	tree := NewFileTree()
-	tree.AddPath("/etc/nginx/nginx.conf", nil)
-	tree.AddPath("/etc/nginx/public", nil)
-	tree.AddPath("/var/run/systemd", nil)
-	tree.AddPath("/var/run/bashful", nil)
-	tree.AddPath("/tmp", nil)
-	tree.AddPath("/tmp/nonsense", nil)
+	tree.AddPath("/etc/nginx/nginx.conf", FileInfo{})
+	tree.AddPath("/etc/nginx/public", FileInfo{})
+	tree.AddPath("/var/run/systemd", FileInfo{})
+	tree.AddPath("/var/run/bashful", FileInfo{})
+	tree.AddPath("/tmp", FileInfo{})
+	tree.AddPath("/tmp/nonsense", FileInfo{})
 
 	tree.RemovePath("/var/run/bashful")
 	tree.RemovePath("/tmp")
@@ -418,7 +411,7 @@ func TestStackRange(t *testing.T) {
 			Typeflag: 1,
 			MD5sum:   [16]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 		}
-		lowerTree.AddPath(value, &fakeData)
+		lowerTree.AddPath(value, fakeData)
 	}
 
 	for _, value := range upperPaths {
@@ -427,7 +420,7 @@ func TestStackRange(t *testing.T) {
 			Typeflag: 1,
 			MD5sum:   [16]byte{1, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0},
 		}
-		upperTree.AddPath(value, &fakeData)
+		upperTree.AddPath(value, fakeData)
 	}
 	trees := []*FileTree{lowerTree, upperTree, tree}
 	StackRange(trees, 2)
@@ -445,7 +438,7 @@ func TestRemoveOnIterate(t *testing.T) {
 			Typeflag: 1,
 			MD5sum:   [16]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 		}
-		node, err := tree.AddPath(value, &fakeData)
+		node, err := tree.AddPath(value, fakeData)
 		if err == nil && stringInSlice(node.Path(), []string{"/etc"}) {
 			node.Data.ViewInfo.Hidden = true
 		}
@@ -458,12 +451,12 @@ func TestRemoveOnIterate(t *testing.T) {
 		return nil
 	}, nil)
 
-	expected := `.
-└── usr
+	expected :=
+`└── usr
     ├── bin
     └── something
 `
-	actual := tree.String()
+	actual := tree.String(false)
 	if expected != actual {
 		t.Errorf("Expected tree string:\n--->%s<---\nGot:\n--->%s<---", expected, actual)
 	}

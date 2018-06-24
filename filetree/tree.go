@@ -32,7 +32,7 @@ func NewFileTree() (tree *FileTree) {
 	return tree
 }
 
-func (tree *FileTree) String() string {
+func (tree *FileTree) String(showAttributes bool) string {
 	var renderTreeLine func(string, []bool, bool, bool) string
 	var walkTree func(*FileNode, []bool, int) string
 
@@ -73,7 +73,10 @@ func (tree *FileTree) String() string {
 			}
 			last := idx == (len(node.Children) - 1)
 			showCollapsed := child.Data.ViewInfo.Collapsed && len(child.Children) > 0
-			result += child.MetadataString() + " " + renderTreeLine(child.String(), spaces, last, showCollapsed)
+			if showAttributes {
+				result += child.MetadataString() + " "
+			}
+			result += renderTreeLine(child.String(), spaces, last, showCollapsed)
 			if len(child.Children) > 0 && !child.Data.ViewInfo.Collapsed {
 				spacesChild := append(spaces, last)
 				result += walkTree(child, spacesChild, depth+1)
@@ -82,7 +85,7 @@ func (tree *FileTree) String() string {
 		return result
 	}
 
-	return "." + newLine + walkTree(tree.Root, []bool{}, 0)
+	return walkTree(tree.Root, []bool{}, 0)
 }
 
 func (tree *FileTree) Copy() *FileTree {
