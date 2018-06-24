@@ -7,8 +7,11 @@ import (
 
 	"strings"
 
+	"strings"
+
 	"github.com/fatih/color"
 	"github.com/jroimartin/gocui"
+	"github.com/lunixbochs/vtclean"
 	"github.com/wagoodman/docker-image-explorer/filetree"
 )
 
@@ -16,6 +19,7 @@ type FileTreeView struct {
 	Name            string
 	gui             *gocui.Gui
 	view            *gocui.View
+	header          *gocui.View
 	TreeIndex       int
 	ModelTree       *filetree.FileTree
 	ViewTree        *filetree.FileTree
@@ -36,7 +40,7 @@ func NewFileTreeView(name string, gui *gocui.Gui, tree *filetree.FileTree, refTr
 	return treeview
 }
 
-func (view *FileTreeView) Setup(v *gocui.View) error {
+func (view *FileTreeView) Setup(v *gocui.View, header *gocui.View) error {
 
 	// set view options
 	view.view = v
@@ -45,7 +49,12 @@ func (view *FileTreeView) Setup(v *gocui.View) error {
 	//view.view.Highlight = true
 	//view.view.SelBgColor = gocui.ColorGreen
 	//view.view.SelFgColor = gocui.ColorBlack
-	view.view.Frame = true
+	view.view.Frame = false
+
+	view.header = header
+	view.header.Editable = false
+	view.header.Wrap = false
+	view.header.Frame = false
 
 	// set keybindings
 	if err := view.gui.SetKeybinding(view.Name, gocui.KeyArrowDown, gocui.ModNone, func(*gocui.Gui, *gocui.View) error { return view.CursorDown() }); err != nil {
@@ -75,6 +84,9 @@ func (view *FileTreeView) Setup(v *gocui.View) error {
 
 	view.updateViewTree()
 	view.Render()
+
+	headerStr := fmt.Sprintf(filetree.AttributeFormat+" %s", "P", "ermission", "UID:GID", "Size", "Filetree")
+	fmt.Fprintln(view.header, Formatting.Header(vtclean.Clean(headerStr, false)))
 
 	return nil
 }
@@ -110,6 +122,8 @@ func (view *FileTreeView) setLayer(layerIndex int) error {
 }
 
 func (view *FileTreeView) CursorDown() error {
+	// cannot easily (quickly) check the model length, allow the view
+	// to let us know what is a valid bounds (i.e. when it hits an empty line)
 	err := CursorDown(view.gui, view.view)
 	if err == nil {
 		view.TreeIndex++
@@ -118,9 +132,11 @@ func (view *FileTreeView) CursorDown() error {
 }
 
 func (view *FileTreeView) CursorUp() error {
-	err := CursorUp(view.gui, view.view)
-	if err == nil {
-		view.TreeIndex--
+	if view.TreeIndex > 0 {
+		err := CursorUp(view.gui, view.view)
+		if err == nil {
+			view.TreeIndex--
+		}
 	}
 	return view.Render()
 }
@@ -130,16 +146,11 @@ func (view *FileTreeView) getAbsPositionNode() (node *filetree.FileNode) {
 	var evaluator func(*filetree.FileNode) bool
 	var dfsCounter int
 
-	// special case: the root node is never visited
-	if view.TreeIndex == 0 {
-		return view.ModelTree.Root
-	}
-
 	visiter = func(curNode *filetree.FileNode) error {
-		dfsCounter++
 		if dfsCounter == view.TreeIndex {
 			node = curNode
 		}
+		dfsCounter++
 		return nil
 	}
 	var filterBytes []byte
@@ -236,12 +247,12 @@ func (view *FileTreeView) KeyHelp() string {
 
 func (view *FileTreeView) Render() error {
 	// print the tree to the view
-	lines := strings.Split(view.ViewTree.String(), "\n")
+	lines := strings.Split(view.ViewTree.String(true), "\n")
 	view.gui.Update(func(g *gocui.Gui) error {
 		view.view.Clear()
 		for idx, line := range lines {
 			if idx == view.TreeIndex {
-				fmt.Fprintln(view.view, Formatting.Header(line))
+				fmt.Fprintln(view.view, Formatting.StatusBar(vtclean.Clean(line, false)))
 			} else {
 				fmt.Fprintln(view.view, line)
 			}

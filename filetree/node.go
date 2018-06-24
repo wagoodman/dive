@@ -6,6 +6,13 @@ import (
 
 	"github.com/fatih/color"
 	"fmt"
+	"github.com/phayes/permbits"
+	"github.com/dustin/go-humanize"
+	"github.com/wagoodman/docker-image-explorer/_vendor-20180604210951/github.com/Microsoft/go-winio/archive/tar"
+)
+
+const (
+	AttributeFormat = "%s%s %10s %10s "
 )
 
 type FileNode struct {
@@ -16,13 +23,12 @@ type FileNode struct {
 	Children  map[string]*FileNode
 }
 
-func NewNode(parent *FileNode, name string, data *FileInfo) (node *FileNode) {
+func NewNode(parent *FileNode, name string, data FileInfo) (node *FileNode) {
 	node = new(FileNode)
 	node.Name = name
 	node.Data = *NewNodeData()
-	if data != nil {
-		node.Data.FileInfo = data.Copy()
-	}
+	node.Data.FileInfo = *data.Copy()
+
 	node.Children = make(map[string]*FileNode)
 	node.Parent = parent
 	if parent != nil {
@@ -42,11 +48,11 @@ func (node *FileNode) Copy(parent *FileNode) *FileNode {
 	return newNode
 }
 
-func (node *FileNode) AddChild(name string, data *FileInfo) (child *FileNode) {
+func (node *FileNode) AddChild(name string, data FileInfo) (child *FileNode) {
 	child = NewNode(node, name, data)
 	if node.Children[name] != nil {
 		// tree node already exists, replace the payload, keep the children
-		node.Children[name].Data.FileInfo = data.Copy()
+		node.Children[name].Data.FileInfo = *data.Copy()
 	} else {
 		node.Children[name] = child
 		node.Tree.Size++
@@ -68,6 +74,7 @@ func (node *FileNode) Remove() error {
 
 func (node *FileNode) String() string {
 	var style *color.Color
+	var display string
 	if node == nil {
 		return ""
 	}
@@ -83,7 +90,42 @@ func (node *FileNode) String() string {
 	default:
 		style = color.New(color.BgMagenta)
 	}
-	return style.Sprint(node.Name)
+	display = node.Name
+	if node.Data.FileInfo.TarHeader.Typeflag == tar.TypeSymlink || node.Data.FileInfo.TarHeader.Typeflag == tar.TypeLink {
+		display += " -> " + node.Data.FileInfo.TarHeader.Linkname
+	}
+	return style.Sprint(display)
+}
+
+func (node *FileNode) MetadataString() string {
+	var style *color.Color
+	if node == nil {
+		return ""
+	}
+	switch node.Data.DiffType {
+	case Added:
+		style = color.New(color.FgGreen)
+	case Removed:
+		style = color.New(color.FgRed)
+	case Changed:
+		style = color.New(color.FgYellow)
+	case Unchanged:
+		style = color.New(color.Reset)
+	default:
+		style = color.New(color.BgMagenta)
+	}
+
+	fileMode := permbits.FileMode(node.Data.FileInfo.TarHeader.FileInfo().Mode()).String()
+	dir := "-"
+	if node.Data.FileInfo.TarHeader.FileInfo().IsDir() {
+		dir = "d"
+	}
+	user := node.Data.FileInfo.TarHeader.Uid
+	group := node.Data.FileInfo.TarHeader.Gid
+	userGroup := fmt.Sprintf("%d:%d", user, group)
+	size := humanize.Bytes(uint64(node.Data.FileInfo.TarHeader.FileInfo().Size()))
+
+	return style.Sprint(fmt.Sprintf(AttributeFormat,dir, fileMode, userGroup, size))
 }
 
 func (node *FileNode) VisitDepthChildFirst(visiter Visiter, evaluator VisitEvaluator) error {

@@ -18,7 +18,7 @@ const (
 
 type NodeData struct {
 	ViewInfo  ViewInfo
-	FileInfo  *FileInfo
+	FileInfo  FileInfo
 	DiffType  DiffType
 }
 
@@ -28,9 +28,10 @@ type ViewInfo struct {
 }
 
 type FileInfo struct {
-	Path     string
-	Typeflag byte
-	MD5sum   [16]byte
+	Path      string
+	Typeflag  byte
+	MD5sum    [16]byte
+	TarHeader tar.Header
 }
 
 type DiffType int
@@ -38,7 +39,7 @@ type DiffType int
 func NewNodeData() (*NodeData) {
 	return &NodeData{
 		ViewInfo: *NewViewInfo(),
-		FileInfo: nil,
+		FileInfo: FileInfo{},
 		DiffType: Unchanged,
 	}
 }
@@ -46,7 +47,7 @@ func NewNodeData() (*NodeData) {
 func (data *NodeData) Copy() (*NodeData) {
 	return &NodeData{
 		ViewInfo: *data.ViewInfo.Copy(),
-		FileInfo: data.FileInfo.Copy(),
+		FileInfo: *data.FileInfo.Copy(),
 		DiffType: data.DiffType,
 	}
 }
@@ -71,6 +72,7 @@ func NewFileInfo(reader *tar.Reader, header *tar.Header, path string) FileInfo {
 			Path:     path,
 			Typeflag: header.Typeflag,
 			MD5sum:   [16]byte{},
+			TarHeader: *header,
 		}
 	}
 	fileBytes := make([]byte, header.Size)
@@ -78,10 +80,12 @@ func NewFileInfo(reader *tar.Reader, header *tar.Header, path string) FileInfo {
 	if err != nil && err != io.EOF {
 		panic(err)
 	}
+
 	return FileInfo{
-		Path:     path,
-		Typeflag: header.Typeflag,
-		MD5sum:   md5.Sum(fileBytes),
+		Path:      path,
+		Typeflag:  header.Typeflag,
+		MD5sum:    md5.Sum(fileBytes),
+		TarHeader: *header,
 	}
 }
 
@@ -112,19 +116,14 @@ func (data *FileInfo) Copy() *FileInfo {
 		return nil
 	}
 	return &FileInfo{
-		Path:     data.Path,
-		Typeflag: data.Typeflag,
-		MD5sum:   data.MD5sum,
+		Path:      data.Path,
+		Typeflag:  data.Typeflag,
+		MD5sum:    data.MD5sum,
+		TarHeader: data.TarHeader,
 	}
 }
 
-func (data *FileInfo) getDiffType(other *FileInfo) DiffType {
-	if data == nil && other == nil {
-		return Unchanged
-	}
-	if data == nil || other == nil {
-		return Changed
-	}
+func (data *FileInfo) getDiffType(other FileInfo) DiffType {
 	if data.Typeflag == other.Typeflag {
 		if bytes.Compare(data.MD5sum[:], other.MD5sum[:]) == 0 {
 			return Unchanged

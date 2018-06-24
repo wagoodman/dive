@@ -19,6 +19,10 @@ import (
 	"golang.org/x/net/context"
 )
 
+const (
+	LayerFormat = "%-25s %7s %s"
+)
+
 func check(e error) {
 	if e != nil {
 		panic(e)
@@ -56,7 +60,7 @@ func (layer *Layer) String() string {
 	if len(layer.History.Tags) > 0 {
 		id = "[" + strings.Join(layer.History.Tags, ",") + "]"
 	}
-	return fmt.Sprintf("%25s %7s %s", id, humanize.Bytes(uint64(layer.History.Size)), layer.History.CreatedBy)
+	return fmt.Sprintf(LayerFormat, id, humanize.Bytes(uint64(layer.History.Size)), layer.History.CreatedBy)
 }
 
 func InitializeData(imageID string) ([]*Layer, []*filetree.FileTree) {
@@ -103,7 +107,7 @@ func InitializeData(imageID string) ([]*Layer, []*filetree.FileTree) {
 				tree.Name = name
 				fileInfos := getFileList(tarReader, header)
 				for _, element := range fileInfos {
-					tree.AddPath(element.Path, &element)
+					tree.AddPath(element.Path, element)
 				}
 				layerMap[tree.Name] = tree
 			}
@@ -184,9 +188,9 @@ func saveImage(imageID string) (string, string) {
 	return imageTarPath, tmpDir
 }
 
-func getFileList(parentReader *tar.Reader, h *tar.Header) []filetree.FileInfo {
+func getFileList(parentReader *tar.Reader, header *tar.Header) []filetree.FileInfo {
 	var files []filetree.FileInfo
-	var tarredBytes = make([]byte, h.Size)
+	var tarredBytes = make([]byte, header.Size)
 
 	_, err := parentReader.Read(tarredBytes)
 	if err != nil {

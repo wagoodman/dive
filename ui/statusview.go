@@ -23,7 +23,7 @@ func NewStatusView(name string, gui *gocui.Gui) (statusview *StatusView) {
 	return statusview
 }
 
-func (view *StatusView) Setup(v *gocui.View) error {
+func (view *StatusView) Setup(v *gocui.View, header *gocui.View) error {
 
 	// set view options
 	view.view = v
