@@ -3,8 +3,8 @@ package ui
 import (
 	"fmt"
 
-	"github.com/jroimartin/gocui"
 	"github.com/fatih/color"
+	"github.com/jroimartin/gocui"
 )
 
 type StatusView struct {
@@ -43,7 +43,6 @@ func (view *StatusView) Setup(v *gocui.View, header *gocui.View) error {
 	return nil
 }
 
-
 func (view *StatusView) CursorDown() error {
 	return nil
 }
@@ -54,15 +53,16 @@ func (view *StatusView) CursorUp() error {
 
 func (view *StatusView) KeyHelp() string {
 	control := color.New(color.Bold).SprintFunc()
-	return  control("[^C]") + ": Quit " +
-		control("[^Space]") + ": Switch View "
+	return control("[^C]") + ": Quit " +
+		control("[^Space]") + ": Switch View " +
+		control("[^/]") + ": Filter files"
 
 }
 
 func (view *StatusView) Render() error {
 	view.gui.Update(func(g *gocui.Gui) error {
 		view.view.Clear()
-		fmt.Fprintln(view.view, view.KeyHelp() + " | " + Views.lookup[view.gui.CurrentView().Name()].KeyHelp())
+		fmt.Fprintln(view.view, view.KeyHelp()+" | "+Views.lookup[view.gui.CurrentView().Name()].KeyHelp())
 
 		return nil
 	})

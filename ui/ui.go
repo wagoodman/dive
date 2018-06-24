@@ -1,27 +1,41 @@
 package ui
 
 import (
+	"errors"
+	"fmt"
 	"log"
 
+	"github.com/fatih/color"
 	"github.com/jroimartin/gocui"
 	"github.com/wagoodman/docker-image-explorer/filetree"
 	"github.com/wagoodman/docker-image-explorer/image"
-	"github.com/fatih/color"
-	"github.com/wagoodman/docker-image-explorer/_vendor-20180604210951/github.com/pkg/errors"
 )
 
-const debug = false
+const debug = true
+
+func debugPrint(s string) {
+	if debug && Views.Tree != nil && Views.Tree.gui != nil {
+		v, _ := Views.Tree.gui.View("debug")
+		if v != nil {
+			if len(v.BufferLines()) > 20 {
+				v.Clear()
+			}
+			_, _ = fmt.Fprintln(v, s)
+		}
+	}
+}
 
 var Formatting struct {
-	Header func(...interface{})(string)
-	StatusBar func(...interface{})(string)
+	Header    func(...interface{}) string
+	StatusBar func(...interface{}) string
 }
 
 var Views struct {
-	Tree   *FileTreeView
-	Layer  *LayerView
-	Status *StatusView
-	lookup map[string]View
+	Tree    *FileTreeView
+	Layer   *LayerView
+	Status  *StatusView
+	Command *CommandView
+	lookup  map[string]View
 }
 
 type View interface {
@@ -40,6 +54,20 @@ func toggleView(g *gocui.Gui, v *gocui.View) error {
 	}
 	_, err := g.SetCurrentView(Views.Layer.Name)
 	Render()
+	return err
+}
+
+func focusFilterView(g *gocui.Gui, v *gocui.View) error {
+	_, err := g.SetCurrentView(Views.Command.Name)
+	Render()
+	return err
+}
+
+func returnToTreeView(g *gocui.Gui, v *gocui.View) error {
+	_, err := g.SetCurrentView(Views.Tree.Name)
+	if Views.Tree != nil {
+		Views.Tree.ReRender()
+	}
 	return err
 }
 
@@ -91,6 +119,12 @@ func keybindings(g *gocui.Gui) error {
 	if err := g.SetKeybinding("main", gocui.KeyCtrlSpace, gocui.ModNone, toggleView); err != nil {
 		return err
 	}
+	if err := g.SetKeybinding("", gocui.KeyCtrlSlash, gocui.ModNone, focusFilterView); err != nil {
+		return err
+	}
+	if err := g.SetKeybinding("command", gocui.KeyEnter, gocui.ModNone, returnToTreeView); err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -121,7 +155,6 @@ func layout(g *gocui.Gui) error {
 				return err
 			}
 		}
-
 
 	}
 	// Filetree
@@ -155,6 +188,13 @@ func layout(g *gocui.Gui) error {
 		Views.Status.Setup(view, nil)
 
 	}
+	if view, err := g.SetView(Views.Command.Name, -1, maxY-bottomRows-2, maxX, maxY-1); err != nil {
+		if err != gocui.ErrUnknownView {
+			return err
+		}
+		Views.Command.Setup(view, nil)
+
+	}
 
 	return nil
 }
@@ -185,6 +225,9 @@ func Run(layers []*image.Layer, refTrees []*filetree.FileTree) {
 
 	Views.Status = NewStatusView("status", g)
 	Views.lookup[Views.Status.Name] = Views.Status
+
+	Views.Command = NewCommandView("command", g)
+	Views.lookup[Views.Command.Name] = Views.Command
 
 	g.Cursor = false
 	//g.Mouse = true
