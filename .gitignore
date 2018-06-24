@@ -12,7 +12,7 @@
 
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
-
+/tmp
 /build
 /_vendor*
 /vendor

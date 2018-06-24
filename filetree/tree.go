@@ -33,10 +33,10 @@ func NewFileTree() (tree *FileTree) {
 }
 
 func (tree *FileTree) String() string {
-	var renderLine func(string, []bool, bool, bool) string
+	var renderTreeLine func(string, []bool, bool, bool) string
 	var walkTree func(*FileNode, []bool, int) string
 
-	renderLine = func(nodeText string, spaces []bool, last bool, collapsed bool) string {
+	renderTreeLine = func(nodeText string, spaces []bool, last bool, collapsed bool) string {
 		var otherBranches string
 		for _, space := range spaces {
 			if space {
@@ -73,7 +73,7 @@ func (tree *FileTree) String() string {
 			}
 			last := idx == (len(node.Children) - 1)
 			showCollapsed := child.Data.ViewInfo.Collapsed && len(child.Children) > 0
-			result += renderLine(child.String(), spaces, last, showCollapsed)
+			result += child.MetadataString() + " " + renderTreeLine(child.String(), spaces, last, showCollapsed)
 			if len(child.Children) > 0 && !child.Data.ViewInfo.Collapsed {
 				spacesChild := append(spaces, last)
 				result += walkTree(child, spacesChild, depth+1)
@@ -131,7 +131,7 @@ func (tree *FileTree) Stack(upper *FileTree) error {
 }
 
 func (tree *FileTree) GetNode(path string) (*FileNode, error) {
-	nodeNames := strings.Split(path, "/")
+	nodeNames := strings.Split(strings.Trim(path, "/"), "/")
 	node := tree.Root
 	for _, name := range nodeNames {
 		if name == "" {
@@ -145,9 +145,9 @@ func (tree *FileTree) GetNode(path string) (*FileNode, error) {
 	return node, nil
 }
 
-func (tree *FileTree) AddPath(path string, data *FileInfo) (*FileNode, error) {
+func (tree *FileTree) AddPath(path string, data FileInfo) (*FileNode, error) {
 	// fmt.Printf("ADDPATH: %s %+v\n", path, data)
-	nodeNames := strings.Split(path, "/")
+	nodeNames := strings.Split(strings.Trim(path, "/"), "/")
 	node := tree.Root
 	for idx, name := range nodeNames {
 		if name == "" {
@@ -159,7 +159,7 @@ func (tree *FileTree) AddPath(path string, data *FileInfo) (*FileNode, error) {
 		} else {
 			// don't attach the payload. The payload is destined for the
 			// Path's end node, not any intermediary node.
-			node = node.AddChild(name, nil)
+			node = node.AddChild(name, FileInfo{})
 		}
 
 		// attach payload to the last specified node

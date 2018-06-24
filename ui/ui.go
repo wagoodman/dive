@@ -13,6 +13,7 @@ const debug = false
 
 var Formatting struct {
 	Header func(...interface{})(string)
+	StatusBar func(...interface{})(string)
 }
 
 var Views struct {
@@ -23,7 +24,7 @@ var Views struct {
 }
 
 type View interface {
-	Setup(*gocui.View) error
+	Setup(*gocui.View, *gocui.View) error
 	CursorDown() error
 	CursorUp() error
 	Render() error
@@ -102,24 +103,41 @@ func layout(g *gocui.Gui) error {
 	}
 	debugCols := maxX - debugWidth
 	bottomRows := 1
-	if view, err := g.SetView(Views.Layer.Name, -1, -1, splitCols, maxY-bottomRows); err != nil {
+	headerRows := 1
+
+	// Layers
+	if view, err := g.SetView(Views.Layer.Name, -1, -1+headerRows, splitCols, maxY-bottomRows); err != nil {
 		if err != gocui.ErrUnknownView {
 			return err
 		}
-		Views.Layer.Setup(view)
+		if header, err := g.SetView(Views.Layer.Name+"header", -1, -1, splitCols, headerRows); err != nil {
+			if err != gocui.ErrUnknownView {
+				return err
+			}
+			Views.Layer.Setup(view, header)
 
-		if _, err := g.SetCurrentView(Views.Layer.Name); err != nil {
-			return err
+			if _, err := g.SetCurrentView(Views.Layer.Name); err != nil {
+				return err
+			}
 		}
 
+
 	}
-	if view, err := g.SetView(Views.Tree.Name, splitCols, -1, debugCols, maxY-bottomRows); err != nil {
+	// Filetree
+	if view, err := g.SetView(Views.Tree.Name, splitCols, -1+headerRows, debugCols, maxY-bottomRows); err != nil {
 		if err != gocui.ErrUnknownView {
 			return err
 		}
 
-		Views.Tree.Setup(view)
+		if header, err := g.SetView(Views.Tree.Name+"header", splitCols, -1, debugCols, headerRows); err != nil {
+			if err != gocui.ErrUnknownView {
+				return err
+			}
+			Views.Tree.Setup(view, header)
+		}
 	}
+
+	// Debug pane
 	if debug {
 		if _, err := g.SetView("debug", debugCols, -1, maxX, maxY-bottomRows); err != nil {
 			if err != gocui.ErrUnknownView {
@@ -127,11 +145,13 @@ func layout(g *gocui.Gui) error {
 			}
 		}
 	}
+
+	// StatusBar
 	if view, err := g.SetView(Views.Status.Name, -1, maxY-bottomRows-1, maxX, maxY); err != nil {
 		if err != gocui.ErrUnknownView {
 			return err
 		}
-		Views.Status.Setup(view)
+		Views.Status.Setup(view, nil)
 
 	}
 
@@ -145,7 +165,8 @@ func Render() {
 }
 
 func Run(layers []*image.Layer, refTrees []*filetree.FileTree) {
-	Formatting.Header = color.New(color.ReverseVideo, color.Bold).SprintFunc()
+	Formatting.StatusBar = color.New(color.ReverseVideo, color.Bold).SprintFunc()
+	Formatting.Header = color.New(color.Bold).SprintFunc()
 
 	g, err := gocui.NewGui(gocui.OutputNormal)
 	if err != nil {

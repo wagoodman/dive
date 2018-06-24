@@ -8,12 +8,14 @@ import (
 	"github.com/wagoodman/docker-image-explorer/filetree"
 	"github.com/fatih/color"
 	"strings"
+	"github.com/lunixbochs/vtclean"
 )
 
 type FileTreeView struct {
 	Name            string
 	gui             *gocui.Gui
 	view            *gocui.View
+	header          *gocui.View
 	TreeIndex       int
 	ModelTree       *filetree.FileTree
 	ViewTree        *filetree.FileTree
@@ -34,7 +36,7 @@ func NewFileTreeView(name string, gui *gocui.Gui, tree *filetree.FileTree, refTr
 	return treeview
 }
 
-func (view *FileTreeView) Setup(v *gocui.View) error {
+func (view *FileTreeView) Setup(v *gocui.View, header *gocui.View) error {
 
 	// set view options
 	view.view = v
@@ -43,7 +45,12 @@ func (view *FileTreeView) Setup(v *gocui.View) error {
 	//view.view.Highlight = true
 	//view.view.SelBgColor = gocui.ColorGreen
 	//view.view.SelFgColor = gocui.ColorBlack
-	view.view.Frame = true
+	view.view.Frame = false
+
+	view.header = header
+	view.header.Editable = false
+	view.header.Wrap = false
+	view.header.Frame = false
 
 	// set keybindings
 	if err := view.gui.SetKeybinding(view.Name, gocui.KeyArrowDown, gocui.ModNone, func(*gocui.Gui, *gocui.View) error { return view.CursorDown() }); err != nil {
@@ -70,6 +77,9 @@ func (view *FileTreeView) Setup(v *gocui.View) error {
 
 	view.updateViewTree()
 	view.Render()
+
+	headerStr := fmt.Sprintf(filetree.AttributeFormat + " %s", "P","ermission", "UID:GID", "Size", "Filetree")
+	fmt.Fprintln(view.header, Formatting.Header(vtclean.Clean(headerStr, false)))
 
 	return nil
 }
@@ -200,7 +210,7 @@ func (view *FileTreeView) Render() error {
 		view.view.Clear()
 		for idx, line := range lines {
 			if idx == view.TreeIndex {
-				fmt.Fprintln(view.view, Formatting.Header(line))
+				fmt.Fprintln(view.view, Formatting.StatusBar(vtclean.Clean(line, false)))
 			} else {
 				fmt.Fprintln(view.view, line)
 			}
