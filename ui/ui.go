@@ -7,6 +7,7 @@ import (
 	"github.com/wagoodman/docker-image-explorer/filetree"
 	"github.com/wagoodman/docker-image-explorer/image"
 	"github.com/fatih/color"
+	"github.com/wagoodman/docker-image-explorer/_vendor-20180604210951/github.com/pkg/errors"
 )
 
 const debug = false
@@ -51,7 +52,7 @@ func CursorDown(g *gocui.Gui, v *gocui.View) error {
 		// todo: handle error
 	}
 	if len(line) == 0 {
-		return nil
+		return errors.New("unable to move cursor down, empty line")
 	}
 	if err := v.SetCursor(cx, cy+1); err != nil {
 		ox, oy := v.Origin()

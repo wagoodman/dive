@@ -116,6 +116,8 @@ func (view *FileTreeView) setLayer(layerIndex int) error {
 }
 
 func (view *FileTreeView) CursorDown() error {
+	// cannot easily (quickly) check the model length, allow the view
+	// to let us know what is a valid bounds (i.e. when it hits an empty line)
 	err := CursorDown(view.gui, view.view)
 	if err == nil {
 		view.TreeIndex++
@@ -124,9 +126,11 @@ func (view *FileTreeView) CursorDown() error {
 }
 
 func (view *FileTreeView) CursorUp() error {
-	err := CursorUp(view.gui, view.view)
-	if err == nil {
-		view.TreeIndex--
+	if view.TreeIndex > 0 {
+		err := CursorUp(view.gui, view.view)
+		if err == nil {
+			view.TreeIndex--
+		}
 	}
 	return view.Render()
 }

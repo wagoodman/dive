@@ -79,7 +79,7 @@ func (view *LayerView) Render() error {
 }
 
 func (view *LayerView) CursorDown() error {
-	if int(view.LayerIndex) < len(view.Layers) {
+	if view.LayerIndex < len(view.Layers) {
 		err := CursorDown(view.gui, view.view)
 		if err == nil {
 			view.LayerIndex++
@@ -91,7 +91,7 @@ func (view *LayerView) CursorDown() error {
 }
 
 func (view *LayerView) CursorUp() error {
-	if int(view.LayerIndex) > 0 {
+	if view.LayerIndex > 0 {
 		err := CursorUp(view.gui, view.view)
 		if err == nil {
 			view.LayerIndex--
