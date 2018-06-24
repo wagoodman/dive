@@ -54,7 +54,9 @@ func focusFilterView(g *gocui.Gui, v *gocui.View) error {
 func returnToTreeView(g *gocui.Gui, v *gocui.View) error {
 	debugPrint("returnToTreeView()")
 	_, err := g.SetCurrentView(Views.Tree.Name)
-	Render()
+	if Views.Tree != nil {
+		Views.Tree.Render()
+	}
 	return err
 }
 

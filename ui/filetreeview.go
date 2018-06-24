@@ -173,7 +173,9 @@ func (view *FileTreeView) getAbsPositionNode() (node *filetree.FileNode) {
 
 func (view *FileTreeView) toggleCollapse() error {
 	node := view.getAbsPositionNode()
-	node.Data.ViewInfo.Collapsed = !node.Data.ViewInfo.Collapsed
+	if node != nil {
+		node.Data.ViewInfo.Collapsed = !node.Data.ViewInfo.Collapsed
+	}
 	view.updateViewTree()
 	return view.Render()
 }
