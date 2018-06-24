@@ -107,7 +107,6 @@ func (view *FileTreeView) setLayer(layerIndex int) error {
 		_, _ = fmt.Fprintln(v, view.RefTrees[layerIndex])
 	}
 
-
 	view.view.SetCursor(0, 0)
 	view.TreeIndex = 0
 	view.ModelTree = newTree

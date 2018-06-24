@@ -20,7 +20,7 @@ import (
 )
 
 const (
-	LayerFormat = "%25s %7s %s"
+	LayerFormat = "%-25s %7s %s"
 )
 
 func check(e error) {

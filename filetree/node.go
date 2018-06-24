@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	AttributeFormat = "%7s%1s %10s %10s "
+	AttributeFormat = "%s%s %10s %10s "
 )
 
 type FileNode struct {
