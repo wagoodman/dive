@@ -1,14 +1,13 @@
 package filetree
 
 import (
+	"archive/tar"
 	"sort"
 	"strings"
-
 	"github.com/fatih/color"
 	"fmt"
 	"github.com/phayes/permbits"
 	"github.com/dustin/go-humanize"
-	"github.com/wagoodman/docker-image-explorer/_vendor-20180604210951/github.com/Microsoft/go-winio/archive/tar"
 )
 
 const (

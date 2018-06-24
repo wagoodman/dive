@@ -55,12 +55,17 @@ type Layer struct {
 	History types.ImageHistory
 }
 
-func (layer *Layer) String() string {
+func (layer *Layer) Id() string {
 	id := layer.History.ID[0:25]
 	if len(layer.History.Tags) > 0 {
 		id = "[" + strings.Join(layer.History.Tags, ",") + "]"
 	}
-	return fmt.Sprintf(LayerFormat, id, humanize.Bytes(uint64(layer.History.Size)), layer.History.CreatedBy)
+	return id
+}
+
+func (layer *Layer) String() string {
+
+	return fmt.Sprintf(LayerFormat, layer.Id(), humanize.Bytes(uint64(layer.History.Size)), strings.TrimPrefix(layer.History.CreatedBy, "/bin/sh -c "))
 }
 
 func InitializeData(imageID string) ([]*Layer, []*filetree.FileTree) {

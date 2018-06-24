@@ -6,21 +6,30 @@ import (
 
 	"github.com/jroimartin/gocui"
 	"github.com/wagoodman/docker-image-explorer/filetree"
-	"github.com/fatih/color"
 	"strings"
 	"github.com/lunixbochs/vtclean"
 )
 
+const (
+	CompareLayer CompareType = iota
+	CompareAll
+)
+
+type CompareType int
+
+
 type FileTreeView struct {
-	Name            string
-	gui             *gocui.Gui
-	view            *gocui.View
-	header          *gocui.View
-	TreeIndex       int
-	ModelTree       *filetree.FileTree
-	ViewTree        *filetree.FileTree
-	RefTrees        []*filetree.FileTree
-	HiddenDiffTypes []bool
+	Name              string
+	gui               *gocui.Gui
+	view              *gocui.View
+	header            *gocui.View
+	ModelTree         *filetree.FileTree
+	ViewTree          *filetree.FileTree
+	RefTrees          []*filetree.FileTree
+	HiddenDiffTypes   []bool
+	CompareMode       CompareType
+	CompareStartIndex int
+	CompareStopIndex  int
 }
 
 func NewFileTreeView(name string, gui *gocui.Gui, tree *filetree.FileTree, refTrees []*filetree.FileTree) (treeview *FileTreeView) {
@@ -32,6 +41,7 @@ func NewFileTreeView(name string, gui *gocui.Gui, tree *filetree.FileTree, refTr
 	treeview.ModelTree = tree
 	treeview.RefTrees = refTrees
 	treeview.HiddenDiffTypes = make([]bool, 4)
+	treeview.CompareMode = CompareLayer
 
 	return treeview
 }
@@ -88,8 +98,9 @@ func (view *FileTreeView) setLayer(layerIndex int) error {
 	if layerIndex > len(view.RefTrees)-1 {
 		return errors.New(fmt.Sprintf("Invalid layer index given: %d of %d", layerIndex, len(view.RefTrees)-1))
 	}
-	newTree := filetree.StackRange(view.RefTrees, layerIndex-1)
-	newTree.Compare(view.RefTrees[layerIndex])
+	view.CompareStopIndex = layerIndex
+	newTree := filetree.StackRange(view.RefTrees, view.CompareStartIndex, view.CompareStopIndex-1)
+	newTree.Compare(view.RefTrees[view.CompareStopIndex])
 
 	// preserve view state on copy
 	visitor := func(node *filetree.FileNode) error {
@@ -104,11 +115,11 @@ func (view *FileTreeView) setLayer(layerIndex int) error {
 	if debug {
 		v, _ := view.gui.View("debug")
 		v.Clear()
-		_, _ = fmt.Fprintln(v, view.RefTrees[layerIndex])
+		_, _ = fmt.Fprintln(v, view.RefTrees[view.CompareStopIndex])
 	}
 
 	view.view.SetCursor(0, 0)
-	view.TreeIndex = 0
+	view.CompareStopIndex = 0
 	view.ModelTree = newTree
 	view.updateViewTree()
 	return view.Render()
@@ -119,16 +130,16 @@ func (view *FileTreeView) CursorDown() error {
 	// to let us know what is a valid bounds (i.e. when it hits an empty line)
 	err := CursorDown(view.gui, view.view)
 	if err == nil {
-		view.TreeIndex++
+		view.CompareStopIndex++
 	}
 	return view.Render()
 }
 
 func (view *FileTreeView) CursorUp() error {
-	if view.TreeIndex > 0 {
+	if view.CompareStopIndex > 0 {
 		err := CursorUp(view.gui, view.view)
 		if err == nil {
-			view.TreeIndex--
+			view.CompareStopIndex--
 		}
 	}
 	return view.Render()
@@ -140,7 +151,7 @@ func (view *FileTreeView) getAbsPositionNode() (node *filetree.FileNode) {
 	var dfsCounter int
 
 	visiter = func(curNode *filetree.FileNode) error {
-		if dfsCounter == view.TreeIndex {
+		if dfsCounter == view.CompareStopIndex {
 			node = curNode
 		}
 		dfsCounter++
@@ -170,7 +181,7 @@ func (view *FileTreeView) toggleShowDiffType(diffType filetree.DiffType) error {
 	view.HiddenDiffTypes[diffType] = !view.HiddenDiffTypes[diffType]
 
 	view.view.SetCursor(0, 0)
-	view.TreeIndex = 0
+	view.CompareStopIndex = 0
 	view.updateViewTree()
 	return view.Render()
 }
@@ -193,12 +204,11 @@ func (view *FileTreeView) updateViewTree() {
 }
 
 func (view *FileTreeView) KeyHelp() string {
-	control := color.New(color.Bold).SprintFunc()
-	return  control("[Space]") + ": Collapse dir " +
-	        control("[^A]") + ": Added files " +
-			control("[^R]") + ": Removed files " +
-			control("[^M]") + ": Modified files " +
-			control("[^U]") + ": Unmodified files"
+	return  Formatting.Control("[Space]") + ": Collapse dir " +
+		Formatting.Control("[^A]") + ": Added files " +
+		Formatting.Control("[^R]") + ": Removed files " +
+		Formatting.Control("[^M]") + ": Modified files " +
+		Formatting.Control("[^U]") + ": Unmodified files"
 }
 
 func (view *FileTreeView) Render() error {
@@ -207,7 +217,7 @@ func (view *FileTreeView) Render() error {
 	view.gui.Update(func(g *gocui.Gui) error {
 		view.view.Clear()
 		for idx, line := range lines {
-			if idx == view.TreeIndex {
+			if idx == view.CompareStopIndex {
 				fmt.Fprintln(view.view, Formatting.StatusBar(vtclean.Clean(line, false)))
 			} else {
 				fmt.Fprintln(view.view, line)

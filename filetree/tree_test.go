@@ -423,7 +423,7 @@ func TestStackRange(t *testing.T) {
 		upperTree.AddPath(value, fakeData)
 	}
 	trees := []*FileTree{lowerTree, upperTree, tree}
-	StackRange(trees, 2)
+	StackRange(trees, 0, 2)
 }
 
 

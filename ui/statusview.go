@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/jroimartin/gocui"
-	"github.com/fatih/color"
 )
 
 type StatusView struct {
@@ -53,10 +52,8 @@ func (view *StatusView) CursorUp() error {
 }
 
 func (view *StatusView) KeyHelp() string {
-	control := color.New(color.Bold).SprintFunc()
-	return  control("[^C]") + ": Quit " +
-		control("[^Space]") + ": Switch View "
-
+	return  Formatting.Control("[^C]") + ": Quit " +
+		Formatting.Control("[^Space]") + ": Switch View "
 }
 
 func (view *StatusView) Render() error {

@@ -51,11 +51,24 @@ func (view *LayerView) Setup(v *gocui.View, header *gocui.View) error {
 	if err := view.gui.SetKeybinding(view.Name, gocui.KeyArrowUp, gocui.ModNone, func(*gocui.Gui, *gocui.View) error { return view.CursorUp() }); err != nil {
 		return err
 	}
+	if err := view.gui.SetKeybinding(view.Name, gocui.KeyCtrlL, gocui.ModNone, func(*gocui.Gui, *gocui.View) error { return view.setCompareMode(CompareLayer) }); err != nil {
+		return err
+	}
+	if err := view.gui.SetKeybinding(view.Name, gocui.KeyCtrlA, gocui.ModNone, func(*gocui.Gui, *gocui.View) error { return view.setCompareMode(CompareAll) }); err != nil {
+		return err
+	}
+
 
 	headerStr := fmt.Sprintf(image.LayerFormat, "Image ID", "Size", "Command")
 	fmt.Fprintln(view.header, Formatting.Header(vtclean.Clean(headerStr, false)))
 
 	return view.Render()
+}
+
+func (view *LayerView) setCompareMode(compareMode CompareType) error {
+	Views.Tree.CompareMode = compareMode
+	view.Render()
+	return Views.Tree.setLayer(Views.Tree.CompareStopIndex)
 }
 
 func (view *LayerView) Render() error {
@@ -65,10 +78,16 @@ func (view *LayerView) Render() error {
 			layer := view.Layers[revIdx]
 			idx := (len(view.Layers)-1) - revIdx
 
+			layerStr := layer.String()
+			if idx == 0 {
+				// TODO: add size
+				layerStr = fmt.Sprintf(image.LayerFormat, layer.History.ID[0:25], "", "FROM "+layer.Id())
+			}
+
 			if idx == view.LayerIndex {
-				fmt.Fprintln(view.view, Formatting.StatusBar(layer.String()))
+				fmt.Fprintln(view.view, Formatting.StatusBar(layerStr))
 			} else {
-				fmt.Fprintln(view.view, layer.String())
+				fmt.Fprintln(view.view, layerStr)
 			}
 
 		}
@@ -103,5 +122,6 @@ func (view *LayerView) CursorUp() error {
 }
 
 func (view *LayerView) KeyHelp() string {
-	return "blerg"
+	return  Formatting.Control("[^L]") + ": Layer Changes " +
+		Formatting.Control("[^A]") + ": All Changes "
 }
