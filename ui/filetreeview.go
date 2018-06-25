@@ -1,7 +1,6 @@
 package ui
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/jroimartin/gocui"
@@ -27,9 +26,8 @@ type FileTreeView struct {
 	ViewTree          *filetree.FileTree
 	RefTrees          []*filetree.FileTree
 	HiddenDiffTypes   []bool
-	CompareMode       CompareType
-	CompareStartIndex int
-	CompareStopIndex  int
+	TreeIndex         int
+
 }
 
 func NewFileTreeView(name string, gui *gocui.Gui, tree *filetree.FileTree, refTrees []*filetree.FileTree) (treeview *FileTreeView) {
@@ -41,7 +39,6 @@ func NewFileTreeView(name string, gui *gocui.Gui, tree *filetree.FileTree, refTr
 	treeview.ModelTree = tree
 	treeview.RefTrees = refTrees
 	treeview.HiddenDiffTypes = make([]bool, 4)
-	treeview.CompareMode = CompareLayer
 
 	return treeview
 }
@@ -94,13 +91,17 @@ func (view *FileTreeView) Setup(v *gocui.View, header *gocui.View) error {
 	return nil
 }
 
-func (view *FileTreeView) setLayer(layerIndex int) error {
-	if layerIndex > len(view.RefTrees)-1 {
-		return errors.New(fmt.Sprintf("Invalid layer index given: %d of %d", layerIndex, len(view.RefTrees)-1))
+
+
+func (view *FileTreeView) setTreeByLayer(bottomTreeStart, bottomTreeStop, topTreeStart, topTreeStop int) error {
+	//if stopIdx > len(view.RefTrees)-1 {
+	//	return errors.New(fmt.Sprintf("Invalid layer index given: %d of %d", stopIdx, len(view.RefTrees)-1))
+	//}
+	newTree := filetree.StackRange(view.RefTrees, bottomTreeStart, bottomTreeStop)
+
+	for idx := topTreeStart; idx <= topTreeStop; idx++ {
+		newTree.Compare(view.RefTrees[idx])
 	}
-	view.CompareStopIndex = layerIndex
-	newTree := filetree.StackRange(view.RefTrees, view.CompareStartIndex, view.CompareStopIndex-1)
-	newTree.Compare(view.RefTrees[view.CompareStopIndex])
 
 	// preserve view state on copy
 	visitor := func(node *filetree.FileNode) error {
@@ -112,14 +113,8 @@ func (view *FileTreeView) setLayer(layerIndex int) error {
 	}
 	view.ModelTree.VisitDepthChildFirst(visitor, nil)
 
-	if debug {
-		v, _ := view.gui.View("debug")
-		v.Clear()
-		_, _ = fmt.Fprintln(v, view.RefTrees[view.CompareStopIndex])
-	}
-
 	view.view.SetCursor(0, 0)
-	view.CompareStopIndex = 0
+	view.TreeIndex = 0
 	view.ModelTree = newTree
 	view.updateViewTree()
 	return view.Render()
@@ -130,16 +125,16 @@ func (view *FileTreeView) CursorDown() error {
 	// to let us know what is a valid bounds (i.e. when it hits an empty line)
 	err := CursorDown(view.gui, view.view)
 	if err == nil {
-		view.CompareStopIndex++
+		view.TreeIndex++
 	}
 	return view.Render()
 }
 
 func (view *FileTreeView) CursorUp() error {
-	if view.CompareStopIndex > 0 {
+	if view.TreeIndex > 0 {
 		err := CursorUp(view.gui, view.view)
 		if err == nil {
-			view.CompareStopIndex--
+			view.TreeIndex--
 		}
 	}
 	return view.Render()
@@ -151,7 +146,7 @@ func (view *FileTreeView) getAbsPositionNode() (node *filetree.FileNode) {
 	var dfsCounter int
 
 	visiter = func(curNode *filetree.FileNode) error {
-		if dfsCounter == view.CompareStopIndex {
+		if dfsCounter == view.TreeIndex {
 			node = curNode
 		}
 		dfsCounter++
@@ -181,7 +176,7 @@ func (view *FileTreeView) toggleShowDiffType(diffType filetree.DiffType) error {
 	view.HiddenDiffTypes[diffType] = !view.HiddenDiffTypes[diffType]
 
 	view.view.SetCursor(0, 0)
-	view.CompareStopIndex = 0
+	view.TreeIndex = 0
 	view.updateViewTree()
 	return view.Render()
 }
@@ -217,7 +212,7 @@ func (view *FileTreeView) Render() error {
 	view.gui.Update(func(g *gocui.Gui) error {
 		view.view.Clear()
 		for idx, line := range lines {
-			if idx == view.CompareStopIndex {
+			if idx == view.TreeIndex {
 				fmt.Fprintln(view.view, Formatting.StatusBar(vtclean.Clean(line, false)))
 			} else {
 				fmt.Fprintln(view.view, line)

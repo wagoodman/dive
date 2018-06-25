@@ -15,6 +15,8 @@ type LayerView struct {
 	header     *gocui.View
 	LayerIndex int
 	Layers     []*image.Layer
+	CompareMode       CompareType
+	CompareStartIndex int
 }
 
 func NewLayerView(name string, gui *gocui.Gui, layers []*image.Layer) (layerview *LayerView) {
@@ -24,6 +26,7 @@ func NewLayerView(name string, gui *gocui.Gui, layers []*image.Layer) (layerview
 	layerview.Name = name
 	layerview.gui = gui
 	layerview.Layers = layers
+	layerview.CompareMode = CompareLayer
 
 	return layerview
 }
@@ -59,16 +62,53 @@ func (view *LayerView) Setup(v *gocui.View, header *gocui.View) error {
 	}
 
 
-	headerStr := fmt.Sprintf(image.LayerFormat, "Image ID", "Size", "Command")
+	headerStr := fmt.Sprintf("C "+image.LayerFormat, "Image ID", "Size", "Command")
 	fmt.Fprintln(view.header, Formatting.Header(vtclean.Clean(headerStr, false)))
 
 	return view.Render()
 }
 
 func (view *LayerView) setCompareMode(compareMode CompareType) error {
-	Views.Tree.CompareMode = compareMode
+	view.CompareMode = compareMode
 	view.Render()
-	return Views.Tree.setLayer(Views.Tree.CompareStopIndex)
+	return Views.Tree.setTreeByLayer(view.getCompareIndexes())
+}
+
+func (view *LayerView) getCompareIndexes() (bottomTreeStart, bottomTreeStop, topTreeStart, topTreeStop int) {
+	bottomTreeStart = view.CompareStartIndex
+	topTreeStop = view.LayerIndex
+
+	if view.LayerIndex == view.CompareStartIndex {
+		bottomTreeStop = view.LayerIndex
+		topTreeStart = view.LayerIndex
+	} else if view.CompareMode == CompareLayer {
+		bottomTreeStop = view.LayerIndex -1
+		topTreeStart = view.LayerIndex
+	} else {
+		bottomTreeStop = view.CompareStartIndex
+		topTreeStart = view.CompareStartIndex+1
+	}
+
+	return bottomTreeStart, bottomTreeStop, topTreeStart, topTreeStop
+}
+
+func (view *LayerView) renderCompareBar(layerIdx int) string {
+	bottomTreeStart, bottomTreeStop, topTreeStart, topTreeStop := view.getCompareIndexes()
+	result := " "
+
+	if debug {
+		v, _ := view.gui.View("debug")
+		v.Clear()
+		_, _ = fmt.Fprintf(v, "bStart: %d bStop: %d tStart: %d tStop: %d", bottomTreeStart, bottomTreeStop, topTreeStart, topTreeStop)
+	}
+
+	if layerIdx >= bottomTreeStart && layerIdx <= bottomTreeStop {
+		result = Formatting.CompareBottom(" ")
+	}
+	if layerIdx >= topTreeStart && layerIdx <= topTreeStop {
+		result = Formatting.CompareTop(" ")
+	}
+	return result
 }
 
 func (view *LayerView) Render() error {
@@ -84,10 +124,12 @@ func (view *LayerView) Render() error {
 				layerStr = fmt.Sprintf(image.LayerFormat, layer.History.ID[0:25], "", "FROM "+layer.Id())
 			}
 
+			compareBar := view.renderCompareBar(idx)
+
 			if idx == view.LayerIndex {
-				fmt.Fprintln(view.view, Formatting.StatusBar(layerStr))
+				fmt.Fprintln(view.view, compareBar + " " + Formatting.StatusBar(layerStr))
 			} else {
-				fmt.Fprintln(view.view, layerStr)
+				fmt.Fprintln(view.view, compareBar + " " + layerStr)
 			}
 
 		}
@@ -102,8 +144,8 @@ func (view *LayerView) CursorDown() error {
 		err := CursorDown(view.gui, view.view)
 		if err == nil {
 			view.LayerIndex++
+			Views.Tree.setTreeByLayer(view.getCompareIndexes())
 			view.Render()
-			Views.Tree.setLayer(view.LayerIndex)
 		}
 	}
 	return nil
@@ -114,8 +156,8 @@ func (view *LayerView) CursorUp() error {
 		err := CursorUp(view.gui, view.view)
 		if err == nil {
 			view.LayerIndex--
+			Views.Tree.setTreeByLayer(view.getCompareIndexes())
 			view.Render()
-			Views.Tree.setLayer(view.LayerIndex)
 		}
 	}
 	return nil
