@@ -3,6 +3,7 @@ BIN = die
 all: clean build
 
 run: build
+	docker image ls | grep "die-test" >/dev/null || docker build -t die-test:latest .
 	./build/$(BIN) die-test
 
 build: #deps
