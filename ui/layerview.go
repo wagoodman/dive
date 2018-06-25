@@ -62,7 +62,7 @@ func (view *LayerView) Setup(v *gocui.View, header *gocui.View) error {
 	}
 
 
-	headerStr := fmt.Sprintf("C "+image.LayerFormat, "Image ID", "Size", "Command")
+	headerStr := fmt.Sprintf("Cmp "+image.LayerFormat, "Image ID", "Size", "Command")
 	fmt.Fprintln(view.header, Formatting.Header(vtclean.Clean(headerStr, false)))
 
 	return view.Render()
@@ -94,20 +94,33 @@ func (view *LayerView) getCompareIndexes() (bottomTreeStart, bottomTreeStop, top
 
 func (view *LayerView) renderCompareBar(layerIdx int) string {
 	bottomTreeStart, bottomTreeStop, topTreeStart, topTreeStop := view.getCompareIndexes()
-	result := " "
+	result := "  "
 
-	if debug {
-		v, _ := view.gui.View("debug")
-		v.Clear()
-		_, _ = fmt.Fprintf(v, "bStart: %d bStop: %d tStart: %d tStop: %d", bottomTreeStart, bottomTreeStop, topTreeStart, topTreeStop)
-	}
+	//if debug {
+	//	v, _ := view.gui.View("debug")
+	//	v.Clear()
+	//	_, _ = fmt.Fprintf(v, "bStart: %d bStop: %d tStart: %d tStop: %d", bottomTreeStart, bottomTreeStop, topTreeStart, topTreeStop)
+	//}
 
 	if layerIdx >= bottomTreeStart && layerIdx <= bottomTreeStop {
-		result = Formatting.CompareBottom(" ")
+		result = Formatting.CompareBottom("  ")
 	}
 	if layerIdx >= topTreeStart && layerIdx <= topTreeStop {
-		result = Formatting.CompareTop(" ")
+		result = Formatting.CompareTop("  ")
 	}
+
+	//if bottomTreeStop == topTreeStart {
+	//	result += "  "
+	//} else {
+	//	if layerIdx == bottomTreeStop {
+	//		result += "─┐"
+	//	} else if layerIdx == topTreeStart {
+	//		result += "─┘"
+	//	} else {
+	//		result += "  "
+	//	}
+	//}
+
 	return result
 }
 
@@ -127,9 +140,9 @@ func (view *LayerView) Render() error {
 			compareBar := view.renderCompareBar(idx)
 
 			if idx == view.LayerIndex {
-				fmt.Fprintln(view.view, compareBar + " " + Formatting.StatusBar(layerStr))
+				fmt.Fprintln(view.view, compareBar + "  " + Formatting.StatusBar(layerStr))
 			} else {
-				fmt.Fprintln(view.view, compareBar + " " + layerStr)
+				fmt.Fprintln(view.view, compareBar + "  " + layerStr)
 			}
 
 		}
