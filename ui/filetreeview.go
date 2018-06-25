@@ -2,10 +2,11 @@ package ui
 
 import (
 	"fmt"
+	"regexp"
+	"strings"
 
 	"github.com/jroimartin/gocui"
 	"github.com/wagoodman/docker-image-explorer/filetree"
-	"strings"
 	"github.com/lunixbochs/vtclean"
 )
 
@@ -81,11 +82,14 @@ func (view *FileTreeView) Setup(v *gocui.View, header *gocui.View) error {
 	if err := view.gui.SetKeybinding(view.Name, gocui.KeyCtrlU, gocui.ModNone, func(*gocui.Gui, *gocui.View) error { return view.toggleShowDiffType(filetree.Unchanged) }); err != nil {
 		return err
 	}
+	if err := view.gui.SetKeybinding(view.Name, gocui.KeyCtrlSlash, gocui.ModNone, func(*gocui.Gui, *gocui.View) error { return nil }); err != nil {
+		return err
+	}
 
 	view.updateViewTree()
 	view.Render()
 
-	headerStr := fmt.Sprintf(filetree.AttributeFormat + " %s", "P","ermission", "UID:GID", "Size", "Filetree")
+	headerStr := fmt.Sprintf(filetree.AttributeFormat+" %s", "P", "ermission", "UID:GID", "Size", "Filetree")
 	fmt.Fprintln(view.header, Formatting.Header(vtclean.Clean(headerStr, false)))
 
 	return nil
@@ -152,12 +156,26 @@ func (view *FileTreeView) getAbsPositionNode() (node *filetree.FileNode) {
 		dfsCounter++
 		return nil
 	}
-
-	evaluator = func(curNode *filetree.FileNode) bool {
-		return !curNode.Parent.Data.ViewInfo.Collapsed && !curNode.Data.ViewInfo.Hidden
+	var filterBytes []byte
+	var filterRegex *regexp.Regexp
+	read, err := Views.Command.view.Read(filterBytes)
+	if read > 0 && err == nil {
+		regex, err := regexp.Compile(string(filterBytes))
+		if err == nil {
+			filterRegex = regex
+		}
 	}
 
-	err := view.ModelTree.VisitDepthParentFirst(visiter, evaluator)
+	evaluator = func(curNode *filetree.FileNode) bool {
+		regexMatch := true
+		if filterRegex != nil {
+			match := filterRegex.Find([]byte(curNode.Path()))
+			regexMatch = match != nil
+		}
+		return !curNode.Parent.Data.ViewInfo.Collapsed && !curNode.Data.ViewInfo.Hidden && regexMatch
+	}
+
+	err = view.ModelTree.VisitDepthParentFirst(visiter, evaluator)
 	if err != nil {
 		panic(err)
 	}
@@ -167,7 +185,9 @@ func (view *FileTreeView) getAbsPositionNode() (node *filetree.FileNode) {
 
 func (view *FileTreeView) toggleCollapse() error {
 	node := view.getAbsPositionNode()
-	node.Data.ViewInfo.Collapsed = !node.Data.ViewInfo.Collapsed
+	if node != nil {
+		node.Data.ViewInfo.Collapsed = !node.Data.ViewInfo.Collapsed
+	}
 	view.updateViewTree()
 	return view.Render()
 }
@@ -181,10 +201,39 @@ func (view *FileTreeView) toggleShowDiffType(diffType filetree.DiffType) error {
 	return view.Render()
 }
 
+func filterRegex() *regexp.Regexp {
+	if Views.Command == nil || Views.Command.view == nil {
+		return nil
+	}
+	filterString := strings.TrimSpace(Views.Command.view.Buffer())
+	if len(filterString) < 1 {
+		return nil
+	}
+
+	regex, err := regexp.Compile(filterString)
+	if err != nil {
+		return nil
+	}
+
+	return regex
+}
+
 func (view *FileTreeView) updateViewTree() {
+	regex := filterRegex()
+
 	// keep the view selection in parity with the current DiffType selection
 	view.ModelTree.VisitDepthChildFirst(func(node *filetree.FileNode) error {
 		node.Data.ViewInfo.Hidden = view.HiddenDiffTypes[node.Data.DiffType]
+		visibleChild := false
+		for _, child := range node.Children {
+			if !child.Data.ViewInfo.Hidden {
+				visibleChild = true
+			}
+		}
+		if regex != nil && !visibleChild {
+			match := regex.FindString(node.Path())
+			node.Data.ViewInfo.Hidden = len(match) == 0
+		}
 		return nil
 	}, nil)
 
@@ -222,4 +271,9 @@ func (view *FileTreeView) Render() error {
 		return nil
 	})
 	return nil
+}
+
+func (view *FileTreeView) ReRender() error {
+	view.updateViewTree()
+	return view.Render()
 }

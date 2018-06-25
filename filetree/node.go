@@ -2,12 +2,13 @@ package filetree
 
 import (
 	"archive/tar"
+	"fmt"
 	"sort"
 	"strings"
-	"github.com/fatih/color"
-	"fmt"
-	"github.com/phayes/permbits"
+
 	"github.com/dustin/go-humanize"
+	"github.com/fatih/color"
+	"github.com/phayes/permbits"
 )
 
 const (
@@ -15,11 +16,11 @@ const (
 )
 
 type FileNode struct {
-	Tree      *FileTree
-	Parent    *FileNode
-	Name      string
-	Data      NodeData
-	Children  map[string]*FileNode
+	Tree     *FileTree
+	Parent   *FileNode
+	Name     string
+	Data     NodeData
+	Children map[string]*FileNode
 }
 
 func NewNode(parent *FileNode, name string, data FileInfo) (node *FileNode) {
@@ -124,7 +125,7 @@ func (node *FileNode) MetadataString() string {
 	userGroup := fmt.Sprintf("%d:%d", user, group)
 	size := humanize.Bytes(uint64(node.Data.FileInfo.TarHeader.FileInfo().Size()))
 
-	return style.Sprint(fmt.Sprintf(AttributeFormat,dir, fileMode, userGroup, size))
+	return style.Sprint(fmt.Sprintf(AttributeFormat, dir, fileMode, userGroup, size))
 }
 
 func (node *FileNode) VisitDepthChildFirst(visiter Visiter, evaluator VisitEvaluator) error {
@@ -160,7 +161,7 @@ func (node *FileNode) VisitDepthParentFirst(visiter Visiter, evaluator VisitEval
 	}
 
 	// never visit the root node
-	if node != node.Tree.Root{
+	if node != node.Tree.Root {
 		err = visiter(node)
 		if err != nil {
 			return err
@@ -224,7 +225,7 @@ func (node *FileNode) deriveDiffType(diffType DiffType) error {
 
 	}
 
-	return 	node.AssignDiffType(myDiffType)
+	return node.AssignDiffType(myDiffType)
 }
 
 func (node *FileNode) AssignDiffType(diffType DiffType) error {

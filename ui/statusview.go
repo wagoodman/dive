@@ -2,7 +2,7 @@ package ui
 
 import (
 	"fmt"
-
+	
 	"github.com/jroimartin/gocui"
 )
 
@@ -42,7 +42,6 @@ func (view *StatusView) Setup(v *gocui.View, header *gocui.View) error {
 	return nil
 }
 
-
 func (view *StatusView) CursorDown() error {
 	return nil
 }
@@ -52,14 +51,15 @@ func (view *StatusView) CursorUp() error {
 }
 
 func (view *StatusView) KeyHelp() string {
-	return  Formatting.Control("[^C]") + ": Quit " +
-		Formatting.Control("[^Space]") + ": Switch View "
+	return Formatting.Control("[^C]") + ": Quit " +
+		Formatting.Control("[^Space]") + ": Switch View " +
+			Formatting.Control("[^/]") + ": Filter files"
 }
 
 func (view *StatusView) Render() error {
 	view.gui.Update(func(g *gocui.Gui) error {
 		view.view.Clear()
-		fmt.Fprintln(view.view, view.KeyHelp() + " | " + Views.lookup[view.gui.CurrentView().Name()].KeyHelp())
+		fmt.Fprintln(view.view, view.KeyHelp()+" | "+Views.lookup[view.gui.CurrentView().Name()].KeyHelp())
 
 		return nil
 	})
