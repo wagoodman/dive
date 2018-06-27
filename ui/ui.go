@@ -11,7 +11,7 @@ import (
 	"github.com/fatih/color"
 )
 
-const debug = true
+const debug = false
 
 func debugPrint(s string) {
 	if debug && Views.Tree != nil && Views.Tree.gui != nil {
