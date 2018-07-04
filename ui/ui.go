@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/fatih/color"
 	"github.com/jroimartin/gocui"
 	"github.com/wagoodman/docker-image-explorer/filetree"
 	"github.com/wagoodman/docker-image-explorer/image"
+	"github.com/fatih/color"
 )
 
 const debug = false
@@ -26,8 +26,11 @@ func debugPrint(s string) {
 }
 
 var Formatting struct {
-	Header    func(...interface{}) string
-	StatusBar func(...interface{}) string
+	Header func(...interface{})(string)
+	StatusBar func(...interface{})(string)
+	Control func(...interface{})(string)
+	CompareTop func(...interface{})(string)
+	CompareBottom func(...interface{})(string)
 }
 
 var Views struct {
@@ -208,6 +211,9 @@ func Render() {
 func Run(layers []*image.Layer, refTrees []*filetree.FileTree) {
 	Formatting.StatusBar = color.New(color.ReverseVideo, color.Bold).SprintFunc()
 	Formatting.Header = color.New(color.Bold).SprintFunc()
+	Formatting.Control = color.New(color.Bold).SprintFunc()
+	Formatting.CompareTop = color.New(color.BgMagenta).SprintFunc()
+	Formatting.CompareBottom = color.New(color.BgGreen).SprintFunc()
 
 	g, err := gocui.NewGui(gocui.OutputNormal)
 	if err != nil {
@@ -220,7 +226,7 @@ func Run(layers []*image.Layer, refTrees []*filetree.FileTree) {
 	Views.Layer = NewLayerView("side", g, layers)
 	Views.lookup[Views.Layer.Name] = Views.Layer
 
-	Views.Tree = NewFileTreeView("main", g, filetree.StackRange(refTrees, 0), refTrees)
+	Views.Tree = NewFileTreeView("main", g, filetree.StackRange(refTrees, 0,0), refTrees)
 	Views.lookup[Views.Tree.Name] = Views.Tree
 
 	Views.Status = NewStatusView("status", g)

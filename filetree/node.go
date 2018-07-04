@@ -92,7 +92,7 @@ func (node *FileNode) String() string {
 	}
 	display = node.Name
 	if node.Data.FileInfo.TarHeader.Typeflag == tar.TypeSymlink || node.Data.FileInfo.TarHeader.Typeflag == tar.TypeLink {
-		display += " -> " + node.Data.FileInfo.TarHeader.Linkname
+		display += " → " + node.Data.FileInfo.TarHeader.Linkname
 	}
 	return style.Sprint(display)
 }

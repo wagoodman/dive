@@ -1,27 +1,34 @@
 package ui
 
 import (
-	"errors"
 	"fmt"
 	"regexp"
 	"strings"
 
-	"github.com/fatih/color"
 	"github.com/jroimartin/gocui"
-	"github.com/lunixbochs/vtclean"
 	"github.com/wagoodman/docker-image-explorer/filetree"
+	"github.com/lunixbochs/vtclean"
 )
 
+const (
+	CompareLayer CompareType = iota
+	CompareAll
+)
+
+type CompareType int
+
+
 type FileTreeView struct {
-	Name            string
-	gui             *gocui.Gui
-	view            *gocui.View
-	header          *gocui.View
-	TreeIndex       int
-	ModelTree       *filetree.FileTree
-	ViewTree        *filetree.FileTree
-	RefTrees        []*filetree.FileTree
-	HiddenDiffTypes []bool
+	Name              string
+	gui               *gocui.Gui
+	view              *gocui.View
+	header            *gocui.View
+	ModelTree         *filetree.FileTree
+	ViewTree          *filetree.FileTree
+	RefTrees          []*filetree.FileTree
+	HiddenDiffTypes   []bool
+	TreeIndex         int
+
 }
 
 func NewFileTreeView(name string, gui *gocui.Gui, tree *filetree.FileTree, refTrees []*filetree.FileTree) (treeview *FileTreeView) {
@@ -88,12 +95,17 @@ func (view *FileTreeView) Setup(v *gocui.View, header *gocui.View) error {
 	return nil
 }
 
-func (view *FileTreeView) setLayer(layerIndex int) error {
-	if layerIndex > len(view.RefTrees)-1 {
-		return errors.New(fmt.Sprintf("Invalid layer index given: %d of %d", layerIndex, len(view.RefTrees)-1))
+
+
+func (view *FileTreeView) setTreeByLayer(bottomTreeStart, bottomTreeStop, topTreeStart, topTreeStop int) error {
+	//if stopIdx > len(view.RefTrees)-1 {
+	//	return errors.New(fmt.Sprintf("Invalid layer index given: %d of %d", stopIdx, len(view.RefTrees)-1))
+	//}
+	newTree := filetree.StackRange(view.RefTrees, bottomTreeStart, bottomTreeStop)
+
+	for idx := topTreeStart; idx <= topTreeStop; idx++ {
+		newTree.Compare(view.RefTrees[idx])
 	}
-	newTree := filetree.StackRange(view.RefTrees, layerIndex-1)
-	newTree.Compare(view.RefTrees[layerIndex])
 
 	// preserve view state on copy
 	visitor := func(node *filetree.FileNode) error {
@@ -236,12 +248,11 @@ func (view *FileTreeView) updateViewTree() {
 }
 
 func (view *FileTreeView) KeyHelp() string {
-	control := color.New(color.Bold).SprintFunc()
-	return control("[Space]") + ": Collapse dir " +
-		control("[^A]") + ": Added files " +
-		control("[^R]") + ": Removed files " +
-		control("[^M]") + ": Modified files " +
-		control("[^U]") + ": Unmodified files"
+	return  Formatting.Control("[Space]") + ": Collapse dir " +
+		Formatting.Control("[^A]") + ": Added files " +
+		Formatting.Control("[^R]") + ": Removed files " +
+		Formatting.Control("[^M]") + ": Modified files " +
+		Formatting.Control("[^U]") + ": Unmodified files"
 }
 
 func (view *FileTreeView) Render() error {

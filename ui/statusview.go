@@ -3,7 +3,6 @@ package ui
 import (
 	"fmt"
 
-	"github.com/fatih/color"
 	"github.com/jroimartin/gocui"
 )
 
@@ -52,11 +51,9 @@ func (view *StatusView) CursorUp() error {
 }
 
 func (view *StatusView) KeyHelp() string {
-	control := color.New(color.Bold).SprintFunc()
-	return control("[^C]") + ": Quit " +
-		control("[^Space]") + ": Switch View " +
-		control("[^/]") + ": Filter files"
-
+	return Formatting.Control("[^C]") + ": Quit " +
+		Formatting.Control("[^Space]") + ": Switch View " +
+			Formatting.Control("[^/]") + ": Filter files"
 }
 
 func (view *StatusView) Render() error {

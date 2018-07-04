@@ -217,9 +217,9 @@ func (tree *FileTree) MarkRemoved(path string) error {
 	return node.AssignDiffType(Removed)
 }
 
-func StackRange(trees []*FileTree, index int) *FileTree {
+func StackRange(trees []*FileTree, start, stop int) *FileTree {
 	tree := trees[0].Copy()
-	for idx := 0; idx <= index; idx++ {
+	for idx := start; idx <= stop; idx++ {
 		tree.Stack(trees[idx])
 	}
 	return tree
