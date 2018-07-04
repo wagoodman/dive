@@ -39,7 +39,7 @@ func NewManifest(reader *tar.Reader, header *tar.Header) ImageManifest {
 	size := header.Size
 	manifestBytes := make([]byte, size)
 	_, err := reader.Read(manifestBytes)
-	if err != nil {
+	if err != nil && err != io.EOF {
 		panic(err)
 	}
 	var m []ImageManifest
@@ -56,7 +56,11 @@ type Layer struct {
 }
 
 func (layer *Layer) Id() string {
-	id := layer.History.ID[0:25]
+	rangeBound := 25
+	if length := len(layer.History.ID); length < 25 {
+		rangeBound = length
+	}
+	id := layer.History.ID[0:rangeBound]
 	if len(layer.History.Tags) > 0 {
 		id = "[" + strings.Join(layer.History.Tags, ",") + "]"
 	}
@@ -140,7 +144,9 @@ func InitializeData(imageID string) ([]*Layer, []*filetree.FileTree) {
 	for idx := 0; idx < len(layers); idx++ {
 		layers[idx] = new(Layer)
 		layers[idx].History = history[idx]
-		layers[idx].TarPath = manifest.LayerTarPaths[idx]
+		if len(manifest.LayerTarPaths) > idx {
+			layers[idx].TarPath = manifest.LayerTarPaths[idx]
+		}
 	}
 
 	return layers, trees
@@ -198,7 +204,7 @@ func getFileList(parentReader *tar.Reader, header *tar.Header) []filetree.FileIn
 	var tarredBytes = make([]byte, header.Size)
 
 	_, err := parentReader.Read(tarredBytes)
-	if err != nil {
+	if err != nil && err != io.EOF {
 		panic(err)
 	}
 	reader := bytes.NewReader(tarredBytes)
