@@ -241,3 +241,13 @@ func EfficiencyMap(trees []*FileTree) map[string]int {
 	}
 	return result
 }
+
+func EfficiencyScore(trees []*FileTree) float64 {
+	efficiencyMap := EfficiencyMap(trees)
+	uniquePaths := len(efficiencyMap)
+	pathAppearances := 0
+	for _, value := range efficiencyMap {
+		pathAppearances += value
+	}
+	return float64(uniquePaths) / float64(pathAppearances)
+}
