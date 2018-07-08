@@ -187,7 +187,7 @@ func (tree *FileTree) Compare(upper *FileTree) error {
 		if upperNode.IsWhiteout() {
 			err := tree.MarkRemoved(upperNode.Path())
 			if err != nil {
-				 return fmt.Errorf("cannot remove upperNode %s: %v", upperNode.Path(), err.Error())
+				return fmt.Errorf("cannot remove upperNode %s: %v", upperNode.Path(), err.Error())
 			}
 		} else {
 			lowerNode, _ := tree.GetNode(upperNode.Path())
@@ -195,7 +195,7 @@ func (tree *FileTree) Compare(upper *FileTree) error {
 				newNode, err := tree.AddPath(upperNode.Path(), upperNode.Data.FileInfo)
 				// fmt.Printf("added new upperNode at %s\n", newNode.Path())
 				if err != nil {
-					 return fmt.Errorf("cannot add new upperNode %s: %v", upperNode.Path(), err.Error())
+					return fmt.Errorf("cannot add new upperNode %s: %v", upperNode.Path(), err.Error())
 				}
 				newNode.AssignDiffType(Added)
 			} else {
@@ -223,4 +223,21 @@ func StackRange(trees []*FileTree, start, stop int) *FileTree {
 		tree.Stack(trees[idx])
 	}
 	return tree
+}
+
+// EfficiencyMap creates a map[string]int showing how often each int
+// appears in the
+func EfficiencyMap(trees []*FileTree) map[string]int {
+	result := make(map[string]int)
+	visitor := func(node *FileNode) error {
+		result[node.Path()]++
+		return nil
+	}
+	visitEvaluator := func(node *FileNode) bool {
+		return node.IsLeaf()
+	}
+	for _, tree := range trees {
+		tree.VisitDepthChildFirst(visitor, visitEvaluator)
+	}
+	return result
 }

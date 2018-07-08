@@ -2,6 +2,7 @@ package filetree
 
 import (
 	"fmt"
+	"reflect"
 	"testing"
 )
 
@@ -29,7 +30,7 @@ func TestPrintTree(t *testing.T) {
 	two.AddChild("forth, one level down...", FileInfo{})
 
 	expected :=
-`├── first node!
+		`├── first node!
 ├── second node!
 │   └── forth, one level down...
 └── third node!
@@ -52,7 +53,7 @@ func TestAddPath(t *testing.T) {
 	tree.AddPath("/tmp/nonsense", FileInfo{})
 
 	expected :=
-`├── etc
+		`├── etc
 │   └── nginx
 │       ├── nginx.conf
 │       └── public
@@ -84,7 +85,7 @@ func TestRemovePath(t *testing.T) {
 	tree.RemovePath("/tmp")
 
 	expected :=
-`├── etc
+		`├── etc
 │   └── nginx
 │       ├── nginx.conf
 │       └── public
@@ -130,7 +131,7 @@ func TestStack(t *testing.T) {
 	}
 
 	expected :=
-`├── etc
+		`├── etc
 │   └── nginx
 │       ├── nginx.conf
 │       └── public
@@ -169,7 +170,7 @@ func TestCopy(t *testing.T) {
 	tree.RemovePath("/tmp")
 
 	expected :=
-`├── etc
+		`├── etc
 │   └── nginx
 │       ├── nginx.conf
 │       └── public
@@ -249,11 +250,11 @@ func TestCompareWithAdds(t *testing.T) {
 		p := n.Path()
 		if p == "/" {
 			return nil
-		} else if stringInSlice(p,[]string{"/usr/bin/bash"}) {
+		} else if stringInSlice(p, []string{"/usr/bin/bash"}) {
 			if err := AssertDiffType(n, Added); err != nil {
 				failedAssertions = append(failedAssertions, err)
 			}
-		} else if stringInSlice(p,[]string{"/usr/bin", "/usr"}) {
+		} else if stringInSlice(p, []string{"/usr/bin", "/usr"}) {
 			if err := AssertDiffType(n, Changed); err != nil {
 				failedAssertions = append(failedAssertions, err)
 			}
@@ -296,7 +297,6 @@ func TestCompareWithChanges(t *testing.T) {
 		})
 	}
 
-
 	lowerTree.Compare(upperTree)
 	failedAssertions := []error{}
 	asserter := func(n *FileNode) error {
@@ -328,7 +328,6 @@ func TestCompareWithChanges(t *testing.T) {
 	}
 }
 
-
 func TestCompareWithRemoves(t *testing.T) {
 	lowerTree := NewFileTree()
 	upperTree := NewFileTree()
@@ -359,11 +358,11 @@ func TestCompareWithRemoves(t *testing.T) {
 		p := n.Path()
 		if p == "/" {
 			return nil
-		} else if stringInSlice(p,[]string{"/etc", "/usr/bin", "/etc/hosts", "/etc/sudoers", "/root/example/some1", "/root/example/some2", "/root/example"}) {
+		} else if stringInSlice(p, []string{"/etc", "/usr/bin", "/etc/hosts", "/etc/sudoers", "/root/example/some1", "/root/example/some2", "/root/example"}) {
 			if err := AssertDiffType(n, Removed); err != nil {
 				failedAssertions = append(failedAssertions, err)
 			}
-		} else if stringInSlice(p,[]string{"/usr", "/root"}) {
+		} else if stringInSlice(p, []string{"/usr", "/root"}) {
 			if err := AssertDiffType(n, Changed); err != nil {
 				failedAssertions = append(failedAssertions, err)
 			}
@@ -426,7 +425,6 @@ func TestStackRange(t *testing.T) {
 	StackRange(trees, 0, 2)
 }
 
-
 func TestRemoveOnIterate(t *testing.T) {
 
 	tree := NewFileTree()
@@ -452,7 +450,7 @@ func TestRemoveOnIterate(t *testing.T) {
 	}, nil)
 
 	expected :=
-`└── usr
+		`└── usr
     ├── bin
     └── something
 `
@@ -463,3 +461,20 @@ func TestRemoveOnIterate(t *testing.T) {
 
 }
 
+func TestEfficencyMap(t *testing.T) {
+	trees := make([]*FileTree, 3)
+	for ix, _ := range trees {
+		tree := NewFileTree()
+		tree.AddPath("/etc/nginx/nginx.conf", FileInfo{})
+		tree.AddPath("/etc/nginx/public", FileInfo{})
+		trees[ix] = tree
+	}
+	var expectedMap = map[string]int{
+		"/etc/nginx/nginx.conf": 3,
+		"/etc/nginx/public":     3,
+	}
+	actualMap := EfficiencyMap(trees)
+	if !reflect.DeepEqual(expectedMap, actualMap) {
+		t.Fatalf("Expected %v but go %v", expectedMap, actualMap)
+	}
+}
