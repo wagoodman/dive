@@ -29,17 +29,14 @@ func (view *StatusView) Setup(v *gocui.View, header *gocui.View) error {
 	view.view.Frame = false
 	view.view.BgColor = gocui.ColorDefault + gocui.AttrReverse
 
-	// set keybindings
-	// if err := view.gui.SetKeybinding(view.Name, gocui.KeyArrowDown, gocui.ModNone, func(*gocui.Gui, *gocui.View) error { return view.CursorDown() }); err != nil {
-	// 	return err
-	// }
-	// if err := view.gui.SetKeybinding(view.Name, gocui.KeyArrowUp, gocui.ModNone, func(*gocui.Gui, *gocui.View) error { return view.CursorUp() }); err != nil {
-	// 	return err
-	// }
-
 	view.Render()
 
 	return nil
+}
+
+func (view *StatusView) IsVisible() bool {
+	if view == nil {return false}
+	return true
 }
 
 func (view *StatusView) CursorDown() error {
@@ -53,7 +50,11 @@ func (view *StatusView) CursorUp() error {
 func (view *StatusView) KeyHelp() string {
 	return Formatting.Control("[^C]") + ": Quit " +
 		Formatting.Control("[^Space]") + ": Switch View " +
-			Formatting.Control("[^/]") + ": Filter files"
+     	Formatting.Control("[^/]") + ": Filter files"
+}
+
+func (view *StatusView) Update() error {
+	return nil
 }
 
 func (view *StatusView) Render() error {

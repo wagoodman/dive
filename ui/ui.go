@@ -34,11 +34,11 @@ var Formatting struct {
 }
 
 var Views struct {
-	Tree    *FileTreeView
-	Layer   *LayerView
-	Status  *StatusView
-	Command *CommandView
-	lookup  map[string]View
+	Tree   *FileTreeView
+	Layer  *LayerView
+	Status *StatusView
+	Filter *FilterView
+	lookup map[string]View
 }
 
 type View interface {
@@ -46,32 +46,44 @@ type View interface {
 	CursorDown() error
 	CursorUp() error
 	Render() error
+	Update() error
 	KeyHelp() string
+	IsVisible() bool
 }
 
 func toggleView(g *gocui.Gui, v *gocui.View) error {
 	if v == nil || v.Name() == Views.Layer.Name {
 		_, err := g.SetCurrentView(Views.Tree.Name)
+		Update()
 		Render()
 		return err
 	}
 	_, err := g.SetCurrentView(Views.Layer.Name)
+	Update()
 	Render()
 	return err
 }
 
-func focusFilterView(g *gocui.Gui, v *gocui.View) error {
-	_, err := g.SetCurrentView(Views.Command.Name)
-	Render()
-	return err
-}
+func toggleFilterView(g *gocui.Gui, v *gocui.View) error {
+	// delete all user input from the tree view
+	Views.Filter.view.Clear()
+	Views.Filter.view.SetCursor(0,0)
 
-func returnToTreeView(g *gocui.Gui, v *gocui.View) error {
-	_, err := g.SetCurrentView(Views.Tree.Name)
-	if Views.Tree != nil {
-		Views.Tree.ReRender()
+	// toggle hiding
+	Views.Filter.hidden = !Views.Filter.hidden
+
+	if !Views.Filter.hidden {
+		_, err := g.SetCurrentView(Views.Filter.Name)
+		if err != nil {
+			return err
+		}
+		Update()
+		Render()
+	} else {
+		toggleView(g, v)
 	}
-	return err
+
+	return nil
 }
 
 func CursorDown(g *gocui.Gui, v *gocui.View) error {
@@ -116,16 +128,10 @@ func keybindings(g *gocui.Gui) error {
 	//if err := g.SetKeybinding("main", gocui.MouseLeft, gocui.ModNone, toggleCollapse); err != nil {
 	//	return err
 	//}
-	if err := g.SetKeybinding("side", gocui.KeyCtrlSpace, gocui.ModNone, toggleView); err != nil {
+	if err := g.SetKeybinding("", gocui.KeyCtrlSpace, gocui.ModNone, toggleView); err != nil {
 		return err
 	}
-	if err := g.SetKeybinding("main", gocui.KeyCtrlSpace, gocui.ModNone, toggleView); err != nil {
-		return err
-	}
-	if err := g.SetKeybinding("", gocui.KeyCtrlSlash, gocui.ModNone, focusFilterView); err != nil {
-		return err
-	}
-	if err := g.SetKeybinding("command", gocui.KeyEnter, gocui.ModNone, returnToTreeView); err != nil {
+	if err := g.SetKeybinding("", gocui.KeyCtrlSlash, gocui.ModNone, toggleFilterView); err != nil {
 		return err
 	}
 
@@ -144,6 +150,7 @@ func isNewView(errs ...error) bool {
 	return true
 }
 
+// TODO: this logic should be refactored into an abstraction that takes care of the math for us
 func layout(g *gocui.Gui) error {
 	maxX, maxY := g.Size()
 	splitCols := maxX / 2
@@ -154,8 +161,20 @@ func layout(g *gocui.Gui) error {
 	debugCols := maxX - debugWidth
 	bottomRows := 1
 	headerRows := 1
+
+	filterBarHeight := 1
+	statusBarHeight := 1
+
+	statusBarIndex := 1
+	filterBarIndex := 2
+
 	var view, header *gocui.View
 	var viewErr, headerErr, err error
+
+	if Views.Filter.hidden {
+		bottomRows--
+		filterBarHeight = 0
+	}
 
 	// Debug pane
 	if debug {
@@ -185,24 +204,33 @@ func layout(g *gocui.Gui) error {
 	}
 
 	// Status Bar
-	view, viewErr = g.SetView(Views.Status.Name, -1, maxY-bottomRows-1, maxX, maxY)
+	view, viewErr = g.SetView(Views.Status.Name, -1, maxY-statusBarHeight-statusBarIndex, maxX, maxY-(statusBarIndex-1))
 	if isNewView(viewErr, headerErr) {
 		Views.Status.Setup(view, nil)
 	}
 
-	// Command Bar
-	view, viewErr = g.SetView(Views.Command.Name, -1, maxY-bottomRows-2, maxX, maxY-1)
+	// Filter Bar
+	view, viewErr = g.SetView(Views.Filter.Name, len(Views.Filter.headerStr)-1, maxY-filterBarHeight-filterBarIndex, maxX, maxY-(filterBarIndex-1))
+	header, headerErr = g.SetView(Views.Filter.Name+"header", -1, maxY-filterBarHeight - filterBarIndex, len(Views.Filter.headerStr), maxY-(filterBarIndex-1))
 	if isNewView(viewErr, headerErr) {
-		debugPrint("Setup...")
-		Views.Command.Setup(view, nil)
+		Views.Filter.Setup(view, header)
 	}
+
 
 	return nil
 }
 
+func Update() {
+	for _, view := range Views.lookup {
+		view.Update()
+	}
+}
+
 func Render() {
 	for _, view := range Views.lookup {
-		view.Render()
+		if view.IsVisible() {
+			view.Render()
+		}
 	}
 }
 
@@ -230,8 +258,8 @@ func Run(layers []*image.Layer, refTrees []*filetree.FileTree) {
 	Views.Status = NewStatusView("status", g)
 	Views.lookup[Views.Status.Name] = Views.Status
 
-	Views.Command = NewCommandView("command", g)
-	Views.lookup[Views.Command.Name] = Views.Command
+	Views.Filter = NewFilterView("command", g)
+	Views.lookup[Views.Filter.Name] = Views.Filter
 
 	g.Cursor = false
 	//g.Mouse = true

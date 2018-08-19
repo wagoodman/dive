@@ -64,6 +64,11 @@ func (view *LayerView) Setup(v *gocui.View, header *gocui.View) error {
 	return view.Render()
 }
 
+func (view *LayerView) IsVisible() bool {
+	if view == nil {return false}
+	return true
+}
+
 func (view *LayerView) setCompareMode(compareMode CompareType) error {
 	view.CompareMode = compareMode
 	view.Render()
@@ -120,10 +125,14 @@ func (view *LayerView) renderCompareBar(layerIdx int) string {
 	return result
 }
 
+func (view *LayerView) Update() error {
+	return nil
+}
+
 func (view *LayerView) Render() error {
 	view.gui.Update(func(g *gocui.Gui) error {
 		// update header
-		headerStr := fmt.Sprintf("Cmp "+image.LayerFormat, "Image ID", "Size", "Command")
+		headerStr := fmt.Sprintf("Cmp "+image.LayerFormat, "Image ID", "Size", "Filter")
 		fmt.Fprintln(view.header, Formatting.Header(vtclean.Clean(headerStr, false)))
 
 		// update contents

@@ -82,16 +82,17 @@ func (view *FileTreeView) Setup(v *gocui.View, header *gocui.View) error {
 	if err := view.gui.SetKeybinding(view.Name, gocui.KeyCtrlU, gocui.ModNone, func(*gocui.Gui, *gocui.View) error { return view.toggleShowDiffType(filetree.Unchanged) }); err != nil {
 		return err
 	}
-	if err := view.gui.SetKeybinding(view.Name, gocui.KeyCtrlSlash, gocui.ModNone, func(*gocui.Gui, *gocui.View) error { return nil }); err != nil {
-		return err
-	}
 
-	view.updateViewTree()
+	view.Update()
 	view.Render()
 
 	return nil
 }
 
+func (view *FileTreeView) IsVisible() bool {
+	if view == nil {return false}
+	return true
+}
 
 
 func (view *FileTreeView) setTreeByLayer(bottomTreeStart, bottomTreeStop, topTreeStart, topTreeStop int) error {
@@ -117,7 +118,7 @@ func (view *FileTreeView) setTreeByLayer(bottomTreeStart, bottomTreeStop, topTre
 	view.view.SetCursor(0, 0)
 	view.TreeIndex = 0
 	view.ModelTree = newTree
-	view.updateViewTree()
+	view.Update()
 	return view.Render()
 }
 
@@ -155,7 +156,7 @@ func (view *FileTreeView) getAbsPositionNode() (node *filetree.FileNode) {
 	}
 	var filterBytes []byte
 	var filterRegex *regexp.Regexp
-	read, err := Views.Command.view.Read(filterBytes)
+	read, err := Views.Filter.view.Read(filterBytes)
 	if read > 0 && err == nil {
 		regex, err := regexp.Compile(string(filterBytes))
 		if err == nil {
@@ -185,7 +186,7 @@ func (view *FileTreeView) toggleCollapse() error {
 	if node != nil {
 		node.Data.ViewInfo.Collapsed = !node.Data.ViewInfo.Collapsed
 	}
-	view.updateViewTree()
+	view.Update()
 	return view.Render()
 }
 
@@ -194,15 +195,15 @@ func (view *FileTreeView) toggleShowDiffType(diffType filetree.DiffType) error {
 
 	view.view.SetCursor(0, 0)
 	view.TreeIndex = 0
-	view.updateViewTree()
+	view.Update()
 	return view.Render()
 }
 
 func filterRegex() *regexp.Regexp {
-	if Views.Command == nil || Views.Command.view == nil {
+	if Views.Filter == nil || Views.Filter.view == nil {
 		return nil
 	}
-	filterString := strings.TrimSpace(Views.Command.view.Buffer())
+	filterString := strings.TrimSpace(Views.Filter.view.Buffer())
 	if len(filterString) < 1 {
 		return nil
 	}
@@ -215,7 +216,7 @@ func filterRegex() *regexp.Regexp {
 	return regex
 }
 
-func (view *FileTreeView) updateViewTree() {
+func (view *FileTreeView) Update() error {
 	regex := filterRegex()
 
 	// keep the view selection in parity with the current DiffType selection
@@ -242,6 +243,7 @@ func (view *FileTreeView) updateViewTree() {
 		}
 		return nil
 	}, nil)
+	return nil;
 }
 
 func (view *FileTreeView) KeyHelp() string {
@@ -274,9 +276,4 @@ func (view *FileTreeView) Render() error {
 		return nil
 	})
 	return nil
-}
-
-func (view *FileTreeView) ReRender() error {
-	view.updateViewTree()
-	return view.Render()
 }

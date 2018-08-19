@@ -8,11 +8,14 @@ import (
 
 // with special thanks to https://gist.github.com/jroimartin/3b2e943a3811d795e0718b4a95b89bec
 
-type CommandView struct {
+type FilterView struct {
 	Name      string
 	gui       *gocui.Gui
 	view      *gocui.View
+	header    *gocui.View
+	headerStr string
 	maxLength int
+	hidden    bool
 }
 
 type Input struct {
@@ -22,17 +25,19 @@ type Input struct {
 	maxLength int
 }
 
-func NewCommandView(name string, gui *gocui.Gui) (commandview *CommandView) {
-	commandview = new(CommandView)
+func NewFilterView(name string, gui *gocui.Gui) (filterview *FilterView) {
+	filterview = new(FilterView)
 
 	// populate main fields
-	commandview.Name = name
-	commandview.gui = gui
+	filterview.Name = name
+	filterview.gui = gui
+	filterview.headerStr = "Path Filter: "
+	filterview.hidden = true
 
-	return commandview
+	return filterview
 }
 
-func (view *CommandView) Setup(v *gocui.View, header *gocui.View) error {
+func (view *FilterView) Setup(v *gocui.View, header *gocui.View) error {
 
 	// set view options
 	view.view = v
@@ -41,6 +46,13 @@ func (view *CommandView) Setup(v *gocui.View, header *gocui.View) error {
 	view.view.BgColor = gocui.ColorDefault + gocui.AttrReverse
 	view.view.Editable = true
 	view.view.Editor = view
+
+	view.header = header
+	view.header.BgColor = gocui.ColorDefault + gocui.AttrReverse
+	view.header.Editable = false
+	view.header.Wrap = false
+	view.header.Frame = false
+
 	// set keybindings
 	// if err := view.gui.SetKeybinding(view.Name, gocui.KeyArrowDown, gocui.ModNone, func(*gocui.Gui, *gocui.View) error { return view.CursorDown() }); err != nil {
 	// 	return err
@@ -54,18 +66,27 @@ func (view *CommandView) Setup(v *gocui.View, header *gocui.View) error {
 	return nil
 }
 
-func (view *CommandView) CursorDown() error {
+func (view *FilterView) IsVisible() bool {
+	if view == nil {return false}
+	return !view.hidden
+}
+
+func (view *FilterView) CursorDown() error {
 	return nil
 }
 
-func (view *CommandView) CursorUp() error {
+func (view *FilterView) CursorUp() error {
 	return nil
 }
 
-func (i *CommandView) Edit(v *gocui.View, key gocui.Key, ch rune, mod gocui.Modifier) {
+func (view *FilterView) Edit(v *gocui.View, key gocui.Key, ch rune, mod gocui.Modifier) {
+	if !view.IsVisible() {
+		return
+	}
+
 	cx, _ := v.Cursor()
 	ox, _ := v.Origin()
-	limit := ox+cx+1 > i.maxLength
+	limit := ox+cx+1 > view.maxLength
 	switch {
 	case ch != 0 && mod == 0 && !limit:
 		v.EditWrite(ch)
@@ -75,17 +96,23 @@ func (i *CommandView) Edit(v *gocui.View, key gocui.Key, ch rune, mod gocui.Modi
 		v.EditDelete(true)
 	}
 	if Views.Tree != nil {
-		Views.Tree.ReRender()
+		Views.Tree.Update()
+		Views.Tree.Render()
 	}
 }
 
-func (view *CommandView) KeyHelp() string {
-	return "Type string to filter"
+func (view *FilterView) KeyHelp() string {
+	return Formatting.Control("Type string to filter the file tree")
 }
 
-func (view *CommandView) Render() error {
+func (view *FilterView) Update() error {
+	return nil
+}
+
+func (view *FilterView) Render() error {
 	view.gui.Update(func(g *gocui.Gui) error {
-		fmt.Fprintln(view.view, "")
+		// render the header
+		fmt.Fprintln(view.header, Formatting.Header(view.headerStr))
 
 		return nil
 	})
