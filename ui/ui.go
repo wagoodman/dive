@@ -132,6 +132,18 @@ func keybindings(g *gocui.Gui) error {
 	return nil
 }
 
+func isNewView(errs ...error) bool {
+	for _, err := range errs {
+		if err == nil {
+			return false
+		}
+		if err != nil && err != gocui.ErrUnknownView {
+			return false
+		}
+	}
+	return true
+}
+
 func layout(g *gocui.Gui) error {
 	maxX, maxY := g.Size()
 	splitCols := maxX / 2
@@ -142,37 +154,8 @@ func layout(g *gocui.Gui) error {
 	debugCols := maxX - debugWidth
 	bottomRows := 1
 	headerRows := 1
-
-	// Layers
-	if view, err := g.SetView(Views.Layer.Name, -1, -1+headerRows, splitCols, maxY-bottomRows); err != nil {
-		if err != gocui.ErrUnknownView {
-			return err
-		}
-		if header, err := g.SetView(Views.Layer.Name+"header", -1, -1, splitCols, headerRows); err != nil {
-			if err != gocui.ErrUnknownView {
-				return err
-			}
-			Views.Layer.Setup(view, header)
-
-			if _, err := g.SetCurrentView(Views.Layer.Name); err != nil {
-				return err
-			}
-		}
-
-	}
-	// Filetree
-	if view, err := g.SetView(Views.Tree.Name, splitCols, -1+headerRows, debugCols, maxY-bottomRows); err != nil {
-		if err != gocui.ErrUnknownView {
-			return err
-		}
-
-		if header, err := g.SetView(Views.Tree.Name+"header", splitCols, -1, debugCols, headerRows); err != nil {
-			if err != gocui.ErrUnknownView {
-				return err
-			}
-			Views.Tree.Setup(view, header)
-		}
-	}
+	var view, header *gocui.View
+	var viewErr, headerErr, err error
 
 	// Debug pane
 	if debug {
@@ -183,20 +166,35 @@ func layout(g *gocui.Gui) error {
 		}
 	}
 
-	// StatusBar
-	if view, err := g.SetView(Views.Status.Name, -1, maxY-bottomRows-1, maxX, maxY); err != nil {
-		if err != gocui.ErrUnknownView {
+	// Layers
+	view, viewErr = g.SetView(Views.Layer.Name, -1, -1+headerRows, splitCols, maxY-bottomRows)
+	header, headerErr = g.SetView(Views.Layer.Name+"header", -1, -1, splitCols, headerRows)
+	if isNewView(viewErr, headerErr) {
+		Views.Layer.Setup(view, header)
+
+		if _, err = g.SetCurrentView(Views.Layer.Name); err != nil {
 			return err
 		}
-		Views.Status.Setup(view, nil)
-
 	}
-	if view, err := g.SetView(Views.Command.Name, -1, maxY-bottomRows-2, maxX, maxY-1); err != nil {
-		if err != gocui.ErrUnknownView {
-			return err
-		}
-		Views.Command.Setup(view, nil)
 
+	// Filetree
+	view, viewErr = g.SetView(Views.Tree.Name, splitCols, -1+headerRows, debugCols, maxY-bottomRows)
+	header, headerErr = g.SetView(Views.Tree.Name+"header", splitCols, -1, debugCols, headerRows)
+	if isNewView(viewErr, headerErr) {
+		Views.Tree.Setup(view, header)
+	}
+
+	// Status Bar
+	view, viewErr = g.SetView(Views.Status.Name, -1, maxY-bottomRows-1, maxX, maxY)
+	if isNewView(viewErr, headerErr) {
+		Views.Status.Setup(view, nil)
+	}
+
+	// Command Bar
+	view, viewErr = g.SetView(Views.Command.Name, -1, maxY-bottomRows-2, maxX, maxY-1)
+	if isNewView(viewErr, headerErr) {
+		debugPrint("Setup...")
+		Views.Command.Setup(view, nil)
 	}
 
 	return nil

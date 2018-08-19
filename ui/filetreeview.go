@@ -89,9 +89,6 @@ func (view *FileTreeView) Setup(v *gocui.View, header *gocui.View) error {
 	view.updateViewTree()
 	view.Render()
 
-	headerStr := fmt.Sprintf(filetree.AttributeFormat+" %s", "P", "ermission", "UID:GID", "Size", "Filetree")
-	fmt.Fprintln(view.header, Formatting.Header(vtclean.Clean(headerStr, false)))
-
 	return nil
 }
 
@@ -259,6 +256,12 @@ func (view *FileTreeView) Render() error {
 	// print the tree to the view
 	lines := strings.Split(view.ViewTree.String(true), "\n")
 	view.gui.Update(func(g *gocui.Gui) error {
+		// update the header
+		view.header.Clear()
+		headerStr := fmt.Sprintf(filetree.AttributeFormat+" %s", "P", "ermission", "UID:GID", "Size", "Filetree")
+		fmt.Fprintln(view.header, Formatting.Header(vtclean.Clean(headerStr, false)))
+
+		// update the contents
 		view.view.Clear()
 		for idx, line := range lines {
 			if idx == view.TreeIndex {

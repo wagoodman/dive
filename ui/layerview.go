@@ -61,10 +61,6 @@ func (view *LayerView) Setup(v *gocui.View, header *gocui.View) error {
 		return err
 	}
 
-
-	headerStr := fmt.Sprintf("Cmp "+image.LayerFormat, "Image ID", "Size", "Command")
-	fmt.Fprintln(view.header, Formatting.Header(vtclean.Clean(headerStr, false)))
-
 	return view.Render()
 }
 
@@ -126,6 +122,11 @@ func (view *LayerView) renderCompareBar(layerIdx int) string {
 
 func (view *LayerView) Render() error {
 	view.gui.Update(func(g *gocui.Gui) error {
+		// update header
+		headerStr := fmt.Sprintf("Cmp "+image.LayerFormat, "Image ID", "Size", "Command")
+		fmt.Fprintln(view.header, Formatting.Header(vtclean.Clean(headerStr, false)))
+
+		// update contents
 		view.view.Clear()
 		for revIdx := len(view.Layers) - 1; revIdx >= 0; revIdx-- {
 			layer := view.Layers[revIdx]
