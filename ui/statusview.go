@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/jroimartin/gocui"
+	"strings"
 )
 
 type StatusView struct {
@@ -27,19 +28,16 @@ func (view *StatusView) Setup(v *gocui.View, header *gocui.View) error {
 	// set view options
 	view.view = v
 	view.view.Frame = false
-	view.view.BgColor = gocui.ColorDefault + gocui.AttrReverse
-
-	// set keybindings
-	// if err := view.gui.SetKeybinding(view.Name, gocui.KeyArrowDown, gocui.ModNone, func(*gocui.Gui, *gocui.View) error { return view.CursorDown() }); err != nil {
-	// 	return err
-	// }
-	// if err := view.gui.SetKeybinding(view.Name, gocui.KeyArrowUp, gocui.ModNone, func(*gocui.Gui, *gocui.View) error { return view.CursorUp() }); err != nil {
-	// 	return err
-	// }
+	//view.view.BgColor = gocui.ColorDefault + gocui.AttrReverse
 
 	view.Render()
 
 	return nil
+}
+
+func (view *StatusView) IsVisible() bool {
+	if view == nil {return false}
+	return true
 }
 
 func (view *StatusView) CursorDown() error {
@@ -51,15 +49,19 @@ func (view *StatusView) CursorUp() error {
 }
 
 func (view *StatusView) KeyHelp() string {
-	return Formatting.Control("[^C]") + ": Quit " +
-		Formatting.Control("[^Space]") + ": Switch View " +
-			Formatting.Control("[^/]") + ": Filter files"
+	return  renderStatusOption("^C","Quit", false) +
+			renderStatusOption("^Space","Switch view", false) +
+			renderStatusOption("^/","Filter files", Views.Filter.IsVisible())
+}
+
+func (view *StatusView) Update() error {
+	return nil
 }
 
 func (view *StatusView) Render() error {
 	view.gui.Update(func(g *gocui.Gui) error {
 		view.view.Clear()
-		fmt.Fprintln(view.view, view.KeyHelp()+" | "+Views.lookup[view.gui.CurrentView().Name()].KeyHelp())
+		fmt.Fprintln(view.view, view.KeyHelp()+Views.lookup[view.gui.CurrentView().Name()].KeyHelp() + Formatting.StatusNormal("▏" + strings.Repeat(" ", 1000)))
 
 		return nil
 	})

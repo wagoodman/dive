@@ -50,9 +50,6 @@ func (view *FileTreeView) Setup(v *gocui.View, header *gocui.View) error {
 	view.view = v
 	view.view.Editable = false
 	view.view.Wrap = false
-	//view.view.Highlight = true
-	//view.view.SelBgColor = gocui.ColorGreen
-	//view.view.SelFgColor = gocui.ColorBlack
 	view.view.Frame = false
 
 	view.header = header
@@ -82,19 +79,17 @@ func (view *FileTreeView) Setup(v *gocui.View, header *gocui.View) error {
 	if err := view.gui.SetKeybinding(view.Name, gocui.KeyCtrlU, gocui.ModNone, func(*gocui.Gui, *gocui.View) error { return view.toggleShowDiffType(filetree.Unchanged) }); err != nil {
 		return err
 	}
-	if err := view.gui.SetKeybinding(view.Name, gocui.KeyCtrlSlash, gocui.ModNone, func(*gocui.Gui, *gocui.View) error { return nil }); err != nil {
-		return err
-	}
 
-	view.updateViewTree()
+	view.Update()
 	view.Render()
-
-	headerStr := fmt.Sprintf(filetree.AttributeFormat+" %s", "P", "ermission", "UID:GID", "Size", "Filetree")
-	fmt.Fprintln(view.header, Formatting.Header(vtclean.Clean(headerStr, false)))
 
 	return nil
 }
 
+func (view *FileTreeView) IsVisible() bool {
+	if view == nil {return false}
+	return true
+}
 
 
 func (view *FileTreeView) setTreeByLayer(bottomTreeStart, bottomTreeStop, topTreeStart, topTreeStop int) error {
@@ -120,7 +115,7 @@ func (view *FileTreeView) setTreeByLayer(bottomTreeStart, bottomTreeStop, topTre
 	view.view.SetCursor(0, 0)
 	view.TreeIndex = 0
 	view.ModelTree = newTree
-	view.updateViewTree()
+	view.Update()
 	return view.Render()
 }
 
@@ -158,7 +153,7 @@ func (view *FileTreeView) getAbsPositionNode() (node *filetree.FileNode) {
 	}
 	var filterBytes []byte
 	var filterRegex *regexp.Regexp
-	read, err := Views.Command.view.Read(filterBytes)
+	read, err := Views.Filter.view.Read(filterBytes)
 	if read > 0 && err == nil {
 		regex, err := regexp.Compile(string(filterBytes))
 		if err == nil {
@@ -188,7 +183,7 @@ func (view *FileTreeView) toggleCollapse() error {
 	if node != nil {
 		node.Data.ViewInfo.Collapsed = !node.Data.ViewInfo.Collapsed
 	}
-	view.updateViewTree()
+	view.Update()
 	return view.Render()
 }
 
@@ -197,15 +192,17 @@ func (view *FileTreeView) toggleShowDiffType(diffType filetree.DiffType) error {
 
 	view.view.SetCursor(0, 0)
 	view.TreeIndex = 0
-	view.updateViewTree()
-	return view.Render()
+
+	Update()
+	Render()
+	return nil
 }
 
 func filterRegex() *regexp.Regexp {
-	if Views.Command == nil || Views.Command.view == nil {
+	if Views.Filter == nil || Views.Filter.view == nil {
 		return nil
 	}
-	filterString := strings.TrimSpace(Views.Command.view.Buffer())
+	filterString := strings.TrimSpace(Views.Filter.view.Buffer())
 	if len(filterString) < 1 {
 		return nil
 	}
@@ -218,7 +215,7 @@ func filterRegex() *regexp.Regexp {
 	return regex
 }
 
-func (view *FileTreeView) updateViewTree() {
+func (view *FileTreeView) Update() error {
 	regex := filterRegex()
 
 	// keep the view selection in parity with the current DiffType selection
@@ -245,24 +242,31 @@ func (view *FileTreeView) updateViewTree() {
 		}
 		return nil
 	}, nil)
+	return nil;
 }
 
 func (view *FileTreeView) KeyHelp() string {
-	return  Formatting.Control("[Space]") + ": Collapse dir " +
-		Formatting.Control("[^A]") + ": Added files " +
-		Formatting.Control("[^R]") + ": Removed files " +
-		Formatting.Control("[^M]") + ": Modified files " +
-		Formatting.Control("[^U]") + ": Unmodified files"
+	return  renderStatusOption("Space","Collapse dir", false) +
+			renderStatusOption("^A","Added files", !view.HiddenDiffTypes[filetree.Added]) +
+			renderStatusOption("^R","Removed files", !view.HiddenDiffTypes[filetree.Removed]) +
+			renderStatusOption("^M","Modified files", !view.HiddenDiffTypes[filetree.Changed]) +
+			renderStatusOption("^U","Unmodified files", !view.HiddenDiffTypes[filetree.Unchanged])
 }
 
 func (view *FileTreeView) Render() error {
 	// print the tree to the view
 	lines := strings.Split(view.ViewTree.String(true), "\n")
 	view.gui.Update(func(g *gocui.Gui) error {
+		// update the header
+		view.header.Clear()
+		headerStr := fmt.Sprintf(filetree.AttributeFormat+" %s", "P", "ermission", "UID:GID", "Size", "Filetree")
+		fmt.Fprintln(view.header, Formatting.Header(vtclean.Clean(headerStr, false)))
+
+		// update the contents
 		view.view.Clear()
 		for idx, line := range lines {
 			if idx == view.TreeIndex {
-				fmt.Fprintln(view.view, Formatting.StatusBar(vtclean.Clean(line, false)))
+				fmt.Fprintln(view.view, Formatting.Selected(vtclean.Clean(line, false)))
 			} else {
 				fmt.Fprintln(view.view, line)
 			}
@@ -271,9 +275,4 @@ func (view *FileTreeView) Render() error {
 		return nil
 	})
 	return nil
-}
-
-func (view *FileTreeView) ReRender() error {
-	view.updateViewTree()
-	return view.Render()
 }

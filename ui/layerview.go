@@ -61,16 +61,18 @@ func (view *LayerView) Setup(v *gocui.View, header *gocui.View) error {
 		return err
 	}
 
-
-	headerStr := fmt.Sprintf("Cmp "+image.LayerFormat, "Image ID", "Size", "Command")
-	fmt.Fprintln(view.header, Formatting.Header(vtclean.Clean(headerStr, false)))
-
 	return view.Render()
+}
+
+func (view *LayerView) IsVisible() bool {
+	if view == nil {return false}
+	return true
 }
 
 func (view *LayerView) setCompareMode(compareMode CompareType) error {
 	view.CompareMode = compareMode
-	view.Render()
+	Update()
+	Render()
 	return Views.Tree.setTreeByLayer(view.getCompareIndexes())
 }
 
@@ -124,8 +126,17 @@ func (view *LayerView) renderCompareBar(layerIdx int) string {
 	return result
 }
 
+func (view *LayerView) Update() error {
+	return nil
+}
+
 func (view *LayerView) Render() error {
 	view.gui.Update(func(g *gocui.Gui) error {
+		// update header
+		headerStr := fmt.Sprintf("Cmp "+image.LayerFormat, "Image ID", "Size", "Filter")
+		fmt.Fprintln(view.header, Formatting.Header(vtclean.Clean(headerStr, false)))
+
+		// update contents
 		view.view.Clear()
 		for revIdx := len(view.Layers) - 1; revIdx >= 0; revIdx-- {
 			layer := view.Layers[revIdx]
@@ -140,7 +151,7 @@ func (view *LayerView) Render() error {
 			compareBar := view.renderCompareBar(idx)
 
 			if idx == view.LayerIndex {
-				fmt.Fprintln(view.view, compareBar + "  " + Formatting.StatusBar(layerStr))
+				fmt.Fprintln(view.view, compareBar + "  " + Formatting.Selected(layerStr))
 			} else {
 				fmt.Fprintln(view.view, compareBar + "  " + layerStr)
 			}
@@ -177,6 +188,6 @@ func (view *LayerView) CursorUp() error {
 }
 
 func (view *LayerView) KeyHelp() string {
-	return  Formatting.Control("[^L]") + ": Layer Changes " +
-		Formatting.Control("[^A]") + ": All Changes "
+	return  renderStatusOption("^L","Layer changes", view.CompareMode == CompareLayer) +
+			renderStatusOption("^A","All changes", view.CompareMode == CompareAll)
 }
