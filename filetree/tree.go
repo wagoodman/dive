@@ -149,7 +149,6 @@ func (tree *FileTree) GetNode(path string) (*FileNode, error) {
 }
 
 func (tree *FileTree) AddPath(path string, data FileInfo) (*FileNode, error) {
-	// fmt.Printf("ADDPATH: %s %+v\n", path, data)
 	nodeNames := strings.Split(strings.Trim(path, "/"), "/")
 	node := tree.Root
 	for idx, name := range nodeNames {
@@ -193,14 +192,12 @@ func (tree *FileTree) Compare(upper *FileTree) error {
 			lowerNode, _ := tree.GetNode(upperNode.Path())
 			if lowerNode == nil {
 				newNode, err := tree.AddPath(upperNode.Path(), upperNode.Data.FileInfo)
-				// fmt.Printf("added new upperNode at %s\n", newNode.Path())
 				if err != nil {
 					return fmt.Errorf("cannot add new upperNode %s: %v", upperNode.Path(), err.Error())
 				}
 				newNode.AssignDiffType(Added)
 			} else {
 				diffType := lowerNode.compare(upperNode)
-				// fmt.Printf("found existing upperNode at %s\n", lowerNode.Path())
 				return lowerNode.deriveDiffType(diffType)
 			}
 		}

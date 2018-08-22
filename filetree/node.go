@@ -123,7 +123,25 @@ func (node *FileNode) MetadataString() string {
 	user := node.Data.FileInfo.TarHeader.Uid
 	group := node.Data.FileInfo.TarHeader.Gid
 	userGroup := fmt.Sprintf("%d:%d", user, group)
-	size := humanize.Bytes(uint64(node.Data.FileInfo.TarHeader.FileInfo().Size()))
+
+	//size := humanize.Bytes(uint64(node.Data.FileInfo.TarHeader.FileInfo().Size()))
+	var sizeBytes int64
+
+	if node.Data.FileInfo.TarHeader.FileInfo().IsDir() {
+
+		sizer := func(curNode *FileNode) error {
+			if curNode.Data.DiffType != Removed {
+				sizeBytes += curNode.Data.FileInfo.TarHeader.FileInfo().Size()
+			}
+			return nil
+		}
+
+		node.VisitDepthChildFirst(sizer, nil)
+	} else {
+		sizeBytes = node.Data.FileInfo.TarHeader.FileInfo().Size()
+	}
+
+	size := humanize.Bytes(uint64(sizeBytes))
 
 	return style.Sprint(fmt.Sprintf(AttributeFormat, dir, fileMode, userGroup, size))
 }

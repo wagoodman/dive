@@ -133,7 +133,7 @@ func (view *LayerView) Update() error {
 func (view *LayerView) Render() error {
 	view.gui.Update(func(g *gocui.Gui) error {
 		// update header
-		headerStr := fmt.Sprintf("Cmp "+image.LayerFormat, "Image ID", "Size", "Filter")
+		headerStr := fmt.Sprintf("Cmp "+image.LayerFormat, "Image ID", "%Eff.", "Size", "Filter")
 		fmt.Fprintln(view.header, Formatting.Header(vtclean.Clean(headerStr, false)))
 
 		// update contents
@@ -145,7 +145,7 @@ func (view *LayerView) Render() error {
 			layerStr := layer.String()
 			if idx == 0 {
 				// TODO: add size
-				layerStr = fmt.Sprintf(image.LayerFormat, layer.History.ID[0:25], "", "FROM "+layer.Id())
+				layerStr = fmt.Sprintf(image.LayerFormat, layer.History.ID[0:25], "", "", "FROM "+layer.Id())
 			}
 
 			compareBar := view.renderCompareBar(idx)

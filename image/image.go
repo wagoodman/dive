@@ -17,10 +17,11 @@ import (
 	humanize "github.com/dustin/go-humanize"
 	"github.com/wagoodman/docker-image-explorer/filetree"
 	"golang.org/x/net/context"
+	"strconv"
 )
 
 const (
-	LayerFormat = "%-25s %7s %s"
+	LayerFormat = "%-25s %5s %7s %s"
 )
 
 func check(e error) {
@@ -51,8 +52,11 @@ func NewManifest(reader *tar.Reader, header *tar.Header) ImageManifest {
 }
 
 type Layer struct {
-	TarPath string
-	History types.ImageHistory
+	TarPath  string
+	History  types.ImageHistory
+	Index    int
+	Tree     *filetree.FileTree
+	RefTrees []*filetree.FileTree
 }
 
 func (layer *Layer) Id() string {
@@ -69,7 +73,12 @@ func (layer *Layer) Id() string {
 
 func (layer *Layer) String() string {
 
-	return fmt.Sprintf(LayerFormat, layer.Id(), humanize.Bytes(uint64(layer.History.Size)), strings.TrimPrefix(layer.History.CreatedBy, "/bin/sh -c "))
+	return fmt.Sprintf(LayerFormat,
+						layer.Id(),
+						strconv.Itoa(int(100.0*filetree.EfficiencyScore(layer.RefTrees[:layer.Index+1]))) + "%",
+						//"100%",
+						humanize.Bytes(uint64(layer.History.Size)),
+						strings.TrimPrefix(layer.History.CreatedBy, "/bin/sh -c "))
 }
 
 func InitializeData(imageID string) ([]*Layer, []*filetree.FileTree) {
@@ -144,6 +153,9 @@ func InitializeData(imageID string) ([]*Layer, []*filetree.FileTree) {
 	for idx := 0; idx < len(layers); idx++ {
 		layers[idx] = new(Layer)
 		layers[idx].History = history[idx]
+		layers[idx].Index = idx
+		layers[idx].Tree = trees[idx]
+		layers[idx].RefTrees = trees
 		if len(manifest.LayerTarPaths) > idx {
 			layers[idx].TarPath = manifest.LayerTarPaths[idx]
 		}

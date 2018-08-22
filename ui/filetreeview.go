@@ -242,7 +242,7 @@ func (view *FileTreeView) Update() error {
 		}
 		return nil
 	}, nil)
-	return nil;
+	return nil
 }
 
 func (view *FileTreeView) KeyHelp() string {
