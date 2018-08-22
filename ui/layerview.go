@@ -71,7 +71,8 @@ func (view *LayerView) IsVisible() bool {
 
 func (view *LayerView) setCompareMode(compareMode CompareType) error {
 	view.CompareMode = compareMode
-	view.Render()
+	Update()
+	Render()
 	return Views.Tree.setTreeByLayer(view.getCompareIndexes())
 }
 
@@ -150,7 +151,7 @@ func (view *LayerView) Render() error {
 			compareBar := view.renderCompareBar(idx)
 
 			if idx == view.LayerIndex {
-				fmt.Fprintln(view.view, compareBar + "  " + Formatting.StatusBar(layerStr))
+				fmt.Fprintln(view.view, compareBar + "  " + Formatting.Selected(layerStr))
 			} else {
 				fmt.Fprintln(view.view, compareBar + "  " + layerStr)
 			}
@@ -187,6 +188,6 @@ func (view *LayerView) CursorUp() error {
 }
 
 func (view *LayerView) KeyHelp() string {
-	return  Formatting.Control("[^L]") + ": Layer Changes " +
-		Formatting.Control("[^A]") + ": All Changes "
+	return  renderStatusOption("^L","Layer changes", view.CompareMode == CompareLayer) +
+			renderStatusOption("^A","All changes", view.CompareMode == CompareAll)
 }

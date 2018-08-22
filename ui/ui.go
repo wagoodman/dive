@@ -26,10 +26,13 @@ func debugPrint(s string) {
 }
 
 var Formatting struct {
-	Header func(...interface{})(string)
-	StatusBar func(...interface{})(string)
-	Control func(...interface{})(string)
-	CompareTop func(...interface{})(string)
+	Header        func(...interface{})(string)
+	Selected      func(...interface{})(string)
+	StatusSelected      func(...interface{})(string)
+	StatusNormal      func(...interface{})(string)
+	StatusControlSelected      func(...interface{})(string)
+	StatusControlNormal      func(...interface{})(string)
+	CompareTop    func(...interface{})(string)
 	CompareBottom func(...interface{})(string)
 }
 
@@ -234,10 +237,21 @@ func Render() {
 	}
 }
 
+func renderStatusOption(control, title string, selected bool) string {
+	if selected {
+		return Formatting.StatusSelected("▏") + Formatting.StatusControlSelected(control) +  Formatting.StatusSelected("  " + title + " ")
+	} else {
+		return Formatting.StatusNormal("▏") + Formatting.StatusControlNormal(control) +  Formatting.StatusNormal("  " + title + " ")
+	}
+}
+
 func Run(layers []*image.Layer, refTrees []*filetree.FileTree) {
-	Formatting.StatusBar = color.New(color.ReverseVideo, color.Bold).SprintFunc()
+	Formatting.Selected = color.New(color.ReverseVideo, color.Bold).SprintFunc()
 	Formatting.Header = color.New(color.Bold).SprintFunc()
-	Formatting.Control = color.New(color.Bold).SprintFunc()
+	Formatting.StatusSelected = color.New(color.BgMagenta, color.FgWhite).SprintFunc()
+	Formatting.StatusNormal = color.New(color.ReverseVideo).SprintFunc()
+	Formatting.StatusControlSelected = color.New(color.BgMagenta, color.FgWhite, color.Bold).SprintFunc()
+	Formatting.StatusControlNormal = color.New(color.ReverseVideo, color.Bold).SprintFunc()
 	Formatting.CompareTop = color.New(color.BgMagenta).SprintFunc()
 	Formatting.CompareBottom = color.New(color.BgGreen).SprintFunc()
 

@@ -50,9 +50,6 @@ func (view *FileTreeView) Setup(v *gocui.View, header *gocui.View) error {
 	view.view = v
 	view.view.Editable = false
 	view.view.Wrap = false
-	//view.view.Highlight = true
-	//view.view.SelBgColor = gocui.ColorGreen
-	//view.view.SelFgColor = gocui.ColorBlack
 	view.view.Frame = false
 
 	view.header = header
@@ -195,8 +192,10 @@ func (view *FileTreeView) toggleShowDiffType(diffType filetree.DiffType) error {
 
 	view.view.SetCursor(0, 0)
 	view.TreeIndex = 0
-	view.Update()
-	return view.Render()
+
+	Update()
+	Render()
+	return nil
 }
 
 func filterRegex() *regexp.Regexp {
@@ -247,11 +246,11 @@ func (view *FileTreeView) Update() error {
 }
 
 func (view *FileTreeView) KeyHelp() string {
-	return  Formatting.Control("[Space]") + ": Collapse dir " +
-		Formatting.Control("[^A]") + ": Added files " +
-		Formatting.Control("[^R]") + ": Removed files " +
-		Formatting.Control("[^M]") + ": Modified files " +
-		Formatting.Control("[^U]") + ": Unmodified files"
+	return  renderStatusOption("Space","Collapse dir", false) +
+			renderStatusOption("^A","Added files", !view.HiddenDiffTypes[filetree.Added]) +
+			renderStatusOption("^R","Removed files", !view.HiddenDiffTypes[filetree.Removed]) +
+			renderStatusOption("^M","Modified files", !view.HiddenDiffTypes[filetree.Changed]) +
+			renderStatusOption("^U","Unmodified files", !view.HiddenDiffTypes[filetree.Unchanged])
 }
 
 func (view *FileTreeView) Render() error {
@@ -267,7 +266,7 @@ func (view *FileTreeView) Render() error {
 		view.view.Clear()
 		for idx, line := range lines {
 			if idx == view.TreeIndex {
-				fmt.Fprintln(view.view, Formatting.StatusBar(vtclean.Clean(line, false)))
+				fmt.Fprintln(view.view, Formatting.Selected(vtclean.Clean(line, false)))
 			} else {
 				fmt.Fprintln(view.view, line)
 			}

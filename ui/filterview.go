@@ -43,12 +43,12 @@ func (view *FilterView) Setup(v *gocui.View, header *gocui.View) error {
 	view.view = v
 	view.maxLength = 200
 	view.view.Frame = false
-	view.view.BgColor = gocui.ColorDefault + gocui.AttrReverse
+	view.view.BgColor = gocui.AttrReverse
 	view.view.Editable = true
 	view.view.Editor = view
 
 	view.header = header
-	view.header.BgColor = gocui.ColorDefault + gocui.AttrReverse
+	view.header.BgColor = gocui.AttrReverse
 	view.header.Editable = false
 	view.header.Wrap = false
 	view.header.Frame = false
@@ -102,7 +102,7 @@ func (view *FilterView) Edit(v *gocui.View, key gocui.Key, ch rune, mod gocui.Mo
 }
 
 func (view *FilterView) KeyHelp() string {
-	return Formatting.Control("Type string to filter the file tree")
+	return Formatting.StatusControlNormal("▏Type to filter the file tree ")
 }
 
 func (view *FilterView) Update() error {
