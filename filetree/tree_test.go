@@ -494,7 +494,7 @@ func TestEfficiencyScore(t *testing.T) {
 		t.Fatalf("Expected %f but got %f", expected, actual)
 	}
 
-	trees = make([]*FileInfo, 1)
+	trees = make([]*FileTree, 1)
 	for ix, _ := range trees {
 		tree := NewFileTree()
 		tree.AddPath("/etc/nginx/nginx.conf", FileInfo{})
