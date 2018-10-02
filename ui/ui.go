@@ -6,8 +6,8 @@ import (
 	"log"
 
 	"github.com/jroimartin/gocui"
-	"github.com/wagoodman/docker-image-explorer/filetree"
-	"github.com/wagoodman/docker-image-explorer/image"
+	"github.com/wagoodman/dive/filetree"
+	"github.com/wagoodman/dive/image"
 	"github.com/fatih/color"
 )
 

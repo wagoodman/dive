@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/jroimartin/gocui"
-	"github.com/wagoodman/docker-image-explorer/image"
+	"github.com/wagoodman/dive/image"
 	"github.com/lunixbochs/vtclean"
 )
 

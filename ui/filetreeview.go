@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/jroimartin/gocui"
-	"github.com/wagoodman/docker-image-explorer/filetree"
+	"github.com/wagoodman/dive/filetree"
 	"github.com/lunixbochs/vtclean"
 )
 
