@@ -20,8 +20,11 @@
 
 package main
 
-import "github.com/wagoodman/dive/cmd"
+import (
+	"github.com/wagoodman/dive/cmd"
+)
 
 func main() {
 	cmd.Execute()
 }
+

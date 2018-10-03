@@ -12,12 +12,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/docker/docker/api/types/image"
 	"github.com/docker/docker/client"
-	humanize "github.com/dustin/go-humanize"
 	"github.com/wagoodman/dive/filetree"
 	"golang.org/x/net/context"
-	"strconv"
 )
 
 const (
@@ -43,42 +40,12 @@ func NewManifest(reader *tar.Reader, header *tar.Header) ImageManifest {
 	if err != nil && err != io.EOF {
 		panic(err)
 	}
-	var m []ImageManifest
-	err = json.Unmarshal(manifestBytes, &m)
+	var manifest []ImageManifest
+	err = json.Unmarshal(manifestBytes, &manifest)
 	if err != nil {
 		panic(err)
 	}
-	return m[0]
-}
-
-type Layer struct {
-	TarPath  string
-	History  image.HistoryResponseItem
-	Index    int
-	Tree     *filetree.FileTree
-	RefTrees []*filetree.FileTree
-}
-
-func (layer *Layer) Id() string {
-	rangeBound := 25
-	if length := len(layer.History.ID); length < 25 {
-		rangeBound = length
-	}
-	id := layer.History.ID[0:rangeBound]
-	if len(layer.History.Tags) > 0 {
-		id = "[" + strings.Join(layer.History.Tags, ",") + "]"
-	}
-	return id
-}
-
-func (layer *Layer) String() string {
-
-	return fmt.Sprintf(LayerFormat,
-						layer.Id(),
-						strconv.Itoa(int(100.0*filetree.EfficiencyScore(layer.RefTrees[:layer.Index+1]))) + "%",
-						//"100%",
-						humanize.Bytes(uint64(layer.History.Size)),
-						strings.TrimPrefix(layer.History.CreatedBy, "/bin/sh -c "))
+	return manifest[0]
 }
 
 func InitializeData(imageID string) ([]*Layer, []*filetree.FileTree) {
@@ -87,10 +54,15 @@ func InitializeData(imageID string) ([]*Layer, []*filetree.FileTree) {
 	var trees []*filetree.FileTree = make([]*filetree.FileTree, 0)
 
 	// save this image to disk temporarily to get the content info
-	imageTarPath, tmpDir := saveImage(imageID)
-	defer os.RemoveAll(tmpDir)
+	fmt.Println("Fetching image...")
+	// imageTarPath, tmpDir := saveImage(imageID)
+	imageTarPath := "/tmp/dive031537738/image.tar"
+	// tmpDir := "/tmp/dive031537738"
+	// fmt.Println(tmpDir)
+	// defer os.RemoveAll(tmpDir)
 
 	// read through the image contents and build a tree
+	fmt.Println("Reading image...")
 	tarFile, err := os.Open(imageTarPath)
 	if err != nil {
 		fmt.Println(err)
@@ -135,13 +107,14 @@ func InitializeData(imageID string) ([]*Layer, []*filetree.FileTree) {
 	}
 
 	// build the content tree
+	fmt.Println("Building tree...")
 	for _, treeName := range manifest.LayerTarPaths {
 		trees = append(trees, layerMap[treeName])
 	}
 
 	// get the history of this image
 	ctx := context.Background()
-	dockerClient, err := client.NewEnvClient()
+	dockerClient, err := client.NewClientWithOpts()
 	if err != nil {
 		panic(err)
 	}
@@ -149,13 +122,14 @@ func InitializeData(imageID string) ([]*Layer, []*filetree.FileTree) {
 	history, err := dockerClient.ImageHistory(ctx, imageID)
 
 	// build the layers array
-	layers := make([]*Layer, len(history)-1)
-	for idx := 0; idx < len(layers); idx++ {
-		layers[idx] = new(Layer)
-		layers[idx].History = history[idx]
-		layers[idx].Index = idx
-		layers[idx].Tree = trees[idx]
-		layers[idx].RefTrees = trees
+	layers := make([]*Layer, len(trees))
+	for idx := 0; idx < len(trees); idx++ {
+		layers[idx] = &Layer{
+			History: history[idx],
+			Index: idx,
+			Tree: trees[idx],
+			RefTrees: trees,
+		}
 		if len(manifest.LayerTarPaths) > idx {
 			layers[idx].TarPath = manifest.LayerTarPaths[idx]
 		}
@@ -166,7 +140,7 @@ func InitializeData(imageID string) ([]*Layer, []*filetree.FileTree) {
 
 func saveImage(imageID string) (string, string) {
 	ctx := context.Background()
-	dockerClient, err := client.NewEnvClient()
+	dockerClient, err := client.NewClientWithOpts()
 	if err != nil {
 		panic(err)
 	}
@@ -175,7 +149,7 @@ func saveImage(imageID string) (string, string) {
 	check(err)
 	defer readCloser.Close()
 
-	tmpDir, err := ioutil.TempDir("", "docker-image-explorer")
+	tmpDir, err := ioutil.TempDir("", "dive")
 	check(err)
 
 	imageTarPath := filepath.Join(tmpDir, "image.tar")

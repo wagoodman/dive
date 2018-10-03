@@ -9,9 +9,13 @@ import (
 	"github.com/wagoodman/dive/filetree"
 	"github.com/wagoodman/dive/image"
 	"github.com/fatih/color"
+	"os"
+	"runtime"
+	"runtime/pprof"
 )
 
-const debug = false
+const debug = true
+const profile = false
 
 func debugPrint(s string) {
 	if debug && Views.Tree != nil && Views.Tree.gui != nil {
@@ -120,7 +124,18 @@ func CursorUp(g *gocui.Gui, v *gocui.View) error {
 	return nil
 }
 
+
+var cpuProfilePath *os.File
+var memoryProfilePath *os.File
+
 func quit(g *gocui.Gui, v *gocui.View) error {
+	if profile {
+		pprof.StopCPUProfile()
+		runtime.GC() // get up-to-date statistics
+		pprof.WriteHeapProfile(memoryProfilePath)
+		memoryProfilePath.Close()
+		cpuProfilePath.Close()
+	}
 	return gocui.ErrQuit
 }
 
@@ -246,6 +261,7 @@ func renderStatusOption(control, title string, selected bool) string {
 }
 
 func Run(layers []*image.Layer, refTrees []*filetree.FileTree) {
+
 	Formatting.Selected = color.New(color.ReverseVideo, color.Bold).SprintFunc()
 	Formatting.Header = color.New(color.Bold).SprintFunc()
 	Formatting.StatusSelected = color.New(color.BgMagenta, color.FgWhite).SprintFunc()
@@ -279,8 +295,17 @@ func Run(layers []*image.Layer, refTrees []*filetree.FileTree) {
 	//g.Mouse = true
 	g.SetManagerFunc(layout)
 
+	// let the default position of the cursor be the last layer
+	// Views.Layer.SetCursor(len(Views.Layer.Layers)-1)
+
 	if err := keybindings(g); err != nil {
 		log.Panicln(err)
+	}
+
+	if profile {
+		os.Create("cpu.pprof")
+		os.Create("mem.pprof")
+		pprof.StartCPUProfile(cpuProfilePath)
 	}
 
 	if err := g.MainLoop(); err != nil && err != gocui.ErrQuit {

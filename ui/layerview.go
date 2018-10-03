@@ -144,8 +144,15 @@ func (view *LayerView) Render() error {
 
 			layerStr := layer.String()
 			if idx == 0 {
+				var layerId string
+				if len(layer.History.ID) >= 25 {
+					layerId = layer.History.ID[0:25]
+				} else {
+					layerId = fmt.Sprintf("%-25s", layer.History.ID)
+				}
+
 				// TODO: add size
-				layerStr = fmt.Sprintf(image.LayerFormat, layer.History.ID[0:25], "", "", "FROM "+layer.Id())
+				layerStr = fmt.Sprintf(image.LayerFormat, layerId, "", "", "FROM "+layer.Id())
 			}
 
 			compareBar := view.renderCompareBar(idx)
@@ -170,6 +177,7 @@ func (view *LayerView) CursorDown() error {
 			view.LayerIndex++
 			Views.Tree.setTreeByLayer(view.getCompareIndexes())
 			view.Render()
+			// debugPrint(fmt.Sprintf("%d",len(filetree.Cache)))
 		}
 	}
 	return nil
@@ -182,8 +190,18 @@ func (view *LayerView) CursorUp() error {
 			view.LayerIndex--
 			Views.Tree.setTreeByLayer(view.getCompareIndexes())
 			view.Render()
+			// debugPrint(fmt.Sprintf("%d",len(filetree.Cache)))
 		}
 	}
+	return nil
+}
+
+func (view *LayerView) SetCursor(layer int) error {
+	// view.view.SetCursor(0, layer)
+	view.LayerIndex = layer
+	Views.Tree.setTreeByLayer(view.getCompareIndexes())
+	view.Render()
+
 	return nil
 }
 

@@ -15,12 +15,20 @@ const (
 	AttributeFormat = "%s%s %10s %10s "
 )
 
+var diffTypeColor = map[DiffType]*color.Color {
+	Added: color.New(color.FgGreen),
+	Removed: color.New(color.FgRed),
+	Changed: color.New(color.FgYellow),
+	Unchanged: color.New(color.Reset),
+}
+
 type FileNode struct {
 	Tree     *FileTree
 	Parent   *FileNode
 	Name     string
 	Data     NodeData
 	Children map[string]*FileNode
+	path     string
 }
 
 func NewNode(parent *FileNode, name string, data FileInfo) (node *FileNode) {
@@ -35,6 +43,59 @@ func NewNode(parent *FileNode, name string, data FileInfo) (node *FileNode) {
 		node.Tree = parent.Tree
 	}
 	return node
+}
+
+// todo: make more performant
+// todo: rewrite with visitor functions
+func (node *FileNode) renderTreeLine(spaces []bool, last bool, collapsed bool) string {
+	var otherBranches string
+	for _, space := range spaces {
+		if space {
+			otherBranches += noBranchSpace
+		} else {
+			otherBranches += branchSpace
+		}
+	}
+
+	thisBranch := middleItem
+	if last {
+		thisBranch = lastItem
+	}
+
+	collapsedIndicator := uncollapsedItem
+	if collapsed {
+		collapsedIndicator = collapsedItem
+	}
+
+	return otherBranches + thisBranch + collapsedIndicator + node.String() + newLine
+}
+
+// todo: make more performant
+// todo: rewrite with visitor functions
+func (node *FileNode) renderStringTree(spaces []bool, showAttributes bool, depth int) string {
+	var result string
+	var keys []string
+	for key := range node.Children {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+	for idx, name := range keys {
+		child := node.Children[name]
+		if child.Data.ViewInfo.Hidden {
+			continue
+		}
+		last := idx == (len(node.Children) - 1)
+		showCollapsed := child.Data.ViewInfo.Collapsed && len(child.Children) > 0
+		if showAttributes {
+			result += child.MetadataString() + " "
+		}
+		result += child.renderTreeLine(spaces, last, showCollapsed)
+		if len(child.Children) > 0 && !child.Data.ViewInfo.Collapsed {
+			spacesChild := append(spaces, last)
+			result += child.renderStringTree(spacesChild, showAttributes, depth+1)
+		}
+	}
+	return result
 }
 
 func (node *FileNode) Copy(parent *FileNode) *FileNode {
@@ -73,46 +134,21 @@ func (node *FileNode) Remove() error {
 }
 
 func (node *FileNode) String() string {
-	var style *color.Color
 	var display string
 	if node == nil {
 		return ""
 	}
-	switch node.Data.DiffType {
-	case Added:
-		style = color.New(color.FgGreen)
-	case Removed:
-		style = color.New(color.FgRed)
-	case Changed:
-		style = color.New(color.FgYellow)
-	case Unchanged:
-		style = color.New(color.Reset)
-	default:
-		style = color.New(color.BgMagenta)
-	}
+
 	display = node.Name
 	if node.Data.FileInfo.TarHeader.Typeflag == tar.TypeSymlink || node.Data.FileInfo.TarHeader.Typeflag == tar.TypeLink {
 		display += " → " + node.Data.FileInfo.TarHeader.Linkname
 	}
-	return style.Sprint(display)
+	return diffTypeColor[node.Data.DiffType].Sprint(display)
 }
 
 func (node *FileNode) MetadataString() string {
-	var style *color.Color
 	if node == nil {
 		return ""
-	}
-	switch node.Data.DiffType {
-	case Added:
-		style = color.New(color.FgGreen)
-	case Removed:
-		style = color.New(color.FgRed)
-	case Changed:
-		style = color.New(color.FgYellow)
-	case Unchanged:
-		style = color.New(color.Reset)
-	default:
-		style = color.New(color.BgMagenta)
 	}
 
 	fileMode := permbits.FileMode(node.Data.FileInfo.TarHeader.FileInfo().Mode()).String()
@@ -143,7 +179,7 @@ func (node *FileNode) MetadataString() string {
 
 	size := humanize.Bytes(uint64(sizeBytes))
 
-	return style.Sprint(fmt.Sprintf(AttributeFormat, dir, fileMode, userGroup, size))
+	return diffTypeColor[node.Data.DiffType].Sprint(fmt.Sprintf(AttributeFormat, dir, fileMode, userGroup, size))
 }
 
 func (node *FileNode) VisitDepthChildFirst(visiter Visiter, evaluator VisitEvaluator) error {
@@ -205,24 +241,40 @@ func (node *FileNode) IsWhiteout() bool {
 	return strings.HasPrefix(node.Name, whiteoutPrefix)
 }
 
+// todo: make path() more efficient, similar to so (buggy):
+// func (node *FileNode) Path() string {
+// 	if node.path == "" {
+// 		path := "/"
+//
+// 		if node.Parent != nil {
+// 			path = node.Parent.Path()
+// 		}
+// 		node.path = path + "/" + strings.TrimPrefix(node.Name, whiteoutPrefix)
+// 	}
+// 	return node.path
+// }
+
 func (node *FileNode) Path() string {
-	path := []string{}
-	curNode := node
-	for {
-		if curNode.Parent == nil {
-			break
-		}
+	if node.path == "" {
+		path := []string{}
+		curNode := node
+		for {
+			if curNode.Parent == nil {
+				break
+			}
 
-		name := curNode.Name
-		if curNode == node {
-			// white out prefixes are fictitious on leaf nodes
-			name = strings.TrimPrefix(name, whiteoutPrefix)
-		}
+			name := curNode.Name
+			if curNode == node {
+				// white out prefixes are fictitious on leaf nodes
+				name = strings.TrimPrefix(name, whiteoutPrefix)
+			}
 
-		path = append([]string{name}, path...)
-		curNode = curNode.Parent
+			path = append([]string{name}, path...)
+			curNode = curNode.Parent
+		}
+		node.path = "/" + strings.Join(path, "/")
 	}
-	return "/" + strings.Join(path, "/")
+	return node.path
 }
 
 func (node *FileNode) IsLeaf() bool {
