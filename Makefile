@@ -1,35 +1,26 @@
-BIN = die
+BIN = dive
 
 all: clean build
 
 run: build
-	docker image ls | grep "die-test" >/dev/null || docker build -t die-test:latest .
+	docker image ls | grep "dive-test" >/dev/null || docker build -t dive-test:latest .
 	./build/$(BIN) die-test
 
-build: #deps
-	go build -o build/$(BIN) ./cmd/...
+build:
+	go build -o build/$(BIN)
 
-install: deps
+install:
 	go install ./...
 
-deps:
-	command -v $(GOPATH)/bin/dep >/dev/null || go get -u github.com/golang/dep/cmd/dep
-	$(GOPATH)/bin/dep ensure
-
 test: build
-	@! git grep tcell -- ':!tui/' ':!Gopkg.lock' ':!Gopkg.toml' ':!Makefile'
 	go test -v ./...
 
-lint: lintdeps build
-	golint -set_exit_status $$(go list ./... | grep -v /vendor/)
-
-lintdeps:
-	go get -d -v -t ./...
-	command -v golint >/dev/null || go get -u github.com/golang/lint/golint
+lint: build
+	golint -set_exit_status $$(go list ./...)
 
 clean:
 	rm -rf build
 	rm -rf vendor
 	go clean
 
-.PHONY: build install deps test lint lintdeps clean
+.PHONY: build install test lint clean

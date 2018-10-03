@@ -12,10 +12,10 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/image"
 	"github.com/docker/docker/client"
 	humanize "github.com/dustin/go-humanize"
-	"github.com/wagoodman/docker-image-explorer/filetree"
+	"github.com/wagoodman/dive/filetree"
 	"golang.org/x/net/context"
 	"strconv"
 )
@@ -53,7 +53,7 @@ func NewManifest(reader *tar.Reader, header *tar.Header) ImageManifest {
 
 type Layer struct {
 	TarPath  string
-	History  types.ImageHistory
+	History  image.HistoryResponseItem
 	Index    int
 	Tree     *filetree.FileTree
 	RefTrees []*filetree.FileTree
