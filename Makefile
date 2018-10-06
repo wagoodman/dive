@@ -2,11 +2,9 @@ BIN = dive
 
 all: clean build
 
-# karuppiah7890/bashful
-#	docker image ls | grep "dive-test" >/dev/null || docker build -t dive-test:latest .
-#	./build/$(BIN) die-test
 run: build
-	./build/$(BIN) karuppiah7890/bashful
+	docker image ls | grep "dive-test" >/dev/null || docker build -t dive-test:latest .
+	./build/$(BIN) die-test
 
 build:
 	go build -o build/$(BIN)
