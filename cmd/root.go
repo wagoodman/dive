@@ -3,10 +3,10 @@ package cmd
 import (
 	"fmt"
 	"os"
-
-	homedir "github.com/mitchellh/go-homedir"
+	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	log "github.com/sirupsen/logrus"
 )
 
 var cfgFile string
@@ -31,6 +31,7 @@ func Execute() {
 
 func init() {
 	cobra.OnInitialize(initConfig)
+	cobra.OnInitialize(initLogging)
 
 	// Here you will define your flags and configuration settings.
 	// Cobra supports persistent flags, which, if defined here,
@@ -66,4 +67,26 @@ func initConfig() {
 	if err := viper.ReadInConfig(); err == nil {
 		fmt.Println("Using config file:", viper.ConfigFileUsed())
 	}
+}
+
+func initLogging() {
+	var filename string = "dive.log"
+	// Create the log file if doesn't exist. And append to it if it already exists.
+	f, err := os.OpenFile(filename, os.O_WRONLY | os.O_APPEND | os.O_CREATE, 0644)
+	Formatter := new(log.TextFormatter)
+	// You can change the Timestamp format. But you have to use the same date and time.
+	// "2006-02-02 15:04:06" Works. If you change any digit, it won't work
+	// ie "Mon Jan 2 15:04:05 MST 2006" is the reference time. You can't change it
+	// Formatter.TimestampFormat = "15:04:05"
+	// Formatter.FullTimestamp = false
+	Formatter.DisableTimestamp = true
+	log.SetFormatter(Formatter)
+	log.SetLevel(log.DebugLevel)
+	if err != nil {
+		// Cannot open log file. Logging to stderr
+		fmt.Println(err)
+	}else{
+		log.SetOutput(f)
+	}
+	log.Info("Starting Dive...")
 }

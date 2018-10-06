@@ -1,7 +1,7 @@
 package image
 
 import (
-	"github.com/docker/docker/api/types/image"
+	// "github.com/docker/docker/api/types/image"
 	"github.com/wagoodman/dive/filetree"
 	"strings"
 	"fmt"
@@ -11,7 +11,8 @@ import (
 
 type Layer struct {
 	TarPath  string
-	History  image.HistoryResponseItem
+	// History  image.HistoryResponseItem
+	History ImageHistoryEntry
 	Index    int
 	Tree     *filetree.FileTree
 	RefTrees []*filetree.FileTree

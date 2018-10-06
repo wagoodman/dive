@@ -6,6 +6,7 @@ import (
 	"github.com/jroimartin/gocui"
 	"github.com/wagoodman/dive/image"
 	"github.com/lunixbochs/vtclean"
+	"github.com/dustin/go-humanize"
 )
 
 type LayerView struct {
@@ -151,8 +152,7 @@ func (view *LayerView) Render() error {
 					layerId = fmt.Sprintf("%-25s", layer.History.ID)
 				}
 
-				// TODO: add size
-				layerStr = fmt.Sprintf(image.LayerFormat, layerId, "", "", "FROM "+layer.Id())
+				layerStr = fmt.Sprintf(image.LayerFormat, layerId, "", humanize.Bytes(uint64(layer.History.Size)), "FROM "+layer.Id())
 			}
 
 			compareBar := view.renderCompareBar(idx)

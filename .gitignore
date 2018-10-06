@@ -17,3 +17,4 @@
 /_vendor*
 /vendor
 /.image
+*.log
