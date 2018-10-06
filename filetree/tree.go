@@ -20,7 +20,7 @@ const (
 type FileTree struct {
 	Root *FileNode
 	Size int
-	FileSize int64
+	FileSize uint64
 	Name string
 	Id   uuid.UUID
 }

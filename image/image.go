@@ -45,7 +45,7 @@ type RootFs struct {
 
 type ImageHistoryEntry struct {
 	ID string
-	Size int64
+	Size uint64
 	Created string `json:"created"`
 	Author string `json:"author"`
 	CreatedBy string `json:"created_by"`
@@ -179,7 +179,7 @@ func InitializeData(imageID string) ([]*Layer, []*filetree.FileTree) {
 				tree.Name = name
 				fileInfos := getFileList(tarReader, header)
 				for _, element := range fileInfos {
-					tree.FileSize += element.TarHeader.FileInfo().Size()
+					tree.FileSize += uint64(element.TarHeader.FileInfo().Size())
 					tree.AddPath(element.Path, element)
 				}
 				layerMap[tree.Name] = tree
@@ -211,7 +211,7 @@ func InitializeData(imageID string) ([]*Layer, []*filetree.FileTree) {
 			continue
 		}
 
-		config.History[idx].Size = trees[(len(trees)-1)-layerIdx].FileSize
+		config.History[idx].Size = uint64(trees[(len(trees)-1)-layerIdx].FileSize)
 
 		layers[layerIdx] = &Layer{
 			History: config.History[idx],
