@@ -2,8 +2,8 @@ package filetree
 
 import (
 	"fmt"
-	"sort"
 	"strings"
+	"github.com/satori/go.uuid"
 )
 
 const (
@@ -21,6 +21,7 @@ type FileTree struct {
 	Root *FileNode
 	Size int
 	Name string
+	Id   uuid.UUID
 }
 
 func NewFileTree() (tree *FileTree) {
@@ -29,63 +30,12 @@ func NewFileTree() (tree *FileTree) {
 	tree.Root = new(FileNode)
 	tree.Root.Tree = tree
 	tree.Root.Children = make(map[string]*FileNode)
+	tree.Id = uuid.Must(uuid.NewV4())
 	return tree
 }
 
 func (tree *FileTree) String(showAttributes bool) string {
-	var renderTreeLine func(string, []bool, bool, bool) string
-	var walkTree func(*FileNode, []bool, int) string
-
-	renderTreeLine = func(nodeText string, spaces []bool, last bool, collapsed bool) string {
-		var otherBranches string
-		for _, space := range spaces {
-			if space {
-				otherBranches += noBranchSpace
-			} else {
-				otherBranches += branchSpace
-			}
-		}
-
-		thisBranch := middleItem
-		if last {
-			thisBranch = lastItem
-		}
-
-		collapsedIndicator := uncollapsedItem
-		if collapsed {
-			collapsedIndicator = collapsedItem
-		}
-
-		return otherBranches + thisBranch + collapsedIndicator + nodeText + newLine
-	}
-
-	walkTree = func(node *FileNode, spaces []bool, depth int) string {
-		var result string
-		var keys []string
-		for key := range node.Children {
-			keys = append(keys, key)
-		}
-		sort.Strings(keys)
-		for idx, name := range keys {
-			child := node.Children[name]
-			if child.Data.ViewInfo.Hidden {
-				continue
-			}
-			last := idx == (len(node.Children) - 1)
-			showCollapsed := child.Data.ViewInfo.Collapsed && len(child.Children) > 0
-			if showAttributes {
-				result += child.MetadataString() + " "
-			}
-			result += renderTreeLine(child.String(), spaces, last, showCollapsed)
-			if len(child.Children) > 0 && !child.Data.ViewInfo.Collapsed {
-				spacesChild := append(spaces, last)
-				result += walkTree(child, spacesChild, depth+1)
-			}
-		}
-		return result
-	}
-
-	return walkTree(tree.Root, []bool{}, 0)
+	return tree.Root.renderStringTree([]bool{}, showAttributes, 0)
 }
 
 func (tree *FileTree) Copy() *FileTree {
@@ -214,11 +164,37 @@ func (tree *FileTree) MarkRemoved(path string) error {
 	return node.AssignDiffType(Removed)
 }
 
+// memoize StackRange for performance
+type stackRangeCacheKey struct {
+	// Ids mapset.Set
+	start, stop int
+}
+
+var stackRangeCache = make(map[stackRangeCacheKey]*FileTree)
+
 func StackRange(trees []*FileTree, start, stop int) *FileTree {
+
+	// var ids []interface{}
+	//
+	// for _, tree := range trees {
+	// 	ids = append(ids, tree.Id)
+	// }
+//mapset.NewSetFromSlice(ids)
+// 	key := stackRangeCacheKey{start, stop}
+//
+//
+// 	cachedResult, ok := stackRangeCache[key]
+// 	if ok {
+// 		return cachedResult
+// 	}
+
 	tree := trees[0].Copy()
 	for idx := start; idx <= stop; idx++ {
 		tree.Stack(trees[idx])
 	}
+
+	// stackRangeCache[key] = tree
+
 	return tree
 }
 
