@@ -28,6 +28,7 @@ type FileTreeView struct {
 	RefTrees              []*filetree.FileTree
 	HiddenDiffTypes       []bool
 	TreeIndex             uint
+	bufferIndex           uint
 	bufferIndexUpperBound uint
 	bufferIndexLowerBound uint
 }
@@ -82,13 +83,17 @@ func (view *FileTreeView) Setup(v *gocui.View, header *gocui.View) error {
 	}
 
 	view.bufferIndexLowerBound = 0
-	_, height := view.view.Size()
-	view.bufferIndexUpperBound = uint(height - 1) // don't include the header in the view size
+	view.bufferIndexUpperBound = view.height() // don't include the header or footer in the view size
 
 	view.Update()
 	view.Render()
 
 	return nil
+}
+
+func (view *FileTreeView) height() uint {
+	_, height := view.view.Size()
+	return uint(height - 2)
 }
 
 func (view *FileTreeView) IsVisible() bool {
@@ -98,9 +103,9 @@ func (view *FileTreeView) IsVisible() bool {
 
 
 func (view *FileTreeView) setTreeByLayer(bottomTreeStart, bottomTreeStop, topTreeStart, topTreeStop int) error {
-	//if stopIdx > len(view.RefTrees)-1 {
-	//	return errors.New(fmt.Sprintf("Invalid layer index given: %d of %d", stopIdx, len(view.RefTrees)-1))
-	//}
+	if topTreeStop > len(view.RefTrees)-1 {
+		return fmt.Errorf("Invalid layer index given: %d of %d", topTreeStop, len(view.RefTrees)-1)
+	}
 	newTree := filetree.StackRange(view.RefTrees, bottomTreeStart, bottomTreeStop)
 
 	for idx := topTreeStart; idx <= topTreeStop; idx++ {
@@ -124,18 +129,40 @@ func (view *FileTreeView) setTreeByLayer(bottomTreeStart, bottomTreeStop, topTre
 	return view.Render()
 }
 
-func (view *FileTreeView) CursorDown() error {
-	// we cannot use the gocui buffer since any state change requires writing the entire tree to the buffer.
-	// Instead we are keeping an upper and lower bounds of the tree string to render and only flushing
-	// this range into the view buffer. This is much faster when tree sizes are large.
+func (view *FileTreeView) doCursorUp() {
+	view.TreeIndex--
+	if view.TreeIndex < view.bufferIndexLowerBound {
+		view.bufferIndexUpperBound--
+		view.bufferIndexLowerBound--
+	}
 
+	if view.bufferIndex > 0 {
+		view.bufferIndex--
+	}
+}
+
+func (view *FileTreeView) doCursorDown() {
 	view.TreeIndex++
 	if view.TreeIndex > view.bufferIndexUpperBound {
 		view.bufferIndexUpperBound++
 		view.bufferIndexLowerBound++
 	}
+	view.bufferIndex++
+	if view.bufferIndex > view.height() {
+		view.bufferIndex = view.height()
+	}
+}
+
+func (view *FileTreeView) CursorDown() error {
+	// we cannot use the gocui buffer since any state change requires writing the entire tree to the buffer.
+	// Instead we are keeping an upper and lower bounds of the tree string to render and only flushing
+	// this range into the view buffer. This is much faster when tree sizes are large.
+
+	view.doCursorDown()
 	return view.Render()
 }
+
+
 
 func (view *FileTreeView) CursorUp() error {
 	// we cannot use the gocui buffer since any state change requires writing the entire tree to the buffer.
@@ -143,11 +170,7 @@ func (view *FileTreeView) CursorUp() error {
 	// this range into the view buffer. This is much faster when tree sizes are large.
 
 	if view.TreeIndex > 0 {
-		view.TreeIndex--
-		if view.TreeIndex < view.bufferIndexLowerBound {
-			view.bufferIndexUpperBound--
-			view.bufferIndexLowerBound--
-		}
+		view.doCursorUp()
 		return view.Render()
 	}
 	return nil
@@ -271,6 +294,12 @@ func (view *FileTreeView) Render() error {
 	treeString := view.ViewTree.StringBetween(view.bufferIndexLowerBound, view.bufferIndexUpperBound,true)
 	// treeString := view.ViewTree.String(true)
 	lines := strings.Split(treeString, "\n")
+
+	// undo a cursor down that has gone past bottom of the visible tree
+	if view.bufferIndex >= uint(len(lines))-1 {
+		view.doCursorUp()
+	}
+
 	view.gui.Update(func(g *gocui.Gui) error {
 		// update the header
 		view.header.Clear()
@@ -280,7 +309,7 @@ func (view *FileTreeView) Render() error {
 		// update the contents
 		view.view.Clear()
 		for idx, line := range lines {
-			if uint(idx) == view.TreeIndex {
+			if uint(idx) == view.bufferIndex {
 				fmt.Fprintln(view.view, Formatting.Selected(vtclean.Clean(line, false)))
 			} else {
 				fmt.Fprintln(view.view, line)
