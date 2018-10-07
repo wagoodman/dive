@@ -172,7 +172,7 @@ func (view *LayerView) Render() error {
 
 func (view *LayerView) CursorDown() error {
 	if view.LayerIndex < len(view.Layers) {
-		_, err := CursorDown(view.gui, view.view)
+		err := CursorDown(view.gui, view.view)
 		if err == nil {
 			view.LayerIndex++
 			Views.Tree.setTreeByLayer(view.getCompareIndexes())
@@ -185,7 +185,7 @@ func (view *LayerView) CursorDown() error {
 
 func (view *LayerView) CursorUp() error {
 	if view.LayerIndex > 0 {
-		_, err := CursorUp(view.gui, view.view)
+		err := CursorUp(view.gui, view.view)
 		if err == nil {
 			view.LayerIndex--
 			Views.Tree.setTreeByLayer(view.getCompareIndexes())

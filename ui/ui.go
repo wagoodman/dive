@@ -93,7 +93,7 @@ func toggleFilterView(g *gocui.Gui, v *gocui.View) error {
 	return nil
 }
 
-func CursorDown(g *gocui.Gui, v *gocui.View) (bool, error) {
+func CursorDown(g *gocui.Gui, v *gocui.View) error {
 	cx, cy := v.Cursor()
 
 	// if there isn't a next line
@@ -102,28 +102,26 @@ func CursorDown(g *gocui.Gui, v *gocui.View) (bool, error) {
 		// todo: handle error
 	}
 	if len(line) == 0 {
-		return false, errors.New("unable to move cursor down, empty line")
+		return errors.New("unable to move cursor down, empty line")
 	}
 	if err := v.SetCursor(cx, cy+1); err != nil {
 		ox, oy := v.Origin()
 		if err := v.SetOrigin(ox, oy+1); err != nil {
-			return false, err
+			return err
 		}
-		return true, nil
 	}
-	return false, nil
+	return nil
 }
 
-func CursorUp(g *gocui.Gui, v *gocui.View) (bool, error) {
+func CursorUp(g *gocui.Gui, v *gocui.View) error {
 	ox, oy := v.Origin()
 	cx, cy := v.Cursor()
 	if err := v.SetCursor(cx, cy-1); err != nil && oy > 0 {
 		if err := v.SetOrigin(ox, oy-1); err != nil {
-			return false, err
+			return err
 		}
-		return true, nil
 	}
-	return false, nil
+	return nil
 }
 
 
