@@ -20,6 +20,7 @@ const (
 type FileTree struct {
 	Root *FileNode
 	Size int
+	FileSize uint64
 	Name string
 	Id   uuid.UUID
 }
@@ -41,6 +42,7 @@ func (tree *FileTree) String(showAttributes bool) string {
 func (tree *FileTree) Copy() *FileTree {
 	newTree := NewFileTree()
 	newTree.Size = tree.Size
+	newTree.FileSize = tree.FileSize
 	newTree.Root = tree.Root.Copy(newTree.Root)
 
 	// update the tree pointers

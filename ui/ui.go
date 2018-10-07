@@ -14,7 +14,7 @@ import (
 	"runtime/pprof"
 )
 
-const debug = true
+const debug = false
 const profile = false
 
 func debugPrint(s string) {

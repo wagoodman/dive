@@ -3,10 +3,10 @@ package cmd
 import (
 	"fmt"
 	"os"
-
-	homedir "github.com/mitchellh/go-homedir"
+	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	log "github.com/sirupsen/logrus"
 )
 
 var cfgFile string
@@ -31,6 +31,7 @@ func Execute() {
 
 func init() {
 	cobra.OnInitialize(initConfig)
+	cobra.OnInitialize(initLogging)
 
 	// Here you will define your flags and configuration settings.
 	// Cobra supports persistent flags, which, if defined here,
@@ -66,4 +67,22 @@ func initConfig() {
 	if err := viper.ReadInConfig(); err == nil {
 		fmt.Println("Using config file:", viper.ConfigFileUsed())
 	}
+}
+
+func initLogging() {
+	// TODO: clean this up and make more configurable
+	var filename string = "dive.log"
+	// create the log file if doesn't exist. And append to it if it already exists.
+	f, err := os.OpenFile(filename, os.O_WRONLY | os.O_APPEND | os.O_CREATE, 0644)
+	Formatter := new(log.TextFormatter)
+	Formatter.DisableTimestamp = true
+	log.SetFormatter(Formatter)
+	log.SetLevel(log.DebugLevel)
+	if err != nil {
+		// cannot open log file. Logging to stderr
+		fmt.Println(err)
+	}else{
+		log.SetOutput(f)
+	}
+	log.Info("Starting Dive...")
 }
