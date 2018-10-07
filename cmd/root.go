@@ -84,5 +84,5 @@ func initLogging() {
 	}else{
 		log.SetOutput(f)
 	}
-	log.Info("Starting Dive...")
+	log.Debug("Starting Dive...")
 }

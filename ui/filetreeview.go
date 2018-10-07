@@ -19,16 +19,18 @@ type CompareType int
 
 
 type FileTreeView struct {
-	Name              string
-	gui               *gocui.Gui
-	view              *gocui.View
-	header            *gocui.View
-	ModelTree         *filetree.FileTree
-	ViewTree          *filetree.FileTree
-	RefTrees          []*filetree.FileTree
-	HiddenDiffTypes   []bool
-	TreeIndex         int
-
+	Name                  string
+	gui                   *gocui.Gui
+	view                  *gocui.View
+	header                *gocui.View
+	ModelTree             *filetree.FileTree
+	ViewTree              *filetree.FileTree
+	RefTrees              []*filetree.FileTree
+	HiddenDiffTypes       []bool
+	TreeIndex             uint
+	bufferIndex           uint
+	bufferIndexUpperBound uint
+	bufferIndexLowerBound uint
 }
 
 func NewFileTreeView(name string, gui *gocui.Gui, tree *filetree.FileTree, refTrees []*filetree.FileTree) (treeview *FileTreeView) {
@@ -80,10 +82,18 @@ func (view *FileTreeView) Setup(v *gocui.View, header *gocui.View) error {
 		return err
 	}
 
+	view.bufferIndexLowerBound = 0
+	view.bufferIndexUpperBound = view.height() // don't include the header or footer in the view size
+
 	view.Update()
 	view.Render()
 
 	return nil
+}
+
+func (view *FileTreeView) height() uint {
+	_, height := view.view.Size()
+	return uint(height - 2)
 }
 
 func (view *FileTreeView) IsVisible() bool {
@@ -93,9 +103,9 @@ func (view *FileTreeView) IsVisible() bool {
 
 
 func (view *FileTreeView) setTreeByLayer(bottomTreeStart, bottomTreeStop, topTreeStart, topTreeStop int) error {
-	//if stopIdx > len(view.RefTrees)-1 {
-	//	return errors.New(fmt.Sprintf("Invalid layer index given: %d of %d", stopIdx, len(view.RefTrees)-1))
-	//}
+	if topTreeStop > len(view.RefTrees)-1 {
+		return fmt.Errorf("Invalid layer index given: %d of %d", topTreeStop, len(view.RefTrees)-1)
+	}
 	newTree := filetree.StackRange(view.RefTrees, bottomTreeStart, bottomTreeStop)
 
 	for idx := topTreeStart; idx <= topTreeStop; idx++ {
@@ -119,30 +129,57 @@ func (view *FileTreeView) setTreeByLayer(bottomTreeStart, bottomTreeStop, topTre
 	return view.Render()
 }
 
-func (view *FileTreeView) CursorDown() error {
-	// cannot easily (quickly) check the model length, allow the view
-	// to let us know what is a valid bounds (i.e. when it hits an empty line)
-	err := CursorDown(view.gui, view.view)
-	if err == nil {
-		view.TreeIndex++
+func (view *FileTreeView) doCursorUp() {
+	view.TreeIndex--
+	if view.TreeIndex < view.bufferIndexLowerBound {
+		view.bufferIndexUpperBound--
+		view.bufferIndexLowerBound--
 	}
+
+	if view.bufferIndex > 0 {
+		view.bufferIndex--
+	}
+}
+
+func (view *FileTreeView) doCursorDown() {
+	view.TreeIndex++
+	if view.TreeIndex > view.bufferIndexUpperBound {
+		view.bufferIndexUpperBound++
+		view.bufferIndexLowerBound++
+	}
+	view.bufferIndex++
+	if view.bufferIndex > view.height() {
+		view.bufferIndex = view.height()
+	}
+}
+
+func (view *FileTreeView) CursorDown() error {
+	// we cannot use the gocui buffer since any state change requires writing the entire tree to the buffer.
+	// Instead we are keeping an upper and lower bounds of the tree string to render and only flushing
+	// this range into the view buffer. This is much faster when tree sizes are large.
+
+	view.doCursorDown()
 	return view.Render()
 }
 
+
+
 func (view *FileTreeView) CursorUp() error {
+	// we cannot use the gocui buffer since any state change requires writing the entire tree to the buffer.
+	// Instead we are keeping an upper and lower bounds of the tree string to render and only flushing
+	// this range into the view buffer. This is much faster when tree sizes are large.
+
 	if view.TreeIndex > 0 {
-		err := CursorUp(view.gui, view.view)
-		if err == nil {
-			view.TreeIndex--
-		}
+		view.doCursorUp()
+		return view.Render()
 	}
-	return view.Render()
+	return nil
 }
 
 func (view *FileTreeView) getAbsPositionNode() (node *filetree.FileNode) {
 	var visiter func(*filetree.FileNode) error
 	var evaluator func(*filetree.FileNode) bool
-	var dfsCounter int
+	var dfsCounter uint
 
 	visiter = func(curNode *filetree.FileNode) error {
 		if dfsCounter == view.TreeIndex {
@@ -254,8 +291,14 @@ func (view *FileTreeView) KeyHelp() string {
 }
 
 func (view *FileTreeView) Render() error {
-	// print the tree to the view
-	lines := strings.Split(view.ViewTree.String(true), "\n")
+	treeString := view.ViewTree.StringBetween(view.bufferIndexLowerBound, view.bufferIndexUpperBound,true)
+	lines := strings.Split(treeString, "\n")
+
+	// undo a cursor down that has gone past bottom of the visible tree
+	if view.bufferIndex >= uint(len(lines))-1 {
+		view.doCursorUp()
+	}
+
 	view.gui.Update(func(g *gocui.Gui) error {
 		// update the header
 		view.header.Clear()
@@ -265,7 +308,7 @@ func (view *FileTreeView) Render() error {
 		// update the contents
 		view.view.Clear()
 		for idx, line := range lines {
-			if idx == view.TreeIndex {
+			if uint(idx) == view.bufferIndex {
 				fmt.Fprintln(view.view, Formatting.Selected(vtclean.Clean(line, false)))
 			} else {
 				fmt.Fprintln(view.view, line)
