@@ -292,7 +292,6 @@ func (view *FileTreeView) KeyHelp() string {
 
 func (view *FileTreeView) Render() error {
 	treeString := view.ViewTree.StringBetween(view.bufferIndexLowerBound, view.bufferIndexUpperBound,true)
-	// treeString := view.ViewTree.String(true)
 	lines := strings.Split(treeString, "\n")
 
 	// undo a cursor down that has gone past bottom of the visible tree
