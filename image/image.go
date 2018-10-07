@@ -134,11 +134,11 @@ func InitializeData(imageID string) ([]*Layer, []*filetree.FileTree) {
 
 	// save this image to disk temporarily to get the content info
 	fmt.Println("Fetching image...")
-	imageTarPath, tmpDir := saveImage(imageID)
-	// imageTarPath := "/tmp/dive932744808/image.tar"
+	// imageTarPath, tmpDir := saveImage(imageID)
+	imageTarPath := "/tmp/dive932744808/image.tar"
 	// tmpDir := "/tmp/dive031537738"
 	// fmt.Println(tmpDir)
-	defer os.RemoveAll(tmpDir)
+	// defer os.RemoveAll(tmpDir)
 
 	// read through the image contents and build a tree
 	fmt.Println("Reading image...")

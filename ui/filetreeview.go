@@ -268,7 +268,6 @@ func (view *FileTreeView) KeyHelp() string {
 }
 
 func (view *FileTreeView) Render() error {
-	// print the tree to the view
 	treeString := view.ViewTree.StringBetween(view.bufferIndexLowerBound, view.bufferIndexUpperBound,true)
 	// treeString := view.ViewTree.String(true)
 	lines := strings.Split(treeString, "\n")

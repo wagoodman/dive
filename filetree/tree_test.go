@@ -23,20 +23,85 @@ func AssertDiffType(node *FileNode, expectedDiffType DiffType) error {
 	return nil
 }
 
-func TestPrintTree(t *testing.T) {
+func TestStringCollapsed(t *testing.T) {
 	tree := NewFileTree()
-	tree.Root.AddChild("first node!", FileInfo{})
-	two := tree.Root.AddChild("second node!", FileInfo{})
-	tree.Root.AddChild("third node!", FileInfo{})
-	two.AddChild("forth, one level down...", FileInfo{})
+	tree.Root.AddChild("1 node!", FileInfo{})
+	two := tree.Root.AddChild("2 node!", FileInfo{})
+	subTwo := two.AddChild("2 child!", FileInfo{})
+	subTwo.AddChild("2 grandchild!", FileInfo{})
+	subTwo.Data.ViewInfo.Collapsed = true
+	three := tree.Root.AddChild("3 node!", FileInfo{})
+	subThree := three.AddChild("3 child!", FileInfo{})
+	three.AddChild("3 nested child 1!", FileInfo{})
+	threeGc1 := subThree.AddChild("3 grandchild 1!", FileInfo{})
+	threeGc1.AddChild("3 greatgrandchild 1!", FileInfo{})
+	subThree.AddChild("3 grandchild 2!", FileInfo{})
+	four := tree.Root.AddChild("4 node!", FileInfo{})
+	four.Data.ViewInfo.Collapsed = true
+	tree.Root.AddChild("5 node!", FileInfo{})
+	four.AddChild("6, one level down...", FileInfo{})
 
 	expected :=
-		`├── first node!
-├── second node!
-│   └── forth, one level down...
-└── third node!
+		`├── 1 node!
+├── 2 node!
+│   └─⊕ 2 child!
+├── 3 node!
+│   ├── 3 child!
+│   │   ├── 3 grandchild 1!
+│   │   │   └── 3 greatgrandchild 1!
+│   │   └── 3 grandchild 2!
+│   └── 3 nested child 1!
+├─⊕ 4 node!
+└── 5 node!
 `
 	actual := tree.String(false)
+
+	if expected != actual {
+		t.Errorf("Expected tree string:\n--->%s<---\nGot:\n--->%s<---", expected, actual)
+	}
+
+}
+
+func TestString(t *testing.T) {
+	tree := NewFileTree()
+	tree.Root.AddChild("1 node!", FileInfo{})
+	tree.Root.AddChild("2 node!", FileInfo{})
+	tree.Root.AddChild("3 node!", FileInfo{})
+	four := tree.Root.AddChild("4 node!", FileInfo{})
+	tree.Root.AddChild("5 node!", FileInfo{})
+	four.AddChild("6, one level down...", FileInfo{})
+
+	expected :=
+		`├── 1 node!
+├── 2 node!
+├── 3 node!
+├── 4 node!
+│   └── 6, one level down...
+└── 5 node!
+`
+	actual := tree.String(false)
+
+	if expected != actual {
+		t.Errorf("Expected tree string:\n--->%s<---\nGot:\n--->%s<---", expected, actual)
+	}
+
+}
+
+func TestStringBetween(t *testing.T) {
+	tree := NewFileTree()
+	tree.AddPath("/etc/nginx/nginx.conf", FileInfo{})
+	tree.AddPath("/etc/nginx/public", FileInfo{})
+	tree.AddPath("/var/run/systemd", FileInfo{})
+	tree.AddPath("/var/run/bashful", FileInfo{})
+	tree.AddPath("/tmp", FileInfo{})
+	tree.AddPath("/tmp/nonsense", FileInfo{})
+
+	expected :=
+		`│       └── public
+├── tmp
+│   └── nonsense
+`
+	actual := tree.StringBetween(3, 5, false)
 
 	if expected != actual {
 		t.Errorf("Expected tree string:\n--->%s<---\nGot:\n--->%s<---", expected, actual)

@@ -68,65 +68,6 @@ func (node *FileNode) renderTreeLine(spaces []bool, last bool, collapsed bool) s
 	return otherBranches + thisBranch + collapsedIndicator + node.String() + newLine
 }
 
-// todo: until visitor context is implemented, this can't easily be expressed with the existing visitor implementation
-func (node *FileNode) renderStringTreeBetween(startRow, stopRow int, currentRow, renderedLines *uint, spaces []bool, showAttributes bool, depth int) string {
-	var result string
-	var keys []string
-
-	// if we're beyond the range, don't visit this node or subsequent nodes
-	if startRow >= 0 && stopRow >= 0 {
-		if *currentRow > uint(stopRow) {
-			return result
-		}
-	}
-
-	// always render the nodes consistently (sorted)
-	for key := range node.Children {
-		keys = append(keys, key)
-	}
-	sort.Strings(keys)
-
-	// grab string representation of child nodes
-	for idx, name := range keys {
-
-		child := node.Children[name]
-		if child.Data.ViewInfo.Hidden {
-			continue
-		}
-
-		// only keep the results for nodes within the given range
-		doRender := true
-		if startRow >= 0 && stopRow >= 0 {
-			*currentRow++
-			if *currentRow < uint(startRow) && *currentRow > uint(stopRow) {
-				doRender = false
-			} else {
-				*renderedLines++
-			}
-		}
-
-		if doRender {
-			last := idx == (len(node.Children) - 1)
-			showCollapsed := child.Data.ViewInfo.Collapsed && len(child.Children) > 0
-			if showAttributes {
-				result += child.MetadataString() + " "
-			}
-			result += child.renderTreeLine(spaces, last, showCollapsed)
-
-			if len(child.Children) > 0 && !child.Data.ViewInfo.Collapsed {
-				spacesChild := append(spaces, last)
-				result += child.renderStringTreeBetween(startRow, stopRow, currentRow, renderedLines, spacesChild, showAttributes, depth+1)
-			}
-		}
-
-	}
-	return result
-}
-
-func (node *FileNode) renderStringTree(spaces []bool, showAttributes bool, depth int) string {
-	return node.renderStringTreeBetween(-1, -1, nil, nil, spaces, showAttributes, depth)
-}
-
 func (node *FileNode) Copy(parent *FileNode) *FileNode {
 	newNode := NewNode(parent, node.Name, node.Data.FileInfo)
 	newNode.Data.ViewInfo = node.Data.ViewInfo
