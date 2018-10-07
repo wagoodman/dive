@@ -45,8 +45,6 @@ func NewNode(parent *FileNode, name string, data FileInfo) (node *FileNode) {
 	return node
 }
 
-// todo: make more performant
-// todo: rewrite with visitor functions
 func (node *FileNode) renderTreeLine(spaces []bool, last bool, collapsed bool) string {
 	var otherBranches string
 	for _, space := range spaces {
@@ -70,32 +68,63 @@ func (node *FileNode) renderTreeLine(spaces []bool, last bool, collapsed bool) s
 	return otherBranches + thisBranch + collapsedIndicator + node.String() + newLine
 }
 
-// todo: make more performant
-// todo: rewrite with visitor functions
-func (node *FileNode) renderStringTree(spaces []bool, showAttributes bool, depth int) string {
+// todo: until visitor context is implemented, this can't easily be expressed with the existing visitor implementation
+func (node *FileNode) renderStringTreeBetween(startRow, stopRow int, currentRow, renderedLines *uint, spaces []bool, showAttributes bool, depth int) string {
 	var result string
 	var keys []string
+
+	// if we're beyond the range, don't visit this node or subsequent nodes
+	if startRow >= 0 && stopRow >= 0 {
+		if *currentRow > uint(stopRow) {
+			return result
+		}
+	}
+
+	// always render the nodes consistently (sorted)
 	for key := range node.Children {
 		keys = append(keys, key)
 	}
 	sort.Strings(keys)
+
+	// grab string representation of child nodes
 	for idx, name := range keys {
+
 		child := node.Children[name]
 		if child.Data.ViewInfo.Hidden {
 			continue
 		}
-		last := idx == (len(node.Children) - 1)
-		showCollapsed := child.Data.ViewInfo.Collapsed && len(child.Children) > 0
-		if showAttributes {
-			result += child.MetadataString() + " "
+
+		// only keep the results for nodes within the given range
+		doRender := true
+		if startRow >= 0 && stopRow >= 0 {
+			*currentRow++
+			if *currentRow < uint(startRow) && *currentRow > uint(stopRow) {
+				doRender = false
+			} else {
+				*renderedLines++
+			}
 		}
-		result += child.renderTreeLine(spaces, last, showCollapsed)
-		if len(child.Children) > 0 && !child.Data.ViewInfo.Collapsed {
-			spacesChild := append(spaces, last)
-			result += child.renderStringTree(spacesChild, showAttributes, depth+1)
+
+		if doRender {
+			last := idx == (len(node.Children) - 1)
+			showCollapsed := child.Data.ViewInfo.Collapsed && len(child.Children) > 0
+			if showAttributes {
+				result += child.MetadataString() + " "
+			}
+			result += child.renderTreeLine(spaces, last, showCollapsed)
+
+			if len(child.Children) > 0 && !child.Data.ViewInfo.Collapsed {
+				spacesChild := append(spaces, last)
+				result += child.renderStringTreeBetween(startRow, stopRow, currentRow, renderedLines, spacesChild, showAttributes, depth+1)
+			}
 		}
+
 	}
 	return result
+}
+
+func (node *FileNode) renderStringTree(spaces []bool, showAttributes bool, depth int) string {
+	return node.renderStringTreeBetween(-1, -1, nil, nil, spaces, showAttributes, depth)
 }
 
 func (node *FileNode) Copy(parent *FileNode) *FileNode {
@@ -240,19 +269,6 @@ func (node *FileNode) VisitDepthParentFirst(visiter Visiter, evaluator VisitEval
 func (node *FileNode) IsWhiteout() bool {
 	return strings.HasPrefix(node.Name, whiteoutPrefix)
 }
-
-// todo: make path() more efficient, similar to so (buggy):
-// func (node *FileNode) Path() string {
-// 	if node.path == "" {
-// 		path := "/"
-//
-// 		if node.Parent != nil {
-// 			path = node.Parent.Path()
-// 		}
-// 		node.path = path + "/" + strings.TrimPrefix(node.Name, whiteoutPrefix)
-// 	}
-// 	return node.path
-// }
 
 func (node *FileNode) Path() string {
 	if node.path == "" {

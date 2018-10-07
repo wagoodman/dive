@@ -39,6 +39,11 @@ func (tree *FileTree) String(showAttributes bool) string {
 	return tree.Root.renderStringTree([]bool{}, showAttributes, 0)
 }
 
+func (tree *FileTree) StringBetween(start, stop uint, showAttributes bool) string {
+	var currentRow, renderedLines uint
+	return tree.Root.renderStringTreeBetween(int(start), int(stop), &currentRow, &renderedLines, []bool{}, showAttributes, 0)
+}
+
 func (tree *FileTree) Copy() *FileTree {
 	newTree := NewFileTree()
 	newTree.Size = tree.Size
@@ -166,36 +171,11 @@ func (tree *FileTree) MarkRemoved(path string) error {
 	return node.AssignDiffType(Removed)
 }
 
-// memoize StackRange for performance
-type stackRangeCacheKey struct {
-	// Ids mapset.Set
-	start, stop int
-}
-
-var stackRangeCache = make(map[stackRangeCacheKey]*FileTree)
-
 func StackRange(trees []*FileTree, start, stop int) *FileTree {
-
-	// var ids []interface{}
-	//
-	// for _, tree := range trees {
-	// 	ids = append(ids, tree.Id)
-	// }
-//mapset.NewSetFromSlice(ids)
-// 	key := stackRangeCacheKey{start, stop}
-//
-//
-// 	cachedResult, ok := stackRangeCache[key]
-// 	if ok {
-// 		return cachedResult
-// 	}
-
 	tree := trees[0].Copy()
 	for idx := start; idx <= stop; idx++ {
 		tree.Stack(trees[idx])
 	}
-
-	// stackRangeCache[key] = tree
 
 	return tree
 }
