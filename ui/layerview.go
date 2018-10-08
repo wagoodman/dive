@@ -38,9 +38,6 @@ func (view *LayerView) Setup(v *gocui.View, header *gocui.View) error {
 	view.view = v
 	view.view.Editable = false
 	view.view.Wrap = false
-	//view.view.Highlight = true
-	//view.view.SelBgColor = gocui.ColorGreen
-	//view.view.SelFgColor = gocui.ColorBlack
 	view.view.Frame = false
 
 	view.header = header

@@ -101,6 +101,13 @@ func (view *FileTreeView) IsVisible() bool {
 	return true
 }
 
+func (view *FileTreeView) resetCursor() {
+	view.view.SetCursor(0, 0)
+	view.TreeIndex = 0
+	view.bufferIndex = 0
+	view.bufferIndexLowerBound = 0
+	view.bufferIndexUpperBound = view.height()
+}
 
 func (view *FileTreeView) setTreeByLayer(bottomTreeStart, bottomTreeStop, topTreeStart, topTreeStop int) error {
 	if topTreeStop > len(view.RefTrees)-1 {
@@ -122,8 +129,8 @@ func (view *FileTreeView) setTreeByLayer(bottomTreeStart, bottomTreeStop, topTre
 	}
 	view.ModelTree.VisitDepthChildFirst(visitor, nil)
 
-	view.view.SetCursor(0, 0)
-	view.TreeIndex = 0
+	view.resetCursor()
+
 	view.ModelTree = newTree
 	view.Update()
 	return view.Render()
@@ -227,8 +234,7 @@ func (view *FileTreeView) toggleCollapse() error {
 func (view *FileTreeView) toggleShowDiffType(diffType filetree.DiffType) error {
 	view.HiddenDiffTypes[diffType] = !view.HiddenDiffTypes[diffType]
 
-	view.view.SetCursor(0, 0)
-	view.TreeIndex = 0
+	view.resetCursor()
 
 	Update()
 	Render()
