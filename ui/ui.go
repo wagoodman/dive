@@ -179,7 +179,7 @@ func layout(g *gocui.Gui) error {
 	}
 	debugCols := maxX - debugWidth
 	bottomRows := 1
-	headerRows := 1
+	headerRows := 2
 
 	filterBarHeight := 1
 	statusBarHeight := 1
@@ -215,11 +215,13 @@ func layout(g *gocui.Gui) error {
 		if _, err = g.SetCurrentView(Views.Layer.Name); err != nil {
 			return err
 		}
+		// since we are selecting the view, we should rerender to indicate it is selected
+		Views.Layer.Render()
 	}
 
 	// Details
-	view, viewErr = g.SetView(Views.Details.Name, -1, -1+layersHeight+1, splitCols, maxY-bottomRows)
-	header, headerErr = g.SetView(Views.Details.Name+"header", -1, -1+layersHeight, splitCols, layersHeight+1)
+	view, viewErr = g.SetView(Views.Details.Name, -1, -1+layersHeight+headerRows, splitCols, maxY-bottomRows)
+	header, headerErr = g.SetView(Views.Details.Name+"header", -1, -1+layersHeight, splitCols, layersHeight+headerRows)
 	if isNewView(viewErr, headerErr) {
 		Views.Details.Setup(view, header)
 	}

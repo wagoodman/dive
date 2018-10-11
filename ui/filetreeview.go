@@ -305,10 +305,22 @@ func (view *FileTreeView) Render() error {
 		view.doCursorUp()
 	}
 
+	title := "Current Layer Contents"
+	if Views.Layer.CompareMode == CompareAll {
+		title = "Aggregated Layer Contents"
+	}
+
+	// indicate when selected
+	if view.gui.CurrentView() == view.view {
+		title = "● "+title
+	}
+
 	view.gui.Update(func(g *gocui.Gui) error {
 		// update the header
 		view.header.Clear()
-		headerStr := fmt.Sprintf(filetree.AttributeFormat+" %s", "P", "ermission", "UID:GID", "Size", "Filetree")
+		width, _ := g.Size()
+		headerStr := fmt.Sprintf("[%s]%s\n", title, strings.Repeat("─", width*2))
+		headerStr += fmt.Sprintf(filetree.AttributeFormat+" %s", "P", "ermission", "UID:GID", "Size", "Filetree")
 		fmt.Fprintln(view.header, Formatting.Header(vtclean.Clean(headerStr, false)))
 
 		// update the contents

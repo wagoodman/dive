@@ -5,6 +5,7 @@ import (
 
 	"github.com/jroimartin/gocui"
 	"github.com/lunixbochs/vtclean"
+	"strings"
 )
 
 type DetailsView struct {
@@ -29,7 +30,7 @@ func (view *DetailsView) Setup(v *gocui.View, header *gocui.View) error {
 	// set view options
 	view.view = v
 	view.view.Editable = false
-	view.view.Wrap = false
+	view.view.Wrap = true
 	view.view.Highlight = false
 	view.view.Frame = false
 
@@ -59,14 +60,20 @@ func (view *DetailsView) Update() error {
 }
 
 func (view *DetailsView) Render() error {
+	currentLayer := Views.Layer.currentLayer()
+
 	view.gui.Update(func(g *gocui.Gui) error {
 		// update header
-		headerStr := fmt.Sprintf("Image & Layer Details")
+		view.header.Clear()
+		width, _ := g.Size()
+		headerStr := fmt.Sprintf("[Image & Layer Details]%s", strings.Repeat("─",width*2))
 		fmt.Fprintln(view.header, Formatting.Header(vtclean.Clean(headerStr, false)))
 
 		// update contents
 		view.view.Clear()
-		fmt.Fprintln(view.view, "TBD")
+		fmt.Fprintln(view.view, Formatting.Header("Command"))
+		fmt.Fprintln(view.view, currentLayer.History.CreatedBy)
+
 		return nil
 	})
 	return nil
