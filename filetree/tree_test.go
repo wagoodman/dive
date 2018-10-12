@@ -554,7 +554,7 @@ func TestEfficiencyScore(t *testing.T) {
 		trees[ix] = tree
 	}
 	expected := 2.0 / 6.0
-	actual := EfficiencyScore(trees)
+	actual := CalculateEfficiency(trees)
 	if math.Abs(expected-actual) > 0.0001 {
 		t.Fatalf("Expected %f but got %f", expected, actual)
 	}
@@ -567,7 +567,7 @@ func TestEfficiencyScore(t *testing.T) {
 		trees[ix] = tree
 	}
 	expected = 1.0
-	actual = EfficiencyScore(trees)
+	actual = CalculateEfficiency(trees)
 	if math.Abs(expected-actual) > 0.0001 {
 		t.Fatalf("Expected %f but got %f", expected, actual)
 	}

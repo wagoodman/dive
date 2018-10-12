@@ -17,10 +17,6 @@ import (
 	"golang.org/x/net/context"
 )
 
-const (
-	LayerFormat = "%-25s %5s %7s %s"
-)
-
 func check(e error) {
 	if e != nil {
 		panic(e)

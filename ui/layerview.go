@@ -128,7 +128,7 @@ func (view *LayerView) Render() error {
 		view.header.Clear()
 		width, _ := g.Size()
 		headerStr := fmt.Sprintf("[%s]%s\n", title, strings.Repeat("─", width*2))
-		headerStr += fmt.Sprintf("Cmp "+image.LayerFormat, "Image ID", "%Eff.", "Size", "Command")
+		headerStr += fmt.Sprintf("Cmp "+image.LayerFormat, "Image ID", "Size", "Command")
 		fmt.Fprintln(view.header, Formatting.Header(vtclean.Clean(headerStr, false)))
 
 		// update contents
@@ -146,7 +146,7 @@ func (view *LayerView) Render() error {
 					layerId = fmt.Sprintf("%-25s", layer.History.ID)
 				}
 
-				layerStr = fmt.Sprintf(image.LayerFormat, layerId, "", humanize.Bytes(uint64(layer.History.Size)), "FROM "+layer.Id())
+				layerStr = fmt.Sprintf(image.LayerFormat, layerId, humanize.Bytes(uint64(layer.History.Size)), "FROM "+layer.Id())
 			}
 
 			compareBar := view.renderCompareBar(idx)

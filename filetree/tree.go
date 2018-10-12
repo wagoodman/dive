@@ -262,30 +262,3 @@ func StackRange(trees []*FileTree, start, stop int) *FileTree {
 
 	return tree
 }
-
-// EfficiencyMap creates a map[string]int showing how often each int
-// appears in the
-func EfficiencyMap(trees []*FileTree) map[string]int {
-	result := make(map[string]int)
-	visitor := func(node *FileNode) error {
-		result[node.Path()]++
-		return nil
-	}
-	visitEvaluator := func(node *FileNode) bool {
-		return node.IsLeaf()
-	}
-	for _, tree := range trees {
-		tree.VisitDepthChildFirst(visitor, visitEvaluator)
-	}
-	return result
-}
-
-func EfficiencyScore(trees []*FileTree) float64 {
-	efficiencyMap := EfficiencyMap(trees)
-	uniquePaths := len(efficiencyMap)
-	pathAppearances := 0
-	for _, value := range efficiencyMap {
-		pathAppearances += value
-	}
-	return float64(uniquePaths) / float64(pathAppearances)
-}
