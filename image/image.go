@@ -127,10 +127,22 @@ func GetImageConfig(imageTarPath string, manifest ImageManifest) ImageConfig{
 	return config
 }
 
+func processTar(layerMap map[string]*filetree.FileTree, name string, tarredBytes []byte) {
+	tree := filetree.NewFileTree()
+	tree.Name = name
+
+	fileInfos := getFileList(tarredBytes)
+	for _, element := range fileInfos {
+		tree.FileSize += uint64(element.TarHeader.FileInfo().Size())
+		tree.AddPath(element.Path, element)
+	}
+	layerMap[tree.Name] = tree
+}
+
 func InitializeData(imageID string) ([]*Layer, []*filetree.FileTree) {
 	var manifest ImageManifest
 	var layerMap = make(map[string]*filetree.FileTree)
-	var trees []*filetree.FileTree = make([]*filetree.FileTree, 0)
+	var trees = make([]*filetree.FileTree, 0)
 
 	// save this image to disk temporarily to get the content info
 	fmt.Println("Fetching image...")
@@ -150,6 +162,7 @@ func InitializeData(imageID string) ([]*Layer, []*filetree.FileTree) {
 	defer tarFile.Close()
 
 	tarReader := tar.NewReader(tarFile)
+
 	for {
 		header, err := tarReader.Next()
 
@@ -165,9 +178,6 @@ func InitializeData(imageID string) ([]*Layer, []*filetree.FileTree) {
 		}
 
 		name := header.Name
-		if name == "manifest.json" {
-			manifest = NewImageManifest(tarReader, header)
-		}
 
 		switch header.Typeflag {
 		case tar.TypeDir:
@@ -175,14 +185,18 @@ func InitializeData(imageID string) ([]*Layer, []*filetree.FileTree) {
 		case tar.TypeReg:
 			// todo: process this loop in parallel, visualize with jotframe
 			if strings.HasSuffix(name, "layer.tar") {
-				tree := filetree.NewFileTree()
-				tree.Name = name
-				fileInfos := getFileList(tarReader, header)
-				for _, element := range fileInfos {
-					tree.FileSize += uint64(element.TarHeader.FileInfo().Size())
-					tree.AddPath(element.Path, element)
+
+				var tarredBytes = make([]byte, header.Size)
+
+				_, err := tarReader.Read(tarredBytes)
+				if err != nil && err != io.EOF {
+					panic(err)
 				}
-				layerMap[tree.Name] = tree
+
+				go processTar(layerMap, name, tarredBytes)
+
+			} else if name == "manifest.json" {
+				manifest = NewImageManifest(tarReader, header)
 			}
 		default:
 			fmt.Printf("ERRG: unknown tar entry: %v: %s\n", header.Typeflag, name)
@@ -195,9 +209,9 @@ func InitializeData(imageID string) ([]*Layer, []*filetree.FileTree) {
 	// build the content tree
 	fmt.Println("Building tree...")
 	for _, treeName := range manifest.LayerTarPaths {
+		fmt.Printf("%s : %+v\n", treeName, layerMap[treeName])
 		trees = append(trees, layerMap[treeName])
 	}
-
 
 	// build the layers array
 	layers := make([]*Layer, len(trees))
@@ -276,14 +290,9 @@ func saveImage(imageID string) (string, string) {
 	return imageTarPath, tmpDir
 }
 
-func getFileList(parentReader *tar.Reader, header *tar.Header) []filetree.FileInfo {
+func getFileList(tarredBytes []byte) []filetree.FileInfo {
 	var files []filetree.FileInfo
-	var tarredBytes = make([]byte, header.Size)
 
-	_, err := parentReader.Read(tarredBytes)
-	if err != nil && err != io.EOF {
-		panic(err)
-	}
 	reader := bytes.NewReader(tarredBytes)
 	tarReader := tar.NewReader(reader)
 	for {
