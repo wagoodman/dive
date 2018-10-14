@@ -101,6 +101,13 @@ func (view *FileTreeView) IsVisible() bool {
 	return true
 }
 
+func (view *FileTreeView) resetCursor() {
+	view.view.SetCursor(0, 0)
+	view.TreeIndex = 0
+	view.bufferIndex = 0
+	view.bufferIndexLowerBound = 0
+	view.bufferIndexUpperBound = view.height()
+}
 
 func (view *FileTreeView) setTreeByLayer(bottomTreeStart, bottomTreeStop, topTreeStart, topTreeStop int) error {
 	if topTreeStop > len(view.RefTrees)-1 {
@@ -122,8 +129,8 @@ func (view *FileTreeView) setTreeByLayer(bottomTreeStart, bottomTreeStop, topTre
 	}
 	view.ModelTree.VisitDepthChildFirst(visitor, nil)
 
-	view.view.SetCursor(0, 0)
-	view.TreeIndex = 0
+	view.resetCursor()
+
 	view.ModelTree = newTree
 	view.Update()
 	return view.Render()
@@ -227,8 +234,7 @@ func (view *FileTreeView) toggleCollapse() error {
 func (view *FileTreeView) toggleShowDiffType(diffType filetree.DiffType) error {
 	view.HiddenDiffTypes[diffType] = !view.HiddenDiffTypes[diffType]
 
-	view.view.SetCursor(0, 0)
-	view.TreeIndex = 0
+	view.resetCursor()
 
 	Update()
 	Render()
@@ -299,10 +305,22 @@ func (view *FileTreeView) Render() error {
 		view.doCursorUp()
 	}
 
+	title := "Current Layer Contents"
+	if Views.Layer.CompareMode == CompareAll {
+		title = "Aggregated Layer Contents"
+	}
+
+	// indicate when selected
+	if view.gui.CurrentView() == view.view {
+		title = "● "+title
+	}
+
 	view.gui.Update(func(g *gocui.Gui) error {
 		// update the header
 		view.header.Clear()
-		headerStr := fmt.Sprintf(filetree.AttributeFormat+" %s", "P", "ermission", "UID:GID", "Size", "Filetree")
+		width, _ := g.Size()
+		headerStr := fmt.Sprintf("[%s]%s\n", title, strings.Repeat("─", width*2))
+		headerStr += fmt.Sprintf(filetree.AttributeFormat+" %s", "P", "ermission", "UID:GID", "Size", "Filetree")
 		fmt.Fprintln(view.header, Formatting.Header(vtclean.Clean(headerStr, false)))
 
 		// update the contents

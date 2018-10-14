@@ -41,11 +41,12 @@ var Formatting struct {
 }
 
 var Views struct {
-	Tree   *FileTreeView
-	Layer  *LayerView
-	Status *StatusView
-	Filter *FilterView
-	lookup map[string]View
+	Tree    *FileTreeView
+	Layer   *LayerView
+	Status  *StatusView
+	Filter  *FilterView
+	Details *DetailsView
+	lookup  map[string]View
 }
 
 type View interface {
@@ -178,13 +179,15 @@ func layout(g *gocui.Gui) error {
 	}
 	debugCols := maxX - debugWidth
 	bottomRows := 1
-	headerRows := 1
+	headerRows := 2
 
 	filterBarHeight := 1
 	statusBarHeight := 1
 
 	statusBarIndex := 1
 	filterBarIndex := 2
+
+	layersHeight := len(Views.Layer.Layers) + headerRows + 1 // layers + header + base image layer row
 
 	var view, header *gocui.View
 	var viewErr, headerErr, err error
@@ -204,7 +207,7 @@ func layout(g *gocui.Gui) error {
 	}
 
 	// Layers
-	view, viewErr = g.SetView(Views.Layer.Name, -1, -1+headerRows, splitCols, maxY-bottomRows)
+	view, viewErr = g.SetView(Views.Layer.Name, -1, -1+headerRows, splitCols, layersHeight)
 	header, headerErr = g.SetView(Views.Layer.Name+"header", -1, -1, splitCols, headerRows)
 	if isNewView(viewErr, headerErr) {
 		Views.Layer.Setup(view, header)
@@ -212,6 +215,15 @@ func layout(g *gocui.Gui) error {
 		if _, err = g.SetCurrentView(Views.Layer.Name); err != nil {
 			return err
 		}
+		// since we are selecting the view, we should rerender to indicate it is selected
+		Views.Layer.Render()
+	}
+
+	// Details
+	view, viewErr = g.SetView(Views.Details.Name, -1, -1+layersHeight+headerRows, splitCols, maxY-bottomRows)
+	header, headerErr = g.SetView(Views.Details.Name+"header", -1, -1+layersHeight, splitCols, layersHeight+headerRows)
+	if isNewView(viewErr, headerErr) {
+		Views.Details.Setup(view, header)
 	}
 
 	// Filetree
@@ -290,6 +302,10 @@ func Run(layers []*image.Layer, refTrees []*filetree.FileTree) {
 
 	Views.Filter = NewFilterView("command", g)
 	Views.lookup[Views.Filter.Name] = Views.Filter
+
+	Views.Details = NewStatisticsView("details", g)
+	Views.lookup[Views.Details.Name] = Views.Details
+
 
 	g.Cursor = false
 	//g.Mouse = true

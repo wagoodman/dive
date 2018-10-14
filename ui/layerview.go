@@ -7,6 +7,7 @@ import (
 	"github.com/wagoodman/dive/image"
 	"github.com/lunixbochs/vtclean"
 	"github.com/dustin/go-humanize"
+	"strings"
 )
 
 type LayerView struct {
@@ -38,9 +39,6 @@ func (view *LayerView) Setup(v *gocui.View, header *gocui.View) error {
 	view.view = v
 	view.view.Editable = false
 	view.view.Wrap = false
-	//view.view.Highlight = true
-	//view.view.SelBgColor = gocui.ColorGreen
-	//view.view.SelFgColor = gocui.ColorBlack
 	view.view.Frame = false
 
 	view.header = header
@@ -68,6 +66,10 @@ func (view *LayerView) Setup(v *gocui.View, header *gocui.View) error {
 func (view *LayerView) IsVisible() bool {
 	if view == nil {return false}
 	return true
+}
+
+func (view *LayerView) currentLayer() *image.Layer {
+	return view.Layers[(len(view.Layers)-1)-view.LayerIndex]
 }
 
 func (view *LayerView) setCompareMode(compareMode CompareType) error {
@@ -99,30 +101,12 @@ func (view *LayerView) renderCompareBar(layerIdx int) string {
 	bottomTreeStart, bottomTreeStop, topTreeStart, topTreeStop := view.getCompareIndexes()
 	result := "  "
 
-	//if debug {
-	//	v, _ := view.gui.View("debug")
-	//	v.Clear()
-	//	_, _ = fmt.Fprintf(v, "bStart: %d bStop: %d tStart: %d tStop: %d", bottomTreeStart, bottomTreeStop, topTreeStart, topTreeStop)
-	//}
-
 	if layerIdx >= bottomTreeStart && layerIdx <= bottomTreeStop {
 		result = Formatting.CompareBottom("  ")
 	}
 	if layerIdx >= topTreeStart && layerIdx <= topTreeStop {
 		result = Formatting.CompareTop("  ")
 	}
-
-	//if bottomTreeStop == topTreeStart {
-	//	result += "  "
-	//} else {
-	//	if layerIdx == bottomTreeStop {
-	//		result += "─┐"
-	//	} else if layerIdx == topTreeStart {
-	//		result += "─┘"
-	//	} else {
-	//		result += "  "
-	//	}
-	//}
 
 	return result
 }
@@ -132,9 +116,19 @@ func (view *LayerView) Update() error {
 }
 
 func (view *LayerView) Render() error {
+
+	// indicate when selected
+	title := "Layers"
+	if view.gui.CurrentView() == view.view {
+		title = "● "+title
+	}
+
 	view.gui.Update(func(g *gocui.Gui) error {
 		// update header
-		headerStr := fmt.Sprintf("Cmp "+image.LayerFormat, "Image ID", "%Eff.", "Size", "Filter")
+		view.header.Clear()
+		width, _ := g.Size()
+		headerStr := fmt.Sprintf("[%s]%s\n", title, strings.Repeat("─", width*2))
+		headerStr += fmt.Sprintf("Cmp "+image.LayerFormat, "Image ID", "%Eff.", "Size", "Command")
 		fmt.Fprintln(view.header, Formatting.Header(vtclean.Clean(headerStr, false)))
 
 		// update contents
@@ -174,10 +168,7 @@ func (view *LayerView) CursorDown() error {
 	if view.LayerIndex < len(view.Layers) {
 		err := CursorDown(view.gui, view.view)
 		if err == nil {
-			view.LayerIndex++
-			Views.Tree.setTreeByLayer(view.getCompareIndexes())
-			view.Render()
-			// debugPrint(fmt.Sprintf("%d",len(filetree.Cache)))
+			view.SetCursor(view.LayerIndex+1)
 		}
 	}
 	return nil
@@ -187,25 +178,22 @@ func (view *LayerView) CursorUp() error {
 	if view.LayerIndex > 0 {
 		err := CursorUp(view.gui, view.view)
 		if err == nil {
-			view.LayerIndex--
-			Views.Tree.setTreeByLayer(view.getCompareIndexes())
-			view.Render()
-			// debugPrint(fmt.Sprintf("%d",len(filetree.Cache)))
+			view.SetCursor(view.LayerIndex-1)
 		}
 	}
 	return nil
 }
 
 func (view *LayerView) SetCursor(layer int) error {
-	// view.view.SetCursor(0, layer)
 	view.LayerIndex = layer
 	Views.Tree.setTreeByLayer(view.getCompareIndexes())
+	Views.Details.Render()
 	view.Render()
 
 	return nil
 }
 
 func (view *LayerView) KeyHelp() string {
-	return  renderStatusOption("^L","Layer changes", view.CompareMode == CompareLayer) +
-			renderStatusOption("^A","All changes", view.CompareMode == CompareAll)
+	return  renderStatusOption("^L","Show layer changes", view.CompareMode == CompareLayer) +
+			renderStatusOption("^A","Show aggregated changes", view.CompareMode == CompareAll)
 }

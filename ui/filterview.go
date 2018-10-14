@@ -18,13 +18,6 @@ type FilterView struct {
 	hidden    bool
 }
 
-type Input struct {
-	name      string
-	x, y      int
-	w         int
-	maxLength int
-}
-
 func NewFilterView(name string, gui *gocui.Gui) (filterview *FilterView) {
 	filterview = new(FilterView)
 
