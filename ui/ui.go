@@ -311,6 +311,10 @@ func Run(layers []*image.Layer, refTrees []*filetree.FileTree) {
 	//g.Mouse = true
 	g.SetManagerFunc(layout)
 
+	// perform the first update and render now that all resources have been loaded
+	Update()
+	Render()
+
 	// let the default position of the cursor be the last layer
 	// Views.Layer.SetCursor(len(Views.Layer.Layers)-1)
 
