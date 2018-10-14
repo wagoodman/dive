@@ -1,9 +1,14 @@
 package cmd
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
+	"os/exec"
+	"os"
+	"strings"
+	"io/ioutil"
+	log "github.com/sirupsen/logrus"
+	"github.com/wagoodman/dive/image"
+	"github.com/wagoodman/dive/ui"
 )
 
 // buildCmd represents the build command
@@ -11,21 +16,55 @@ var buildCmd = &cobra.Command{
 	Use:   "build",
 	Short: "Build and analyze a docker image",
 	Long: `Build and analyze a docker image`,
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("build called")
-	},
+	DisableFlagParsing: true,
+	Run: doBuild,
 }
 
 func init() {
 	rootCmd.AddCommand(buildCmd)
+}
 
-	// Here you will define your flags and configuration settings.
+func doBuild(cmd *cobra.Command, args []string) {
+	iidfile, err := ioutil.TempFile("/tmp", "dive.*.iid")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer os.Remove(iidfile.Name())
 
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// buildCmd.PersistentFlags().String("foo", "", "A help for foo")
+	allArgs := append([]string{"--iidfile", iidfile.Name()}, args...)
+	err = runDockerCmd("build", allArgs...)
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// buildCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	imageId, err := ioutil.ReadFile(iidfile.Name())
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	manifest, refTrees := image.InitializeData(string(imageId))
+	ui.Run(manifest, refTrees)
+}
+
+func runDockerCmd(cmdStr string, args... string) error {
+
+	allArgs := cleanArgs(append([]string{cmdStr}, args...))
+
+	cmd := exec.Command("docker", allArgs...)
+
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	cmd.Stdin = os.Stdin
+
+	return cmd.Run()
+}
+
+func cleanArgs(s []string) []string {
+	var r []string
+	for _, str := range s {
+		if str != "" {
+			r = append(r, strings.Trim(str, " "))
+		}
+	}
+	return r
 }

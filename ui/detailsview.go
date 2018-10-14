@@ -102,7 +102,6 @@ func (view *DetailsView) Render() error {
 		fmt.Fprintln(view.view, spaceStr)
 
 		fmt.Fprintln(view.view, inefficiencyReport)
-
 		return nil
 	})
 	return nil

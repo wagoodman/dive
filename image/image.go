@@ -137,7 +137,7 @@ func InitializeData(imageID string) ([]*Layer, []*filetree.FileTree) {
 	defer os.RemoveAll(tmpDir)
 
 	// read through the image contents and build a tree
-	fmt.Println("Reading image...")
+	fmt.Printf("Reading image '%s'...\n", imageID)
 	tarFile, err := os.Open(imageTarPath)
 	if err != nil {
 		fmt.Println(err)
