@@ -73,14 +73,19 @@ func (view *DetailsView) Render() error {
 	var wastedSpace int64
 
 	template := "%5s  %12s  %-s\n"
+	var trueInefficiencies int
 	inefficiencyReport := fmt.Sprintf(Formatting.Header(template), "Count", "Total Space", "Path")
 	for idx := len(view.inefficiencies)-1; idx > 0; idx-- {
 		data := view.inefficiencies[idx]
 		if data.CumulativeSize == 0 {
 			continue
 		}
+		trueInefficiencies++
 		wastedSpace += data.CumulativeSize
 		inefficiencyReport += fmt.Sprintf(template, strconv.Itoa(len(data.Nodes)), humanize.Bytes(uint64(data.CumulativeSize)), data.Path)
+	}
+	if trueInefficiencies == 0 {
+		inefficiencyReport = ""
 	}
 
 	effStr := fmt.Sprintf("\n%s %d %%", Formatting.Header("Image efficiency score:"), int(100.0*view.efficiency))
