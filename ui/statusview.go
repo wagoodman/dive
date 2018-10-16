@@ -7,57 +7,59 @@ import (
 	"strings"
 )
 
+// DetailsView holds the UI objects and data models for populating the bottom-most pane. Specifcially the panel
+// shows the user a set of possible actions to take in the window and currently selected pane.
 type StatusView struct {
 	Name string
 	gui  *gocui.Gui
 	view *gocui.View
 }
 
-func NewStatusView(name string, gui *gocui.Gui) (statusview *StatusView) {
-	statusview = new(StatusView)
+// NewStatusView creates a new view object attached the the global [gocui] screen object.
+func NewStatusView(name string, gui *gocui.Gui) (statusView *StatusView) {
+	statusView = new(StatusView)
 
 	// populate main fields
-	statusview.Name = name
-	statusview.gui = gui
+	statusView.Name = name
+	statusView.gui = gui
 
-	return statusview
+	return statusView
 }
 
+// Setup initializes the UI concerns within the context of a global [gocui] view object.
 func (view *StatusView) Setup(v *gocui.View, header *gocui.View) error {
 
 	// set view options
 	view.view = v
 	view.view.Frame = false
-	//view.view.BgColor = gocui.ColorDefault + gocui.AttrReverse
 
 	view.Render()
 
 	return nil
 }
 
+// IsVisible indicates if the status view pane is currently initialized.
 func (view *StatusView) IsVisible() bool {
 	if view == nil {return false}
 	return true
 }
 
+// CursorDown moves the cursor down in the details pane (currently indicates nothing).
 func (view *StatusView) CursorDown() error {
 	return nil
 }
 
+// CursorUp moves the cursor up in the details pane (currently indicates nothing).
 func (view *StatusView) CursorUp() error {
 	return nil
 }
 
-func (view *StatusView) KeyHelp() string {
-	return  renderStatusOption("^C","Quit", false) +
-			renderStatusOption("^Space","Switch view", false) +
-			renderStatusOption("^/","Filter files", Views.Filter.IsVisible())
-}
-
+// Update refreshes the state objects for future rendering (currently does nothing).
 func (view *StatusView) Update() error {
 	return nil
 }
 
+// Render flushes the state objects to the screen.
 func (view *StatusView) Render() error {
 	view.gui.Update(func(g *gocui.Gui) error {
 		view.view.Clear()
@@ -67,4 +69,11 @@ func (view *StatusView) Render() error {
 	})
 	// todo: blerg
 	return nil
+}
+
+// KeyHelp indicates all the possible global actions a user can take when any pane is selected.
+func (view *StatusView) KeyHelp() string {
+	return  renderStatusOption("^C","Quit", false) +
+		renderStatusOption("^Space","Switch view", false) +
+		renderStatusOption("^/","Filter files", Views.Filter.IsVisible())
 }

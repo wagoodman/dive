@@ -18,6 +18,7 @@ const (
 	collapsedItem   = "⊕ "
 )
 
+// FileTree represents a set of files, directories, and their relations.
 type FileTree struct {
 	Root *FileNode
 	Size int
@@ -26,6 +27,7 @@ type FileTree struct {
 	Id   uuid.UUID
 }
 
+// NewFileTree creates an empty FileTree
 func NewFileTree() (tree *FileTree) {
 	tree = new(FileTree)
 	tree.Size = 0
@@ -36,6 +38,8 @@ func NewFileTree() (tree *FileTree) {
 	return tree
 }
 
+// renderParams is a representation of a FileNode in the context of the greater tree. All
+// data stored is necessary for rendering a single line in a tree format.
 type renderParams struct{
 	node *FileNode
 	spaces []bool
@@ -44,13 +48,15 @@ type renderParams struct{
 	isLast bool
 }
 
+// renderStringTreeBetween returns a string representing the given tree between the given rows. Since each node
+// is rendered on its own line, the returned string shows the visible nodes not affected by a collapsed parent.
 func (tree *FileTree) renderStringTreeBetween(startRow, stopRow int, showAttributes bool) string {
 	// generate a list of nodes to render
-	var params []renderParams = make([]renderParams,0)
+	var params = make([]renderParams,0)
 	var result string
 
 	// visit from the front of the list
-	var paramsToVisit = []renderParams{ renderParams{node: tree.Root, spaces: []bool{}, showCollapsed: false, isLast: false} }
+	var paramsToVisit = []renderParams{ {node: tree.Root, spaces: []bool{}, showCollapsed: false, isLast: false} }
 	for currentRow := 0; len(paramsToVisit) > 0 && currentRow <= stopRow; currentRow++ {
 		// pop the first node
 		var currentParams renderParams
@@ -61,6 +67,7 @@ func (tree *FileTree) renderStringTreeBetween(startRow, stopRow int, showAttribu
 		for key := range currentParams.node.Children {
 			keys = append(keys, key)
 		}
+		// we should always visit nodes in order
 		sort.Strings(keys)
 
 		var childParams = make([]renderParams,0)
@@ -119,14 +126,17 @@ func (tree *FileTree) renderStringTreeBetween(startRow, stopRow int, showAttribu
 	return result
 }
 
+// String returns the entire tree in an ASCII representation.
 func (tree *FileTree) String(showAttributes bool) string {
 	return tree.renderStringTreeBetween(0, tree.Size, showAttributes)
 }
 
+// StringBetween returns a partial tree in an ASCII representation.
 func (tree *FileTree) StringBetween(start, stop uint, showAttributes bool) string {
 	return tree.renderStringTreeBetween(int(start), int(stop), showAttributes)
 }
 
+// Copy returns a copy of the given FileTree
 func (tree *FileTree) Copy() *FileTree {
 	newTree := NewFileTree()
 	newTree.Size = tree.Size
@@ -142,19 +152,23 @@ func (tree *FileTree) Copy() *FileTree {
 	return newTree
 }
 
-type Visiter func(*FileNode) error
+// Visitor is a function that processes, observes, or otherwise transforms the given node
+type Visitor func(*FileNode) error
+
+// VisitEvaluator is a function that indicates whether the given node should be visited by a Visitor.
 type VisitEvaluator func(*FileNode) bool
 
-// DFS bubble up
-func (tree *FileTree) VisitDepthChildFirst(visiter Visiter, evaluator VisitEvaluator) error {
-	return tree.Root.VisitDepthChildFirst(visiter, evaluator)
+// VisitDepthChildFirst iterates the given tree depth-first, evaluating the deepest depths first (visit on bubble up)
+func (tree *FileTree) VisitDepthChildFirst(visitor Visitor, evaluator VisitEvaluator) error {
+	return tree.Root.VisitDepthChildFirst(visitor, evaluator)
 }
 
-// DFS sink down
-func (tree *FileTree) VisitDepthParentFirst(visiter Visiter, evaluator VisitEvaluator) error {
-	return tree.Root.VisitDepthParentFirst(visiter, evaluator)
+// VisitDepthParentFirst iterates the given tree depth-first, evaluating the shallowest depths first (visit while sinking down)
+func (tree *FileTree) VisitDepthParentFirst(visitor Visitor, evaluator VisitEvaluator) error {
+	return tree.Root.VisitDepthParentFirst(visitor, evaluator)
 }
 
+// Stack takes two trees and combines them together. This is done by "stacking" the given tree on top of the owning tree.
 func (tree *FileTree) Stack(upper *FileTree) error {
 	graft := func(node *FileNode) error {
 		if node.IsWhiteout() {
@@ -173,6 +187,7 @@ func (tree *FileTree) Stack(upper *FileTree) error {
 	return upper.VisitDepthChildFirst(graft, nil)
 }
 
+// GetNode fetches a single node when given a slash-delimited string from root ('/') to the desired node (e.g. '/a/node/path')
 func (tree *FileTree) GetNode(path string) (*FileNode, error) {
 	nodeNames := strings.Split(strings.Trim(path, "/"), "/")
 	node := tree.Root
@@ -188,6 +203,7 @@ func (tree *FileTree) GetNode(path string) (*FileNode, error) {
 	return node, nil
 }
 
+// AddPath adds a new node to the tree with the given payload
 func (tree *FileTree) AddPath(path string, data FileInfo) (*FileNode, error) {
 	nodeNames := strings.Split(strings.Trim(path, "/"), "/")
 	node := tree.Root
@@ -213,6 +229,7 @@ func (tree *FileTree) AddPath(path string, data FileInfo) (*FileNode, error) {
 	return node, nil
 }
 
+// RemovePath removes a node from the tree given its path.
 func (tree *FileTree) RemovePath(path string) error {
 	node, err := tree.GetNode(path)
 	if err != nil {
@@ -221,10 +238,11 @@ func (tree *FileTree) RemovePath(path string) error {
 	return node.Remove()
 }
 
+// Compare marks the FileNodes in the owning tree with DiffType annotations when compared to the given tree.
 func (tree *FileTree) Compare(upper *FileTree) error {
 	graft := func(upperNode *FileNode) error {
 		if upperNode.IsWhiteout() {
-			err := tree.MarkRemoved(upperNode.Path())
+			err := tree.markRemoved(upperNode.Path())
 			if err != nil {
 				return fmt.Errorf("cannot remove upperNode %s: %v", upperNode.Path(), err.Error())
 			}
@@ -246,7 +264,8 @@ func (tree *FileTree) Compare(upper *FileTree) error {
 	return upper.VisitDepthChildFirst(graft, nil)
 }
 
-func (tree *FileTree) MarkRemoved(path string) error {
+// markRemoved annotates the FileNode at the given path as Removed.
+func (tree *FileTree) markRemoved(path string) error {
 	node, err := tree.GetNode(path)
 	if err != nil {
 		return err
@@ -254,6 +273,7 @@ func (tree *FileTree) MarkRemoved(path string) error {
 	return node.AssignDiffType(Removed)
 }
 
+// StackRange combines an array of trees into a single tree
 func StackRange(trees []*FileTree, start, stop int) *FileTree {
 	tree := trees[0].Copy()
 	for idx := start; idx <= stop; idx++ {

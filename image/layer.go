@@ -11,6 +11,7 @@ const (
 	LayerFormat = "%-25s %7s  %s"
 )
 
+// Layer represents a Docker image layer and metadata
 type Layer struct {
 	TarPath  string
 	History ImageHistoryEntry
@@ -19,6 +20,7 @@ type Layer struct {
 	RefTrees []*filetree.FileTree
 }
 
+// Id returns the truncated id of the current layer.
 func (layer *Layer) Id() string {
 	rangeBound := 25
 	if length := len(layer.History.ID); length < 25 {
@@ -34,6 +36,7 @@ func (layer *Layer) Id() string {
 	return id
 }
 
+// String represents a layer in a columnar format.
 func (layer *Layer) String() string {
 
 	return fmt.Sprintf(LayerFormat,

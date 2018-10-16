@@ -24,6 +24,7 @@ func init() {
 	rootCmd.AddCommand(buildCmd)
 }
 
+// doBuild implements the steps taken for the build command
 func doBuild(cmd *cobra.Command, args []string) {
 	iidfile, err := ioutil.TempFile("/tmp", "dive.*.iid")
 	if err != nil {
@@ -46,6 +47,7 @@ func doBuild(cmd *cobra.Command, args []string) {
 	ui.Run(manifest, refTrees)
 }
 
+// runDockerCmd runs a given Docker command in the current tty
 func runDockerCmd(cmdStr string, args... string) error {
 
 	allArgs := cleanArgs(append([]string{cmdStr}, args...))
@@ -59,6 +61,7 @@ func runDockerCmd(cmdStr string, args... string) error {
 	return cmd.Run()
 }
 
+// cleanArgs trims the whitespace from the given set of strings.
 func cleanArgs(s []string) []string {
 	var r []string
 	for _, str := range s {

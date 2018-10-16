@@ -22,6 +22,7 @@ var diffTypeColor = map[DiffType]*color.Color {
 	Unchanged: color.New(color.Reset),
 }
 
+// FileNode represents a single file, its relation to files beneath it, the tree it exists in, and the metadata of the given file.
 type FileNode struct {
 	Tree     *FileTree
 	Parent   *FileNode
@@ -31,6 +32,7 @@ type FileNode struct {
 	path     string
 }
 
+// NewNode creates a new FileNode relative to the given parent node with a payload.
 func NewNode(parent *FileNode, name string, data FileInfo) (node *FileNode) {
 	node = new(FileNode)
 	node.Name = name
@@ -45,6 +47,7 @@ func NewNode(parent *FileNode, name string, data FileInfo) (node *FileNode) {
 	return node
 }
 
+// renderTreeLine returns a string representing this FileNode in the context of a greater ASCII tree.
 func (node *FileNode) renderTreeLine(spaces []bool, last bool, collapsed bool) string {
 	var otherBranches string
 	for _, space := range spaces {
@@ -68,6 +71,7 @@ func (node *FileNode) renderTreeLine(spaces []bool, last bool, collapsed bool) s
 	return otherBranches + thisBranch + collapsedIndicator + node.String() + newLine
 }
 
+// Copy duplicates the existing node relative to a new parent node.
 func (node *FileNode) Copy(parent *FileNode) *FileNode {
 	newNode := NewNode(parent, node.Name, node.Data.FileInfo)
 	newNode.Data.ViewInfo = node.Data.ViewInfo
@@ -79,6 +83,7 @@ func (node *FileNode) Copy(parent *FileNode) *FileNode {
 	return newNode
 }
 
+// AddChild creates a new node relative to the current FileNode.
 func (node *FileNode) AddChild(name string, data FileInfo) (child *FileNode) {
 	child = NewNode(node, name, data)
 	if node.Children[name] != nil {
@@ -91,6 +96,7 @@ func (node *FileNode) AddChild(name string, data FileInfo) (child *FileNode) {
 	return child
 }
 
+// Remove deletes the current FileNode from it's parent FileNode's relations.
 func (node *FileNode) Remove() error {
 	if node == node.Tree.Root {
 		return fmt.Errorf("cannot remove the tree root")
@@ -103,6 +109,7 @@ func (node *FileNode) Remove() error {
 	return nil
 }
 
+// String shows the filename formatted into the proper color (by DiffType), additionally indicating if it is a symlink.
 func (node *FileNode) String() string {
 	var display string
 	if node == nil {
@@ -116,6 +123,7 @@ func (node *FileNode) String() string {
 	return diffTypeColor[node.Data.DiffType].Sprint(display)
 }
 
+// MetadatString returns the FileNode metadata in a columnar string.
 func (node *FileNode) MetadataString() string {
 	if node == nil {
 		return ""
@@ -130,7 +138,6 @@ func (node *FileNode) MetadataString() string {
 	group := node.Data.FileInfo.TarHeader.Gid
 	userGroup := fmt.Sprintf("%d:%d", user, group)
 
-	//size := humanize.Bytes(uint64(node.Data.FileInfo.TarHeader.FileInfo().Size()))
 	var sizeBytes int64
 
 	if node.Data.FileInfo.TarHeader.FileInfo().IsDir() {
@@ -152,7 +159,8 @@ func (node *FileNode) MetadataString() string {
 	return diffTypeColor[node.Data.DiffType].Sprint(fmt.Sprintf(AttributeFormat, dir, fileMode, userGroup, size))
 }
 
-func (node *FileNode) VisitDepthChildFirst(visiter Visiter, evaluator VisitEvaluator) error {
+// VisitDepthChildFirst iterates a tree depth-first (starting at this FileNode), evaluating the deepest depths first (visit on bubble up)
+func (node *FileNode) VisitDepthChildFirst(visitor Visitor, evaluator VisitEvaluator) error {
 	var keys []string
 	for key := range node.Children {
 		keys = append(keys, key)
@@ -160,7 +168,7 @@ func (node *FileNode) VisitDepthChildFirst(visiter Visiter, evaluator VisitEvalu
 	sort.Strings(keys)
 	for _, name := range keys {
 		child := node.Children[name]
-		err := child.VisitDepthChildFirst(visiter, evaluator)
+		err := child.VisitDepthChildFirst(visitor, evaluator)
 		if err != nil {
 			return err
 		}
@@ -169,13 +177,14 @@ func (node *FileNode) VisitDepthChildFirst(visiter Visiter, evaluator VisitEvalu
 	if node == node.Tree.Root {
 		return nil
 	} else if evaluator != nil && evaluator(node) || evaluator == nil {
-		return visiter(node)
+		return visitor(node)
 	}
 
 	return nil
 }
 
-func (node *FileNode) VisitDepthParentFirst(visiter Visiter, evaluator VisitEvaluator) error {
+// VisitDepthParentFirst iterates a tree depth-first (starting at this FileNode), evaluating the shallowest depths first (visit while sinking down)
+func (node *FileNode) VisitDepthParentFirst(visitor Visitor, evaluator VisitEvaluator) error {
 	var err error
 
 	doVisit := evaluator != nil && evaluator(node) || evaluator == nil
@@ -186,7 +195,7 @@ func (node *FileNode) VisitDepthParentFirst(visiter Visiter, evaluator VisitEval
 
 	// never visit the root node
 	if node != node.Tree.Root {
-		err = visiter(node)
+		err = visitor(node)
 		if err != nil {
 			return err
 		}
@@ -199,7 +208,7 @@ func (node *FileNode) VisitDepthParentFirst(visiter Visiter, evaluator VisitEval
 	sort.Strings(keys)
 	for _, name := range keys {
 		child := node.Children[name]
-		err = child.VisitDepthParentFirst(visiter, evaluator)
+		err = child.VisitDepthParentFirst(visitor, evaluator)
 		if err != nil {
 			return err
 		}
@@ -207,10 +216,17 @@ func (node *FileNode) VisitDepthParentFirst(visiter Visiter, evaluator VisitEval
 	return err
 }
 
+// IsWhiteout returns an indication if this file may be a overlay-whiteout file.
 func (node *FileNode) IsWhiteout() bool {
 	return strings.HasPrefix(node.Name, whiteoutPrefix)
 }
 
+// IsLeaf returns true is the current node has no child nodes.
+func (node *FileNode) IsLeaf() bool {
+	return len(node.Children) == 0
+}
+
+// Path returns a slash-delimited string from the root of the greater tree to the current node (e.g. /a/path/to/here)
 func (node *FileNode) Path() string {
 	if node.path == "" {
 		path := []string{}
@@ -234,14 +250,9 @@ func (node *FileNode) Path() string {
 	return node.path
 }
 
-func (node *FileNode) IsLeaf() bool {
-	return len(node.Children) == 0
-}
-
+// deriveDiffType determines a DiffType to the current FileNode. Note: the DiffType of a node is always the DiffType of
+// its attributes and its contents. The contents are the bytes of the file of the children of a directory.
 func (node *FileNode) deriveDiffType(diffType DiffType) error {
-	// THE DIFF_TYPE OF A NODE IS ALWAYS THE DIFF_TYPE OF ITS ATTRIBUTES AND ITS CONTENTS
-	// THE CONTENTS ARE THE BYTES OF A FILE OR THE CHILDREN OF A DIRECTORY
-
 	if node.IsLeaf() {
 		return node.AssignDiffType(diffType)
 	}
@@ -255,6 +266,7 @@ func (node *FileNode) deriveDiffType(diffType DiffType) error {
 	return node.AssignDiffType(myDiffType)
 }
 
+// AssignDiffType will assign the given DiffType to this node, possible affecting child nodes.
 func (node *FileNode) AssignDiffType(diffType DiffType) error {
 	var err error
 
@@ -277,27 +289,27 @@ func (node *FileNode) AssignDiffType(diffType DiffType) error {
 	return nil
 }
 
-func (a *FileNode) compare(b *FileNode) DiffType {
-	if a == nil && b == nil {
+// compare the current node against the given node, returning a definitive DiffType.
+func (node *FileNode) compare(other *FileNode) DiffType {
+	if node == nil && other == nil {
 		return Unchanged
 	}
-	// a is nil but not b
-	if a == nil && b != nil {
+
+	if node == nil && other != nil {
 		return Added
 	}
 
-	// b is nil but not a
-	if a != nil && b == nil {
+	if node != nil && other == nil {
 		return Removed
 	}
 
-	if b.IsWhiteout() {
+	if other.IsWhiteout() {
 		return Removed
 	}
-	if a.Name != b.Name {
+	if node.Name != other.Name {
 		panic("comparing mismatched nodes")
 	}
 	// TODO: fails on nil
 
-	return a.Data.FileInfo.getDiffType(b.Data.FileInfo)
+	return node.Data.FileInfo.Compare(other.Data.FileInfo)
 }

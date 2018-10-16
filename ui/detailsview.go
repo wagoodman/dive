@@ -11,6 +11,8 @@ import (
 	"github.com/dustin/go-humanize"
 )
 
+// DetailsView holds the UI objects and data models for populating the lower-left pane. Specifically the pane that
+// shows the layer details and image statistics.
 type DetailsView struct {
 	Name       string
 	gui        *gocui.Gui
@@ -20,16 +22,18 @@ type DetailsView struct {
 	inefficiencies filetree.EfficiencySlice
 }
 
-func NewStatisticsView(name string, gui *gocui.Gui) (detailsview *DetailsView) {
-	detailsview = new(DetailsView)
+// NewDetailsView creates a new view object attached the the global [gocui] screen object.
+func NewDetailsView(name string, gui *gocui.Gui) (detailsView *DetailsView) {
+	detailsView = new(DetailsView)
 
 	// populate main fields
-	detailsview.Name = name
-	detailsview.gui = gui
+	detailsView.Name = name
+	detailsView.gui = gui
 
-	return detailsview
+	return detailsView
 }
 
+// Setup initializes the UI concerns within the context of a global [gocui] view object.
 func (view *DetailsView) Setup(v *gocui.View, header *gocui.View) error {
 
 	// set view options
@@ -55,18 +59,34 @@ func (view *DetailsView) Setup(v *gocui.View, header *gocui.View) error {
 	return view.Render()
 }
 
+// IsVisible indicates if the details view pane is currently initialized.
 func (view *DetailsView) IsVisible() bool {
 	if view == nil {return false}
 	return true
 }
 
-// we only need to update this view upon the initial tree load
+// CursorDown moves the cursor down in the details pane (currently indicates nothing).
+func (view *DetailsView) CursorDown() error {
+	return CursorDown(view.gui, view.view)
+}
+
+// CursorUp moves the cursor up in the details pane (currently indicates nothing).
+func (view *DetailsView) CursorUp() error {
+	return CursorUp(view.gui, view.view)
+}
+
+// Update refreshes the state objects for future rendering. Note: we only need to update this view upon the initial tree load
 func (view *DetailsView) Update() error {
 	layerTrees := Views.Tree.RefTrees
 	view.efficiency, view.inefficiencies = filetree.Efficiency(layerTrees[:len(layerTrees)-1])
 	return nil
 }
 
+// Render flushes the state objects to the screen. The details pane reports:
+// 1. the current selected layer's command string
+// 2. the image efficiency score
+// 3. the estimated wasted image space
+// 4. a list of inefficient file allocations
 func (view *DetailsView) Render() error {
 	currentLayer := Views.Layer.currentLayer()
 
@@ -112,17 +132,7 @@ func (view *DetailsView) Render() error {
 	return nil
 }
 
-func (view *DetailsView) CursorDown() error {
-	return CursorDown(view.gui, view.view)
-}
-
-func (view *DetailsView) CursorUp() error {
-	return CursorUp(view.gui, view.view)
-}
-
-
+// KeyHelp indicates all the possible actions a user can take while the current pane is selected (currently does nothing).
 func (view *DetailsView) KeyHelp() string {
 	return "TBD"
-	// return  renderStatusOption("^L","Layer changes", view.CompareMode == CompareLayer) +
-	// 		renderStatusOption("^A","All changes", view.CompareMode == CompareAll)
 }
