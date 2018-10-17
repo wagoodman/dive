@@ -1,4 +1,5 @@
 # dive
+[![Go Report Card](https://goreportcard.com/badge/github.com/wagoodman/dive)](https://goreportcard.com/report/github.com/wagoodman/dive)
 
 A tool for interrogating docker images. 
 
