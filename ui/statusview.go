@@ -40,7 +40,9 @@ func (view *StatusView) Setup(v *gocui.View, header *gocui.View) error {
 
 // IsVisible indicates if the status view pane is currently initialized.
 func (view *StatusView) IsVisible() bool {
-	if view == nil {return false}
+	if view == nil {
+		return false
+	}
 	return true
 }
 
@@ -63,7 +65,7 @@ func (view *StatusView) Update() error {
 func (view *StatusView) Render() error {
 	view.gui.Update(func(g *gocui.Gui) error {
 		view.view.Clear()
-		fmt.Fprintln(view.view, view.KeyHelp()+Views.lookup[view.gui.CurrentView().Name()].KeyHelp() + Formatting.StatusNormal("▏" + strings.Repeat(" ", 1000)))
+		fmt.Fprintln(view.view, view.KeyHelp()+Views.lookup[view.gui.CurrentView().Name()].KeyHelp()+Formatting.StatusNormal("▏"+strings.Repeat(" ", 1000)))
 
 		return nil
 	})
@@ -73,7 +75,7 @@ func (view *StatusView) Render() error {
 
 // KeyHelp indicates all the possible global actions a user can take when any pane is selected.
 func (view *StatusView) KeyHelp() string {
-	return  renderStatusOption("^C","Quit", false) +
-		renderStatusOption("^Space","Switch view", false) +
-		renderStatusOption("^/","Filter files", Views.Filter.IsVisible())
+	return renderStatusOption("^C", "Quit", false) +
+		renderStatusOption("^Space", "Switch view", false) +
+		renderStatusOption("^/", "Filter files", Views.Filter.IsVisible())
 }

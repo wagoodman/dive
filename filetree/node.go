@@ -15,10 +15,10 @@ const (
 	AttributeFormat = "%s%s %10s %10s "
 )
 
-var diffTypeColor = map[DiffType]*color.Color {
-	Added: color.New(color.FgGreen),
-	Removed: color.New(color.FgRed),
-	Changed: color.New(color.FgYellow),
+var diffTypeColor = map[DiffType]*color.Color{
+	Added:     color.New(color.FgGreen),
+	Removed:   color.New(color.FgRed),
+	Changed:   color.New(color.FgYellow),
 	Unchanged: color.New(color.Reset),
 }
 

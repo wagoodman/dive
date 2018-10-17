@@ -42,7 +42,7 @@ func Efficiency(trees []*FileTree) (float64, EfficiencySlice) {
 		if _, ok := efficiencyMap[path]; !ok {
 			efficiencyMap[path] = &EfficiencyData{
 				Path:              path,
-				Nodes:             make([]*FileNode,0),
+				Nodes:             make([]*FileNode, 0),
 				minDiscoveredSize: -1,
 			}
 		}
@@ -66,7 +66,6 @@ func Efficiency(trees []*FileTree) (float64, EfficiencySlice) {
 		tree.VisitDepthChildFirst(visitor, visitEvaluator)
 	}
 
-
 	// calculate the score
 	var minimumPathSizes int64
 	var discoveredPathSizes int64
@@ -81,5 +80,3 @@ func Efficiency(trees []*FileTree) (float64, EfficiencySlice) {
 
 	return score, inefficientMatches
 }
-
-

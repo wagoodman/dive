@@ -55,7 +55,9 @@ func (view *FilterView) Setup(v *gocui.View, header *gocui.View) error {
 
 // IsVisible indicates if the filter view pane is currently initialized
 func (view *FilterView) IsVisible() bool {
-	if view == nil {return false}
+	if view == nil {
+		return false
+	}
 	return !view.hidden
 }
 

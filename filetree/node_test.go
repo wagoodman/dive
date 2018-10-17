@@ -44,7 +44,6 @@ func TestAddChild(t *testing.T) {
 		t.Errorf("Expected 'ones' payload to be %+v got %+v.", expectedFC, actualFC)
 	}
 
-
 }
 
 func TestRemoveChild(t *testing.T) {

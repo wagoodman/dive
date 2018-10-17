@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/fatih/color"
 	"github.com/jroimartin/gocui"
 	"github.com/wagoodman/dive/filetree"
 	"github.com/wagoodman/dive/image"
-	"github.com/fatih/color"
 	"os"
 	"runtime"
 	"runtime/pprof"
@@ -35,14 +35,14 @@ func debugPrint(s string) {
 
 // Formatting defines standard functions for formatting UI sections.
 var Formatting struct {
-	Header        func(...interface{})(string)
-	Selected      func(...interface{})(string)
-	StatusSelected      func(...interface{})(string)
-	StatusNormal      func(...interface{})(string)
-	StatusControlSelected      func(...interface{})(string)
-	StatusControlNormal      func(...interface{})(string)
-	CompareTop    func(...interface{})(string)
-	CompareBottom func(...interface{})(string)
+	Header                func(...interface{}) string
+	Selected              func(...interface{}) string
+	StatusSelected        func(...interface{}) string
+	StatusNormal          func(...interface{}) string
+	StatusControlSelected func(...interface{}) string
+	StatusControlNormal   func(...interface{}) string
+	CompareTop            func(...interface{}) string
+	CompareBottom         func(...interface{}) string
 }
 
 // Views contains all rendered UI panes.
@@ -84,7 +84,7 @@ func toggleView(g *gocui.Gui, v *gocui.View) error {
 func toggleFilterView(g *gocui.Gui, v *gocui.View) error {
 	// delete all user input from the tree view
 	Views.Filter.view.Clear()
-	Views.Filter.view.SetCursor(0,0)
+	Views.Filter.view.SetCursor(0, 0)
 
 	// toggle hiding
 	Views.Filter.hidden = !Views.Filter.hidden
@@ -179,7 +179,6 @@ func isNewView(errs ...error) bool {
 	return true
 }
 
-
 // layout defines the definition of the window pane size and placement relations to one another. This
 // is invoked at application start and whenever the screen dimensions change.
 func layout(g *gocui.Gui) error {
@@ -255,11 +254,10 @@ func layout(g *gocui.Gui) error {
 
 	// Filter Bar
 	view, viewErr = g.SetView(Views.Filter.Name, len(Views.Filter.headerStr)-1, maxY-filterBarHeight-filterBarIndex, maxX, maxY-(filterBarIndex-1))
-	header, headerErr = g.SetView(Views.Filter.Name+"header", -1, maxY-filterBarHeight - filterBarIndex, len(Views.Filter.headerStr), maxY-(filterBarIndex-1))
+	header, headerErr = g.SetView(Views.Filter.Name+"header", -1, maxY-filterBarHeight-filterBarIndex, len(Views.Filter.headerStr), maxY-(filterBarIndex-1))
 	if isNewView(viewErr, headerErr) {
 		Views.Filter.Setup(view, header)
 	}
-
 
 	return nil
 }
@@ -283,9 +281,9 @@ func Render() {
 // renderStatusOption formats key help bindings-to-title pairs.
 func renderStatusOption(control, title string, selected bool) string {
 	if selected {
-		return Formatting.StatusSelected("▏") + Formatting.StatusControlSelected(control) +  Formatting.StatusSelected("  " + title + " ")
+		return Formatting.StatusSelected("▏") + Formatting.StatusControlSelected(control) + Formatting.StatusSelected("  "+title+" ")
 	} else {
-		return Formatting.StatusNormal("▏") + Formatting.StatusControlNormal(control) +  Formatting.StatusNormal("  " + title + " ")
+		return Formatting.StatusNormal("▏") + Formatting.StatusControlNormal(control) + Formatting.StatusNormal("  "+title+" ")
 	}
 }
 
@@ -312,7 +310,7 @@ func Run(layers []*image.Layer, refTrees []*filetree.FileTree) {
 	Views.Layer = NewLayerView("side", g, layers)
 	Views.lookup[Views.Layer.Name] = Views.Layer
 
-	Views.Tree = NewFileTreeView("main", g, filetree.StackRange(refTrees, 0,0), refTrees)
+	Views.Tree = NewFileTreeView("main", g, filetree.StackRange(refTrees, 0, 0), refTrees)
 	Views.lookup[Views.Tree.Name] = Views.Tree
 
 	Views.Status = NewStatusView("status", g)
@@ -323,7 +321,6 @@ func Run(layers []*image.Layer, refTrees []*filetree.FileTree) {
 
 	Views.Details = NewDetailsView("details", g)
 	Views.lookup[Views.Details.Name] = Views.Details
-
 
 	g.Cursor = false
 	//g.Mouse = true

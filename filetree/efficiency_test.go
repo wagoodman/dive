@@ -47,4 +47,3 @@ package filetree
 // 		t.Fatalf("Expected %f but got %f", expected, actual)
 // 	}
 // }
-

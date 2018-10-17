@@ -17,9 +17,9 @@ const (
 
 // NodeData is the payload for a FileNode
 type NodeData struct {
-	ViewInfo  ViewInfo
-	FileInfo  FileInfo
-	DiffType  DiffType
+	ViewInfo ViewInfo
+	FileInfo FileInfo
+	DiffType DiffType
 }
 
 // ViewInfo contains UI specific detail for a specific FileNode
@@ -40,7 +40,7 @@ type FileInfo struct {
 type DiffType int
 
 // NewNodeData creates an empty NodeData struct for a FileNode
-func NewNodeData() (*NodeData) {
+func NewNodeData() *NodeData {
 	return &NodeData{
 		ViewInfo: *NewViewInfo(),
 		FileInfo: FileInfo{},
@@ -49,7 +49,7 @@ func NewNodeData() (*NodeData) {
 }
 
 // Copy duplicates a NodeData
-func (data *NodeData) Copy() (*NodeData) {
+func (data *NodeData) Copy() *NodeData {
 	return &NodeData{
 		ViewInfo: *data.ViewInfo.Copy(),
 		FileInfo: *data.FileInfo.Copy(),
@@ -57,12 +57,11 @@ func (data *NodeData) Copy() (*NodeData) {
 	}
 }
 
-
 // NewViewInfo creates a default ViewInfo
 func NewViewInfo() (view *ViewInfo) {
 	return &ViewInfo{
 		Collapsed: false,
-		Hidden: false,
+		Hidden:    false,
 	}
 }
 
@@ -120,7 +119,6 @@ func (data *FileInfo) Compare(other FileInfo) DiffType {
 	return Changed
 }
 
-
 // String of a DiffType
 func (diff DiffType) String() string {
 	switch diff {
@@ -145,5 +143,3 @@ func (diff DiffType) merge(other DiffType) DiffType {
 	}
 	return Changed
 }
-
-

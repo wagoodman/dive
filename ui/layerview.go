@@ -3,22 +3,22 @@ package ui
 import (
 	"fmt"
 
-	"github.com/jroimartin/gocui"
-	"github.com/wagoodman/dive/image"
-	"github.com/lunixbochs/vtclean"
 	"github.com/dustin/go-humanize"
+	"github.com/jroimartin/gocui"
+	"github.com/lunixbochs/vtclean"
+	"github.com/wagoodman/dive/image"
 	"strings"
 )
 
 // LayerView holds the UI objects and data models for populating the lower-left pane. Specifically the pane that
 // shows the image layers and layer selector.
 type LayerView struct {
-	Name       string
-	gui        *gocui.Gui
-	view       *gocui.View
-	header     *gocui.View
-	LayerIndex int
-	Layers     []*image.Layer
+	Name              string
+	gui               *gocui.Gui
+	view              *gocui.View
+	header            *gocui.View
+	LayerIndex        int
+	Layers            []*image.Layer
 	CompareMode       CompareType
 	CompareStartIndex int
 }
@@ -69,7 +69,9 @@ func (view *LayerView) Setup(v *gocui.View, header *gocui.View) error {
 
 // IsVisible indicates if the layer view pane is currently initialized.
 func (view *LayerView) IsVisible() bool {
-	if view == nil {return false}
+	if view == nil {
+		return false
+	}
 	return true
 }
 
@@ -78,7 +80,7 @@ func (view *LayerView) CursorDown() error {
 	if view.LayerIndex < len(view.Layers) {
 		err := CursorDown(view.gui, view.view)
 		if err == nil {
-			view.SetCursor(view.LayerIndex+1)
+			view.SetCursor(view.LayerIndex + 1)
 		}
 	}
 	return nil
@@ -89,7 +91,7 @@ func (view *LayerView) CursorUp() error {
 	if view.LayerIndex > 0 {
 		err := CursorUp(view.gui, view.view)
 		if err == nil {
-			view.SetCursor(view.LayerIndex-1)
+			view.SetCursor(view.LayerIndex - 1)
 		}
 	}
 	return nil
@@ -127,11 +129,11 @@ func (view *LayerView) getCompareIndexes() (bottomTreeStart, bottomTreeStop, top
 		bottomTreeStop = view.LayerIndex
 		topTreeStart = view.LayerIndex
 	} else if view.CompareMode == CompareLayer {
-		bottomTreeStop = view.LayerIndex -1
+		bottomTreeStop = view.LayerIndex - 1
 		topTreeStart = view.LayerIndex
 	} else {
 		bottomTreeStop = view.CompareStartIndex
-		topTreeStart = view.CompareStartIndex+1
+		topTreeStart = view.CompareStartIndex + 1
 	}
 
 	return bottomTreeStart, bottomTreeStop, topTreeStart, topTreeStop
@@ -165,7 +167,7 @@ func (view *LayerView) Render() error {
 	// indicate when selected
 	title := "Layers"
 	if view.gui.CurrentView() == view.view {
-		title = "● "+title
+		title = "● " + title
 	}
 
 	view.gui.Update(func(g *gocui.Gui) error {
@@ -180,7 +182,7 @@ func (view *LayerView) Render() error {
 		view.view.Clear()
 		for revIdx := len(view.Layers) - 1; revIdx >= 0; revIdx-- {
 			layer := view.Layers[revIdx]
-			idx := (len(view.Layers)-1) - revIdx
+			idx := (len(view.Layers) - 1) - revIdx
 
 			layerStr := layer.String()
 			if idx == 0 {
@@ -197,9 +199,9 @@ func (view *LayerView) Render() error {
 			compareBar := view.renderCompareBar(idx)
 
 			if idx == view.LayerIndex {
-				fmt.Fprintln(view.view, compareBar + "  " + Formatting.Selected(layerStr))
+				fmt.Fprintln(view.view, compareBar+"  "+Formatting.Selected(layerStr))
 			} else {
-				fmt.Fprintln(view.view, compareBar + "  " + layerStr)
+				fmt.Fprintln(view.view, compareBar+"  "+layerStr)
 			}
 
 		}
@@ -208,9 +210,8 @@ func (view *LayerView) Render() error {
 	return nil
 }
 
-
 // KeyHelp indicates all the possible actions a user can take while the current pane is selected.
 func (view *LayerView) KeyHelp() string {
-	return  renderStatusOption("^L","Show layer changes", view.CompareMode == CompareLayer) +
-			renderStatusOption("^A","Show aggregated changes", view.CompareMode == CompareAll)
+	return renderStatusOption("^L", "Show layer changes", view.CompareMode == CompareLayer) +
+		renderStatusOption("^A", "Show aggregated changes", view.CompareMode == CompareAll)
 }

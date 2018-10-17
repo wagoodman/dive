@@ -1,10 +1,10 @@
 package image
 
 import (
-	"github.com/wagoodman/dive/filetree"
-	"strings"
 	"fmt"
 	"github.com/dustin/go-humanize"
+	"github.com/wagoodman/dive/filetree"
+	"strings"
 )
 
 const (
@@ -14,7 +14,7 @@ const (
 // Layer represents a Docker image layer and metadata
 type Layer struct {
 	TarPath  string
-	History ImageHistoryEntry
+	History  ImageHistoryEntry
 	Index    int
 	Tree     *filetree.FileTree
 	RefTrees []*filetree.FileTree
@@ -44,4 +44,3 @@ func (layer *Layer) String() string {
 		humanize.Bytes(uint64(layer.History.Size)),
 		strings.TrimPrefix(layer.History.CreatedBy, "/bin/sh -c "))
 }
-

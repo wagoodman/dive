@@ -25,12 +25,11 @@ import (
 )
 
 var (
-	version            = "No version provided"
-	commit             = "No commit provided"
-	buildTime          = "No build timestamp provided"
+	version   = "No version provided"
+	commit    = "No commit provided"
+	buildTime = "No build timestamp provided"
 )
 
 func main() {
 	cmd.Execute()
 }
-

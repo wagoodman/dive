@@ -1,12 +1,12 @@
 package cmd
 
 import (
-	"github.com/spf13/cobra"
 	"fmt"
-	"os"
+	"github.com/fatih/color"
+	"github.com/spf13/cobra"
 	"github.com/wagoodman/dive/image"
 	"github.com/wagoodman/dive/ui"
-	"github.com/fatih/color"
+	"os"
 )
 
 // analyze takes a docker image tag, digest, or id and displayes the

@@ -2,9 +2,9 @@ package filetree
 
 import (
 	"fmt"
-	"strings"
 	"github.com/satori/go.uuid"
 	"sort"
+	"strings"
 )
 
 const (
@@ -20,11 +20,11 @@ const (
 
 // FileTree represents a set of files, directories, and their relations.
 type FileTree struct {
-	Root *FileNode
-	Size int
+	Root     *FileNode
+	Size     int
 	FileSize uint64
-	Name string
-	Id   uuid.UUID
+	Name     string
+	Id       uuid.UUID
 }
 
 // NewFileTree creates an empty FileTree
@@ -40,23 +40,23 @@ func NewFileTree() (tree *FileTree) {
 
 // renderParams is a representation of a FileNode in the context of the greater tree. All
 // data stored is necessary for rendering a single line in a tree format.
-type renderParams struct{
-	node *FileNode
-	spaces []bool
-	childSpaces []bool
+type renderParams struct {
+	node          *FileNode
+	spaces        []bool
+	childSpaces   []bool
 	showCollapsed bool
-	isLast bool
+	isLast        bool
 }
 
 // renderStringTreeBetween returns a string representing the given tree between the given rows. Since each node
 // is rendered on its own line, the returned string shows the visible nodes not affected by a collapsed parent.
 func (tree *FileTree) renderStringTreeBetween(startRow, stopRow int, showAttributes bool) string {
 	// generate a list of nodes to render
-	var params = make([]renderParams,0)
+	var params = make([]renderParams, 0)
 	var result string
 
 	// visit from the front of the list
-	var paramsToVisit = []renderParams{ {node: tree.Root, spaces: []bool{}, showCollapsed: false, isLast: false} }
+	var paramsToVisit = []renderParams{{node: tree.Root, spaces: []bool{}, showCollapsed: false, isLast: false}}
 	for currentRow := 0; len(paramsToVisit) > 0 && currentRow <= stopRow; currentRow++ {
 		// pop the first node
 		var currentParams renderParams
@@ -70,7 +70,7 @@ func (tree *FileTree) renderStringTreeBetween(startRow, stopRow int, showAttribu
 		// we should always visit nodes in order
 		sort.Strings(keys)
 
-		var childParams = make([]renderParams,0)
+		var childParams = make([]renderParams, 0)
 		for idx, name := range keys {
 			child := currentParams.node.Children[name]
 			// don't visit this node...
@@ -91,11 +91,11 @@ func (tree *FileTree) renderStringTreeBetween(startRow, stopRow int, showAttribu
 			}
 
 			childParams = append(childParams, renderParams{
-				node: child,
-				spaces: currentParams.childSpaces,
-				childSpaces: childSpaces,
+				node:          child,
+				spaces:        currentParams.childSpaces,
+				childSpaces:   childSpaces,
 				showCollapsed: showCollapsed,
-				isLast: isLast,
+				isLast:        isLast,
 			})
 		}
 		// keep the child nodes to visit later

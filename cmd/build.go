@@ -1,23 +1,23 @@
 package cmd
 
 import (
-	"github.com/spf13/cobra"
-	"os/exec"
-	"os"
-	"strings"
-	"io/ioutil"
 	log "github.com/sirupsen/logrus"
+	"github.com/spf13/cobra"
 	"github.com/wagoodman/dive/image"
 	"github.com/wagoodman/dive/ui"
+	"io/ioutil"
+	"os"
+	"os/exec"
+	"strings"
 )
 
 // buildCmd represents the build command
 var buildCmd = &cobra.Command{
-	Use:   "build",
-	Short: "Build and analyze a docker image",
-	Long: `Build and analyze a docker image`,
+	Use:                "build",
+	Short:              "Build and analyze a docker image",
+	Long:               `Build and analyze a docker image`,
 	DisableFlagParsing: true,
-	Run: doBuild,
+	Run:                doBuild,
 }
 
 func init() {
@@ -48,7 +48,7 @@ func doBuild(cmd *cobra.Command, args []string) {
 }
 
 // runDockerCmd runs a given Docker command in the current tty
-func runDockerCmd(cmdStr string, args... string) error {
+func runDockerCmd(cmdStr string, args ...string) error {
 
 	allArgs := cleanArgs(append([]string{cmdStr}, args...))
 

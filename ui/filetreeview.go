@@ -6,8 +6,8 @@ import (
 	"strings"
 
 	"github.com/jroimartin/gocui"
-	"github.com/wagoodman/dive/filetree"
 	"github.com/lunixbochs/vtclean"
+	"github.com/wagoodman/dive/filetree"
 )
 
 const (
@@ -102,7 +102,9 @@ func (view *FileTreeView) height() uint {
 
 // IsVisible indicates if the file tree view pane is currently initialized
 func (view *FileTreeView) IsVisible() bool {
-	if view == nil {return false}
+	if view == nil {
+		return false
+	}
 	return true
 }
 
@@ -177,7 +179,6 @@ func (view *FileTreeView) CursorDown() error {
 	view.doCursorDown()
 	return view.Render()
 }
-
 
 // CursorUp moves the cursor up and renders the view.
 // Note: we cannot use the gocui buffer since any state change requires writing the entire tree to the buffer.
@@ -303,7 +304,7 @@ func (view *FileTreeView) Update() error {
 
 // Render flushes the state objects (file tree) to the pane.
 func (view *FileTreeView) Render() error {
-	treeString := view.ViewTree.StringBetween(view.bufferIndexLowerBound, view.bufferIndexUpperBound,true)
+	treeString := view.ViewTree.StringBetween(view.bufferIndexLowerBound, view.bufferIndexUpperBound, true)
 	lines := strings.Split(treeString, "\n")
 
 	// undo a cursor down that has gone past bottom of the visible tree
@@ -318,7 +319,7 @@ func (view *FileTreeView) Render() error {
 
 	// indicate when selected
 	if view.gui.CurrentView() == view.view {
-		title = "● "+title
+		title = "● " + title
 	}
 
 	view.gui.Update(func(g *gocui.Gui) error {
@@ -346,9 +347,9 @@ func (view *FileTreeView) Render() error {
 
 // KeyHelp indicates all the possible actions a user can take while the current pane is selected.
 func (view *FileTreeView) KeyHelp() string {
-	return  renderStatusOption("Space","Collapse dir", false) +
-		renderStatusOption("^A","Added files", !view.HiddenDiffTypes[filetree.Added]) +
-		renderStatusOption("^R","Removed files", !view.HiddenDiffTypes[filetree.Removed]) +
-		renderStatusOption("^M","Modified files", !view.HiddenDiffTypes[filetree.Changed]) +
-		renderStatusOption("^U","Unmodified files", !view.HiddenDiffTypes[filetree.Unchanged])
+	return renderStatusOption("Space", "Collapse dir", false) +
+		renderStatusOption("^A", "Added files", !view.HiddenDiffTypes[filetree.Added]) +
+		renderStatusOption("^R", "Removed files", !view.HiddenDiffTypes[filetree.Removed]) +
+		renderStatusOption("^M", "Modified files", !view.HiddenDiffTypes[filetree.Changed]) +
+		renderStatusOption("^U", "Unmodified files", !view.HiddenDiffTypes[filetree.Unchanged])
 }

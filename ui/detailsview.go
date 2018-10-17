@@ -3,22 +3,22 @@ package ui
 import (
 	"fmt"
 
+	"github.com/dustin/go-humanize"
 	"github.com/jroimartin/gocui"
 	"github.com/lunixbochs/vtclean"
-	"strings"
 	"github.com/wagoodman/dive/filetree"
 	"strconv"
-	"github.com/dustin/go-humanize"
+	"strings"
 )
 
 // DetailsView holds the UI objects and data models for populating the lower-left pane. Specifically the pane that
 // shows the layer details and image statistics.
 type DetailsView struct {
-	Name       string
-	gui        *gocui.Gui
-	view       *gocui.View
-	header     *gocui.View
-	efficiency float64
+	Name           string
+	gui            *gocui.Gui
+	view           *gocui.View
+	header         *gocui.View
+	efficiency     float64
 	inefficiencies filetree.EfficiencySlice
 }
 
@@ -61,7 +61,9 @@ func (view *DetailsView) Setup(v *gocui.View, header *gocui.View) error {
 
 // IsVisible indicates if the details view pane is currently initialized.
 func (view *DetailsView) IsVisible() bool {
-	if view == nil {return false}
+	if view == nil {
+		return false
+	}
 	return true
 }
 
@@ -95,7 +97,7 @@ func (view *DetailsView) Render() error {
 	template := "%5s  %12s  %-s\n"
 	var trueInefficiencies int
 	inefficiencyReport := fmt.Sprintf(Formatting.Header(template), "Count", "Total Space", "Path")
-	for idx := len(view.inefficiencies)-1; idx > 0; idx-- {
+	for idx := len(view.inefficiencies) - 1; idx > 0; idx-- {
 		data := view.inefficiencies[idx]
 		if data.CumulativeSize == 0 {
 			continue
@@ -109,13 +111,13 @@ func (view *DetailsView) Render() error {
 	}
 
 	effStr := fmt.Sprintf("\n%s %d %%", Formatting.Header("Image efficiency score:"), int(100.0*view.efficiency))
-	spaceStr := fmt.Sprintf("%s %s\n", Formatting.Header("Potential wasted space:"),  humanize.Bytes(uint64(wastedSpace)))
+	spaceStr := fmt.Sprintf("%s %s\n", Formatting.Header("Potential wasted space:"), humanize.Bytes(uint64(wastedSpace)))
 
 	view.gui.Update(func(g *gocui.Gui) error {
 		// update header
 		view.header.Clear()
 		width, _ := g.Size()
-		headerStr := fmt.Sprintf("[Image & Layer Details]%s", strings.Repeat("─",width*2))
+		headerStr := fmt.Sprintf("[Image & Layer Details]%s", strings.Repeat("─", width*2))
 		fmt.Fprintln(view.header, Formatting.Header(vtclean.Clean(headerStr, false)))
 
 		// update contents

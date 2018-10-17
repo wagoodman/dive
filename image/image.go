@@ -13,10 +13,10 @@ import (
 	"strings"
 
 	"github.com/docker/docker/client"
-	"github.com/wagoodman/dive/filetree"
-	"golang.org/x/net/context"
-	"github.com/wagoodman/jotframe"
 	"github.com/k0kubun/go-ansi"
+	"github.com/wagoodman/dive/filetree"
+	"github.com/wagoodman/jotframe"
+	"golang.org/x/net/context"
 )
 
 // TODO: this file should be rethought... but since it's only for preprocessing it'll be tech debt for now.
@@ -28,12 +28,12 @@ func check(e error) {
 }
 
 type ProgressBar struct {
-	percent     int
-	rawTotal    int64
-	rawCurrent  int64
+	percent    int
+	rawTotal   int64
+	rawCurrent int64
 }
 
-func NewProgressBar(total int64) *ProgressBar{
+func NewProgressBar(total int64) *ProgressBar {
 	return &ProgressBar{
 		rawTotal: total,
 	}
@@ -46,7 +46,7 @@ func (pb *ProgressBar) Done() {
 
 func (pb *ProgressBar) Update(currentValue int64) (hasChanged bool) {
 	pb.rawCurrent = currentValue
-	percent := int(100.0*(float64(pb.rawCurrent) / float64(pb.rawTotal)))
+	percent := int(100.0 * (float64(pb.rawCurrent) / float64(pb.rawTotal)))
 	if percent != pb.percent {
 		hasChanged = true
 	}
@@ -56,7 +56,7 @@ func (pb *ProgressBar) Update(currentValue int64) (hasChanged bool) {
 
 func (pb *ProgressBar) String() string {
 	width := 40
-	done := int((pb.percent*width)/100.0)
+	done := int((pb.percent * width) / 100.0)
 	todo := width - done
 	head := 1
 	// if pb.percent >= 100 {
@@ -74,21 +74,21 @@ type ImageManifest struct {
 
 type ImageConfig struct {
 	History []ImageHistoryEntry `json:"history"`
-	RootFs RootFs `json:"rootfs"`
+	RootFs  RootFs              `json:"rootfs"`
 }
 
 type RootFs struct {
-	Type string `json:"type"`
+	Type    string   `json:"type"`
 	DiffIds []string `json:"diff_ids"`
 }
 
 type ImageHistoryEntry struct {
-	ID string
-	Size uint64
-	Created string `json:"created"`
-	Author string `json:"author"`
-	CreatedBy string `json:"created_by"`
-	EmptyLayer bool `json:"empty_layer"`
+	ID         string
+	Size       uint64
+	Created    string `json:"created"`
+	Author     string `json:"author"`
+	CreatedBy  string `json:"created_by"`
+	EmptyLayer bool   `json:"empty_layer"`
 }
 
 func NewImageManifest(reader *tar.Reader, header *tar.Header) ImageManifest {
@@ -132,7 +132,7 @@ func NewImageConfig(reader *tar.Reader, header *tar.Header) ImageConfig {
 	return imageConfig
 }
 
-func GetImageConfig(imageTarPath string, manifest ImageManifest) ImageConfig{
+func GetImageConfig(imageTarPath string, manifest ImageManifest) ImageConfig {
 	var config ImageConfig
 	// read through the image contents and build a tree
 	fmt.Println("  Fetching image config...")
@@ -239,7 +239,7 @@ func InitializeData(imageID string) ([]*Layer, []*filetree.FileTree) {
 		}
 
 		observedBytes += header.Size
-		percent = int(100.0*(float64(observedBytes) / float64(totalSize)))
+		percent = int(100.0 * (float64(observedBytes) / float64(totalSize)))
 		io.WriteString(frame.Header(), fmt.Sprintf("  Discovering layers... %d %%", percent))
 
 		name := header.Name
@@ -254,7 +254,7 @@ func InitializeData(imageID string) ([]*Layer, []*filetree.FileTree) {
 					panic(err)
 				}
 				shortName := name[:15]
-				io.WriteString(line, "    ├─ " + shortName + " : loading...")
+				io.WriteString(line, "    ├─ "+shortName+" : loading...")
 
 				var tarredBytes = make([]byte, header.Size)
 
@@ -262,7 +262,6 @@ func InitializeData(imageID string) ([]*Layer, []*filetree.FileTree) {
 				if err != nil && err != io.EOF {
 					panic(err)
 				}
-
 
 				go processLayerTar(line, layerMap, name, tarredBytes)
 
@@ -292,7 +291,7 @@ func InitializeData(imageID string) ([]*Layer, []*filetree.FileTree) {
 
 	// note that the image config stores images in reverse chronological order, so iterate backwards through layers
 	// as you iterate chronologically through history (ignoring history items that have no layer contents)
-	layerIdx := len(trees)-1
+	layerIdx := len(trees) - 1
 	for idx := 0; idx < len(config.History); idx++ {
 		// ignore empty layers, we are only observing layers with content
 		if config.History[idx].EmptyLayer {
@@ -302,9 +301,9 @@ func InitializeData(imageID string) ([]*Layer, []*filetree.FileTree) {
 		config.History[idx].Size = uint64(trees[(len(trees)-1)-layerIdx].FileSize)
 
 		layers[layerIdx] = &Layer{
-			History: config.History[idx],
-			Index: layerIdx,
-			Tree: trees[layerIdx],
+			History:  config.History[idx],
+			Index:    layerIdx,
+			Tree:     trees[layerIdx],
 			RefTrees: trees,
 		}
 

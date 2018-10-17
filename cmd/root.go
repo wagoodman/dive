@@ -2,11 +2,11 @@ package cmd
 
 import (
 	"fmt"
-	"os"
 	"github.com/mitchellh/go-homedir"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	log "github.com/sirupsen/logrus"
+	"os"
 )
 
 var cfgFile string
@@ -15,9 +15,9 @@ var cfgFile string
 var rootCmd = &cobra.Command{
 	Use:   "dive",
 	Short: "Docker Image Visualizer & Explorer",
-	Long: `Docker Image Visualizer & Explorer`,
-	Args: cobra.ExactArgs(1),
-	Run: analyze,
+	Long:  `Docker Image Visualizer & Explorer`,
+	Args:  cobra.ExactArgs(1),
+	Run:   analyze,
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -73,7 +73,7 @@ func initLogging() {
 	// TODO: clean this up and make more configurable
 	var filename string = "dive.log"
 	// create the log file if doesn't exist. And append to it if it already exists.
-	f, err := os.OpenFile(filename, os.O_WRONLY | os.O_APPEND | os.O_CREATE, 0644)
+	f, err := os.OpenFile(filename, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
 	Formatter := new(log.TextFormatter)
 	Formatter.DisableTimestamp = true
 	log.SetFormatter(Formatter)
@@ -81,7 +81,7 @@ func initLogging() {
 	if err != nil {
 		// cannot open log file. Logging to stderr
 		fmt.Println(err)
-	}else{
+	} else {
 		log.SetOutput(f)
 	}
 	log.Debug("Starting Dive...")
