@@ -9,6 +9,10 @@ run: build
 build:
 	go build -o build/$(BIN)
 
+release: test
+	./.scripts/tag.sh
+	goreleaser --rm-dist
+
 install:
 	go install ./...
 
@@ -23,4 +27,4 @@ clean:
 	rm -rf vendor
 	go clean
 
-.PHONY: build install test lint clean
+.PHONY: build install test lint clean release

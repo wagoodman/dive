@@ -1,0 +1,26 @@
+release:
+  prerelease: true
+
+builds:
+  - binary: dive
+    goos:
+      - darwin
+      - linux
+    goarch:
+      - amd64
+    ldflags: -s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.buildTime={{.Date}}`.
+
+archive:
+  format: tar.gz
+
+fpm:
+  license: MIT
+  homepage: https://github.com/wagoodman/dive/
+  formats:
+    - deb
+    - rpm
+
+brew:
+  github:
+    owner: wagoodman
+    name: homebrew-dive

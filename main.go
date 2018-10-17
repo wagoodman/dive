@@ -24,6 +24,12 @@ import (
 	"github.com/wagoodman/dive/cmd"
 )
 
+var (
+	version            = "No version provided"
+	commit             = "No commit provided"
+	buildTime          = "No build timestamp provided"
+)
+
 func main() {
 	cmd.Execute()
 }
