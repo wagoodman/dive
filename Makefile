@@ -4,7 +4,7 @@ all: clean build
 
 run: build
 	docker image ls | grep "dive-test" >/dev/null || docker build -t dive-test:latest .
-	./build/$(BIN) die-test
+	./build/$(BIN) dive-test
 
 build:
 	go build -o build/$(BIN)

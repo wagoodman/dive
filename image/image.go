@@ -15,12 +15,55 @@ import (
 	"github.com/docker/docker/client"
 	"github.com/wagoodman/dive/filetree"
 	"golang.org/x/net/context"
+	"github.com/wagoodman/jotframe"
+	"github.com/k0kubun/go-ansi"
 )
+
+// TODO: this file should be rethought... but since it's only for preprocessing it'll be tech debt for now.
 
 func check(e error) {
 	if e != nil {
 		panic(e)
 	}
+}
+
+type ProgressBar struct {
+	percent     int
+	rawTotal    int64
+	rawCurrent  int64
+}
+
+func NewProgressBar(total int64) *ProgressBar{
+	return &ProgressBar{
+		rawTotal: total,
+	}
+}
+
+func (pb *ProgressBar) Done() {
+	pb.rawCurrent = pb.rawTotal
+	pb.percent = 100
+}
+
+func (pb *ProgressBar) Update(currentValue int64) (hasChanged bool) {
+	pb.rawCurrent = currentValue
+	percent := int(100.0*(float64(pb.rawCurrent) / float64(pb.rawTotal)))
+	if percent != pb.percent {
+		hasChanged = true
+	}
+	pb.percent = percent
+	return hasChanged
+}
+
+func (pb *ProgressBar) String() string {
+	width := 40
+	done := int((pb.percent*width)/100.0)
+	todo := width - done
+	head := 1
+	// if pb.percent >= 100 {
+	// 	head = 0
+	// }
+
+	return "[" + strings.Repeat("=", done) + strings.Repeat(">", head) + strings.Repeat(" ", todo) + "]" + fmt.Sprintf(" %d %% (%d/%d)", pb.percent, pb.rawCurrent, pb.rawTotal)
 }
 
 type ImageManifest struct {
@@ -92,7 +135,7 @@ func NewImageConfig(reader *tar.Reader, header *tar.Header) ImageConfig {
 func GetImageConfig(imageTarPath string, manifest ImageManifest) ImageConfig{
 	var config ImageConfig
 	// read through the image contents and build a tree
-	fmt.Println("Fetching image config...")
+	fmt.Println("  Fetching image config...")
 	tarFile, err := os.Open(imageTarPath)
 	if err != nil {
 		fmt.Println(err)
@@ -123,16 +166,27 @@ func GetImageConfig(imageTarPath string, manifest ImageManifest) ImageConfig{
 	return config
 }
 
-func processTar(layerMap map[string]*filetree.FileTree, name string, tarredBytes []byte) {
+func processLayerTar(line *jotframe.Line, layerMap map[string]*filetree.FileTree, name string, tarredBytes []byte) {
 	tree := filetree.NewFileTree()
 	tree.Name = name
 
 	fileInfos := getFileList(tarredBytes)
-	for _, element := range fileInfos {
+
+	shortName := name[:15]
+	pb := NewProgressBar(int64(len(fileInfos)))
+	for idx, element := range fileInfos {
 		tree.FileSize += uint64(element.TarHeader.FileInfo().Size())
 		tree.AddPath(element.Path, element)
+
+		if pb.Update(int64(idx)) {
+			io.WriteString(line, fmt.Sprintf("    ├─ %s : %s", shortName, pb.String()))
+		}
 	}
+	pb.Done()
+	io.WriteString(line, fmt.Sprintf("    ├─ %s : %s", shortName, pb.String()))
+
 	layerMap[tree.Name] = tree
+	line.Close()
 }
 
 func InitializeData(imageID string) ([]*Layer, []*filetree.FileTree) {
@@ -140,16 +194,16 @@ func InitializeData(imageID string) ([]*Layer, []*filetree.FileTree) {
 	var layerMap = make(map[string]*filetree.FileTree)
 	var trees = make([]*filetree.FileTree, 0)
 
+	ansi.CursorHide()
+
 	// save this image to disk temporarily to get the content info
-	fmt.Println("Fetching image...")
 	imageTarPath, tmpDir := saveImage(imageID)
-	// imageTarPath := "/tmp/dive229500681/image.tar"
-	// tmpDir := "/tmp/dive229500681"
+	// imageTarPath := "/tmp/dive516670682/image.tar"
+	// tmpDir := "/tmp/dive516670682"
 	// fmt.Println(tmpDir)
 	defer os.RemoveAll(tmpDir)
 
 	// read through the image contents and build a tree
-	fmt.Printf("Reading image '%s'...\n", imageID)
 	tarFile, err := os.Open(imageTarPath)
 	if err != nil {
 		fmt.Println(err)
@@ -157,14 +211,25 @@ func InitializeData(imageID string) ([]*Layer, []*filetree.FileTree) {
 	}
 	defer tarFile.Close()
 
+	fi, err := tarFile.Stat()
+	if err != nil {
+		panic(err)
+	}
+	totalSize := fi.Size()
+	var observedBytes int64
+	var percent int
+
 	tarReader := tar.NewReader(tarFile)
+	frame := jotframe.NewFixedFrame(1, true, false, false)
+	lastLine := frame.Lines()[0]
+	io.WriteString(lastLine, "    ╧")
+	lastLine.Close()
 
 	for {
 		header, err := tarReader.Next()
 
-		// log.Debug(header.Name)
-
 		if err == io.EOF {
+			io.WriteString(frame.Header(), "  Discovering layers... Done!")
 			break
 		}
 
@@ -173,23 +238,33 @@ func InitializeData(imageID string) ([]*Layer, []*filetree.FileTree) {
 			os.Exit(1)
 		}
 
+		observedBytes += header.Size
+		percent = int(100.0*(float64(observedBytes) / float64(totalSize)))
+		io.WriteString(frame.Header(), fmt.Sprintf("  Discovering layers... %d %%", percent))
+
 		name := header.Name
 
 		switch header.Typeflag {
 		case tar.TypeDir:
 			continue
 		case tar.TypeReg:
-			// todo: process this loop in parallel, visualize with jotframe
 			if strings.HasSuffix(name, "layer.tar") {
+				line, err := frame.Prepend()
+				if err != nil {
+					panic(err)
+				}
+				shortName := name[:15]
+				io.WriteString(line, "    ├─ " + shortName + " : loading...")
 
 				var tarredBytes = make([]byte, header.Size)
 
-				_, err := tarReader.Read(tarredBytes)
+				_, err = tarReader.Read(tarredBytes)
 				if err != nil && err != io.EOF {
 					panic(err)
 				}
 
-				go processTar(layerMap, name, tarredBytes)
+
+				go processLayerTar(line, layerMap, name, tarredBytes)
 
 			} else if name == "manifest.json" {
 				manifest = NewImageManifest(tarReader, header)
@@ -198,14 +273,17 @@ func InitializeData(imageID string) ([]*Layer, []*filetree.FileTree) {
 			fmt.Printf("ERRG: unknown tar entry: %v: %s\n", header.Typeflag, name)
 		}
 	}
+	frame.Header().Close()
+	frame.Wait()
+	frame.Remove(lastLine)
+	fmt.Println("")
 
 	// obtain the image history
 	config := GetImageConfig(imageTarPath, manifest)
 
 	// build the content tree
-	fmt.Println("Building tree...")
+	fmt.Println("  Building tree...")
 	for _, treeName := range manifest.LayerTarPaths {
-		fmt.Printf("%s : %+v\n", treeName, layerMap[treeName])
 		trees = append(trees, layerMap[treeName])
 	}
 
@@ -236,6 +314,8 @@ func InitializeData(imageID string) ([]*Layer, []*filetree.FileTree) {
 		layerIdx--
 	}
 
+	ansi.CursorShow()
+
 	return layers, trees
 }
 
@@ -245,6 +325,20 @@ func saveImage(imageID string) (string, string) {
 	if err != nil {
 		panic(err)
 	}
+
+	frame := jotframe.NewFixedFrame(0, false, false, true)
+	line, err := frame.Append()
+	check(err)
+	io.WriteString(line, "  Fetching metadata...")
+
+	result, _, err := dockerClient.ImageInspectWithRaw(ctx, imageID)
+	check(err)
+	totalSize := result.Size
+
+	frame.Remove(line)
+	line, err = frame.Append()
+	check(err)
+	io.WriteString(line, "  Fetching image...")
 
 	readCloser, err := dockerClient.ImageSave(ctx, []string{imageID})
 	check(err)
@@ -263,6 +357,9 @@ func saveImage(imageID string) (string, string) {
 		}
 	}()
 	imageWriter := bufio.NewWriter(imageFile)
+	pb := NewProgressBar(totalSize)
+
+	var observedBytes int64
 
 	buf := make([]byte, 1024)
 	for {
@@ -274,6 +371,12 @@ func saveImage(imageID string) (string, string) {
 			break
 		}
 
+		observedBytes += int64(n)
+
+		if pb.Update(observedBytes) {
+			io.WriteString(line, fmt.Sprintf("  Fetching image... %s", pb.String()))
+		}
+
 		if _, err := imageWriter.Write(buf[:n]); err != nil {
 			panic(err)
 		}
@@ -282,6 +385,10 @@ func saveImage(imageID string) (string, string) {
 	if err = imageWriter.Flush(); err != nil {
 		panic(err)
 	}
+
+	pb.Done()
+	io.WriteString(line, fmt.Sprintf("  Fetching image... %s", pb.String()))
+	frame.Close()
 
 	return imageTarPath, tmpDir
 }
