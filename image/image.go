@@ -17,10 +17,6 @@ import (
 	"golang.org/x/net/context"
 )
 
-const (
-	LayerFormat = "%-25s %5s %7s %s"
-)
-
 func check(e error) {
 	if e != nil {
 		panic(e)
@@ -147,13 +143,13 @@ func InitializeData(imageID string) ([]*Layer, []*filetree.FileTree) {
 	// save this image to disk temporarily to get the content info
 	fmt.Println("Fetching image...")
 	imageTarPath, tmpDir := saveImage(imageID)
-	// imageTarPath := "/tmp/dive932744808/image.tar"
-	// tmpDir := "/tmp/dive031537738"
+	// imageTarPath := "/tmp/dive229500681/image.tar"
+	// tmpDir := "/tmp/dive229500681"
 	// fmt.Println(tmpDir)
 	defer os.RemoveAll(tmpDir)
 
 	// read through the image contents and build a tree
-	fmt.Println("Reading image...")
+	fmt.Printf("Reading image '%s'...\n", imageID)
 	tarFile, err := os.Open(imageTarPath)
 	if err != nil {
 		fmt.Println(err)

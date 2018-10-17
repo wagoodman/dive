@@ -4,10 +4,14 @@ import (
 	"github.com/wagoodman/dive/filetree"
 	"strings"
 	"fmt"
-	"strconv"
 	"github.com/dustin/go-humanize"
 )
 
+const (
+	LayerFormat = "%-25s %7s  %s"
+)
+
+// Layer represents a Docker image layer and metadata
 type Layer struct {
 	TarPath  string
 	History ImageHistoryEntry
@@ -16,6 +20,7 @@ type Layer struct {
 	RefTrees []*filetree.FileTree
 }
 
+// Id returns the truncated id of the current layer.
 func (layer *Layer) Id() string {
 	rangeBound := 25
 	if length := len(layer.History.ID); length < 25 {
@@ -31,12 +36,11 @@ func (layer *Layer) Id() string {
 	return id
 }
 
+// String represents a layer in a columnar format.
 func (layer *Layer) String() string {
 
 	return fmt.Sprintf(LayerFormat,
 		layer.Id(),
-		strconv.Itoa(int(100.0*filetree.EfficiencyScore(layer.RefTrees[:layer.Index+1]))) + "%",
-		//"100%",
 		humanize.Bytes(uint64(layer.History.Size)),
 		strings.TrimPrefix(layer.History.CreatedBy, "/bin/sh -c "))
 }

@@ -17,7 +17,8 @@ const (
 
 type CompareType int
 
-
+// FileTreeView holds the UI objects and data models for populating the right pane. Specifically the pane that
+// shows selected layer or aggregate file ASCII tree.
 type FileTreeView struct {
 	Name                  string
 	gui                   *gocui.Gui
@@ -33,19 +34,21 @@ type FileTreeView struct {
 	bufferIndexLowerBound uint
 }
 
-func NewFileTreeView(name string, gui *gocui.Gui, tree *filetree.FileTree, refTrees []*filetree.FileTree) (treeview *FileTreeView) {
-	treeview = new(FileTreeView)
+// NewFileTreeView creates a new view object attached the the global [gocui] screen object.
+func NewFileTreeView(name string, gui *gocui.Gui, tree *filetree.FileTree, refTrees []*filetree.FileTree) (treeView *FileTreeView) {
+	treeView = new(FileTreeView)
 
 	// populate main fields
-	treeview.Name = name
-	treeview.gui = gui
-	treeview.ModelTree = tree
-	treeview.RefTrees = refTrees
-	treeview.HiddenDiffTypes = make([]bool, 4)
+	treeView.Name = name
+	treeView.gui = gui
+	treeView.ModelTree = tree
+	treeView.RefTrees = refTrees
+	treeView.HiddenDiffTypes = make([]bool, 4)
 
-	return treeview
+	return treeView
 }
 
+// Setup initializes the UI concerns within the context of a global [gocui] view object.
 func (view *FileTreeView) Setup(v *gocui.View, header *gocui.View) error {
 
 	// set view options
@@ -91,20 +94,31 @@ func (view *FileTreeView) Setup(v *gocui.View, header *gocui.View) error {
 	return nil
 }
 
+// height obtains the height of the current pane (taking into account the lost space due to headers and footers).
 func (view *FileTreeView) height() uint {
 	_, height := view.view.Size()
 	return uint(height - 2)
 }
 
+// IsVisible indicates if the file tree view pane is currently initialized
 func (view *FileTreeView) IsVisible() bool {
 	if view == nil {return false}
 	return true
 }
 
+// resetCursor moves the cursor back to the top of the buffer and translates to the top of the buffer.
+func (view *FileTreeView) resetCursor() {
+	view.view.SetCursor(0, 0)
+	view.TreeIndex = 0
+	view.bufferIndex = 0
+	view.bufferIndexLowerBound = 0
+	view.bufferIndexUpperBound = view.height()
+}
 
+// setTreeByLayer populates the view model by stacking the indicated image layer file trees.
 func (view *FileTreeView) setTreeByLayer(bottomTreeStart, bottomTreeStop, topTreeStart, topTreeStop int) error {
 	if topTreeStop > len(view.RefTrees)-1 {
-		return fmt.Errorf("Invalid layer index given: %d of %d", topTreeStop, len(view.RefTrees)-1)
+		return fmt.Errorf("invalid layer index given: %d of %d", topTreeStop, len(view.RefTrees)-1)
 	}
 	newTree := filetree.StackRange(view.RefTrees, bottomTreeStart, bottomTreeStop)
 
@@ -122,13 +136,14 @@ func (view *FileTreeView) setTreeByLayer(bottomTreeStart, bottomTreeStop, topTre
 	}
 	view.ModelTree.VisitDepthChildFirst(visitor, nil)
 
-	view.view.SetCursor(0, 0)
-	view.TreeIndex = 0
+	view.resetCursor()
+
 	view.ModelTree = newTree
 	view.Update()
 	return view.Render()
 }
 
+// doCursorUp performs the internal view's buffer adjustments on cursor up. Note: this is independent of the gocui buffer.
 func (view *FileTreeView) doCursorUp() {
 	view.TreeIndex--
 	if view.TreeIndex < view.bufferIndexLowerBound {
@@ -141,6 +156,7 @@ func (view *FileTreeView) doCursorUp() {
 	}
 }
 
+// doCursorDown performs the internal view's buffer adjustments on cursor down. Note: this is independent of the gocui buffer.
 func (view *FileTreeView) doCursorDown() {
 	view.TreeIndex++
 	if view.TreeIndex > view.bufferIndexUpperBound {
@@ -153,22 +169,21 @@ func (view *FileTreeView) doCursorDown() {
 	}
 }
 
+// CursorDown moves the cursor down and renders the view.
+// Note: we cannot use the gocui buffer since any state change requires writing the entire tree to the buffer.
+// Instead we are keeping an upper and lower bounds of the tree string to render and only flushing
+// this range into the view buffer. This is much faster when tree sizes are large.
 func (view *FileTreeView) CursorDown() error {
-	// we cannot use the gocui buffer since any state change requires writing the entire tree to the buffer.
-	// Instead we are keeping an upper and lower bounds of the tree string to render and only flushing
-	// this range into the view buffer. This is much faster when tree sizes are large.
-
 	view.doCursorDown()
 	return view.Render()
 }
 
 
-
+// CursorUp moves the cursor up and renders the view.
+// Note: we cannot use the gocui buffer since any state change requires writing the entire tree to the buffer.
+// Instead we are keeping an upper and lower bounds of the tree string to render and only flushing
+// this range into the view buffer. This is much faster when tree sizes are large.
 func (view *FileTreeView) CursorUp() error {
-	// we cannot use the gocui buffer since any state change requires writing the entire tree to the buffer.
-	// Instead we are keeping an upper and lower bounds of the tree string to render and only flushing
-	// this range into the view buffer. This is much faster when tree sizes are large.
-
 	if view.TreeIndex > 0 {
 		view.doCursorUp()
 		return view.Render()
@@ -176,12 +191,13 @@ func (view *FileTreeView) CursorUp() error {
 	return nil
 }
 
+// getAbsPositionNode determines the selected screen cursor's location in the file tree, returning the selected FileNode.
 func (view *FileTreeView) getAbsPositionNode() (node *filetree.FileNode) {
-	var visiter func(*filetree.FileNode) error
+	var visitor func(*filetree.FileNode) error
 	var evaluator func(*filetree.FileNode) bool
 	var dfsCounter uint
 
-	visiter = func(curNode *filetree.FileNode) error {
+	visitor = func(curNode *filetree.FileNode) error {
 		if dfsCounter == view.TreeIndex {
 			node = curNode
 		}
@@ -207,7 +223,7 @@ func (view *FileTreeView) getAbsPositionNode() (node *filetree.FileNode) {
 		return !curNode.Parent.Data.ViewInfo.Collapsed && !curNode.Data.ViewInfo.Hidden && regexMatch
 	}
 
-	err = view.ModelTree.VisitDepthParentFirst(visiter, evaluator)
+	err = view.ModelTree.VisitDepthParentFirst(visitor, evaluator)
 	if err != nil {
 		panic(err)
 	}
@@ -215,6 +231,7 @@ func (view *FileTreeView) getAbsPositionNode() (node *filetree.FileNode) {
 	return node
 }
 
+// toggleCollapse will collapse/expand the selected FileNode.
 func (view *FileTreeView) toggleCollapse() error {
 	node := view.getAbsPositionNode()
 	if node != nil {
@@ -224,17 +241,18 @@ func (view *FileTreeView) toggleCollapse() error {
 	return view.Render()
 }
 
+// toggleShowDiffType will show/hide the selected DiffType in the filetree pane.
 func (view *FileTreeView) toggleShowDiffType(diffType filetree.DiffType) error {
 	view.HiddenDiffTypes[diffType] = !view.HiddenDiffTypes[diffType]
 
-	view.view.SetCursor(0, 0)
-	view.TreeIndex = 0
+	view.resetCursor()
 
 	Update()
 	Render()
 	return nil
 }
 
+// filterRegex will return a regular expression object to match the user's filter input.
 func filterRegex() *regexp.Regexp {
 	if Views.Filter == nil || Views.Filter.view == nil {
 		return nil
@@ -252,6 +270,7 @@ func filterRegex() *regexp.Regexp {
 	return regex
 }
 
+// Update refreshes the state objects for future rendering.
 func (view *FileTreeView) Update() error {
 	regex := filterRegex()
 
@@ -282,14 +301,7 @@ func (view *FileTreeView) Update() error {
 	return nil
 }
 
-func (view *FileTreeView) KeyHelp() string {
-	return  renderStatusOption("Space","Collapse dir", false) +
-			renderStatusOption("^A","Added files", !view.HiddenDiffTypes[filetree.Added]) +
-			renderStatusOption("^R","Removed files", !view.HiddenDiffTypes[filetree.Removed]) +
-			renderStatusOption("^M","Modified files", !view.HiddenDiffTypes[filetree.Changed]) +
-			renderStatusOption("^U","Unmodified files", !view.HiddenDiffTypes[filetree.Unchanged])
-}
-
+// Render flushes the state objects (file tree) to the pane.
 func (view *FileTreeView) Render() error {
 	treeString := view.ViewTree.StringBetween(view.bufferIndexLowerBound, view.bufferIndexUpperBound,true)
 	lines := strings.Split(treeString, "\n")
@@ -299,10 +311,22 @@ func (view *FileTreeView) Render() error {
 		view.doCursorUp()
 	}
 
+	title := "Current Layer Contents"
+	if Views.Layer.CompareMode == CompareAll {
+		title = "Aggregated Layer Contents"
+	}
+
+	// indicate when selected
+	if view.gui.CurrentView() == view.view {
+		title = "● "+title
+	}
+
 	view.gui.Update(func(g *gocui.Gui) error {
 		// update the header
 		view.header.Clear()
-		headerStr := fmt.Sprintf(filetree.AttributeFormat+" %s", "P", "ermission", "UID:GID", "Size", "Filetree")
+		width, _ := g.Size()
+		headerStr := fmt.Sprintf("[%s]%s\n", title, strings.Repeat("─", width*2))
+		headerStr += fmt.Sprintf(filetree.AttributeFormat+" %s", "P", "ermission", "UID:GID", "Size", "Filetree")
 		fmt.Fprintln(view.header, Formatting.Header(vtclean.Clean(headerStr, false)))
 
 		// update the contents
@@ -318,4 +342,13 @@ func (view *FileTreeView) Render() error {
 		return nil
 	})
 	return nil
+}
+
+// KeyHelp indicates all the possible actions a user can take while the current pane is selected.
+func (view *FileTreeView) KeyHelp() string {
+	return  renderStatusOption("Space","Collapse dir", false) +
+		renderStatusOption("^A","Added files", !view.HiddenDiffTypes[filetree.Added]) +
+		renderStatusOption("^R","Removed files", !view.HiddenDiffTypes[filetree.Removed]) +
+		renderStatusOption("^M","Modified files", !view.HiddenDiffTypes[filetree.Changed]) +
+		renderStatusOption("^U","Unmodified files", !view.HiddenDiffTypes[filetree.Unchanged])
 }

@@ -6,8 +6,8 @@ import (
 	"github.com/jroimartin/gocui"
 )
 
-// with special thanks to https://gist.github.com/jroimartin/3b2e943a3811d795e0718b4a95b89bec
-
+// DetailsView holds the UI objects and data models for populating the bottom row. Specifically the pane that
+// allows the user to filter the file tree by path.
 type FilterView struct {
 	Name      string
 	gui       *gocui.Gui
@@ -18,25 +18,20 @@ type FilterView struct {
 	hidden    bool
 }
 
-type Input struct {
-	name      string
-	x, y      int
-	w         int
-	maxLength int
-}
-
-func NewFilterView(name string, gui *gocui.Gui) (filterview *FilterView) {
-	filterview = new(FilterView)
+// NewFilterView creates a new view object attached the the global [gocui] screen object.
+func NewFilterView(name string, gui *gocui.Gui) (filterView *FilterView) {
+	filterView = new(FilterView)
 
 	// populate main fields
-	filterview.Name = name
-	filterview.gui = gui
-	filterview.headerStr = "Path Filter: "
-	filterview.hidden = true
+	filterView.Name = name
+	filterView.gui = gui
+	filterView.headerStr = "Path Filter: "
+	filterView.hidden = true
 
-	return filterview
+	return filterView
 }
 
+// Setup initializes the UI concerns within the context of a global [gocui] view object.
 func (view *FilterView) Setup(v *gocui.View, header *gocui.View) error {
 
 	// set view options
@@ -53,32 +48,28 @@ func (view *FilterView) Setup(v *gocui.View, header *gocui.View) error {
 	view.header.Wrap = false
 	view.header.Frame = false
 
-	// set keybindings
-	// if err := view.gui.SetKeybinding(view.Name, gocui.KeyArrowDown, gocui.ModNone, func(*gocui.Gui, *gocui.View) error { return view.CursorDown() }); err != nil {
-	// 	return err
-	// }
-	// if err := view.gui.SetKeybinding(view.Name, gocui.KeyArrowUp, gocui.ModNone, func(*gocui.Gui, *gocui.View) error { return view.CursorUp() }); err != nil {
-	// 	return err
-	// }
-
 	view.Render()
 
 	return nil
 }
 
+// IsVisible indicates if the filter view pane is currently initialized
 func (view *FilterView) IsVisible() bool {
 	if view == nil {return false}
 	return !view.hidden
 }
 
+// CursorDown moves the cursor down in the filter pane (currently indicates nothing).
 func (view *FilterView) CursorDown() error {
 	return nil
 }
 
+// CursorUp moves the cursor up in the filter pane (currently indicates nothing).
 func (view *FilterView) CursorUp() error {
 	return nil
 }
 
+// Edit intercepts the key press events in the filer view to update the file view in real time.
 func (view *FilterView) Edit(v *gocui.View, key gocui.Key, ch rune, mod gocui.Modifier) {
 	if !view.IsVisible() {
 		return
@@ -101,14 +92,12 @@ func (view *FilterView) Edit(v *gocui.View, key gocui.Key, ch rune, mod gocui.Mo
 	}
 }
 
-func (view *FilterView) KeyHelp() string {
-	return Formatting.StatusControlNormal("▏Type to filter the file tree ")
-}
-
+// Update refreshes the state objects for future rendering (currently does nothing).
 func (view *FilterView) Update() error {
 	return nil
 }
 
+// Render flushes the state objects to the screen. Currently this is the users path filter input.
 func (view *FilterView) Render() error {
 	view.gui.Update(func(g *gocui.Gui) error {
 		// render the header
@@ -116,6 +105,10 @@ func (view *FilterView) Render() error {
 
 		return nil
 	})
-	// todo: blerg
 	return nil
+}
+
+// KeyHelp indicates all the possible actions a user can take while the current pane is selected.
+func (view *FilterView) KeyHelp() string {
+	return Formatting.StatusControlNormal("▏Type to filter the file tree ")
 }

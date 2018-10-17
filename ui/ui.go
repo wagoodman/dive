@@ -17,6 +17,10 @@ import (
 const debug = false
 const profile = false
 
+var cpuProfilePath *os.File
+var memoryProfilePath *os.File
+
+// debugPrint writes the given string to the debug pane (if the debug pane is enabled)
 func debugPrint(s string) {
 	if debug && Views.Tree != nil && Views.Tree.gui != nil {
 		v, _ := Views.Tree.gui.View("debug")
@@ -29,6 +33,7 @@ func debugPrint(s string) {
 	}
 }
 
+// Formatting defines standard functions for formatting UI sections.
 var Formatting struct {
 	Header        func(...interface{})(string)
 	Selected      func(...interface{})(string)
@@ -40,14 +45,17 @@ var Formatting struct {
 	CompareBottom func(...interface{})(string)
 }
 
+// Views contains all rendered UI panes.
 var Views struct {
-	Tree   *FileTreeView
-	Layer  *LayerView
-	Status *StatusView
-	Filter *FilterView
-	lookup map[string]View
+	Tree    *FileTreeView
+	Layer   *LayerView
+	Status  *StatusView
+	Filter  *FilterView
+	Details *DetailsView
+	lookup  map[string]View
 }
 
+// View defines the a renderable terminal screen pane.
 type View interface {
 	Setup(*gocui.View, *gocui.View) error
 	CursorDown() error
@@ -58,6 +66,7 @@ type View interface {
 	IsVisible() bool
 }
 
+// toggleView switches between the file view and the layer view and re-renders the screen.
 func toggleView(g *gocui.Gui, v *gocui.View) error {
 	if v == nil || v.Name() == Views.Layer.Name {
 		_, err := g.SetCurrentView(Views.Tree.Name)
@@ -71,6 +80,7 @@ func toggleView(g *gocui.Gui, v *gocui.View) error {
 	return err
 }
 
+// toggleFilterView shows/hides the file tree filter pane.
 func toggleFilterView(g *gocui.Gui, v *gocui.View) error {
 	// delete all user input from the tree view
 	Views.Filter.view.Clear()
@@ -93,6 +103,7 @@ func toggleFilterView(g *gocui.Gui, v *gocui.View) error {
 	return nil
 }
 
+// CursorDown moves the cursor down in the currently selected gocui pane, scrolling the screen as needed.
 func CursorDown(g *gocui.Gui, v *gocui.View) error {
 	cx, cy := v.Cursor()
 
@@ -113,6 +124,7 @@ func CursorDown(g *gocui.Gui, v *gocui.View) error {
 	return nil
 }
 
+// CursorUp moves the cursor up in the currently selected gocui pane, scrolling the screen as needed.
 func CursorUp(g *gocui.Gui, v *gocui.View) error {
 	ox, oy := v.Origin()
 	cx, cy := v.Cursor()
@@ -124,10 +136,7 @@ func CursorUp(g *gocui.Gui, v *gocui.View) error {
 	return nil
 }
 
-
-var cpuProfilePath *os.File
-var memoryProfilePath *os.File
-
+// quit is the gocui callback invoked when the user hits Ctrl+C
 func quit(g *gocui.Gui, v *gocui.View) error {
 	if profile {
 		pprof.StopCPUProfile()
@@ -139,7 +148,8 @@ func quit(g *gocui.Gui, v *gocui.View) error {
 	return gocui.ErrQuit
 }
 
-func keybindings(g *gocui.Gui) error {
+// keyBindings registers global key press actions, valid when in any pane.
+func keyBindings(g *gocui.Gui) error {
 	if err := g.SetKeybinding("", gocui.KeyCtrlC, gocui.ModNone, quit); err != nil {
 		return err
 	}
@@ -156,6 +166,7 @@ func keybindings(g *gocui.Gui) error {
 	return nil
 }
 
+// isNewView determines if a view has already been created based on the set of errors given (a bit hokie)
 func isNewView(errs ...error) bool {
 	for _, err := range errs {
 		if err == nil {
@@ -168,8 +179,12 @@ func isNewView(errs ...error) bool {
 	return true
 }
 
-// TODO: this logic should be refactored into an abstraction that takes care of the math for us
+
+// layout defines the definition of the window pane size and placement relations to one another. This
+// is invoked at application start and whenever the screen dimensions change.
 func layout(g *gocui.Gui) error {
+	// TODO: this logic should be refactored into an abstraction that takes care of the math for us
+
 	maxX, maxY := g.Size()
 	splitCols := maxX / 2
 	debugWidth := 0
@@ -178,13 +193,15 @@ func layout(g *gocui.Gui) error {
 	}
 	debugCols := maxX - debugWidth
 	bottomRows := 1
-	headerRows := 1
+	headerRows := 2
 
 	filterBarHeight := 1
 	statusBarHeight := 1
 
 	statusBarIndex := 1
 	filterBarIndex := 2
+
+	layersHeight := len(Views.Layer.Layers) + headerRows + 1 // layers + header + base image layer row
 
 	var view, header *gocui.View
 	var viewErr, headerErr, err error
@@ -204,7 +221,7 @@ func layout(g *gocui.Gui) error {
 	}
 
 	// Layers
-	view, viewErr = g.SetView(Views.Layer.Name, -1, -1+headerRows, splitCols, maxY-bottomRows)
+	view, viewErr = g.SetView(Views.Layer.Name, -1, -1+headerRows, splitCols, layersHeight)
 	header, headerErr = g.SetView(Views.Layer.Name+"header", -1, -1, splitCols, headerRows)
 	if isNewView(viewErr, headerErr) {
 		Views.Layer.Setup(view, header)
@@ -212,6 +229,15 @@ func layout(g *gocui.Gui) error {
 		if _, err = g.SetCurrentView(Views.Layer.Name); err != nil {
 			return err
 		}
+		// since we are selecting the view, we should rerender to indicate it is selected
+		Views.Layer.Render()
+	}
+
+	// Details
+	view, viewErr = g.SetView(Views.Details.Name, -1, -1+layersHeight+headerRows, splitCols, maxY-bottomRows)
+	header, headerErr = g.SetView(Views.Details.Name+"header", -1, -1+layersHeight, splitCols, layersHeight+headerRows)
+	if isNewView(viewErr, headerErr) {
+		Views.Details.Setup(view, header)
 	}
 
 	// Filetree
@@ -238,12 +264,14 @@ func layout(g *gocui.Gui) error {
 	return nil
 }
 
+// Update refreshes the state objects for future rendering.
 func Update() {
 	for _, view := range Views.lookup {
 		view.Update()
 	}
 }
 
+// Render flushes the state objects to the screen.
 func Render() {
 	for _, view := range Views.lookup {
 		if view.IsVisible() {
@@ -252,6 +280,7 @@ func Render() {
 	}
 }
 
+// renderStatusOption formats key help bindings-to-title pairs.
 func renderStatusOption(control, title string, selected bool) string {
 	if selected {
 		return Formatting.StatusSelected("▏") + Formatting.StatusControlSelected(control) +  Formatting.StatusSelected("  " + title + " ")
@@ -260,6 +289,7 @@ func renderStatusOption(control, title string, selected bool) string {
 	}
 }
 
+// Run is the UI entrypoint.
 func Run(layers []*image.Layer, refTrees []*filetree.FileTree) {
 
 	Formatting.Selected = color.New(color.ReverseVideo, color.Bold).SprintFunc()
@@ -291,14 +321,22 @@ func Run(layers []*image.Layer, refTrees []*filetree.FileTree) {
 	Views.Filter = NewFilterView("command", g)
 	Views.lookup[Views.Filter.Name] = Views.Filter
 
+	Views.Details = NewDetailsView("details", g)
+	Views.lookup[Views.Details.Name] = Views.Details
+
+
 	g.Cursor = false
 	//g.Mouse = true
 	g.SetManagerFunc(layout)
 
+	// perform the first update and render now that all resources have been loaded
+	Update()
+	Render()
+
 	// let the default position of the cursor be the last layer
 	// Views.Layer.SetCursor(len(Views.Layer.Layers)-1)
 
-	if err := keybindings(g); err != nil {
+	if err := keyBindings(g); err != nil {
 		log.Panicln(err)
 	}
 

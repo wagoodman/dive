@@ -262,7 +262,7 @@ func TestCompareWithNoChanges(t *testing.T) {
 	for _, value := range paths {
 		fakeData := FileInfo{
 			Path:     value,
-			Typeflag: 1,
+			TypeFlag: 1,
 			MD5sum:   [16]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 		}
 		lowerTree.AddPath(value, fakeData)
@@ -293,7 +293,7 @@ func TestCompareWithAdds(t *testing.T) {
 	for _, value := range lowerPaths {
 		lowerTree.AddPath(value, FileInfo{
 			Path:     value,
-			Typeflag: 1,
+			TypeFlag: 1,
 			MD5sum:   [16]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 		})
 	}
@@ -301,7 +301,7 @@ func TestCompareWithAdds(t *testing.T) {
 	for _, value := range upperPaths {
 		upperTree.AddPath(value, FileInfo{
 			Path:     value,
-			Typeflag: 1,
+			TypeFlag: 1,
 			MD5sum:   [16]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 		})
 	}
@@ -353,12 +353,12 @@ func TestCompareWithChanges(t *testing.T) {
 	for _, value := range paths {
 		lowerTree.AddPath(value, FileInfo{
 			Path:     value,
-			Typeflag: 1,
+			TypeFlag: 1,
 			MD5sum:   [16]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 		})
 		upperTree.AddPath(value, FileInfo{
 			Path:     value,
-			Typeflag: 1,
+			TypeFlag: 1,
 			MD5sum:   [16]byte{1, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0},
 		})
 	}
@@ -403,7 +403,7 @@ func TestCompareWithRemoves(t *testing.T) {
 	for _, value := range lowerPaths {
 		fakeData := FileInfo{
 			Path:     value,
-			Typeflag: 1,
+			TypeFlag: 1,
 			MD5sum:   [16]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 		}
 		lowerTree.AddPath(value, fakeData)
@@ -412,7 +412,7 @@ func TestCompareWithRemoves(t *testing.T) {
 	for _, value := range upperPaths {
 		fakeData := FileInfo{
 			Path:     value,
-			Typeflag: 1,
+			TypeFlag: 1,
 			MD5sum:   [16]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 		}
 		upperTree.AddPath(value, fakeData)
@@ -473,7 +473,7 @@ func TestStackRange(t *testing.T) {
 	for _, value := range lowerPaths {
 		fakeData := FileInfo{
 			Path:     value,
-			Typeflag: 1,
+			TypeFlag: 1,
 			MD5sum:   [16]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 		}
 		lowerTree.AddPath(value, fakeData)
@@ -482,7 +482,7 @@ func TestStackRange(t *testing.T) {
 	for _, value := range upperPaths {
 		fakeData := FileInfo{
 			Path:     value,
-			Typeflag: 1,
+			TypeFlag: 1,
 			MD5sum:   [16]byte{1, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0},
 		}
 		upperTree.AddPath(value, fakeData)
@@ -499,7 +499,7 @@ func TestRemoveOnIterate(t *testing.T) {
 	for _, value := range paths {
 		fakeData := FileInfo{
 			Path:     value,
-			Typeflag: 1,
+			TypeFlag: 1,
 			MD5sum:   [16]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 		}
 		node, err := tree.AddPath(value, fakeData)
@@ -554,7 +554,7 @@ func TestEfficiencyScore(t *testing.T) {
 		trees[ix] = tree
 	}
 	expected := 2.0 / 6.0
-	actual := EfficiencyScore(trees)
+	actual := CalculateEfficiency(trees)
 	if math.Abs(expected-actual) > 0.0001 {
 		t.Fatalf("Expected %f but got %f", expected, actual)
 	}
@@ -567,7 +567,7 @@ func TestEfficiencyScore(t *testing.T) {
 		trees[ix] = tree
 	}
 	expected = 1.0
-	actual = EfficiencyScore(trees)
+	actual = CalculateEfficiency(trees)
 	if math.Abs(expected-actual) > 0.0001 {
 		t.Fatalf("Expected %f but got %f", expected, actual)
 	}
