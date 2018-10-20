@@ -13,10 +13,10 @@ import (
 	"strings"
 
 	"github.com/docker/docker/client"
-	"github.com/k0kubun/go-ansi"
 	"github.com/wagoodman/dive/filetree"
 	"github.com/wagoodman/jotframe"
 	"golang.org/x/net/context"
+	"github.com/wagoodman/dive/utils"
 )
 
 // TODO: this file should be rethought... but since it's only for preprocessing it'll be tech debt for now.
@@ -57,11 +57,14 @@ func (pb *ProgressBar) Update(currentValue int64) (hasChanged bool) {
 func (pb *ProgressBar) String() string {
 	width := 40
 	done := int((pb.percent * width) / 100.0)
+	if done > width {
+		done = width
+	}
 	todo := width - done
+	if todo < 0 {
+		todo = 0
+	}
 	head := 1
-	// if pb.percent >= 100 {
-	// 	head = 0
-	// }
 
 	return "[" + strings.Repeat("=", done) + strings.Repeat(">", head) + strings.Repeat(" ", todo) + "]" + fmt.Sprintf(" %d %% (%d/%d)", pb.percent, pb.rawCurrent, pb.rawTotal)
 }
@@ -194,13 +197,21 @@ func InitializeData(imageID string) ([]*Layer, []*filetree.FileTree) {
 	var layerMap = make(map[string]*filetree.FileTree)
 	var trees = make([]*filetree.FileTree, 0)
 
-	ansi.CursorHide()
+	// pull the image if it does not exist
+	ctx := context.Background()
+	dockerClient, err := client.NewClientWithOpts()
+	if err != nil {
+		fmt.Println("Could not connect to the Docker daemon:"+err.Error())
+		os.Exit(1)
+	}
+	_, _, err = dockerClient.ImageInspectWithRaw(ctx, imageID)
+	if err != nil {
+		// don't use the API, the CLI has more informative output
+		utils.RunDockerCmd("pull", imageID)
+	}
 
 	// save this image to disk temporarily to get the content info
 	imageTarPath, tmpDir := saveImage(imageID)
-	// imageTarPath := "/tmp/dive516670682/image.tar"
-	// tmpDir := "/tmp/dive516670682"
-	// fmt.Println(tmpDir)
 	defer os.RemoveAll(tmpDir)
 
 	// read through the image contents and build a tree
@@ -313,8 +324,6 @@ func InitializeData(imageID string) ([]*Layer, []*filetree.FileTree) {
 		layerIdx--
 	}
 
-	ansi.CursorShow()
-
 	return layers, trees
 }
 
@@ -322,7 +331,8 @@ func saveImage(imageID string) (string, string) {
 	ctx := context.Background()
 	dockerClient, err := client.NewClientWithOpts()
 	if err != nil {
-		panic(err)
+		fmt.Println("Could not connect to the Docker daemon:"+err.Error())
+		os.Exit(1)
 	}
 
 	frame := jotframe.NewFixedFrame(0, false, false, true)
@@ -331,7 +341,6 @@ func saveImage(imageID string) (string, string) {
 	io.WriteString(line, "  Fetching metadata...")
 
 	result, _, err := dockerClient.ImageInspectWithRaw(ctx, imageID)
-	check(err)
 	totalSize := result.Size
 
 	frame.Remove(line)

@@ -7,15 +7,13 @@ import (
 	"github.com/wagoodman/dive/ui"
 	"io/ioutil"
 	"os"
-	"os/exec"
-	"strings"
+	"github.com/wagoodman/dive/utils"
 )
 
 // buildCmd represents the build command
 var buildCmd = &cobra.Command{
-	Use:                "build",
-	Short:              "Build and analyze a docker image",
-	Long:               `Build and analyze a docker image`,
+	Use:                "build [any valid `docker build` arguments]",
+	Short:              "Builds and analyzes a docker image from a Dockerfile (this is a thin wrapper for the `docker build` command).",
 	DisableFlagParsing: true,
 	Run:                doBuild,
 }
@@ -33,7 +31,7 @@ func doBuild(cmd *cobra.Command, args []string) {
 	defer os.Remove(iidfile.Name())
 
 	allArgs := append([]string{"--iidfile", iidfile.Name()}, args...)
-	err = runDockerCmd("build", allArgs...)
+	err = utils.RunDockerCmd("build", allArgs...)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -45,29 +43,4 @@ func doBuild(cmd *cobra.Command, args []string) {
 
 	manifest, refTrees := image.InitializeData(string(imageId))
 	ui.Run(manifest, refTrees)
-}
-
-// runDockerCmd runs a given Docker command in the current tty
-func runDockerCmd(cmdStr string, args ...string) error {
-
-	allArgs := cleanArgs(append([]string{cmdStr}, args...))
-
-	cmd := exec.Command("docker", allArgs...)
-
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	cmd.Stdin = os.Stdin
-
-	return cmd.Run()
-}
-
-// cleanArgs trims the whitespace from the given set of strings.
-func cleanArgs(s []string) []string {
-	var r []string
-	for _, str := range s {
-		if str != "" {
-			r = append(r, strings.Trim(str, " "))
-		}
-	}
-	return r
 }

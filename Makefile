@@ -3,7 +3,7 @@ BIN = dive
 all: clean build
 
 run: build
-	docker image ls | grep "dive-test" >/dev/null || docker build -t dive-test:latest .
+	docker image ls | grep "dive-test" >/dev/null || docker build -t dive-test:latest -f data/Dockerfile .
 	./build/$(BIN) dive-test
 
 build:
