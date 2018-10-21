@@ -20,7 +20,6 @@ dive build -t <some-tag> .
 **Show Docker image contents broken down by layer**
 
 As you select a layer on the left, you are shown the contents of that layer combined with all previous layers on the right.
-
 Also, you can fully explore the file tree with the arrow keys.
 
 **Indicate what's change in each layer**

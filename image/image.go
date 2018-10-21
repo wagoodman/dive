@@ -14,9 +14,9 @@ import (
 
 	"github.com/docker/docker/client"
 	"github.com/wagoodman/dive/filetree"
+	"github.com/wagoodman/dive/utils"
 	"github.com/wagoodman/jotframe"
 	"golang.org/x/net/context"
-	"github.com/wagoodman/dive/utils"
 )
 
 // TODO: this file should be rethought... but since it's only for preprocessing it'll be tech debt for now.
@@ -201,7 +201,7 @@ func InitializeData(imageID string) ([]*Layer, []*filetree.FileTree) {
 	ctx := context.Background()
 	dockerClient, err := client.NewClientWithOpts()
 	if err != nil {
-		fmt.Println("Could not connect to the Docker daemon:"+err.Error())
+		fmt.Println("Could not connect to the Docker daemon:" + err.Error())
 		os.Exit(1)
 	}
 	_, _, err = dockerClient.ImageInspectWithRaw(ctx, imageID)
@@ -211,8 +211,11 @@ func InitializeData(imageID string) ([]*Layer, []*filetree.FileTree) {
 	}
 
 	// save this image to disk temporarily to get the content info
-	imageTarPath, tmpDir := saveImage(imageID)
-	defer os.RemoveAll(tmpDir)
+	// imageTarPath, tmpDir := saveImage(imageID)
+	// fmt.Println(imageTarPath)
+	// fmt.Println(tmpDir)
+	imageTarPath := "/tmp/dive446223287/image.tar"
+	// defer os.RemoveAll(tmpDir)
 
 	// read through the image contents and build a tree
 	tarFile, err := os.Open(imageTarPath)
@@ -255,10 +258,9 @@ func InitializeData(imageID string) ([]*Layer, []*filetree.FileTree) {
 
 		name := header.Name
 
-		switch header.Typeflag {
-		case tar.TypeDir:
-			continue
-		case tar.TypeReg:
+		// some layer tars can be relative layer symlinks to other layer tars
+		if header.Typeflag == tar.TypeSymlink || header.Typeflag == tar.TypeReg {
+
 			if strings.HasSuffix(name, "layer.tar") {
 				line, err := frame.Prepend()
 				if err != nil {
@@ -275,12 +277,9 @@ func InitializeData(imageID string) ([]*Layer, []*filetree.FileTree) {
 				}
 
 				go processLayerTar(line, layerMap, name, tarredBytes)
-
 			} else if name == "manifest.json" {
 				manifest = NewImageManifest(tarReader, header)
 			}
-		default:
-			fmt.Printf("ERRG: unknown tar entry: %v: %s\n", header.Typeflag, name)
 		}
 	}
 	frame.Header().Close()
@@ -309,7 +308,8 @@ func InitializeData(imageID string) ([]*Layer, []*filetree.FileTree) {
 			continue
 		}
 
-		config.History[idx].Size = uint64(trees[(len(trees)-1)-layerIdx].FileSize)
+		tree := trees[(len(trees)-1)-layerIdx]
+		config.History[idx].Size = uint64(tree.FileSize)
 
 		layers[layerIdx] = &Layer{
 			History:  config.History[idx],
@@ -331,7 +331,7 @@ func saveImage(imageID string) (string, string) {
 	ctx := context.Background()
 	dockerClient, err := client.NewClientWithOpts()
 	if err != nil {
-		fmt.Println("Could not connect to the Docker daemon:"+err.Error())
+		fmt.Println("Could not connect to the Docker daemon:" + err.Error())
 		os.Exit(1)
 	}
 
