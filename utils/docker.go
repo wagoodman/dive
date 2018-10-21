@@ -1,8 +1,8 @@
 package utils
 
 import (
-	"os/exec"
 	"os"
+	"os/exec"
 	"strings"
 )
 
@@ -30,4 +30,3 @@ func cleanArgs(s []string) []string {
 	}
 	return r
 }
-

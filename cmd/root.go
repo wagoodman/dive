@@ -2,13 +2,13 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/k0kubun/go-ansi"
 	"github.com/mitchellh/go-homedir"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"os"
 	"github.com/tebeka/atexit"
-	"github.com/k0kubun/go-ansi"
+	"os"
 )
 
 var cfgFile string
@@ -17,10 +17,10 @@ var cfgFile string
 var rootCmd = &cobra.Command{
 	Use:   "dive [IMAGE]",
 	Short: "Docker Image Visualizer & Explorer",
-	Long:  `This tool provides a way to discover and explore the contents of a docker image. Additionally the tool estimates
+	Long: `This tool provides a way to discover and explore the contents of a docker image. Additionally the tool estimates
 the amount of wasted space and identifies the offending files from the image.`,
-	Args:  cobra.ExactArgs(1),
-	Run:   analyze,
+	Args: cobra.ExactArgs(1),
+	Run:  analyze,
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.

@@ -2,7 +2,6 @@ package ui
 
 import (
 	"fmt"
-
 	"github.com/dustin/go-humanize"
 	"github.com/jroimartin/gocui"
 	"github.com/lunixbochs/vtclean"
@@ -97,7 +96,7 @@ func (view *DetailsView) Render() error {
 	template := "%5s  %12s  %-s\n"
 	var trueInefficiencies int
 	inefficiencyReport := fmt.Sprintf(Formatting.Header(template), "Count", "Total Space", "Path")
-	for idx := len(view.inefficiencies) - 1; idx > 0; idx-- {
+	for idx := len(view.inefficiencies) - 1; idx >= 0; idx-- {
 		data := view.inefficiencies[idx]
 		if data.CumulativeSize == 0 {
 			continue

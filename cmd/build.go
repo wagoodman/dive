@@ -5,9 +5,9 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/wagoodman/dive/image"
 	"github.com/wagoodman/dive/ui"
+	"github.com/wagoodman/dive/utils"
 	"io/ioutil"
 	"os"
-	"github.com/wagoodman/dive/utils"
 )
 
 // buildCmd represents the build command
