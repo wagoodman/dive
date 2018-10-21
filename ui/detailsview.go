@@ -79,7 +79,7 @@ func (view *DetailsView) CursorUp() error {
 // Update refreshes the state objects for future rendering. Note: we only need to update this view upon the initial tree load
 func (view *DetailsView) Update() error {
 	layerTrees := Views.Tree.RefTrees
-	view.efficiency, view.inefficiencies = filetree.Efficiency(layerTrees[:len(layerTrees)-1])
+	view.efficiency, view.inefficiencies = filetree.Efficiency(layerTrees)
 	return nil
 }
 
@@ -98,9 +98,6 @@ func (view *DetailsView) Render() error {
 	inefficiencyReport := fmt.Sprintf(Formatting.Header(template), "Count", "Total Space", "Path")
 	for idx := len(view.inefficiencies) - 1; idx >= 0; idx-- {
 		data := view.inefficiencies[idx]
-		if data.CumulativeSize == 0 {
-			continue
-		}
 		trueInefficiencies++
 		wastedSpace += data.CumulativeSize
 		inefficiencyReport += fmt.Sprintf(template, strconv.Itoa(len(data.Nodes)), humanize.Bytes(uint64(data.CumulativeSize)), data.Path)

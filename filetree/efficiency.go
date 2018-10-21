@@ -1,6 +1,7 @@
 package filetree
 
 import (
+	"github.com/sirupsen/logrus"
 	"sort"
 )
 
@@ -36,6 +37,7 @@ func (efs EfficiencySlice) Less(i, j int) bool {
 func Efficiency(trees []*FileTree) (float64, EfficiencySlice) {
 	efficiencyMap := make(map[string]*EfficiencyData)
 	inefficientMatches := make(EfficiencySlice, 0)
+	currentTree := 0
 
 	visitor := func(node *FileNode) error {
 		path := node.Path()
@@ -47,9 +49,34 @@ func Efficiency(trees []*FileTree) (float64, EfficiencySlice) {
 			}
 		}
 		data := efficiencyMap[path]
-		data.CumulativeSize += node.Data.FileInfo.TarHeader.Size
-		if data.minDiscoveredSize < 0 || node.Data.FileInfo.TarHeader.Size < data.minDiscoveredSize {
-			data.minDiscoveredSize = node.Data.FileInfo.TarHeader.Size
+
+		// this node may have had children that were deleted, however, we won't explicitly list out every child, only
+		// the top-most parent with the cumulative size. These operations will need to be done on the full (stacked)
+		// tree.
+		// Note: whiteout files may also represent directories, so we need to find out if this was previously a file or dir.
+		var sizeBytes int64
+
+		if node.IsWhiteout() {
+			sizer := func(curNode *FileNode) error {
+				sizeBytes += curNode.Data.FileInfo.TarHeader.FileInfo().Size()
+				return nil
+			}
+			stackedTree := StackRange(trees, 0, currentTree-1)
+			previousTreeNode, err := stackedTree.GetNode(node.Path())
+			if err != nil {
+				logrus.Fatal(err)
+			}
+			if previousTreeNode.Data.FileInfo.TarHeader.FileInfo().IsDir() {
+				previousTreeNode.VisitDepthChildFirst(sizer, nil)
+			}
+
+		} else {
+			sizeBytes = node.Data.FileInfo.TarHeader.FileInfo().Size()
+		}
+
+		data.CumulativeSize += sizeBytes
+		if data.minDiscoveredSize < 0 || sizeBytes < data.minDiscoveredSize {
+			data.minDiscoveredSize = sizeBytes
 		}
 		data.Nodes = append(data.Nodes, node)
 
@@ -62,7 +89,8 @@ func Efficiency(trees []*FileTree) (float64, EfficiencySlice) {
 	visitEvaluator := func(node *FileNode) bool {
 		return node.IsLeaf()
 	}
-	for _, tree := range trees {
+	for idx, tree := range trees {
+		currentTree = idx
 		tree.VisitDepthChildFirst(visitor, visitEvaluator)
 	}
 
