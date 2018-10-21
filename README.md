@@ -1,7 +1,9 @@
 # dive
 [![Go Report Card](https://goreportcard.com/badge/github.com/wagoodman/dive)](https://goreportcard.com/report/github.com/wagoodman/dive)
 
-**A tool for interrogating docker images.**
+**A tool for exploring the contents of a docker image, even within each layer.**
+
+![Image](.data/demo.gif)
 
 To analyze a Docker image simply run dive with an image tag/id/digest:
 ```bash

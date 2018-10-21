@@ -1,7 +1,7 @@
 /.git
 /.scripts
+/.data
 /dist
-/doc
 /ui
 /utils
 /image
