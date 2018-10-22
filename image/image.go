@@ -20,6 +20,7 @@ import (
 )
 
 // TODO: this file should be rethought... but since it's only for preprocessing it'll be tech debt for now.
+const dockerVersion = "1.26"
 
 func check(e error) {
 	if e != nil {
@@ -199,7 +200,7 @@ func InitializeData(imageID string) ([]*Layer, []*filetree.FileTree) {
 
 	// pull the image if it does not exist
 	ctx := context.Background()
-	dockerClient, err := client.NewClientWithOpts()
+	dockerClient, err := client.NewClientWithOpts(client.WithVersion(dockerVersion))
 	if err != nil {
 		fmt.Println("Could not connect to the Docker daemon:" + err.Error())
 		os.Exit(1)
@@ -329,7 +330,7 @@ func InitializeData(imageID string) ([]*Layer, []*filetree.FileTree) {
 
 func saveImage(imageID string) (string, string) {
 	ctx := context.Background()
-	dockerClient, err := client.NewClientWithOpts()
+	dockerClient, err := client.NewClientWithOpts(client.WithVersion(dockerVersion))
 	if err != nil {
 		fmt.Println("Could not connect to the Docker daemon:" + err.Error())
 		os.Exit(1)
