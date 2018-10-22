@@ -22,12 +22,14 @@ type DetailsView struct {
 }
 
 // NewDetailsView creates a new view object attached the the global [gocui] screen object.
-func NewDetailsView(name string, gui *gocui.Gui) (detailsView *DetailsView) {
+func NewDetailsView(name string, gui *gocui.Gui, efficiency float64, inefficiencies filetree.EfficiencySlice) (detailsView *DetailsView) {
 	detailsView = new(DetailsView)
 
 	// populate main fields
 	detailsView.Name = name
 	detailsView.gui = gui
+	detailsView.efficiency = efficiency
+	detailsView.inefficiencies = inefficiencies
 
 	return detailsView
 }
@@ -76,10 +78,8 @@ func (view *DetailsView) CursorUp() error {
 	return CursorUp(view.gui, view.view)
 }
 
-// Update refreshes the state objects for future rendering. Note: we only need to update this view upon the initial tree load
+// Update refreshes the state objects for future rendering.
 func (view *DetailsView) Update() error {
-	layerTrees := Views.Tree.RefTrees
-	view.efficiency, view.inefficiencies = filetree.Efficiency(layerTrees)
 	return nil
 }
 
@@ -94,16 +94,21 @@ func (view *DetailsView) Render() error {
 	var wastedSpace int64
 
 	template := "%5s  %12s  %-s\n"
-	var trueInefficiencies int
 	inefficiencyReport := fmt.Sprintf(Formatting.Header(template), "Count", "Total Space", "Path")
-	for idx := len(view.inefficiencies) - 1; idx >= 0; idx-- {
-		data := view.inefficiencies[idx]
-		trueInefficiencies++
-		wastedSpace += data.CumulativeSize
-		inefficiencyReport += fmt.Sprintf(template, strconv.Itoa(len(data.Nodes)), humanize.Bytes(uint64(data.CumulativeSize)), data.Path)
+
+	height := 100
+	if view.view != nil {
+		_, height = view.view.Size()
 	}
-	if trueInefficiencies == 0 {
-		inefficiencyReport = ""
+
+	for idx := 0; idx < len(view.inefficiencies); idx++ {
+		data := view.inefficiencies[len(view.inefficiencies)-1-idx]
+		wastedSpace += data.CumulativeSize
+
+		// todo: make this report scrollable and exportable
+		if idx < height {
+			inefficiencyReport += fmt.Sprintf(template, strconv.Itoa(len(data.Nodes)), humanize.Bytes(uint64(data.CumulativeSize)), data.Path)
+		}
 	}
 
 	effStr := fmt.Sprintf("\n%s %d %%", Formatting.Header("Image efficiency score:"), int(100.0*view.efficiency))

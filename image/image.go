@@ -193,7 +193,7 @@ func processLayerTar(line *jotframe.Line, layerMap map[string]*filetree.FileTree
 	line.Close()
 }
 
-func InitializeData(imageID string) ([]*Layer, []*filetree.FileTree) {
+func InitializeData(imageID string) ([]*Layer, []*filetree.FileTree, float64, filetree.EfficiencySlice) {
 	var manifest ImageManifest
 	var layerMap = make(map[string]*filetree.FileTree)
 	var trees = make([]*filetree.FileTree, 0)
@@ -212,11 +212,11 @@ func InitializeData(imageID string) ([]*Layer, []*filetree.FileTree) {
 	}
 
 	// save this image to disk temporarily to get the content info
-	imageTarPath, tmpDir := saveImage(imageID)
+	// imageTarPath, tmpDir := saveImage(imageID)
 	// fmt.Println(imageTarPath)
 	// fmt.Println(tmpDir)
-	// imageTarPath := "/tmp/dive446223287/image.tar"
-	defer os.RemoveAll(tmpDir)
+	imageTarPath := "/home/wagoodman/Downloads/image/image.tar"
+	// defer os.RemoveAll(tmpDir)
 
 	// read through the image contents and build a tree
 	tarFile, err := os.Open(imageTarPath)
@@ -325,7 +325,10 @@ func InitializeData(imageID string) ([]*Layer, []*filetree.FileTree) {
 		layerIdx--
 	}
 
-	return layers, trees
+	fmt.Println("  Analyzing layers...")
+	efficiency, inefficiencies := filetree.Efficiency(trees)
+
+	return layers, trees, efficiency, inefficiencies
 }
 
 func saveImage(imageID string) (string, string) {

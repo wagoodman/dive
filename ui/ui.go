@@ -3,22 +3,16 @@ package ui
 import (
 	"errors"
 	"fmt"
-	"log"
-
 	"github.com/fatih/color"
 	"github.com/jroimartin/gocui"
 	"github.com/wagoodman/dive/filetree"
 	"github.com/wagoodman/dive/image"
-	"os"
-	"runtime"
-	"runtime/pprof"
+	"log"
 )
 
 const debug = false
-const profile = false
 
-var cpuProfilePath *os.File
-var memoryProfilePath *os.File
+// var profileObj = profile.Start(profile.CPUProfile, profile.ProfilePath("."), profile.NoShutdownHook)
 
 // debugPrint writes the given string to the debug pane (if the debug pane is enabled)
 func debugPrint(s string) {
@@ -138,13 +132,9 @@ func CursorUp(g *gocui.Gui, v *gocui.View) error {
 
 // quit is the gocui callback invoked when the user hits Ctrl+C
 func quit(g *gocui.Gui, v *gocui.View) error {
-	if profile {
-		pprof.StopCPUProfile()
-		runtime.GC() // get up-to-date statistics
-		pprof.WriteHeapProfile(memoryProfilePath)
-		memoryProfilePath.Close()
-		cpuProfilePath.Close()
-	}
+
+	// profileObj.Stop()
+
 	return gocui.ErrQuit
 }
 
@@ -288,7 +278,7 @@ func renderStatusOption(control, title string, selected bool) string {
 }
 
 // Run is the UI entrypoint.
-func Run(layers []*image.Layer, refTrees []*filetree.FileTree) {
+func Run(layers []*image.Layer, refTrees []*filetree.FileTree, efficiency float64, inefficiencies filetree.EfficiencySlice) {
 
 	Formatting.Selected = color.New(color.ReverseVideo, color.Bold).SprintFunc()
 	Formatting.Header = color.New(color.Bold).SprintFunc()
@@ -319,7 +309,7 @@ func Run(layers []*image.Layer, refTrees []*filetree.FileTree) {
 	Views.Filter = NewFilterView("command", g)
 	Views.lookup[Views.Filter.Name] = Views.Filter
 
-	Views.Details = NewDetailsView("details", g)
+	Views.Details = NewDetailsView("details", g, efficiency, inefficiencies)
 	Views.lookup[Views.Details.Name] = Views.Details
 
 	g.Cursor = false
@@ -335,12 +325,6 @@ func Run(layers []*image.Layer, refTrees []*filetree.FileTree) {
 
 	if err := keyBindings(g); err != nil {
 		log.Panicln(err)
-	}
-
-	if profile {
-		os.Create("cpu.pprof")
-		os.Create("mem.pprof")
-		pprof.StartCPUProfile(cpuProfilePath)
 	}
 
 	if err := g.MainLoop(); err != nil && err != gocui.ErrQuit {

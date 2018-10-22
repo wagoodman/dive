@@ -18,6 +18,6 @@ func analyze(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 	color.New(color.Bold).Println("Analyzing Image")
-	manifest, refTrees := image.InitializeData(userImage)
-	ui.Run(manifest, refTrees)
+	manifest, refTrees, efficiency, inefficiencies := image.InitializeData(userImage)
+	ui.Run(manifest, refTrees, efficiency, inefficiencies)
 }

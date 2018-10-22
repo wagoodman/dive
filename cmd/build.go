@@ -41,6 +41,6 @@ func doBuild(cmd *cobra.Command, args []string) {
 		log.Fatal(err)
 	}
 
-	manifest, refTrees := image.InitializeData(string(imageId))
-	ui.Run(manifest, refTrees)
+	manifest, refTrees, efficiency, inefficiencies := image.InitializeData(string(imageId))
+	ui.Run(manifest, refTrees, efficiency, inefficiencies)
 }
