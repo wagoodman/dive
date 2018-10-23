@@ -1,7 +1,7 @@
 # dive
 [![Go Report Card](https://goreportcard.com/badge/github.com/wagoodman/dive)](https://goreportcard.com/report/github.com/wagoodman/dive)
 
-**A tool for exploring the contents of a docker image, even within each layer.**
+**A tool for exploring a docker image, layer contents, and discovering ways to shrink your Docker image size.**
 
 ![Image](.data/demo.gif)
 
