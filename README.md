@@ -21,25 +21,30 @@ dive build -t <some-tag> .
 
 **Show Docker image contents broken down by layer**
 
-As you select a layer on the left, you are shown the contents of that layer combined with all previous layers on the right.
-Also, you can fully explore the file tree with the arrow keys.
+As you select a layer on the left, you are shown the contents of that layer
+combined with all previous layers on the right. Also, you can fully explore the
+file tree with the arrow keys.
 
-**Indicate what's change in each layer**
+**Indicate what's changed in each layer**
 
-Files that have changed, been modified, added, or removed are indicated in the file tree. This can be adjusted to show
-changes for a specific layer, or aggregated changes up to this layer.
+Files that have changed, been modified, added, or removed are indicated in the
+file tree. This can be adjusted to show changes for a specific layer, or
+aggregated changes up to this layer.
 
 **Estimate "image efficiency"**
 
-The lower left pane shows basic layer info and an experimental metric that will guess how much wasted space is in 
-your image. This might be from duplicating files across layers, moving files across layers, or not fully removing 
-files. Both a percentage "score" and total wasted file space is provided.
+The lower left pane shows basic layer info and an experimental metric that will
+guess how much wasted space your image contains. This might be from duplicating
+files across layers, moving files across layers, or not fully removing files.
+Both a percentage "score" and total wasted file space is provided.
 
 **Quick build/analysis cycles**
 
-You can build a Docker image and do an immediate analysis with one command: `dive build -t some-tag .` 
+You can build a Docker image and do an immediate analysis with one command:
+`dive build -t some-tag .`
 
-You only need to replace you `docker build` command with the same `dive build` command.
+You only need to replace you `docker build` command with the same `dive build`
+command.
 
 
 ## Installation
