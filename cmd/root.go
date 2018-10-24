@@ -2,13 +2,14 @@ package cmd
 
 import (
 	"fmt"
+	"os"
+
 	"github.com/k0kubun/go-ansi"
 	"github.com/mitchellh/go-homedir"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/tebeka/atexit"
-	"os"
 )
 
 var cfgFile string
@@ -19,7 +20,7 @@ var rootCmd = &cobra.Command{
 	Short: "Docker Image Visualizer & Explorer",
 	Long: `This tool provides a way to discover and explore the contents of a docker image. Additionally the tool estimates
 the amount of wasted space and identifies the offending files from the image.`,
-	Args: cobra.ExactArgs(1),
+	Args: cobra.MaximumNArgs(1),
 	Run:  analyze,
 }
 
@@ -44,6 +45,8 @@ func init() {
 
 	// TODO: add config options
 	// rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.dive.yaml)")
+
+	rootCmd.PersistentFlags().BoolP("version", "v", false, "display version number")
 }
 
 // initConfig reads in config file and ENV variables if set.
