@@ -1,7 +1,7 @@
 # dive
 [![Go Report Card](https://goreportcard.com/badge/github.com/wagoodman/dive)](https://goreportcard.com/report/github.com/wagoodman/dive)
 
-**A tool for exploring the contents of a docker image, even within each layer.**
+**A tool for exploring a docker image, layer contents, and discovering ways to shrink your Docker image size.**
 
 ![Image](.data/demo.gif)
 
@@ -46,14 +46,14 @@ You only need to replace you `docker build` command with the same `dive build` c
 
 **Ubuntu/Debian**
 ```bash
-wget https://github.com/wagoodman/dive/releases/download/v0.0.1/dive_0.0.1_linux_amd64.deb
-sudo apt install ./dive_0.0.1_linux_amd64.deb
+wget https://github.com/wagoodman/dive/releases/download/v0.0.4/dive_0.0.4_linux_amd64.deb
+sudo apt install ./dive_0.0.4_linux_amd64.deb
 ```
 
 **RHEL/Centos**
 ```bash
-wget https://github.com/wagoodman/dive/releases/download/v0.0.1/dive_0.0.1_linux_amd64.rpm
-rpm -i dive_0.0.1_linux_amd64.rpm
+wget https://github.com/wagoodman/dive/releases/download/v0.0.4/dive_0.0.4_linux_amd64.rpm
+rpm -i dive_0.0.4_linux_amd64.rpm
 ```
 
 **Mac**
