@@ -89,5 +89,5 @@ When running you'll need to include the docker client binary and socket file:
 docker run --rm -it \
     -v /var/run/docker.sock:/var/run/docker.sock \
     -v $(which docker):/bin/docker \
-    wagoodman/dive:latest nginx:latest
+    wagoodman/dive:latest <dive arguments...>
 ```
