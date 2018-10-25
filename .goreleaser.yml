@@ -28,6 +28,7 @@ archive:
 
 nfpm:
   license: MIT
+  maintainer: Alex Goodman
   homepage: https://github.com/wagoodman/dive/
   formats:
     - deb
