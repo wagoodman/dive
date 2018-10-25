@@ -20,9 +20,7 @@
 
 package main
 
-import (
-	"github.com/wagoodman/dive/cmd"
-)
+import "github.com/wagoodman/dive/cmd"
 
 var (
 	version   = "No version provided"
@@ -31,5 +29,11 @@ var (
 )
 
 func main() {
+	cmd.SetVersion(&cmd.Version{
+		Version:   version,
+		Commit:    commit,
+		BuildTime: buildTime,
+	})
+
 	cmd.Execute()
 }
