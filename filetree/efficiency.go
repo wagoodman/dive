@@ -1,6 +1,7 @@
 package filetree
 
 import (
+	"fmt"
 	"github.com/sirupsen/logrus"
 	"sort"
 )
@@ -64,9 +65,8 @@ func Efficiency(trees []*FileTree) (float64, EfficiencySlice) {
 			stackedTree := StackRange(trees, 0, currentTree-1)
 			previousTreeNode, err := stackedTree.GetNode(node.Path())
 			if err != nil {
-				logrus.Fatal(err)
-			}
-			if previousTreeNode.Data.FileInfo.TarHeader.FileInfo().IsDir() {
+				logrus.Debug(fmt.Sprintf("CurrentTree: %d : %s", currentTree, err))
+			} else if previousTreeNode.Data.FileInfo.TarHeader.FileInfo().IsDir() {
 				previousTreeNode.VisitDepthChildFirst(sizer, nil)
 			}
 
