@@ -91,3 +91,8 @@ docker run --rm -it \
     -v $(which docker):/bin/docker \
     wagoodman/dive:latest <dive arguments...>
 ```
+For docker in windows:
+```bash
+docker run --rm -it -v //var/run/docker.sock:/var/run/docker.sock wagoodman/dive:latest <dive arguments...>
+```
+
