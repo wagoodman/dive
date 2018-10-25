@@ -73,3 +73,21 @@ or download a Darwin build from the releases page.
 go get github.com/wagoodman/dive
 ```
 
+**Docker**
+```bash
+docker pull wagoodman/dive
+```
+
+or 
+
+```bash
+docker pull quay.io/wagoodman/dive
+```
+
+When running you'll need to include the docker client binary and socket file:
+```bash
+docker run --rm -it \
+    -v /var/run/docker.sock:/var/run/docker.sock \
+    -v $(which docker):/bin/docker \
+    wagoodman/dive:latest nginx:latest
+```

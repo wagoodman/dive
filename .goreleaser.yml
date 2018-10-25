@@ -10,10 +10,23 @@ builds:
       - amd64
     ldflags: -s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.buildTime={{.Date}}`.
 
+dockers:
+  -
+    binary: dive
+    image_templates:
+    - "wagoodman/dive:{{ .Tag }}"
+    - "wagoodman/dive:v{{ .Major }}"
+    - "wagoodman/dive:v{{ .Major }}.{{ .Minor }}"
+    - "wagoodman/dive:latest"
+    - "quay.io/wagoodman/dive:{{ .Tag }}"
+    - "quay.io/wagoodman/dive:v{{ .Major }}"
+    - "quay.io/wagoodman/dive:v{{ .Major }}.{{ .Minor }}"
+    - "quay.io/wagoodman/dive:latest"
+
 archive:
   format: tar.gz
 
-fpm:
+nfpm:
   license: MIT
   homepage: https://github.com/wagoodman/dive/
   formats:
