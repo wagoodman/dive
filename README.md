@@ -43,7 +43,7 @@ Both a percentage "score" and total wasted file space is provided.
 You can build a Docker image and do an immediate analysis with one command:
 `dive build -t some-tag .`
 
-You only need to replace you `docker build` command with the same `dive build`
+You only need to replace your `docker build` command with the same `dive build`
 command.
 
 
