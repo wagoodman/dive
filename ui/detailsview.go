@@ -123,7 +123,9 @@ func (view *DetailsView) Render() error {
 
 		// update contents
 		view.view.Clear()
-		fmt.Fprintln(view.view, Formatting.Header("Layer Command"))
+		fmt.Fprintln(view.view, Formatting.Header("Digest: ")+currentLayer.Id())
+		fmt.Fprintln(view.view, Formatting.Header("Tar ID: ")+currentLayer.TarId())
+		fmt.Fprintln(view.view, Formatting.Header("Command:"))
 		fmt.Fprintln(view.view, currentLayer.History.CreatedBy)
 
 		fmt.Fprintln(view.view, effStr)

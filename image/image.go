@@ -303,6 +303,7 @@ func InitializeData(imageID string) ([]*Layer, []*filetree.FileTree, float64, fi
 	// note that the image config stores images in reverse chronological order, so iterate backwards through layers
 	// as you iterate chronologically through history (ignoring history items that have no layer contents)
 	layerIdx := len(trees) - 1
+	tarPathIdx := 0
 	for idx := 0; idx < len(config.History); idx++ {
 		// ignore empty layers, we are only observing layers with content
 		if config.History[idx].EmptyLayer {
@@ -317,12 +318,11 @@ func InitializeData(imageID string) ([]*Layer, []*filetree.FileTree, float64, fi
 			Index:    layerIdx,
 			Tree:     trees[layerIdx],
 			RefTrees: trees,
+			TarPath:  manifest.LayerTarPaths[tarPathIdx],
 		}
 
-		if len(manifest.LayerTarPaths) > idx {
-			layers[layerIdx].TarPath = manifest.LayerTarPaths[layerIdx]
-		}
 		layerIdx--
+		tarPathIdx++
 	}
 
 	fmt.Println("  Analyzing layers...")

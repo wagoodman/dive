@@ -20,13 +20,24 @@ type Layer struct {
 	RefTrees []*filetree.FileTree
 }
 
-// Id returns the truncated id of the current layer.
+// ShortId returns the truncated id of the current layer.
+func (layer *Layer) TarId() string {
+	return strings.TrimSuffix(layer.TarPath, "/layer.tar")
+}
+
+// ShortId returns the truncated id of the current layer.
 func (layer *Layer) Id() string {
+	return layer.History.ID
+}
+
+// ShortId returns the truncated id of the current layer.
+func (layer *Layer) ShortId() string {
 	rangeBound := 25
-	if length := len(layer.History.ID); length < 25 {
+	id := layer.Id()
+	if length := len(id); length < 25 {
 		rangeBound = length
 	}
-	id := layer.History.ID[0:rangeBound]
+	id = id[0:rangeBound]
 
 	// show the tagged image as the last layer
 	// if len(layer.History.Tags) > 0 {
@@ -40,7 +51,7 @@ func (layer *Layer) Id() string {
 func (layer *Layer) String() string {
 
 	return fmt.Sprintf(LayerFormat,
-		layer.Id(),
+		layer.ShortId(),
 		humanize.Bytes(uint64(layer.History.Size)),
 		strings.TrimPrefix(layer.History.CreatedBy, "/bin/sh -c "))
 }

@@ -193,7 +193,7 @@ func (view *LayerView) Render() error {
 					layerId = fmt.Sprintf("%-25s", layer.History.ID)
 				}
 
-				layerStr = fmt.Sprintf(image.LayerFormat, layerId, humanize.Bytes(uint64(layer.History.Size)), "FROM "+layer.Id())
+				layerStr = fmt.Sprintf(image.LayerFormat, layerId, humanize.Bytes(uint64(layer.History.Size)), "FROM "+layer.ShortId())
 			}
 
 			compareBar := view.renderCompareBar(idx)
