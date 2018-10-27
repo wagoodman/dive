@@ -2,7 +2,7 @@ package filetree
 
 import (
 	"fmt"
-	"github.com/satori/go.uuid"
+	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 	"sort"
 	"strings"
@@ -36,7 +36,7 @@ func NewFileTree() (tree *FileTree) {
 	tree.Root = new(FileNode)
 	tree.Root.Tree = tree
 	tree.Root.Children = make(map[string]*FileNode)
-	tree.Id = uuid.Must(uuid.NewV4())
+	tree.Id = uuid.New()
 	return tree
 }
 
