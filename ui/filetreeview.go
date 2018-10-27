@@ -69,6 +69,9 @@ func (view *FileTreeView) Setup(v *gocui.View, header *gocui.View) error {
 	if err := view.gui.SetKeybinding(view.Name, gocui.KeyArrowUp, gocui.ModNone, func(*gocui.Gui, *gocui.View) error { return view.CursorUp() }); err != nil {
 		return err
 	}
+	if err := view.gui.SetKeybinding(view.Name, gocui.KeyArrowLeft, gocui.ModNone, func(*gocui.Gui, *gocui.View) error { return view.CursorLeft() }); err != nil {
+		return err
+	}
 	if err := view.gui.SetKeybinding(view.Name, gocui.KeySpace, gocui.ModNone, func(*gocui.Gui, *gocui.View) error { return view.toggleCollapse() }); err != nil {
 		return err
 	}
@@ -190,6 +193,62 @@ func (view *FileTreeView) CursorUp() error {
 		return view.Render()
 	}
 	return nil
+}
+
+//CursorLeft moves the cursor up until we reach the Parent Node or top of the tree
+func (view *FileTreeView) CursorLeft() error {
+	var visitor func(*filetree.FileNode) error
+	var evaluator func(*filetree.FileNode) bool
+	var dfsCounter, newIndex uint
+	oldIndex := view.TreeIndex
+	parentPath := view.getAbsPositionNode().Parent.Path()
+
+	visitor = func(curNode *filetree.FileNode) error {
+		if strings.Compare(parentPath, curNode.Path()) == 0 {
+			newIndex = dfsCounter
+		}
+		dfsCounter++
+		return nil
+	}
+	var filterBytes []byte
+	var filterRegex *regexp.Regexp
+	read, err := Views.Filter.view.Read(filterBytes)
+	if read > 0 && err == nil {
+		regex, err := regexp.Compile(string(filterBytes))
+		if err == nil {
+			filterRegex = regex
+		}
+	}
+
+	evaluator = func(curNode *filetree.FileNode) bool {
+		regexMatch := true
+		if filterRegex != nil {
+			match := filterRegex.Find([]byte(curNode.Path()))
+			regexMatch = match != nil
+		}
+		return !curNode.Parent.Data.ViewInfo.Collapsed && !curNode.Data.ViewInfo.Hidden && regexMatch
+	}
+
+	err = view.ModelTree.VisitDepthParentFirst(visitor, evaluator)
+	if err != nil {
+		panic(err)
+	}
+
+	view.TreeIndex = newIndex
+	moveIndex := oldIndex - newIndex
+	if newIndex < view.bufferIndexLowerBound {
+		view.bufferIndexUpperBound = view.TreeIndex + view.height()
+		view.bufferIndexLowerBound = view.TreeIndex
+	}
+
+	if view.bufferIndex > moveIndex {
+		view.bufferIndex = view.bufferIndex - moveIndex
+	} else {
+		view.bufferIndex = 0
+	}
+
+	view.Update()
+	return view.Render()
 }
 
 // getAbsPositionNode determines the selected screen cursor's location in the file tree, returning the selected FileNode.
