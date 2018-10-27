@@ -6,6 +6,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/sirupsen/logrus"
 	"io"
 	"io/ioutil"
 	"os"
@@ -100,12 +101,12 @@ func NewImageManifest(reader *tar.Reader, header *tar.Header) ImageManifest {
 	manifestBytes := make([]byte, size)
 	_, err := reader.Read(manifestBytes)
 	if err != nil && err != io.EOF {
-		panic(err)
+		logrus.Panic(err)
 	}
 	var manifest []ImageManifest
 	err = json.Unmarshal(manifestBytes, &manifest)
 	if err != nil {
-		panic(err)
+		logrus.Panic(err)
 	}
 	return manifest[0]
 }
@@ -115,12 +116,12 @@ func NewImageConfig(reader *tar.Reader, header *tar.Header) ImageConfig {
 	configBytes := make([]byte, size)
 	_, err := reader.Read(configBytes)
 	if err != nil && err != io.EOF {
-		panic(err)
+		logrus.Panic(err)
 	}
 	var imageConfig ImageConfig
 	err = json.Unmarshal(configBytes, &imageConfig)
 	if err != nil {
-		panic(err)
+		logrus.Panic(err)
 	}
 
 	layerIdx := 0
@@ -143,7 +144,7 @@ func GetImageConfig(imageTarPath string, manifest ImageManifest) ImageConfig {
 	tarFile, err := os.Open(imageTarPath)
 	if err != nil {
 		fmt.Println(err)
-		os.Exit(1)
+		utils.Exit(1)
 	}
 	defer tarFile.Close()
 
@@ -157,7 +158,7 @@ func GetImageConfig(imageTarPath string, manifest ImageManifest) ImageConfig {
 
 		if err != nil {
 			fmt.Println(err)
-			os.Exit(1)
+			utils.Exit(1)
 		}
 
 		name := header.Name
@@ -203,7 +204,7 @@ func InitializeData(imageID string) ([]*Layer, []*filetree.FileTree, float64, fi
 	dockerClient, err := client.NewClientWithOpts(client.WithVersion(dockerVersion))
 	if err != nil {
 		fmt.Println("Could not connect to the Docker daemon:" + err.Error())
-		os.Exit(1)
+		utils.Exit(1)
 	}
 	_, _, err = dockerClient.ImageInspectWithRaw(ctx, imageID)
 	if err != nil {
@@ -222,13 +223,13 @@ func InitializeData(imageID string) ([]*Layer, []*filetree.FileTree, float64, fi
 	tarFile, err := os.Open(imageTarPath)
 	if err != nil {
 		fmt.Println(err)
-		os.Exit(1)
+		utils.Exit(1)
 	}
 	defer tarFile.Close()
 
 	fi, err := tarFile.Stat()
 	if err != nil {
-		panic(err)
+		logrus.Panic(err)
 	}
 	totalSize := fi.Size()
 	var observedBytes int64
@@ -250,7 +251,7 @@ func InitializeData(imageID string) ([]*Layer, []*filetree.FileTree, float64, fi
 
 		if err != nil {
 			fmt.Println(err)
-			os.Exit(1)
+			utils.Exit(1)
 		}
 
 		observedBytes += header.Size
@@ -265,7 +266,7 @@ func InitializeData(imageID string) ([]*Layer, []*filetree.FileTree, float64, fi
 			if strings.HasSuffix(name, "layer.tar") {
 				line, err := frame.Prepend()
 				if err != nil {
-					panic(err)
+					logrus.Panic(err)
 				}
 				shortName := name[:15]
 				io.WriteString(line, "    ├─ "+shortName+" : loading...")
@@ -274,7 +275,7 @@ func InitializeData(imageID string) ([]*Layer, []*filetree.FileTree, float64, fi
 
 				_, err = tarReader.Read(tarredBytes)
 				if err != nil && err != io.EOF {
-					panic(err)
+					logrus.Panic(err)
 				}
 
 				go processLayerTar(line, layerMap, name, tarredBytes)
@@ -336,7 +337,7 @@ func saveImage(imageID string) (string, string) {
 	dockerClient, err := client.NewClientWithOpts(client.WithVersion(dockerVersion))
 	if err != nil {
 		fmt.Println("Could not connect to the Docker daemon:" + err.Error())
-		os.Exit(1)
+		utils.Exit(1)
 	}
 
 	frame := jotframe.NewFixedFrame(0, false, false, true)
@@ -365,7 +366,7 @@ func saveImage(imageID string) (string, string) {
 
 	defer func() {
 		if err := imageFile.Close(); err != nil {
-			panic(err)
+			logrus.Panic(err)
 		}
 	}()
 	imageWriter := bufio.NewWriter(imageFile)
@@ -377,7 +378,7 @@ func saveImage(imageID string) (string, string) {
 	for {
 		n, err := readCloser.Read(buf)
 		if err != nil && err != io.EOF {
-			panic(err)
+			logrus.Panic(err)
 		}
 		if n == 0 {
 			break
@@ -390,12 +391,12 @@ func saveImage(imageID string) (string, string) {
 		}
 
 		if _, err := imageWriter.Write(buf[:n]); err != nil {
-			panic(err)
+			logrus.Panic(err)
 		}
 	}
 
 	if err = imageWriter.Flush(); err != nil {
-		panic(err)
+		logrus.Panic(err)
 	}
 
 	pb.Done()
@@ -419,7 +420,7 @@ func getFileList(tarredBytes []byte) []filetree.FileInfo {
 
 		if err != nil {
 			fmt.Println(err)
-			os.Exit(1)
+			utils.Exit(1)
 		}
 
 		name := header.Name

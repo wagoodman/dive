@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"crypto/md5"
 	"fmt"
+	"github.com/sirupsen/logrus"
 	"io"
 )
 
@@ -85,7 +86,7 @@ func NewFileInfo(reader *tar.Reader, header *tar.Header, path string) FileInfo {
 	fileBytes := make([]byte, header.Size)
 	_, err := reader.Read(fileBytes)
 	if err != nil && err != io.EOF {
-		panic(err)
+		logrus.Panic(err)
 	}
 
 	return FileInfo{

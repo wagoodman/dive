@@ -2,6 +2,7 @@ package ui
 
 import (
 	"fmt"
+	"github.com/sirupsen/logrus"
 	"regexp"
 	"strings"
 
@@ -231,7 +232,7 @@ func (view *FileTreeView) CursorLeft() error {
 
 	err = view.ModelTree.VisitDepthParentFirst(visitor, evaluator)
 	if err != nil {
-		panic(err)
+		logrus.Panic(err)
 	}
 
 	view.TreeIndex = newIndex
@@ -285,7 +286,7 @@ func (view *FileTreeView) getAbsPositionNode() (node *filetree.FileNode) {
 
 	err = view.ModelTree.VisitDepthParentFirst(visitor, evaluator)
 	if err != nil {
-		panic(err)
+		logrus.Panic(err)
 	}
 
 	return node

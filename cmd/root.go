@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/wagoodman/dive/utils"
 	"os"
 
 	"github.com/k0kubun/go-ansi"
@@ -9,7 +10,6 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"github.com/tebeka/atexit"
 )
 
 var cfgFile string
@@ -28,17 +28,12 @@ the amount of wasted space and identifies the offending files from the image.`,
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err)
-		os.Exit(1)
+		utils.Exit(1)
 	}
-}
-
-func exitHandler() {
-	ansi.CursorShow()
 }
 
 func init() {
 	ansi.CursorHide()
-	atexit.Register(exitHandler)
 
 	cobra.OnInitialize(initConfig)
 	cobra.OnInitialize(initLogging)
@@ -59,7 +54,7 @@ func initConfig() {
 		home, err := homedir.Dir()
 		if err != nil {
 			fmt.Println(err)
-			os.Exit(1)
+			utils.Exit(1)
 		}
 
 		// Search config in home directory with name ".dive" (without extension).

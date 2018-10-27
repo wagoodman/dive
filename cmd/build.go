@@ -24,6 +24,7 @@ func init() {
 
 // doBuild implements the steps taken for the build command
 func doBuild(cmd *cobra.Command, args []string) {
+	defer utils.Cleanup()
 	iidfile, err := ioutil.TempFile("/tmp", "dive.*.iid")
 	if err != nil {
 		log.Fatal(err)
