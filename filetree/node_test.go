@@ -95,13 +95,18 @@ func TestIsWhiteout(t *testing.T) {
 	tree1 := NewFileTree()
 	p1, _ := tree1.AddPath("/etc/nginx/public1", FileInfo{})
 	p2, _ := tree1.AddPath("/etc/nginx/.wh.public2", FileInfo{})
+	p3, _ := tree1.AddPath("/etc/nginx/public3/.wh..wh..opq", FileInfo{})
 
 	if p1.IsWhiteout() != false {
-		t.Errorf("Expected Path '%s' to **not** be a whiteout file", p1.Name)
+		t.Errorf("Expected path '%s' to **not** be a whiteout file", p1.Name)
 	}
 
 	if p2.IsWhiteout() != true {
-		t.Errorf("Expected Path '%s' to be a whiteout file", p2.Name)
+		t.Errorf("Expected path '%s' to be a whiteout file", p2.Name)
+	}
+
+	if p3 != nil {
+		t.Errorf("Expected to not be able to add path '%s'", p2.Name)
 	}
 }
 

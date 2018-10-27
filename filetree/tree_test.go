@@ -187,6 +187,8 @@ func TestStack(t *testing.T) {
 	// whiteout the following files
 	tree2.AddPath("/var/run/.wh.bashful", FileInfo{})
 	tree2.AddPath("/.wh.tmp", FileInfo{})
+	// ignore opaque whiteout files entirely
+	tree2.AddPath("/.wh..wh..opq", FileInfo{})
 
 	err := tree1.Stack(tree2)
 

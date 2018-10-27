@@ -3,19 +3,21 @@ package filetree
 import (
 	"fmt"
 	"github.com/satori/go.uuid"
+	"github.com/sirupsen/logrus"
 	"sort"
 	"strings"
 )
 
 const (
-	newLine         = "\n"
-	noBranchSpace   = "    "
-	branchSpace     = "│   "
-	middleItem      = "├─"
-	lastItem        = "└─"
-	whiteoutPrefix  = ".wh."
-	uncollapsedItem = "─ "
-	collapsedItem   = "⊕ "
+	newLine              = "\n"
+	noBranchSpace        = "    "
+	branchSpace          = "│   "
+	middleItem           = "├─"
+	lastItem             = "└─"
+	whiteoutPrefix       = ".wh."
+	doubleWhiteoutPrefix = ".wh..wh.."
+	uncollapsedItem      = "─ "
+	collapsedItem        = "⊕ "
 )
 
 // FileTree represents a set of files, directories, and their relations.
@@ -218,6 +220,11 @@ func (tree *FileTree) AddPath(path string, data FileInfo) (*FileNode, error) {
 			// don't attach the payload. The payload is destined for the
 			// Path's end node, not any intermediary node.
 			node = node.AddChild(name, FileInfo{})
+
+			if node == nil {
+				// the child could not be added
+				return node, fmt.Errorf(fmt.Sprintf("could not add child node '%s'", name))
+			}
 		}
 
 		// attach payload to the last specified node
@@ -277,7 +284,10 @@ func (tree *FileTree) markRemoved(path string) error {
 func StackRange(trees []*FileTree, start, stop int) *FileTree {
 	tree := trees[0].Copy()
 	for idx := start; idx <= stop; idx++ {
-		tree.Stack(trees[idx])
+		err := tree.Stack(trees[idx])
+		if err != nil {
+			logrus.Debug("could not stack tree range:", err)
+		}
 	}
 
 	return tree

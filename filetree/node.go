@@ -44,6 +44,7 @@ func NewNode(parent *FileNode, name string, data FileInfo) (node *FileNode) {
 	if parent != nil {
 		node.Tree = parent.Tree
 	}
+
 	return node
 }
 
@@ -85,6 +86,11 @@ func (node *FileNode) Copy(parent *FileNode) *FileNode {
 
 // AddChild creates a new node relative to the current FileNode.
 func (node *FileNode) AddChild(name string, data FileInfo) (child *FileNode) {
+	// never allow processing of purely whiteout flag files (for now)
+	if strings.HasPrefix(name, doubleWhiteoutPrefix) {
+		return nil
+	}
+
 	child = NewNode(node, name, data)
 	if node.Children[name] != nil {
 		// tree node already exists, replace the payload, keep the children
@@ -93,6 +99,7 @@ func (node *FileNode) AddChild(name string, data FileInfo) (child *FileNode) {
 		node.Children[name] = child
 		node.Tree.Size++
 	}
+
 	return child
 }
 
@@ -229,7 +236,7 @@ func (node *FileNode) IsLeaf() bool {
 // Path returns a slash-delimited string from the root of the greater tree to the current node (e.g. /a/path/to/here)
 func (node *FileNode) Path() string {
 	if node.path == "" {
-		path := []string{}
+		var path []string
 		curNode := node
 		for {
 			if curNode.Parent == nil {
