@@ -146,7 +146,13 @@ func keyBindings(g *gocui.Gui) error {
 	//if err := g.SetKeybinding("main", gocui.MouseLeft, gocui.ModNone, toggleCollapse); err != nil {
 	//	return err
 	//}
+	if err := g.SetKeybinding("", gocui.KeyCtrlSpace, gocui.ModNone, toggleView); err != nil {
+		return err
+	}
 	if err := g.SetKeybinding("", gocui.KeyTab, gocui.ModNone, toggleView); err != nil {
+		return err
+	}
+	if err := g.SetKeybinding("", gocui.KeyCtrlSlash, gocui.ModNone, toggleFilterView); err != nil {
 		return err
 	}
 	if err := g.SetKeybinding("", gocui.KeyCtrlF, gocui.ModNone, toggleFilterView); err != nil {
