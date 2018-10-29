@@ -73,6 +73,9 @@ func (view *FileTreeView) Setup(v *gocui.View, header *gocui.View) error {
 	if err := view.gui.SetKeybinding(view.Name, gocui.KeyArrowLeft, gocui.ModNone, func(*gocui.Gui, *gocui.View) error { return view.CursorLeft() }); err != nil {
 		return err
 	}
+	if err := view.gui.SetKeybinding(view.Name, gocui.KeyArrowRight, gocui.ModNone, func(*gocui.Gui, *gocui.View) error { return view.CursorRight() }); err != nil {
+		return err
+	}
 	if err := view.gui.SetKeybinding(view.Name, gocui.KeySpace, gocui.ModNone, func(*gocui.Gui, *gocui.View) error { return view.toggleCollapse() }); err != nil {
 		return err
 	}
@@ -248,6 +251,34 @@ func (view *FileTreeView) CursorLeft() error {
 		view.bufferIndex = 0
 	}
 
+	view.Update()
+	return view.Render()
+}
+
+//CursorRight descends into directory expanding it if needed
+func (view *FileTreeView) CursorRight() error {
+	node := view.getAbsPositionNode()
+	if node == nil {
+		return nil
+	}
+	if !node.Data.FileInfo.TarHeader.FileInfo().IsDir() {
+		return nil
+	}
+	if len(node.Children) == 0 {
+		return nil
+	}
+	if node.Data.ViewInfo.Collapsed {
+		node.Data.ViewInfo.Collapsed = false
+	}
+	view.TreeIndex++
+	if view.TreeIndex > view.bufferIndexUpperBound {
+		view.bufferIndexUpperBound++
+		view.bufferIndexLowerBound++
+	}
+	view.bufferIndex++
+	if view.bufferIndex > view.height() {
+		view.bufferIndex = view.height()
+	}
 	view.Update()
 	return view.Render()
 }
