@@ -191,6 +191,10 @@ func layout(g *gocui.Gui) error {
 	filterBarIndex := 2
 
 	layersHeight := len(Views.Layer.Layers) + headerRows + 1 // layers + header + base image layer row
+	maxLayerHeight := int(0.75 * float64(maxY))
+	if layersHeight > maxLayerHeight {
+		layersHeight = maxLayerHeight
+	}
 
 	var view, header *gocui.View
 	var viewErr, headerErr, err error
