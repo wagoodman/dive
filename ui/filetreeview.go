@@ -76,6 +76,12 @@ func (view *FileTreeView) Setup(v *gocui.View, header *gocui.View) error {
 	if err := view.gui.SetKeybinding(view.Name, gocui.KeyArrowRight, gocui.ModNone, func(*gocui.Gui, *gocui.View) error { return view.CursorRight() }); err != nil {
 		return err
 	}
+	if err := view.gui.SetKeybinding(view.Name, gocui.KeyPgdn, gocui.ModNone, func(*gocui.Gui, *gocui.View) error { return view.PageDown() }); err != nil {
+		return err
+	}
+	if err := view.gui.SetKeybinding(view.Name, gocui.KeyPgup, gocui.ModNone, func(*gocui.Gui, *gocui.View) error { return view.PageUp() }); err != nil {
+		return err
+	}
 	if err := view.gui.SetKeybinding(view.Name, gocui.KeySpace, gocui.ModNone, func(*gocui.Gui, *gocui.View) error { return view.toggleCollapse() }); err != nil {
 		return err
 	}
@@ -280,6 +286,56 @@ func (view *FileTreeView) CursorRight() error {
 		view.bufferIndex = view.height()
 	}
 	view.Update()
+	return view.Render()
+}
+
+// PageDown moves to next page putting the cursor on top
+func (view *FileTreeView) PageDown() error {
+	nextBufferIndexLowerBound := view.bufferIndexLowerBound + view.height()
+	nextBufferIndexUpperBound := view.bufferIndexUpperBound + view.height()
+
+	treeString := view.ViewTree.StringBetween(nextBufferIndexLowerBound, nextBufferIndexUpperBound, true)
+	lines := strings.Split(treeString, "\n")
+
+	newLines := uint(len(lines)) - 1
+	if view.height() >= newLines {
+		nextBufferIndexLowerBound = view.bufferIndexLowerBound + newLines
+		nextBufferIndexUpperBound = view.bufferIndexUpperBound + newLines
+	}
+	view.bufferIndexLowerBound = nextBufferIndexLowerBound
+	view.bufferIndexUpperBound = nextBufferIndexUpperBound
+
+	if view.TreeIndex < nextBufferIndexLowerBound {
+		view.bufferIndex = 0
+		view.TreeIndex = nextBufferIndexLowerBound
+	} else {
+		view.bufferIndex = view.bufferIndex - newLines
+	}
+	return view.Render()
+}
+
+// PageUp moves to previous page putting the cursor on top
+func (view *FileTreeView) PageUp() error {
+	nextBufferIndexLowerBound := view.bufferIndexLowerBound - view.height()
+	nextBufferIndexUpperBound := view.bufferIndexUpperBound - view.height()
+
+	treeString := view.ViewTree.StringBetween(nextBufferIndexLowerBound, nextBufferIndexUpperBound, true)
+	lines := strings.Split(treeString, "\n")
+
+	newLines := uint(len(lines)) - 2
+	if view.height() >= newLines {
+		nextBufferIndexLowerBound = view.bufferIndexLowerBound - newLines
+		nextBufferIndexUpperBound = view.bufferIndexUpperBound - newLines
+	}
+	view.bufferIndexLowerBound = nextBufferIndexLowerBound
+	view.bufferIndexUpperBound = nextBufferIndexUpperBound
+
+	if view.TreeIndex > (nextBufferIndexUpperBound - 1) {
+		view.bufferIndex = 0
+		view.TreeIndex = nextBufferIndexLowerBound
+	} else {
+		view.bufferIndex = view.bufferIndex + newLines
+	}
 	return view.Render()
 }
 
