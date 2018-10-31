@@ -6,12 +6,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/sirupsen/logrus"
 	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/sirupsen/logrus"
 
 	"github.com/docker/docker/client"
 	"github.com/wagoodman/dive/filetree"
@@ -201,7 +202,7 @@ func InitializeData(imageID string) ([]*Layer, []*filetree.FileTree, float64, fi
 
 	// pull the image if it does not exist
 	ctx := context.Background()
-	dockerClient, err := client.NewClientWithOpts(client.WithVersion(dockerVersion))
+	dockerClient, err := client.NewClientWithOpts(client.WithVersion(dockerVersion), client.FromEnv)
 	if err != nil {
 		fmt.Println("Could not connect to the Docker daemon:" + err.Error())
 		utils.Exit(1)
@@ -334,7 +335,7 @@ func InitializeData(imageID string) ([]*Layer, []*filetree.FileTree, float64, fi
 
 func saveImage(imageID string) (string, string) {
 	ctx := context.Background()
-	dockerClient, err := client.NewClientWithOpts(client.WithVersion(dockerVersion))
+	dockerClient, err := client.NewClientWithOpts(client.WithVersion(dockerVersion), client.FromEnv)
 	if err != nil {
 		fmt.Println("Could not connect to the Docker daemon:" + err.Error())
 		utils.Exit(1)
