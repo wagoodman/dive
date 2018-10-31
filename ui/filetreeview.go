@@ -199,7 +199,7 @@ func (view *FileTreeView) CursorUp() error {
 	return nil
 }
 
-//CursorLeft moves the cursor up until we reach the Parent Node or top of the tree
+// CursorLeft moves the cursor up until we reach the Parent Node or top of the tree
 func (view *FileTreeView) CursorLeft() error {
 	var visitor func(*filetree.FileNode) error
 	var evaluator func(*filetree.FileNode) bool
@@ -255,7 +255,7 @@ func (view *FileTreeView) CursorLeft() error {
 	return view.Render()
 }
 
-//CursorRight descends into directory expanding it if needed
+// CursorRight descends into directory expanding it if needed
 func (view *FileTreeView) CursorRight() error {
 	node := view.getAbsPositionNode()
 	if node == nil {

@@ -245,8 +245,11 @@ func (tree *FileTree) RemovePath(path string) error {
 	return node.Remove()
 }
 
-// Compare marks the FileNodes in the owning tree with DiffType annotations when compared to the given tree.
+// Compare marks the FileNodes in the owning (lower) tree with DiffType annotations when compared to the given (upper) tree.
 func (tree *FileTree) Compare(upper *FileTree) error {
+	// always compare relative to the original, unaltered tree.
+	originalTree := tree.Copy()
+
 	graft := func(upperNode *FileNode) error {
 		if upperNode.IsWhiteout() {
 			err := tree.markRemoved(upperNode.Path())
@@ -254,20 +257,26 @@ func (tree *FileTree) Compare(upper *FileTree) error {
 				return fmt.Errorf("cannot remove upperNode %s: %v", upperNode.Path(), err.Error())
 			}
 		} else {
-			lowerNode, _ := tree.GetNode(upperNode.Path())
-			if lowerNode == nil {
+			// compare against the original tree (to ensure new parents with new children are captured as new instead of modified)
+			originalLowerNode, _ := originalTree.GetNode(upperNode.Path())
+
+			if originalLowerNode == nil {
 				newNode, err := tree.AddPath(upperNode.Path(), upperNode.Data.FileInfo)
 				if err != nil {
 					return fmt.Errorf("cannot add new upperNode %s: %v", upperNode.Path(), err.Error())
 				}
 				newNode.AssignDiffType(Added)
 			} else {
+				// check the tree for comparison markings
+				lowerNode, _ := tree.GetNode(upperNode.Path())
+
 				diffType := lowerNode.compare(upperNode)
 				return lowerNode.deriveDiffType(diffType)
 			}
 		}
 		return nil
 	}
+	// we must visit from the leaves upwards to ensure that diff types can be derived from and assigned to children
 	return upper.VisitDepthChildFirst(graft, nil)
 }
 

@@ -288,7 +288,7 @@ func TestCompareWithAdds(t *testing.T) {
 	lowerTree := NewFileTree()
 	upperTree := NewFileTree()
 	lowerPaths := [...]string{"/etc", "/etc/sudoers", "/usr", "/etc/hosts", "/usr/bin"}
-	upperPaths := [...]string{"/etc", "/etc/sudoers", "/usr", "/etc/hosts", "/usr/bin", "/usr/bin/bash"}
+	upperPaths := [...]string{"/etc", "/etc/sudoers", "/usr", "/etc/hosts", "/usr/bin", "/usr/bin/bash", "/a/new/path"}
 
 	for _, value := range lowerPaths {
 		lowerTree.AddPath(value, FileInfo{
@@ -316,7 +316,7 @@ func TestCompareWithAdds(t *testing.T) {
 		p := n.Path()
 		if p == "/" {
 			return nil
-		} else if stringInSlice(p, []string{"/usr/bin/bash"}) {
+		} else if stringInSlice(p, []string{"/usr/bin/bash", "/a", "/a/new", "/a/new/path"}) {
 			if err := AssertDiffType(n, Added); err != nil {
 				failedAssertions = append(failedAssertions, err)
 			}

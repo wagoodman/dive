@@ -147,18 +147,19 @@ func (node *FileNode) MetadataString() string {
 
 	var sizeBytes int64
 
-	if node.Data.FileInfo.TarHeader.FileInfo().IsDir() {
-
+	if node.IsLeaf() {
+		sizeBytes = node.Data.FileInfo.TarHeader.FileInfo().Size()
+	} else {
 		sizer := func(curNode *FileNode) error {
-			if curNode.Data.DiffType != Removed {
+			// don't include file sizes of children that have been removed (unless the node in question is a removed dir,
+			// then show the accumulated size of removed files)
+			if curNode.Data.DiffType != Removed || node.Data.DiffType == Removed {
 				sizeBytes += curNode.Data.FileInfo.TarHeader.FileInfo().Size()
 			}
 			return nil
 		}
 
 		node.VisitDepthChildFirst(sizer, nil)
-	} else {
-		sizeBytes = node.Data.FileInfo.TarHeader.FileInfo().Size()
 	}
 
 	size := humanize.Bytes(uint64(sizeBytes))
@@ -254,7 +255,7 @@ func (node *FileNode) Path() string {
 		}
 		node.path = "/" + strings.Join(path, "/")
 	}
-	return node.path
+	return strings.Replace(node.path, "//", "/", -1)
 }
 
 // deriveDiffType determines a DiffType to the current FileNode. Note: the DiffType of a node is always the DiffType of
