@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"github.com/wagoodman/dive/utils"
+	"io/ioutil"
 	"os"
 
 	"github.com/k0kubun/go-ansi"
@@ -38,8 +39,7 @@ func init() {
 	cobra.OnInitialize(initConfig)
 	cobra.OnInitialize(initLogging)
 
-	// TODO: add config options
-	// rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.dive.yaml)")
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.dive.yaml)")
 
 	rootCmd.PersistentFlags().BoolP("version", "v", false, "display version number")
 }
@@ -62,6 +62,25 @@ func initConfig() {
 		viper.SetConfigName(".dive")
 	}
 
+	viper.SetDefault("log.level", log.InfoLevel.String())
+	viper.SetDefault("log.path", "./dive.log")
+	viper.SetDefault("log.enabled", true)
+	// status view / global
+	viper.SetDefault("keybinding.quit", "ctrl+c")
+	viper.SetDefault("keybinding.toggle-view", "tab, ctrl+space")
+	viper.SetDefault("keybinding.filter-files", "ctrl+f, ctrl+slash")
+	// layer view
+	viper.SetDefault("keybinding.compare-all", "ctrl+a")
+	viper.SetDefault("keybinding.compare-layer", "ctrl+l")
+	// filetree view
+	viper.SetDefault("keybinding.toggle-collapse-dir", "space")
+	viper.SetDefault("keybinding.toggle-added-files", "ctrl+a")
+	viper.SetDefault("keybinding.toggle-removed-files", "ctrl+r")
+	viper.SetDefault("keybinding.toggle-modified-files", "ctrl+m")
+	viper.SetDefault("keybinding.toggle-unchanged-files", "ctrl+u")
+	viper.SetDefault("keybinding.page-up", "pgup")
+	viper.SetDefault("keybinding.page-down", "pgdn")
+
 	viper.AutomaticEnv() // read in environment variables that match
 
 	// If a config file is found, read it in.
@@ -70,21 +89,33 @@ func initConfig() {
 	}
 }
 
-// initLogging sets up the loggin object with a formatter and location
+// initLogging sets up the logging object with a formatter and location
 func initLogging() {
-	// TODO: clean this up and make more configurable
-	var filename string = "dive.log"
-	// create the log file if doesn't exist. And append to it if it already exists.
-	f, err := os.OpenFile(filename, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
+
+	if viper.GetBool("log.enabled") == false {
+		log.SetOutput(ioutil.Discard)
+	}
+
+	logFileObj, err := os.OpenFile(viper.GetString("log.path"), os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+	}
+
 	Formatter := new(log.TextFormatter)
 	Formatter.DisableTimestamp = true
 	log.SetFormatter(Formatter)
-	log.SetLevel(log.DebugLevel)
+
+	level, err := log.ParseLevel(viper.GetString("log.level"))
 	if err != nil {
-		// cannot open log file. Logging to stderr
-		fmt.Println(err)
-	} else {
-		log.SetOutput(f)
+		fmt.Fprintln(os.Stderr, err)
 	}
+	log.SetLevel(level)
+
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+	} else {
+		log.SetOutput(logFileObj)
+	}
+
 	log.Debug("Starting Dive...")
 }

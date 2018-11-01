@@ -2,6 +2,7 @@ package ui
 
 import (
 	"fmt"
+	"github.com/spf13/viper"
 
 	"github.com/dustin/go-humanize"
 	"github.com/jroimartin/gocui"
@@ -21,6 +22,9 @@ type LayerView struct {
 	Layers            []*image.Layer
 	CompareMode       CompareType
 	CompareStartIndex int
+
+	keybindingCompareAll   []Key
+	keybindingCompareLayer []Key
 }
 
 // NewDetailsView creates a new view object attached the the global [gocui] screen object.
@@ -32,6 +36,9 @@ func NewLayerView(name string, gui *gocui.Gui, layers []*image.Layer) (layerView
 	layerView.gui = gui
 	layerView.Layers = layers
 	layerView.CompareMode = CompareLayer
+
+	layerView.keybindingCompareAll = getKeybindings(viper.GetString("keybinding.compare-all"))
+	layerView.keybindingCompareLayer = getKeybindings(viper.GetString("keybinding.compare-layer"))
 
 	return layerView
 }
@@ -57,11 +64,17 @@ func (view *LayerView) Setup(v *gocui.View, header *gocui.View) error {
 	if err := view.gui.SetKeybinding(view.Name, gocui.KeyArrowUp, gocui.ModNone, func(*gocui.Gui, *gocui.View) error { return view.CursorUp() }); err != nil {
 		return err
 	}
-	if err := view.gui.SetKeybinding(view.Name, gocui.KeyCtrlL, gocui.ModNone, func(*gocui.Gui, *gocui.View) error { return view.setCompareMode(CompareLayer) }); err != nil {
-		return err
+
+	for _, key := range view.keybindingCompareLayer {
+		if err := view.gui.SetKeybinding("", key.value, key.modifier, func(*gocui.Gui, *gocui.View) error { return view.setCompareMode(CompareLayer) }); err != nil {
+			return err
+		}
 	}
-	if err := view.gui.SetKeybinding(view.Name, gocui.KeyCtrlA, gocui.ModNone, func(*gocui.Gui, *gocui.View) error { return view.setCompareMode(CompareAll) }); err != nil {
-		return err
+
+	for _, key := range view.keybindingCompareAll {
+		if err := view.gui.SetKeybinding("", key.value, key.modifier, func(*gocui.Gui, *gocui.View) error { return view.setCompareMode(CompareAll) }); err != nil {
+			return err
+		}
 	}
 
 	return view.Render()
@@ -212,6 +225,6 @@ func (view *LayerView) Render() error {
 
 // KeyHelp indicates all the possible actions a user can take while the current pane is selected.
 func (view *LayerView) KeyHelp() string {
-	return renderStatusOption("^L", "Show layer changes", view.CompareMode == CompareLayer) +
-		renderStatusOption("^A", "Show aggregated changes", view.CompareMode == CompareAll)
+	return renderStatusOption(view.keybindingCompareLayer[0].String(), "Show layer changes", view.CompareMode == CompareLayer) +
+		renderStatusOption(view.keybindingCompareAll[0].String(), "Show aggregated changes", view.CompareMode == CompareAll)
 }

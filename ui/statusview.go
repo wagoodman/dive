@@ -75,7 +75,7 @@ func (view *StatusView) Render() error {
 
 // KeyHelp indicates all the possible global actions a user can take when any pane is selected.
 func (view *StatusView) KeyHelp() string {
-	return renderStatusOption("^C", "Quit", false) +
-		renderStatusOption("TAB", "Switch view", false) +
-		renderStatusOption("^F", "Filter files", Views.Filter.IsVisible())
+	return renderStatusOption(GlobalKeybindings.quit[0].String(), "Quit", false) +
+		renderStatusOption(GlobalKeybindings.toggleView[0].String(), "Switch view", false) +
+		renderStatusOption(GlobalKeybindings.filterView[0].String(), "Filter files", Views.Filter.IsVisible())
 }

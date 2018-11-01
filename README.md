@@ -96,3 +96,47 @@ For docker in windows (does not support pulling images yet):
 docker run --rm -it -v //var/run/docker.sock:/var/run/docker.sock wagoodman/dive:latest <dive arguments...>
 ```
 
+## KeyBindings
+
+Key Binding                                | Description
+-------------------------------------------|---------------------------------------------------------
+<kbd>Ctrl + C</kbd>                        | Exit
+<kbd>Tab</kbd> or <kbd>Ctrl + Space</kbd>  | Switch between the layer and filetree views
+<kbd>Ctrl + F</kbd>                        | Filter files
+<kbd>Ctrl + A</kbd>                        | Layer view: see aggregated image modifications
+<kbd>Ctrl + L</kbd>                        | Layer view: see current layer modifications
+<kbd>Space</kbd>                           | Filetree view: collapse/uncollapse a directory
+<kbd>Ctrl + A</kbd>                        | Filetree view: show/hide added files
+<kbd>Ctrl + R</kbd>                        | Filetree view: show/hide removed files
+<kbd>Ctrl + M</kbd>                        | Filetree view: show/hide modified files
+<kbd>Ctrl + U</kbd>                        | Filetree view: show/hide unmodified files
+<kbd>PageUp</kbd>                          | Filetree view: scroll up a page
+<kbd>PageDown</kbd>                        | Filetree view: scroll down a page
+
+## Configuration
+
+No configuration is necessary, however, you can create a `~/.dive.yaml` file and override values:
+```yaml
+log:
+  enabled: true
+  path: ./dive.log
+  level: info
+
+# note: you can specify multiple bindings by separating values with a comma. UI hinting shows the first binding.
+keybinding:
+  # global bindings
+  quit: ctrl+c
+  toggle-view: tab, ctrl+space
+  filter-files: ctrl+f, ctrl+slash
+  # layer view specific bindings  
+  compare-all: ctrl+a
+  compare-layer: ctrl+l
+  # file view specific bindings
+  toggle-collapse-dir: space
+  toggle-added-files: ctrl+a
+  toggle-removed-files: ctrl+r
+  toggle-modified-files: ctrl+m
+  toggle-unmodified-files: ctrl+u
+  page-up: pgup
+  page-down: pgdn
+```

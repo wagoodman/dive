@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/fatih/color"
 	"github.com/jroimartin/gocui"
+	"github.com/spf13/viper"
 	"github.com/wagoodman/dive/filetree"
 	"github.com/wagoodman/dive/image"
 	"log"
@@ -47,6 +48,12 @@ var Views struct {
 	Filter  *FilterView
 	Details *DetailsView
 	lookup  map[string]View
+}
+
+var GlobalKeybindings struct {
+	quit       []Key
+	toggleView []Key
+	filterView []Key
 }
 
 // View defines the a renderable terminal screen pane.
@@ -140,23 +147,22 @@ func quit(g *gocui.Gui, v *gocui.View) error {
 
 // keyBindings registers global key press actions, valid when in any pane.
 func keyBindings(g *gocui.Gui) error {
-	if err := g.SetKeybinding("", gocui.KeyCtrlC, gocui.ModNone, quit); err != nil {
-		return err
+	for _, key := range GlobalKeybindings.quit {
+		if err := g.SetKeybinding("", key.value, key.modifier, quit); err != nil {
+			return err
+		}
 	}
-	//if err := g.SetKeybinding("main", gocui.MouseLeft, gocui.ModNone, toggleCollapse); err != nil {
-	//	return err
-	//}
-	if err := g.SetKeybinding("", gocui.KeyCtrlSpace, gocui.ModNone, toggleView); err != nil {
-		return err
+
+	for _, key := range GlobalKeybindings.toggleView {
+		if err := g.SetKeybinding("", key.value, key.modifier, toggleView); err != nil {
+			return err
+		}
 	}
-	if err := g.SetKeybinding("", gocui.KeyTab, gocui.ModNone, toggleView); err != nil {
-		return err
-	}
-	if err := g.SetKeybinding("", gocui.KeyCtrlSlash, gocui.ModNone, toggleFilterView); err != nil {
-		return err
-	}
-	if err := g.SetKeybinding("", gocui.KeyCtrlF, gocui.ModNone, toggleFilterView); err != nil {
-		return err
+
+	for _, key := range GlobalKeybindings.filterView {
+		if err := g.SetKeybinding("", key.value, key.modifier, toggleFilterView); err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -299,6 +305,10 @@ func Run(layers []*image.Layer, refTrees []*filetree.FileTree, efficiency float6
 	Formatting.CompareTop = color.New(color.BgMagenta).SprintFunc()
 	Formatting.CompareBottom = color.New(color.BgGreen).SprintFunc()
 
+	GlobalKeybindings.quit = getKeybindings(viper.GetString("keybinding.quit"))
+	GlobalKeybindings.toggleView = getKeybindings(viper.GetString("keybinding.toggle-view"))
+	GlobalKeybindings.filterView = getKeybindings(viper.GetString("keybinding.filter-files"))
+
 	g, err := gocui.NewGui(gocui.OutputNormal)
 	if err != nil {
 		log.Panicln(err)
@@ -329,9 +339,6 @@ func Run(layers []*image.Layer, refTrees []*filetree.FileTree, efficiency float6
 	// perform the first update and render now that all resources have been loaded
 	Update()
 	Render()
-
-	// let the default position of the cursor be the last layer
-	// Views.Layer.SetCursor(len(Views.Layer.Layers)-1)
 
 	if err := keyBindings(g); err != nil {
 		log.Panicln(err)
