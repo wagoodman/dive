@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"bytes"
 	"os"
 	"os/exec"
 	"strings"
@@ -29,4 +30,16 @@ func cleanArgs(s []string) []string {
 		}
 	}
 	return r
+}
+
+func DiscoverDockerVersion() string {
+	cmd := exec.Command("docker", "version", "--format", "{{.Server.APIVersion}}")
+	cmdOutput := &bytes.Buffer{}
+	cmd.Stdout = cmdOutput
+
+	err := cmd.Run()
+	if err != nil {
+		panic(err)
+	}
+	return strings.TrimSpace(string(cmdOutput.Bytes()))
 }

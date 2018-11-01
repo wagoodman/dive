@@ -22,7 +22,7 @@ import (
 )
 
 // TODO: this file should be rethought... but since it's only for preprocessing it'll be tech debt for now.
-const dockerVersion = "1.26"
+var dockerVersion string
 
 func check(e error) {
 	if e != nil {
@@ -199,6 +199,8 @@ func InitializeData(imageID string) ([]*Layer, []*filetree.FileTree, float64, fi
 	var manifest ImageManifest
 	var layerMap = make(map[string]*filetree.FileTree)
 	var trees = make([]*filetree.FileTree, 0)
+	dockerVersion = utils.DiscoverDockerVersion()
+	logrus.Debug("Using docker version:", dockerVersion)
 
 	// pull the image if it does not exist
 	ctx := context.Background()
