@@ -122,15 +122,18 @@ log:
   path: ./dive.log
   level: info
 
-# note: you can specify multiple bindings by separating values with a comma. UI hinting shows the first binding.
+# note: you can specify multiple bindings by separating values with a comma.
+# note: UI hinting is derived from the first binding
 keybinding:
   # global bindings
   quit: ctrl+c
   toggle-view: tab, ctrl+space
   filter-files: ctrl+f, ctrl+slash
+
   # layer view specific bindings  
   compare-all: ctrl+a
   compare-layer: ctrl+l
+
   # file view specific bindings
   toggle-collapse-dir: space
   toggle-added-files: ctrl+a
