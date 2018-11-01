@@ -5,6 +5,9 @@ all: clean build
 run: build
 	./build/$(BIN) build -t dive-test:latest -f .data/Dockerfile .
 
+run-large: build
+	./build/$(BIN) amir20/clashleaders:latest
+
 build:
 	go build -o build/$(BIN)
 
