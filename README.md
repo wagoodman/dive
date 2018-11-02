@@ -51,14 +51,14 @@ command.
 
 **Ubuntu/Debian**
 ```bash
-wget https://github.com/wagoodman/dive/releases/download/v0.0.8/dive_0.0.8_linux_amd64.deb
-sudo apt install ./dive_0.0.8_linux_amd64.deb
+wget https://github.com/wagoodman/dive/releases/download/v0.1.0/dive_0.1.0_linux_amd64.deb
+sudo apt install ./dive_0.1.0_linux_amd64.deb
 ```
 
 **RHEL/Centos**
 ```bash
-wget https://github.com/wagoodman/dive/releases/download/v0.0.8/dive_0.0.8_linux_amd64.rpm
-rpm -i dive_0.0.8_linux_amd64.rpm
+wget https://github.com/wagoodman/dive/releases/download/v0.1.0/dive_0.1.0_linux_amd64.rpm
+rpm -i dive_0.1.0_linux_amd64.rpm
 ```
 
 **Mac**
