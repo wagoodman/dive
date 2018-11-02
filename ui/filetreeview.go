@@ -95,37 +95,37 @@ func (view *FileTreeView) Setup(v *gocui.View, header *gocui.View) error {
 	}
 
 	for _, key := range view.keybindingPageUp {
-		if err := view.gui.SetKeybinding("", key.value, key.modifier, func(*gocui.Gui, *gocui.View) error { return view.PageUp() }); err != nil {
+		if err := view.gui.SetKeybinding(view.Name, key.value, key.modifier, func(*gocui.Gui, *gocui.View) error { return view.PageUp() }); err != nil {
 			return err
 		}
 	}
 	for _, key := range view.keybindingPageDown {
-		if err := view.gui.SetKeybinding("", key.value, key.modifier, func(*gocui.Gui, *gocui.View) error { return view.PageDown() }); err != nil {
+		if err := view.gui.SetKeybinding(view.Name, key.value, key.modifier, func(*gocui.Gui, *gocui.View) error { return view.PageDown() }); err != nil {
 			return err
 		}
 	}
 	for _, key := range view.keybindingToggleCollapse {
-		if err := view.gui.SetKeybinding("", key.value, key.modifier, func(*gocui.Gui, *gocui.View) error { return view.toggleCollapse() }); err != nil {
+		if err := view.gui.SetKeybinding(view.Name, key.value, key.modifier, func(*gocui.Gui, *gocui.View) error { return view.toggleCollapse() }); err != nil {
 			return err
 		}
 	}
 	for _, key := range view.keybindingToggleAdded {
-		if err := view.gui.SetKeybinding("", key.value, key.modifier, func(*gocui.Gui, *gocui.View) error { return view.toggleShowDiffType(filetree.Added) }); err != nil {
+		if err := view.gui.SetKeybinding(view.Name, key.value, key.modifier, func(*gocui.Gui, *gocui.View) error { return view.toggleShowDiffType(filetree.Added) }); err != nil {
 			return err
 		}
 	}
 	for _, key := range view.keybindingToggleRemoved {
-		if err := view.gui.SetKeybinding("", key.value, key.modifier, func(*gocui.Gui, *gocui.View) error { return view.toggleShowDiffType(filetree.Removed) }); err != nil {
+		if err := view.gui.SetKeybinding(view.Name, key.value, key.modifier, func(*gocui.Gui, *gocui.View) error { return view.toggleShowDiffType(filetree.Removed) }); err != nil {
 			return err
 		}
 	}
 	for _, key := range view.keybindingToggleModified {
-		if err := view.gui.SetKeybinding("", key.value, key.modifier, func(*gocui.Gui, *gocui.View) error { return view.toggleShowDiffType(filetree.Changed) }); err != nil {
+		if err := view.gui.SetKeybinding(view.Name, key.value, key.modifier, func(*gocui.Gui, *gocui.View) error { return view.toggleShowDiffType(filetree.Changed) }); err != nil {
 			return err
 		}
 	}
 	for _, key := range view.keybindingToggleUnchanged {
-		if err := view.gui.SetKeybinding("", key.value, key.modifier, func(*gocui.Gui, *gocui.View) error { return view.toggleShowDiffType(filetree.Unchanged) }); err != nil {
+		if err := view.gui.SetKeybinding(view.Name, key.value, key.modifier, func(*gocui.Gui, *gocui.View) error { return view.toggleShowDiffType(filetree.Unchanged) }); err != nil {
 			return err
 		}
 	}

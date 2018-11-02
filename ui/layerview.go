@@ -66,13 +66,13 @@ func (view *LayerView) Setup(v *gocui.View, header *gocui.View) error {
 	}
 
 	for _, key := range view.keybindingCompareLayer {
-		if err := view.gui.SetKeybinding("", key.value, key.modifier, func(*gocui.Gui, *gocui.View) error { return view.setCompareMode(CompareLayer) }); err != nil {
+		if err := view.gui.SetKeybinding(view.Name, key.value, key.modifier, func(*gocui.Gui, *gocui.View) error { return view.setCompareMode(CompareLayer) }); err != nil {
 			return err
 		}
 	}
 
 	for _, key := range view.keybindingCompareAll {
-		if err := view.gui.SetKeybinding("", key.value, key.modifier, func(*gocui.Gui, *gocui.View) error { return view.setCompareMode(CompareAll) }); err != nil {
+		if err := view.gui.SetKeybinding(view.Name, key.value, key.modifier, func(*gocui.Gui, *gocui.View) error { return view.setCompareMode(CompareAll) }); err != nil {
 			return err
 		}
 	}
