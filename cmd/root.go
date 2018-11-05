@@ -39,7 +39,7 @@ func init() {
 	cobra.OnInitialize(initConfig)
 	cobra.OnInitialize(initLogging)
 
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.dive.yaml)")
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.dive.yaml, ~/.config/dive.yaml, or $XDG_CONFIG_HOME/dive.yaml)")
 
 	rootCmd.PersistentFlags().BoolP("version", "v", false, "display version number")
 }
@@ -57,9 +57,24 @@ func initConfig() {
 			utils.Exit(1)
 		}
 
-		// Search config in home directory with name ".dive" (without extension).
-		viper.AddConfigPath(home)
-		viper.SetConfigName(".dive")
+		// allow for:
+		//    ~/.dive.yaml
+		//    $XDG_CONFIG_HOME/dive.yaml
+		//    ~/.config/dive.yaml
+		hiddenHomeCfg := home + string(os.PathSeparator) + ".dive.yaml"
+		if _, err := os.Stat(hiddenHomeCfg); os.IsNotExist(err) {
+			viper.SetConfigName("dive")
+
+			xdgHome := os.Getenv("XDG_CONFIG_HOME")
+			if len(xdgHome) > 0 {
+				viper.AddConfigPath(xdgHome)
+			}
+
+			viper.AddConfigPath(home + string(os.PathSeparator) + ".config")
+
+		} else {
+			viper.SetConfigFile(hiddenHomeCfg)
+		}
 	}
 
 	viper.SetDefault("log.level", log.InfoLevel.String())

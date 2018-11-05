@@ -115,7 +115,7 @@ Key Binding                                | Description
 
 ## Configuration
 
-No configuration is necessary, however, you can create a `~/.dive.yaml` file and override values:
+No configuration is necessary, however, you can create a config file and override values:
 ```yaml
 log:
   enabled: true
@@ -143,3 +143,8 @@ keybinding:
   page-up: pgup
   page-down: pgdn
 ```
+
+dive will search for configs in the following locations:
+- `~/.dive.yaml`
+- `$XDG_CONFIG_HOME/dive.yaml`
+- `~/.config/dive.yaml`
