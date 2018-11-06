@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
+	"github.com/wagoodman/dive/utils"
 	"regexp"
 	"strings"
 
@@ -54,6 +55,22 @@ func NewFileTreeView(name string, gui *gocui.Gui, tree *filetree.FileTree, refTr
 	treeView.ModelTree = tree
 	treeView.RefTrees = refTrees
 	treeView.HiddenDiffTypes = make([]bool, 4)
+
+	hiddenTypes := viper.GetStringSlice("diff.hide")
+	for _, hType := range hiddenTypes {
+		switch t := strings.ToLower(hType); t {
+		case "added":
+			treeView.HiddenDiffTypes[filetree.Added] = true
+		case "removed":
+			treeView.HiddenDiffTypes[filetree.Removed] = true
+		case "changed":
+			treeView.HiddenDiffTypes[filetree.Changed] = true
+		case "unchanged":
+			treeView.HiddenDiffTypes[filetree.Unchanged] = true
+		default:
+			utils.PrintAndExit(fmt.Sprintf("unknown diff.hide value: %s", t))
+		}
+	}
 
 	treeView.keybindingToggleCollapse = getKeybindings(viper.GetString("keybinding.toggle-collapse-dir"))
 	treeView.keybindingToggleAdded = getKeybindings(viper.GetString("keybinding.toggle-added-files"))

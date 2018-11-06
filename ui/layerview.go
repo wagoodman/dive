@@ -3,6 +3,7 @@ package ui
 import (
 	"fmt"
 	"github.com/spf13/viper"
+	"github.com/wagoodman/dive/utils"
 
 	"github.com/dustin/go-humanize"
 	"github.com/jroimartin/gocui"
@@ -35,7 +36,15 @@ func NewLayerView(name string, gui *gocui.Gui, layers []*image.Layer) (layerView
 	layerView.Name = name
 	layerView.gui = gui
 	layerView.Layers = layers
-	layerView.CompareMode = CompareLayer
+
+	switch mode := viper.GetBool("layer.show-aggregated-changes"); mode {
+	case true:
+		layerView.CompareMode = CompareAll
+	case false:
+		layerView.CompareMode = CompareLayer
+	default:
+		utils.PrintAndExit(fmt.Sprintf("unknown layer.show-aggregated-changes value: %s", mode))
+	}
 
 	layerView.keybindingCompareAll = getKeybindings(viper.GetString("keybinding.compare-all"))
 	layerView.keybindingCompareLayer = getKeybindings(viper.GetString("keybinding.compare-layer"))

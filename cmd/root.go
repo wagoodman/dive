@@ -80,14 +80,14 @@ func initConfig() {
 	viper.SetDefault("log.level", log.InfoLevel.String())
 	viper.SetDefault("log.path", "./dive.log")
 	viper.SetDefault("log.enabled", true)
-	// status view / global
+	// keybindings: status view / global
 	viper.SetDefault("keybinding.quit", "ctrl+c")
 	viper.SetDefault("keybinding.toggle-view", "tab, ctrl+space")
 	viper.SetDefault("keybinding.filter-files", "ctrl+f, ctrl+slash")
-	// layer view
+	// keybindings: layer view
 	viper.SetDefault("keybinding.compare-all", "ctrl+a")
 	viper.SetDefault("keybinding.compare-layer", "ctrl+l")
-	// filetree view
+	// keybindings: filetree view
 	viper.SetDefault("keybinding.toggle-collapse-dir", "space")
 	viper.SetDefault("keybinding.toggle-added-files", "ctrl+a")
 	viper.SetDefault("keybinding.toggle-removed-files", "ctrl+r")
@@ -95,6 +95,9 @@ func initConfig() {
 	viper.SetDefault("keybinding.toggle-unchanged-files", "ctrl+u")
 	viper.SetDefault("keybinding.page-up", "pgup")
 	viper.SetDefault("keybinding.page-down", "pgdn")
+
+	viper.SetDefault("diff.hide", "")
+	viper.SetDefault("layer.show-aggregated-changes", false)
 
 	viper.AutomaticEnv() // read in environment variables that match
 

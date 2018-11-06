@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/viper"
 	"github.com/wagoodman/dive/filetree"
 	"github.com/wagoodman/dive/image"
+	"github.com/wagoodman/dive/utils"
 	"log"
 )
 
@@ -313,6 +314,7 @@ func Run(layers []*image.Layer, refTrees []*filetree.FileTree, efficiency float6
 	if err != nil {
 		log.Panicln(err)
 	}
+	utils.SetUi(g)
 	defer g.Close()
 
 	Views.lookup = make(map[string]View)
@@ -347,4 +349,5 @@ func Run(layers []*image.Layer, refTrees []*filetree.FileTree, efficiency float6
 	if err := g.MainLoop(); err != nil && err != gocui.ErrQuit {
 		log.Panicln(err)
 	}
+	utils.Exit(0)
 }

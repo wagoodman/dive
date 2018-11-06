@@ -122,19 +122,19 @@ log:
   path: ./dive.log
   level: info
 
-# note: you can specify multiple bindings by separating values with a comma.
-# note: UI hinting is derived from the first binding
+# Note: you can specify multiple bindings by separating values with a comma.
+# Note: UI hinting is derived from the first binding
 keybinding:
-  # global bindings
+  # Global bindings
   quit: ctrl+c
   toggle-view: tab, ctrl+space
   filter-files: ctrl+f, ctrl+slash
 
-  # layer view specific bindings  
+  # Layer view specific bindings  
   compare-all: ctrl+a
   compare-layer: ctrl+l
 
-  # file view specific bindings
+  # File view specific bindings
   toggle-collapse-dir: space
   toggle-added-files: ctrl+a
   toggle-removed-files: ctrl+r
@@ -142,6 +142,19 @@ keybinding:
   toggle-unmodified-files: ctrl+u
   page-up: pgup
   page-down: pgdn
+  
+diff:
+  # You can change the default files show in the filetree (right pane). All diff types are shown by default. 
+  hide:
+    - added
+    - removed
+    - changed
+    - unchanged
+
+layer:
+  # Enable showing all changes from this layer and ever previous layer
+  show-aggregated-changes: false
+
 ```
 
 dive will search for configs in the following locations:
