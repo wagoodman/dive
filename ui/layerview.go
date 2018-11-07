@@ -43,7 +43,7 @@ func NewLayerView(name string, gui *gocui.Gui, layers []*image.Layer) (layerView
 	case false:
 		layerView.CompareMode = CompareLayer
 	default:
-		utils.PrintAndExit(fmt.Sprintf("unknown layer.show-aggregated-changes value: %s", mode))
+		utils.PrintAndExit(fmt.Sprintf("unknown layer.show-aggregated-changes value: %v", mode))
 	}
 
 	layerView.keybindingCompareAll = getKeybindings(viper.GetString("keybinding.compare-all"))
