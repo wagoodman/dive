@@ -10,7 +10,7 @@ import (
 	"github.com/wagoodman/dive/utils"
 )
 
-// analyze takes a docker image tag, digest, or id and displayes the
+// analyze takes a docker image tag, digest, or id and displays the
 // image analysis to the screen
 func analyze(cmd *cobra.Command, args []string) {
 	defer utils.Cleanup()
