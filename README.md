@@ -91,9 +91,13 @@ docker run --rm -it \
     -v $(which docker):/bin/docker \
     wagoodman/dive:latest <dive arguments...>
 ```
-For docker in windows (does not support pulling images yet):
+
+Docker for Windows (showing PowerShell compatible line breaks; collapse to a single line for Command Prompt compatibility)
 ```bash
-docker run --rm -it -v //var/run/docker.sock:/var/run/docker.sock wagoodman/dive:latest <dive arguments...>
+docker run --rm -it `
+    -v /var/run/docker.sock:/var/run/docker.sock `
+    -v /usr/local/bin/docker:/bin/docker `
+    wagoodman/dive:latest <dive arguments...>
 ```
 
 ## KeyBindings
