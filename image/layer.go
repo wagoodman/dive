@@ -49,7 +49,6 @@ func (layer *Layer) ShortId() string {
 
 // String represents a layer in a columnar format.
 func (layer *Layer) String() string {
-
 	return fmt.Sprintf(LayerFormat,
 		layer.ShortId(),
 		humanize.Bytes(uint64(layer.History.Size)),
