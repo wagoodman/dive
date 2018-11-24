@@ -98,6 +98,7 @@ func initConfig() {
 
 	viper.SetDefault("diff.hide", "")
 	viper.SetDefault("layer.show-aggregated-changes", false)
+	viper.SetDefault("filetree.collapse-dir", false)
 
 	viper.AutomaticEnv() // read in environment variables that match
 

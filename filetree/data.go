@@ -6,6 +6,7 @@ import (
 	"crypto/md5"
 	"fmt"
 	"github.com/sirupsen/logrus"
+	"github.com/spf13/viper"
 	"io"
 )
 
@@ -61,7 +62,7 @@ func (data *NodeData) Copy() *NodeData {
 // NewViewInfo creates a default ViewInfo
 func NewViewInfo() (view *ViewInfo) {
 	return &ViewInfo{
-		Collapsed: false,
+		Collapsed: viper.GetBool("filetree.collapse-dir"),
 		Hidden:    false,
 	}
 }
