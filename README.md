@@ -155,6 +155,10 @@ diff:
     - changed
     - unchanged
 
+filetree:
+  # The default directory-collapse state
+  collapse-dir: false
+
 layer:
   # Enable showing all changes from this layer and ever previous layer
   show-aggregated-changes: false
