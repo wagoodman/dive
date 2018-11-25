@@ -361,12 +361,17 @@ func saveImage(imageID string) (string, string) {
 	tmpDir, err := ioutil.TempDir("", "dive")
 	check(err)
 
+	cleanUpTmp := func() {
+		os.RemoveAll(tmpDir)
+	}
+
 	imageTarPath := filepath.Join(tmpDir, "image.tar")
 	imageFile, err := os.Create(imageTarPath)
 	check(err)
 
 	defer func() {
 		if err := imageFile.Close(); err != nil {
+			cleanUpTmp()
 			logrus.Panic(err)
 		}
 	}()
@@ -379,6 +384,7 @@ func saveImage(imageID string) (string, string) {
 	for {
 		n, err := readCloser.Read(buf)
 		if err != nil && err != io.EOF {
+			cleanUpTmp()
 			logrus.Panic(err)
 		}
 		if n == 0 {
@@ -392,11 +398,13 @@ func saveImage(imageID string) (string, string) {
 		}
 
 		if _, err := imageWriter.Write(buf[:n]); err != nil {
+			cleanUpTmp()
 			logrus.Panic(err)
 		}
 	}
 
 	if err = imageWriter.Flush(); err != nil {
+		cleanUpTmp()
 		logrus.Panic(err)
 	}
 
