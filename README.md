@@ -159,6 +159,9 @@ filetree:
   # The default directory-collapse state
   collapse-dir: false
 
+  # The percentage of screen width the filetree should take on the screen (must be >0 and <1)
+  pane-width: 0.5
+
 layer:
   # Enable showing all changes from this layer and ever previous layer
   show-aggregated-changes: false
