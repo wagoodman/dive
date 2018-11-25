@@ -88,7 +88,6 @@ When running you'll need to include the docker client binary and socket file:
 ```bash
 docker run --rm -it \
     -v /var/run/docker.sock:/var/run/docker.sock \
-    -v $(which docker):/bin/docker \
     wagoodman/dive:latest <dive arguments...>
 ```
 
@@ -96,7 +95,18 @@ Docker for Windows (showing PowerShell compatible line breaks; collapse to a sin
 ```bash
 docker run --rm -it `
     -v /var/run/docker.sock:/var/run/docker.sock `
-    -v /usr/local/bin/docker:/bin/docker `
+    wagoodman/dive:latest <dive arguments...>
+```
+
+**Note:** depending on the version of docker you are running locally you may need to specify the docker API version as an environment variable:
+```bash
+   DOCKER_API_VERSION=1.37 dive ...
+``` 
+or if you are running with a docker image:
+```bash
+docker run --rm -it \
+    -v /var/run/docker.sock:/var/run/docker.sock \
+    -e DOCKER_API_VERSION=1.37
     wagoodman/dive:latest <dive arguments...>
 ```
 

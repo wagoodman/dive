@@ -199,12 +199,10 @@ func InitializeData(imageID string) ([]*Layer, []*filetree.FileTree, float64, fi
 	var manifest ImageManifest
 	var layerMap = make(map[string]*filetree.FileTree)
 	var trees = make([]*filetree.FileTree, 0)
-	dockerVersion = utils.DiscoverDockerVersion()
-	logrus.Debug("Using docker version:", dockerVersion)
 
 	// pull the image if it does not exist
 	ctx := context.Background()
-	dockerClient, err := client.NewClientWithOpts(client.WithVersion(dockerVersion), client.FromEnv)
+	dockerClient, err := client.NewClientWithOpts(client.FromEnv)
 	if err != nil {
 		fmt.Println("Could not connect to the Docker daemon:" + err.Error())
 		utils.Exit(1)
