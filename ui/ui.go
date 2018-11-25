@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/fatih/color"
 	"github.com/jroimartin/gocui"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"github.com/wagoodman/dive/filetree"
 	"github.com/wagoodman/dive/image"
@@ -188,7 +189,12 @@ func layout(g *gocui.Gui) error {
 	// TODO: this logic should be refactored into an abstraction that takes care of the math for us
 
 	maxX, maxY := g.Size()
-	splitCols := maxX / 2
+	fileTreeSplitRatio := viper.GetFloat64("filetree.pane-width")
+	if fileTreeSplitRatio >= 1 || fileTreeSplitRatio <= 0 {
+		logrus.Errorf("invalid config value: 'filetree.pane-width' should be 0 < value < 1, given '%v'", fileTreeSplitRatio)
+		fileTreeSplitRatio = 0.5
+	}
+	splitCols := int(float64(maxX) * (1.0-fileTreeSplitRatio))
 	debugWidth := 0
 	if debug {
 		debugWidth = maxX / 4
