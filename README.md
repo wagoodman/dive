@@ -61,6 +61,16 @@ wget https://github.com/wagoodman/dive/releases/download/v0.3.0/dive_0.3.0_linux
 rpm -i dive_0.3.0_linux_amd64.rpm
 ```
 
+**Arch Linux**
+
+Available as [dive](https://aur.archlinux.org/packages/dive/) in the Arch User Repository (AUR).
+
+```bash
+aurman -S dive
+```
+
+The above example assumes `aurman` as the tool for installing AUR packages.
+
 **Mac**
 ```bash
 brew tap wagoodman/dive
