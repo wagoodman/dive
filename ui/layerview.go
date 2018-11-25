@@ -23,6 +23,7 @@ type LayerView struct {
 	Layers            []*image.Layer
 	CompareMode       CompareType
 	CompareStartIndex int
+	ImageSize         uint64
 
 	keybindingCompareAll   []Key
 	keybindingCompareLayer []Key
@@ -178,6 +179,10 @@ func (view *LayerView) renderCompareBar(layerIdx int) string {
 
 // Update refreshes the state objects for future rendering (currently does nothing).
 func (view *LayerView) Update() error {
+	view.ImageSize = 0
+	for idx := 0; idx < len(view.Layers); idx++ {
+		view.ImageSize += view.Layers[idx].History.Size
+	}
 	return nil
 }
 

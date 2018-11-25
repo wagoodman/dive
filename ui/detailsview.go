@@ -2,13 +2,12 @@ package ui
 
 import (
 	"fmt"
-	"strconv"
-	"strings"
-
 	"github.com/dustin/go-humanize"
 	"github.com/jroimartin/gocui"
 	"github.com/lunixbochs/vtclean"
 	"github.com/wagoodman/dive/filetree"
+	"strconv"
+	"strings"
 )
 
 // DetailsView holds the UI objects and data models for populating the lower-left pane. Specifically the pane that
@@ -112,15 +111,19 @@ func (view *DetailsView) Render() error {
 		}
 	}
 
-	effStr := fmt.Sprintf("\n%s %d %%", Formatting.Header("Image efficiency score:"), int(100.0*view.efficiency))
-	spaceStr := fmt.Sprintf("%s %s\n", Formatting.Header("Potential wasted space:"), humanize.Bytes(uint64(wastedSpace)))
+	imageSizeStr := fmt.Sprintf("%s %s", Formatting.Header("Total Image size:"), humanize.Bytes(Views.Layer.ImageSize))
+	effStr := fmt.Sprintf("%s %d %%", Formatting.Header("Image efficiency score:"), int(100.0*view.efficiency))
+	wastedSpaceStr := fmt.Sprintf("%s %s", Formatting.Header("Potential wasted space:"), humanize.Bytes(uint64(wastedSpace)))
 
 	view.gui.Update(func(g *gocui.Gui) error {
 		// update header
 		view.header.Clear()
-		width, _ := g.Size()
-		headerStr := fmt.Sprintf("[Image & Layer Details]%s", strings.Repeat("─", width*2))
-		fmt.Fprintln(view.header, Formatting.Header(vtclean.Clean(headerStr, false)))
+		width, _ := view.view.Size()
+
+		layerHeaderStr := fmt.Sprintf("[Layer Details]%s", strings.Repeat("─", width-15))
+		imageHeaderStr := fmt.Sprintf("[Image Details]%s", strings.Repeat("─", width-15))
+
+		fmt.Fprintln(view.header, Formatting.Header(vtclean.Clean(layerHeaderStr, false)))
 
 		// update contents
 		view.view.Clear()
@@ -129,8 +132,11 @@ func (view *DetailsView) Render() error {
 		fmt.Fprintln(view.view, Formatting.Header("Command:"))
 		fmt.Fprintln(view.view, currentLayer.History.CreatedBy)
 
-		fmt.Fprintln(view.view, effStr)
-		fmt.Fprintln(view.view, spaceStr)
+		fmt.Fprintln(view.view, "\n"+Formatting.Header(vtclean.Clean(imageHeaderStr, false)))
+
+		fmt.Fprintln(view.view, imageSizeStr)
+		fmt.Fprintln(view.view, wastedSpaceStr)
+		fmt.Fprintln(view.view, effStr+"\n")
 
 		fmt.Fprintln(view.view, inefficiencyReport)
 		return nil
