@@ -31,6 +31,7 @@ func Execute() {
 		fmt.Println(err)
 		utils.Exit(1)
 	}
+	utils.Cleanup()
 }
 
 func init() {
