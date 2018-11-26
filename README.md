@@ -70,6 +70,7 @@ aurman -S dive
 ```
 
 The above example assumes `aurman` as the tool for installing AUR packages.
+*Note*: the AUR repository is **not** controlled by the dive project maintainer. 
 
 **Mac**
 ```bash
