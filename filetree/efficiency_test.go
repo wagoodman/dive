@@ -1,7 +1,7 @@
 package filetree
 
 import (
-	"archive/tar"
+	"github.com/chriscinelli/rawtar"
 	"testing"
 )
 
@@ -11,11 +11,11 @@ func TestEfficencyMap(t *testing.T) {
 		trees[idx] = NewFileTree()
 	}
 
-	trees[0].AddPath("/etc/nginx/nginx.conf", FileInfo{TarHeader: tar.Header{Size: 2000}})
-	trees[0].AddPath("/etc/nginx/public", FileInfo{TarHeader: tar.Header{Size: 3000}})
+	trees[0].AddPath("/etc/nginx/nginx.conf", FileInfo{TarHeader: rawtar.Header{Size: 2000}})
+	trees[0].AddPath("/etc/nginx/public", FileInfo{TarHeader: rawtar.Header{Size: 3000}})
 
-	trees[1].AddPath("/etc/nginx/nginx.conf", FileInfo{TarHeader: tar.Header{Size: 5000}})
-	trees[1].AddPath("/etc/athing", FileInfo{TarHeader: tar.Header{Size: 10000}})
+	trees[1].AddPath("/etc/nginx/nginx.conf", FileInfo{TarHeader: rawtar.Header{Size: 5000}})
+	trees[1].AddPath("/etc/athing", FileInfo{TarHeader: rawtar.Header{Size: 10000}})
 
 	trees[2].AddPath("/etc/.wh.nginx", *BlankFileChangeInfo("/etc/.wh.nginx"))
 

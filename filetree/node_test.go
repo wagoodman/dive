@@ -1,7 +1,7 @@
 package filetree
 
 import (
-	"archive/tar"
+	"github.com/chriscinelli/rawtar"
 	"testing"
 )
 
@@ -152,9 +152,9 @@ func TestDiffTypeFromRemovedChildren(t *testing.T) {
 
 func TestDirSize(t *testing.T) {
 	tree1 := NewFileTree()
-	tree1.AddPath("/etc/nginx/public1", FileInfo{TarHeader: tar.Header{Size: 100}})
-	tree1.AddPath("/etc/nginx/thing1", FileInfo{TarHeader: tar.Header{Size: 200}})
-	tree1.AddPath("/etc/nginx/public3/thing2", FileInfo{TarHeader: tar.Header{Size: 300}})
+	tree1.AddPath("/etc/nginx/public1", FileInfo{TarHeader: rawtar.Header{Size: 100}})
+	tree1.AddPath("/etc/nginx/thing1", FileInfo{TarHeader: rawtar.Header{Size: 200}})
+	tree1.AddPath("/etc/nginx/public3/thing2", FileInfo{TarHeader: rawtar.Header{Size: 300}})
 
 	node, _ := tree1.GetNode("/etc/nginx")
 	expected, actual := "----------        0:0      600 B ", node.MetadataString()

@@ -35,7 +35,7 @@ func BlankFileChangeInfo(path string) (f *FileInfo) {
 	result := FileInfo{
 		Path:     path,
 		TypeFlag: 1,
-		MD5sum:   [16]byte{1, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0},
+		Checksum:   [16]byte{1, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0},
 	}
 	return &result
 }

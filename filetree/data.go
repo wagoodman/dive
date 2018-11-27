@@ -1,13 +1,10 @@
 package filetree
 
 import (
-	"archive/tar"
+	"github.com/chriscinelli/rawtar"
 	"bytes"
-	"crypto/md5"
 	"fmt"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
-	"io"
 )
 
 const (
@@ -34,8 +31,8 @@ type ViewInfo struct {
 type FileInfo struct {
 	Path      string
 	TypeFlag  byte
-	MD5sum    [16]byte
-	TarHeader tar.Header
+	Checksum  string
+	TarHeader rawtar.Header
 }
 
 // DiffType defines the comparison result between two FileNodes
@@ -75,25 +72,20 @@ func (view *ViewInfo) Copy() (newView *ViewInfo) {
 }
 
 // NewFileInfo extracts the metadata from a tar header and file contents and generates a new FileInfo object.
-func NewFileInfo(reader *tar.Reader, header *tar.Header, path string) FileInfo {
-	if header.Typeflag == tar.TypeDir {
+func NewFileInfo(header *rawtar.Header, headerRaw *rawtar.Block, path string) FileInfo {
+	if header.Typeflag == rawtar.TypeDir {
 		return FileInfo{
 			Path:      path,
 			TypeFlag:  header.Typeflag,
-			MD5sum:    [16]byte{},
+			Checksum:    "",
 			TarHeader: *header,
 		}
-	}
-	fileBytes := make([]byte, header.Size)
-	_, err := reader.Read(fileBytes)
-	if err != nil && err != io.EOF {
-		logrus.Panic(err)
 	}
 
 	return FileInfo{
 		Path:      path,
 		TypeFlag:  header.Typeflag,
-		MD5sum:    md5.Sum(fileBytes),
+		Checksum:    parseString(headerRaw.V7().Chksum()),
 		TarHeader: *header,
 	}
 }
@@ -106,15 +98,22 @@ func (data *FileInfo) Copy() *FileInfo {
 	return &FileInfo{
 		Path:      data.Path,
 		TypeFlag:  data.TypeFlag,
-		MD5sum:    data.MD5sum,
+		Checksum:    data.Checksum,
 		TarHeader: data.TarHeader,
 	}
+}
+
+func parseString(b []byte) string {
+	if i := bytes.IndexByte(b, 0); i >= 0 {
+		return string(b[:i])
+	}
+	return string(b)
 }
 
 // Compare determines the DiffType between two FileInfos based on the type and contents of each given FileInfo
 func (data *FileInfo) Compare(other FileInfo) DiffType {
 	if data.TypeFlag == other.TypeFlag {
-		if bytes.Compare(data.MD5sum[:], other.MD5sum[:]) == 0 {
+		if data.Checksum == other.Checksum {
 			return Unchanged
 		}
 	}

@@ -1,7 +1,7 @@
 package filetree
 
 import (
-	"archive/tar"
+	"github.com/chriscinelli/rawtar"
 	"fmt"
 	"sort"
 	"strings"
@@ -124,7 +124,7 @@ func (node *FileNode) String() string {
 	}
 
 	display = node.Name
-	if node.Data.FileInfo.TarHeader.Typeflag == tar.TypeSymlink || node.Data.FileInfo.TarHeader.Typeflag == tar.TypeLink {
+	if node.Data.FileInfo.TarHeader.Typeflag == rawtar.TypeSymlink || node.Data.FileInfo.TarHeader.Typeflag == rawtar.TypeLink {
 		display += " → " + node.Data.FileInfo.TarHeader.Linkname
 	}
 	return diffTypeColor[node.Data.DiffType].Sprint(display)

@@ -1,7 +1,7 @@
 package image
 
 import (
-	"archive/tar"
+	"github.com/chriscinelli/rawtar"
 	"bufio"
 	"bytes"
 	"encoding/json"
@@ -97,7 +97,7 @@ type ImageHistoryEntry struct {
 	EmptyLayer bool   `json:"empty_layer"`
 }
 
-func NewImageManifest(reader *tar.Reader, header *tar.Header) ImageManifest {
+func NewImageManifest(reader *rawtar.Reader, header *rawtar.Header) ImageManifest {
 	size := header.Size
 	manifestBytes := make([]byte, size)
 	_, err := reader.Read(manifestBytes)
@@ -112,7 +112,7 @@ func NewImageManifest(reader *tar.Reader, header *tar.Header) ImageManifest {
 	return manifest[0]
 }
 
-func NewImageConfig(reader *tar.Reader, header *tar.Header) ImageConfig {
+func NewImageConfig(reader *rawtar.Reader, header *rawtar.Header) ImageConfig {
 	size := header.Size
 	configBytes := make([]byte, size)
 	_, err := reader.Read(configBytes)
@@ -149,7 +149,7 @@ func GetImageConfig(imageTarPath string, manifest ImageManifest) ImageConfig {
 	}
 	defer tarFile.Close()
 
-	tarReader := tar.NewReader(tarFile)
+	tarReader := rawtar.NewReader(tarFile)
 	for {
 		header, err := tarReader.Next()
 
@@ -236,7 +236,7 @@ func InitializeData(imageID string) ([]*Layer, []*filetree.FileTree, float64, fi
 	var observedBytes int64
 	var percent int
 
-	tarReader := tar.NewReader(tarFile)
+	tarReader := rawtar.NewReader(tarFile)
 	frame := jotframe.NewFixedFrame(1, true, false, false)
 	lastLine := frame.Lines()[0]
 	io.WriteString(lastLine, "    ╧")
@@ -262,7 +262,7 @@ func InitializeData(imageID string) ([]*Layer, []*filetree.FileTree, float64, fi
 		name := header.Name
 
 		// some layer tars can be relative layer symlinks to other layer tars
-		if header.Typeflag == tar.TypeSymlink || header.Typeflag == tar.TypeReg {
+		if header.Typeflag == rawtar.TypeSymlink || header.Typeflag == rawtar.TypeReg {
 
 			if strings.HasSuffix(name, "layer.tar") {
 				line, err := frame.Prepend()
@@ -419,9 +419,9 @@ func getFileList(tarredBytes []byte) []filetree.FileInfo {
 	var files []filetree.FileInfo
 
 	reader := bytes.NewReader(tarredBytes)
-	tarReader := tar.NewReader(reader)
+	tarReader := rawtar.NewReader(reader)
 	for {
-		header, err := tarReader.Next()
+		header, headerRaw, err := tarReader.NextRaw()
 
 		if err == io.EOF {
 			break
@@ -435,12 +435,12 @@ func getFileList(tarredBytes []byte) []filetree.FileInfo {
 		name := header.Name
 
 		switch header.Typeflag {
-		case tar.TypeXGlobalHeader:
+		case rawtar.TypeXGlobalHeader:
 			fmt.Printf("ERRG: XGlobalHeader: %v: %s\n", header.Typeflag, name)
-		case tar.TypeXHeader:
+		case rawtar.TypeXHeader:
 			fmt.Printf("ERRG: XHeader: %v: %s\n", header.Typeflag, name)
 		default:
-			files = append(files, filetree.NewFileInfo(tarReader, header, name))
+			files = append(files, filetree.NewFileInfo(header, headerRaw, name))
 		}
 	}
 	return files
