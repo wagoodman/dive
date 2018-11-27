@@ -31,7 +31,7 @@ type ViewInfo struct {
 type FileInfo struct {
 	Path      string
 	TypeFlag  byte
-	Checksum  string
+	Checksum  [8]byte
 	TarHeader rawtar.Header
 }
 
@@ -77,15 +77,18 @@ func NewFileInfo(header *rawtar.Header, headerRaw *rawtar.Block, path string) Fi
 		return FileInfo{
 			Path:      path,
 			TypeFlag:  header.Typeflag,
-			Checksum:    "",
+			Checksum:    [8]byte{},
 			TarHeader: *header,
 		}
 	}
 
+	var checksum =  [8]byte{};
+	copy(checksum[:], headerRaw.V7().Chksum())
+
 	return FileInfo{
 		Path:      path,
 		TypeFlag:  header.Typeflag,
-		Checksum:    parseString(headerRaw.V7().Chksum()),
+		Checksum:  checksum,
 		TarHeader: *header,
 	}
 }
@@ -103,17 +106,10 @@ func (data *FileInfo) Copy() *FileInfo {
 	}
 }
 
-func parseString(b []byte) string {
-	if i := bytes.IndexByte(b, 0); i >= 0 {
-		return string(b[:i])
-	}
-	return string(b)
-}
-
 // Compare determines the DiffType between two FileInfos based on the type and contents of each given FileInfo
 func (data *FileInfo) Compare(other FileInfo) DiffType {
 	if data.TypeFlag == other.TypeFlag {
-		if data.Checksum == other.Checksum {
+        if bytes.Compare(data.Checksum[:], other.Checksum[:]) == 0 {
 			return Unchanged
 		}
 	}
