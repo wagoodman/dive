@@ -27,6 +27,7 @@ func doBuild(cmd *cobra.Command, args []string) {
 	defer utils.Cleanup()
 	iidfile, err := ioutil.TempFile("/tmp", "dive.*.iid")
 	if err != nil {
+		utils.Cleanup()
 		log.Fatal(err)
 	}
 	defer os.Remove(iidfile.Name())
@@ -34,11 +35,13 @@ func doBuild(cmd *cobra.Command, args []string) {
 	allArgs := append([]string{"--iidfile", iidfile.Name()}, args...)
 	err = utils.RunDockerCmd("build", allArgs...)
 	if err != nil {
+		utils.Cleanup()
 		log.Fatal(err)
 	}
 
 	imageId, err := ioutil.ReadFile(iidfile.Name())
 	if err != nil {
+		utils.Cleanup()
 		log.Fatal(err)
 	}
 
