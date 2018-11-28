@@ -260,7 +260,11 @@ func (view *FileTreeView) CursorLeft() error {
 	var evaluator func(*filetree.FileNode) bool
 	var dfsCounter, newIndex uint
 	oldIndex := view.TreeIndex
-	parentPath := view.getAbsPositionNode().Parent.Path()
+	currentNode := view.getAbsPositionNode()
+	if currentNode == nil {
+		return nil
+	}
+	parentPath := currentNode.Parent.Path()
 
 	visitor = func(curNode *filetree.FileNode) error {
 		if strings.Compare(parentPath, curNode.Path()) == 0 {
