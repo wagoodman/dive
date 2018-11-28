@@ -97,30 +97,18 @@ type ImageHistoryEntry struct {
 	EmptyLayer bool   `json:"empty_layer"`
 }
 
-func NewImageManifest(reader *tar.Reader, header *tar.Header) ImageManifest {
-	size := header.Size
-	manifestBytes := make([]byte, size)
-	_, err := reader.Read(manifestBytes)
-	if err != nil && err != io.EOF {
-		logrus.Panic(err)
-	}
+func NewImageManifest(manifestBytes []byte) ImageManifest {
 	var manifest []ImageManifest
-	err = json.Unmarshal(manifestBytes, &manifest)
+	err := json.Unmarshal(manifestBytes, &manifest)
 	if err != nil {
 		logrus.Panic(err)
 	}
 	return manifest[0]
 }
 
-func NewImageConfig(reader *tar.Reader, header *tar.Header) ImageConfig {
-	size := header.Size
-	configBytes := make([]byte, size)
-	_, err := reader.Read(configBytes)
-	if err != nil && err != io.EOF {
-		logrus.Panic(err)
-	}
+func NewImageConfig(configBytes []byte) ImageConfig {
 	var imageConfig ImageConfig
-	err = json.Unmarshal(configBytes, &imageConfig)
+	err := json.Unmarshal(configBytes, &imageConfig)
 	if err != nil {
 		logrus.Panic(err)
 	}
@@ -136,40 +124,6 @@ func NewImageConfig(reader *tar.Reader, header *tar.Header) ImageConfig {
 	}
 
 	return imageConfig
-}
-
-func GetImageConfig(imageTarPath string, manifest ImageManifest) ImageConfig {
-	var config ImageConfig
-	// read through the image contents and build a tree
-	fmt.Println("  Fetching image config...")
-	tarFile, err := os.Open(imageTarPath)
-	if err != nil {
-		fmt.Println(err)
-		utils.Exit(1)
-	}
-	defer tarFile.Close()
-
-	tarReader := tar.NewReader(tarFile)
-	for {
-		header, err := tarReader.Next()
-
-		if err == io.EOF {
-			break
-		}
-
-		if err != nil {
-			fmt.Println(err)
-			utils.Exit(1)
-		}
-
-		name := header.Name
-		if name == manifest.ConfigPath {
-			config = NewImageConfig(tarReader, header)
-		}
-	}
-
-	// obtain the image history
-	return config
 }
 
 func processLayerTar(line *jotframe.Line, layerMap map[string]*filetree.FileTree, name string, tarredBytes []byte) {
@@ -196,7 +150,6 @@ func processLayerTar(line *jotframe.Line, layerMap map[string]*filetree.FileTree
 }
 
 func InitializeData(imageID string) ([]*Layer, []*filetree.FileTree, float64, filetree.EfficiencySlice) {
-	var manifest ImageManifest
 	var layerMap = make(map[string]*filetree.FileTree)
 	var trees = make([]*filetree.FileTree, 0)
 
@@ -239,6 +192,10 @@ func InitializeData(imageID string) ([]*Layer, []*filetree.FileTree, float64, fi
 	tarReader := tar.NewReader(tarFile)
 	frame := jotframe.NewFixedFrame(1, true, false, false)
 	lastLine := frame.Lines()[0]
+
+	// json files are small. Let's store the in a map so we can read the image in one pass
+	jsonFiles := make(map[string][]byte)
+
 	io.WriteString(lastLine, "    ╧")
 	lastLine.Close()
 
@@ -260,6 +217,7 @@ func InitializeData(imageID string) ([]*Layer, []*filetree.FileTree, float64, fi
 		io.WriteString(frame.Header(), fmt.Sprintf("  Discovering layers... %d %%", percent))
 
 		name := header.Name
+		var n int
 
 		// some layer tars can be relative layer symlinks to other layer tars
 		if header.Typeflag == tar.TypeSymlink || header.Typeflag == tar.TypeReg {
@@ -280,8 +238,13 @@ func InitializeData(imageID string) ([]*Layer, []*filetree.FileTree, float64, fi
 				}
 
 				go processLayerTar(line, layerMap, name, tarredBytes)
-			} else if name == "manifest.json" {
-				manifest = NewImageManifest(tarReader, header)
+			} else if strings.HasSuffix(name, ".json") {
+				var fileBuffer = make([]byte, header.Size)
+				n, err = tarReader.Read(fileBuffer)
+				if err != nil && err != io.EOF && int64(n) != header.Size {
+					logrus.Panic(err)
+				}
+				jsonFiles[name] = fileBuffer
 			}
 		}
 	}
@@ -290,8 +253,8 @@ func InitializeData(imageID string) ([]*Layer, []*filetree.FileTree, float64, fi
 	frame.Remove(lastLine)
 	fmt.Println("")
 
-	// obtain the image history
-	config := GetImageConfig(imageTarPath, manifest)
+	manifest := NewImageManifest(jsonFiles["manifest.json"])
+	config := NewImageConfig(jsonFiles[manifest.ConfigPath])
 
 	// build the content tree
 	fmt.Println("  Building tree...")
