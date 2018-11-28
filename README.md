@@ -66,10 +66,10 @@ rpm -i dive_0.3.0_linux_amd64.rpm
 Available as [dive](https://aur.archlinux.org/packages/dive/) in the Arch User Repository (AUR).
 
 ```bash
-aurman -S dive
+yay -S dive
 ```
 
-The above example assumes `aurman` as the tool for installing AUR packages.
+The above example assumes [`yay`](https://aur.archlinux.org/packages/yay/) as the tool for installing AUR packages.
 *Note*: the AUR repository is **not** controlled by the dive project maintainer. 
 
 **Mac**
