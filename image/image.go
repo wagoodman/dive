@@ -2,13 +2,9 @@ package image
 
 import (
 	"archive/tar"
-	"bufio"
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
-	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/sirupsen/logrus"
@@ -166,26 +162,9 @@ func InitializeData(imageID string) ([]*Layer, []*filetree.FileTree, float64, fi
 		utils.RunDockerCmd("pull", imageID)
 	}
 
-	// save this image to disk temporarily to get the content info
-	imageTarPath, tmpDir := saveImage(imageID)
-	// fmt.Println(imageTarPath)
-	// fmt.Println(tmpDir)
-	// imageTarPath := "/tmp/dive280665036/image.tar"
-	defer os.RemoveAll(tmpDir)
-
-	// read through the image contents and build a tree
-	tarFile, err := os.Open(imageTarPath)
-	if err != nil {
-		fmt.Println(err)
-		utils.Exit(1)
-	}
+	tarFile, totalSize := getImageReader(imageID)
 	defer tarFile.Close()
 
-	fi, err := tarFile.Stat()
-	if err != nil {
-		logrus.Panic(err)
-	}
-	totalSize := fi.Size()
 	var observedBytes int64
 	var percent int
 
@@ -290,7 +269,7 @@ func InitializeData(imageID string) ([]*Layer, []*filetree.FileTree, float64, fi
 	return layers, trees, efficiency, inefficiencies
 }
 
-func saveImage(imageID string) (string, string) {
+func getImageReader(imageID string) (io.ReadCloser, int64) {
 	ctx := context.Background()
 	dockerClient, err := client.NewClientWithOpts(client.WithVersion(dockerVersion), client.FromEnv)
 	if err != nil {
@@ -313,63 +292,9 @@ func saveImage(imageID string) (string, string) {
 
 	readCloser, err := dockerClient.ImageSave(ctx, []string{imageID})
 	check(err)
-	defer readCloser.Close()
-
-	tmpDir, err := ioutil.TempDir("", "dive")
-	check(err)
-
-	cleanUpTmp := func() {
-		os.RemoveAll(tmpDir)
-	}
-
-	imageTarPath := filepath.Join(tmpDir, "image.tar")
-	imageFile, err := os.Create(imageTarPath)
-	check(err)
-
-	defer func() {
-		if err := imageFile.Close(); err != nil {
-			cleanUpTmp()
-			logrus.Panic(err)
-		}
-	}()
-	imageWriter := bufio.NewWriter(imageFile)
-	pb := NewProgressBar(totalSize)
-
-	var observedBytes int64
-
-	buf := make([]byte, 1024)
-	for {
-		n, err := readCloser.Read(buf)
-		if err != nil && err != io.EOF {
-			cleanUpTmp()
-			logrus.Panic(err)
-		}
-		if n == 0 {
-			break
-		}
-
-		observedBytes += int64(n)
-
-		if pb.Update(observedBytes) {
-			io.WriteString(line, fmt.Sprintf("  Fetching image... %s", pb.String()))
-		}
-
-		if _, err := imageWriter.Write(buf[:n]); err != nil {
-			cleanUpTmp()
-			logrus.Panic(err)
-		}
-	}
-
-	if err = imageWriter.Flush(); err != nil {
-		cleanUpTmp()
-		logrus.Panic(err)
-	}
-
-	pb.Done()
-	io.WriteString(line, fmt.Sprintf("  Fetching image... %s", pb.String()))
 	frame.Close()
 
-	return imageTarPath, tmpDir
+	return readCloser, totalSize
 }
 
 func getFileList(tarReader *tar.Reader) []filetree.FileInfo {
