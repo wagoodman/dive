@@ -263,7 +263,7 @@ func TestCompareWithNoChanges(t *testing.T) {
 		fakeData := FileInfo{
 			Path:     value,
 			TypeFlag: 1,
-			MD5sum:   [16]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+			hash:     123,
 		}
 		lowerTree.AddPath(value, fakeData)
 		upperTree.AddPath(value, fakeData)
@@ -294,7 +294,7 @@ func TestCompareWithAdds(t *testing.T) {
 		lowerTree.AddPath(value, FileInfo{
 			Path:     value,
 			TypeFlag: 1,
-			MD5sum:   [16]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+			hash:     123,
 		})
 	}
 
@@ -302,7 +302,7 @@ func TestCompareWithAdds(t *testing.T) {
 		upperTree.AddPath(value, FileInfo{
 			Path:     value,
 			TypeFlag: 1,
-			MD5sum:   [16]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+			hash:     123,
 		})
 	}
 
@@ -354,12 +354,12 @@ func TestCompareWithChanges(t *testing.T) {
 		lowerTree.AddPath(value, FileInfo{
 			Path:     value,
 			TypeFlag: 1,
-			MD5sum:   [16]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+			hash:     123,
 		})
 		upperTree.AddPath(value, FileInfo{
 			Path:     value,
 			TypeFlag: 1,
-			MD5sum:   [16]byte{1, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0},
+			hash:     456,
 		})
 	}
 
@@ -404,7 +404,7 @@ func TestCompareWithRemoves(t *testing.T) {
 		fakeData := FileInfo{
 			Path:     value,
 			TypeFlag: 1,
-			MD5sum:   [16]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+			hash:     123,
 		}
 		lowerTree.AddPath(value, fakeData)
 	}
@@ -413,7 +413,7 @@ func TestCompareWithRemoves(t *testing.T) {
 		fakeData := FileInfo{
 			Path:     value,
 			TypeFlag: 1,
-			MD5sum:   [16]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+			hash:     123,
 		}
 		upperTree.AddPath(value, fakeData)
 	}
@@ -474,7 +474,7 @@ func TestStackRange(t *testing.T) {
 		fakeData := FileInfo{
 			Path:     value,
 			TypeFlag: 1,
-			MD5sum:   [16]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+			hash:     123,
 		}
 		lowerTree.AddPath(value, fakeData)
 	}
@@ -483,7 +483,7 @@ func TestStackRange(t *testing.T) {
 		fakeData := FileInfo{
 			Path:     value,
 			TypeFlag: 1,
-			MD5sum:   [16]byte{1, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0},
+			hash:     456,
 		}
 		upperTree.AddPath(value, fakeData)
 	}
@@ -500,7 +500,7 @@ func TestRemoveOnIterate(t *testing.T) {
 		fakeData := FileInfo{
 			Path:     value,
 			TypeFlag: 1,
-			MD5sum:   [16]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+			hash:     123,
 		}
 		node, err := tree.AddPath(value, fakeData)
 		if err == nil && stringInSlice(node.Path(), []string{"/etc"}) {

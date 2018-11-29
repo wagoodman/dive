@@ -2,12 +2,12 @@ package filetree
 
 import (
 	"archive/tar"
-	"bytes"
-	"crypto/md5"
 	"fmt"
+	"io"
+
+	"github.com/cespare/xxhash"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
-	"io"
 )
 
 const (
@@ -34,7 +34,7 @@ type ViewInfo struct {
 type FileInfo struct {
 	Path      string
 	TypeFlag  byte
-	MD5sum    [16]byte
+	hash      uint64
 	TarHeader tar.Header
 }
 
@@ -74,26 +74,44 @@ func (view *ViewInfo) Copy() (newView *ViewInfo) {
 	return newView
 }
 
+var chuckSize = 2 * 1024 * 1024
+
+func getHashFromReader(reader io.Reader) uint64 {
+	h := xxhash.New()
+
+	buf := make([]byte, chuckSize)
+	for {
+		n, err := reader.Read(buf)
+		if err != nil && err != io.EOF {
+			logrus.Panic(err)
+		}
+		if n == 0 {
+			break
+		}
+
+		h.Write(buf[:n])
+	}
+
+	return h.Sum64()
+}
+
 // NewFileInfo extracts the metadata from a tar header and file contents and generates a new FileInfo object.
 func NewFileInfo(reader *tar.Reader, header *tar.Header, path string) FileInfo {
 	if header.Typeflag == tar.TypeDir {
 		return FileInfo{
 			Path:      path,
 			TypeFlag:  header.Typeflag,
-			MD5sum:    [16]byte{},
+			hash:      0,
 			TarHeader: *header,
 		}
 	}
-	fileBytes := make([]byte, header.Size)
-	_, err := reader.Read(fileBytes)
-	if err != nil && err != io.EOF {
-		logrus.Panic(err)
-	}
+
+	hash := getHashFromReader(reader)
 
 	return FileInfo{
 		Path:      path,
 		TypeFlag:  header.Typeflag,
-		MD5sum:    md5.Sum(fileBytes),
+		hash:      hash,
 		TarHeader: *header,
 	}
 }
@@ -106,7 +124,7 @@ func (data *FileInfo) Copy() *FileInfo {
 	return &FileInfo{
 		Path:      data.Path,
 		TypeFlag:  data.TypeFlag,
-		MD5sum:    data.MD5sum,
+		hash:      data.hash,
 		TarHeader: data.TarHeader,
 	}
 }
@@ -114,7 +132,7 @@ func (data *FileInfo) Copy() *FileInfo {
 // Compare determines the DiffType between two FileInfos based on the type and contents of each given FileInfo
 func (data *FileInfo) Compare(other FileInfo) DiffType {
 	if data.TypeFlag == other.TypeFlag {
-		if bytes.Compare(data.MD5sum[:], other.MD5sum[:]) == 0 {
+		if data.hash == other.hash {
 			return Unchanged
 		}
 	}
