@@ -202,7 +202,7 @@ func InitializeData(imageID string) ([]*Layer, []*filetree.FileTree, float64, fi
 
 	// pull the image if it does not exist
 	ctx := context.Background()
-	dockerClient, err := client.NewClientWithOpts(client.FromEnv)
+	dockerClient, err := client.NewClientWithOpts(client.WithVersion(dockerVersion), client.FromEnv)
 	if err != nil {
 		fmt.Println("Could not connect to the Docker daemon:" + err.Error())
 		utils.Exit(1)
@@ -210,6 +210,7 @@ func InitializeData(imageID string) ([]*Layer, []*filetree.FileTree, float64, fi
 	_, _, err = dockerClient.ImageInspectWithRaw(ctx, imageID)
 	if err != nil {
 		// don't use the API, the CLI has more informative output
+		fmt.Println("Image not available locally... Trying to pull '" + imageID + "'")
 		utils.RunDockerCmd("pull", imageID)
 	}
 
