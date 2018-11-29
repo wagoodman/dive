@@ -3,7 +3,6 @@ package image
 import (
 	"archive/tar"
 	"bufio"
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -126,11 +125,11 @@ func NewImageConfig(configBytes []byte) ImageConfig {
 	return imageConfig
 }
 
-func processLayerTar(line *jotframe.Line, layerMap map[string]*filetree.FileTree, name string, tarredBytes []byte) {
+func processLayerTar(line *jotframe.Line, layerMap map[string]*filetree.FileTree, name string, reader *tar.Reader) {
 	tree := filetree.NewFileTree()
 	tree.Name = name
 
-	fileInfos := getFileList(tarredBytes)
+	fileInfos := getFileList(reader)
 
 	shortName := name[:15]
 	pb := NewProgressBar(int64(len(fileInfos)))
@@ -231,14 +230,8 @@ func InitializeData(imageID string) ([]*Layer, []*filetree.FileTree, float64, fi
 				shortName := name[:15]
 				io.WriteString(line, "    ├─ "+shortName+" : loading...")
 
-				var tarredBytes = make([]byte, header.Size)
-
-				_, err = tarReader.Read(tarredBytes)
-				if err != nil && err != io.EOF {
-					logrus.Panic(err)
-				}
-
-				go processLayerTar(line, layerMap, name, tarredBytes)
+				layerReader := tar.NewReader(tarReader)
+				processLayerTar(line, layerMap, name, layerReader)
 			} else if strings.HasSuffix(name, ".json") {
 				var fileBuffer = make([]byte, header.Size)
 				n, err = tarReader.Read(fileBuffer)
@@ -379,11 +372,9 @@ func saveImage(imageID string) (string, string) {
 	return imageTarPath, tmpDir
 }
 
-func getFileList(tarredBytes []byte) []filetree.FileInfo {
+func getFileList(tarReader *tar.Reader) []filetree.FileInfo {
 	var files []filetree.FileInfo
 
-	reader := bytes.NewReader(tarredBytes)
-	tarReader := tar.NewReader(reader)
 	for {
 		header, err := tarReader.Next()
 
