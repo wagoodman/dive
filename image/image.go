@@ -12,7 +12,6 @@ import (
 	"github.com/docker/docker/client"
 	"github.com/wagoodman/dive/filetree"
 	"github.com/wagoodman/dive/utils"
-	"github.com/wagoodman/jotframe"
 	"golang.org/x/net/context"
 )
 
@@ -121,7 +120,7 @@ func NewImageConfig(configBytes []byte) ImageConfig {
 	return imageConfig
 }
 
-func processLayerTar(line *jotframe.Line, layerMap map[string]*filetree.FileTree, name string, reader *tar.Reader) {
+func processLayerTar(layerMap map[string]*filetree.FileTree, name string, reader *tar.Reader, layerProgress string) {
 	tree := filetree.NewFileTree()
 	tree.Name = name
 
@@ -134,14 +133,15 @@ func processLayerTar(line *jotframe.Line, layerMap map[string]*filetree.FileTree
 		tree.AddPath(element.Path, element)
 
 		if pb.Update(int64(idx)) {
-			io.WriteString(line, fmt.Sprintf("    ├─ %s : %s", shortName, pb.String()))
+			message := fmt.Sprintf("    ├─ %s %s : %s", layerProgress, shortName, pb.String())
+			fmt.Printf("\r%s", message)
 		}
 	}
 	pb.Done()
-	io.WriteString(line, fmt.Sprintf("    ├─ %s : %s", shortName, pb.String()))
+	message := fmt.Sprintf("    ├─ %s %s : %s", layerProgress, shortName, pb.String())
+	fmt.Printf("\r%s\n", message)
 
 	layerMap[tree.Name] = tree
-	line.Close()
 }
 
 func InitializeData(imageID string) ([]*Layer, []*filetree.FileTree, float64, filetree.EfficiencySlice) {
@@ -158,31 +158,25 @@ func InitializeData(imageID string) ([]*Layer, []*filetree.FileTree, float64, fi
 	_, _, err = dockerClient.ImageInspectWithRaw(ctx, imageID)
 	if err != nil {
 		// don't use the API, the CLI has more informative output
-		fmt.Println("Image not available locally... Trying to pull '" + imageID + "'")
+		fmt.Println("Image not available locally. Trying to pull '" + imageID + "'...")
 		utils.RunDockerCmd("pull", imageID)
 	}
 
-	tarFile, totalSize := getImageReader(imageID)
+	tarFile, _ := getImageReader(imageID)
 	defer tarFile.Close()
 
-	var observedBytes int64
-	var percent int
+	var currentLayer uint
 
 	tarReader := tar.NewReader(tarFile)
-	frame := jotframe.NewFixedFrame(1, true, false, false)
-	lastLine := frame.Lines()[0]
 
 	// json files are small. Let's store the in a map so we can read the image in one pass
 	jsonFiles := make(map[string][]byte)
-
-	io.WriteString(lastLine, "    ╧")
-	lastLine.Close()
 
 	for {
 		header, err := tarReader.Next()
 
 		if err == io.EOF {
-			io.WriteString(frame.Header(), "  Discovering layers... Done!")
+			fmt.Println("    ╧")
 			break
 		}
 
@@ -191,9 +185,7 @@ func InitializeData(imageID string) ([]*Layer, []*filetree.FileTree, float64, fi
 			utils.Exit(1)
 		}
 
-		observedBytes += header.Size
-		percent = int(100.0 * (float64(observedBytes) / float64(totalSize)))
-		io.WriteString(frame.Header(), fmt.Sprintf("  Discovering layers... %d %%", percent))
+		layerProgress := fmt.Sprintf("[layer: %2d]", currentLayer)
 
 		name := header.Name
 		var n int
@@ -202,15 +194,15 @@ func InitializeData(imageID string) ([]*Layer, []*filetree.FileTree, float64, fi
 		if header.Typeflag == tar.TypeSymlink || header.Typeflag == tar.TypeReg {
 
 			if strings.HasSuffix(name, "layer.tar") {
-				line, err := frame.Prepend()
+				currentLayer++
 				if err != nil {
 					logrus.Panic(err)
 				}
-				shortName := name[:15]
-				io.WriteString(line, "    ├─ "+shortName+" : loading...")
+				message := fmt.Sprintf("    ├─ %s %s ", layerProgress, "working...")
+				fmt.Printf("\r%s", message)
 
 				layerReader := tar.NewReader(tarReader)
-				processLayerTar(line, layerMap, name, layerReader)
+				processLayerTar(layerMap, name, layerReader, layerProgress)
 			} else if strings.HasSuffix(name, ".json") {
 				var fileBuffer = make([]byte, header.Size)
 				n, err = tarReader.Read(fileBuffer)
@@ -221,10 +213,6 @@ func InitializeData(imageID string) ([]*Layer, []*filetree.FileTree, float64, fi
 			}
 		}
 	}
-	frame.Header().Close()
-	frame.Wait()
-	frame.Remove(lastLine)
-	fmt.Println("")
 
 	manifest := NewImageManifest(jsonFiles["manifest.json"])
 	config := NewImageConfig(jsonFiles[manifest.ConfigPath])
@@ -277,22 +265,18 @@ func getImageReader(imageID string) (io.ReadCloser, int64) {
 		utils.Exit(1)
 	}
 
-	frame := jotframe.NewFixedFrame(0, false, false, true)
-	line, err := frame.Append()
-	check(err)
-	io.WriteString(line, "  Fetching metadata...")
+
+	fmt.Println("  Fetching metadata...")
 
 	result, _, err := dockerClient.ImageInspectWithRaw(ctx, imageID)
+	check(err)
 	totalSize := result.Size
 
-	frame.Remove(line)
-	line, err = frame.Append()
-	check(err)
-	io.WriteString(line, "  Fetching image...")
+
+	fmt.Println( "  Fetching image...")
 
 	readCloser, err := dockerClient.ImageSave(ctx, []string{imageID})
 	check(err)
-	frame.Close()
 
 	return readCloser, totalSize
 }

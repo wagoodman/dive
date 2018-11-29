@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"github.com/fatih/color"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/wagoodman/dive/image"
@@ -45,6 +46,7 @@ func doBuild(cmd *cobra.Command, args []string) {
 		log.Fatal(err)
 	}
 
+	color.New(color.Bold).Println("Analyzing Image")
 	manifest, refTrees, efficiency, inefficiencies := image.InitializeData(string(imageId))
 	ui.Run(manifest, refTrees, efficiency, inefficiencies)
 }
