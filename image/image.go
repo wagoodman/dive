@@ -207,6 +207,7 @@ func InitializeData(imageID string) ([]*Layer, []*filetree.FileTree, float64, fi
 				var fileBuffer = make([]byte, header.Size)
 				n, err = tarReader.Read(fileBuffer)
 				if err != nil && err != io.EOF && int64(n) != header.Size {
+				if err != nil && err != io.EOF || int64(n) != header.Size {
 					logrus.Panic(err)
 				}
 				jsonFiles[name] = fileBuffer
