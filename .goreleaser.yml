@@ -4,6 +4,7 @@ release:
 builds:
   - binary: dive
     goos:
+      - windows
       - darwin
       - linux
     goarch:
