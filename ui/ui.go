@@ -194,7 +194,7 @@ func layout(g *gocui.Gui) error {
 		logrus.Errorf("invalid config value: 'filetree.pane-width' should be 0 < value < 1, given '%v'", fileTreeSplitRatio)
 		fileTreeSplitRatio = 0.5
 	}
-	splitCols := int(float64(maxX) * (1.0-fileTreeSplitRatio))
+	splitCols := int(float64(maxX) * (1.0 - fileTreeSplitRatio))
 	debugWidth := 0
 	if debug {
 		debugWidth = maxX / 4

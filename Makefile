@@ -11,7 +11,7 @@ run-large: build
 build:
 	go build -o build/$(BIN)
 
-release: test
+release: test validate
 	./.scripts/tag.sh
 	goreleaser --rm-dist
 
@@ -21,6 +21,10 @@ install:
 test: build
 	go test -cover -v ./...
 
+validate:
+	@! gofmt -s -d -l . 2>&1 | grep -vE '^\.git/'
+	go vet ./...
+
 lint: build
 	golint -set_exit_status $$(go list ./...)
 
@@ -29,4 +33,4 @@ clean:
 	rm -rf vendor
 	go clean
 
-.PHONY: build install test lint clean release
+.PHONY: build install test lint clean release validate
