@@ -206,7 +206,6 @@ func InitializeData(imageID string) ([]*Layer, []*filetree.FileTree, float64, fi
 			} else if strings.HasSuffix(name, ".json") {
 				var fileBuffer = make([]byte, header.Size)
 				n, err = tarReader.Read(fileBuffer)
-				if err != nil && err != io.EOF && int64(n) != header.Size {
 				if err != nil && err != io.EOF || int64(n) != header.Size {
 					logrus.Panic(err)
 				}
@@ -266,15 +265,13 @@ func getImageReader(imageID string) (io.ReadCloser, int64) {
 		utils.Exit(1)
 	}
 
-
 	fmt.Println("  Fetching metadata...")
 
 	result, _, err := dockerClient.ImageInspectWithRaw(ctx, imageID)
 	check(err)
 	totalSize := result.Size
 
-
-	fmt.Println( "  Fetching image...")
+	fmt.Println("  Fetching image...")
 
 	readCloser, err := dockerClient.ImageSave(ctx, []string{imageID})
 	check(err)
