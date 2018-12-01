@@ -157,6 +157,7 @@ func InitializeData(imageID string) ([]*Layer, []*filetree.FileTree, float64, fi
 	}
 	_, _, err = dockerClient.ImageInspectWithRaw(ctx, imageID)
 	if err != nil {
+		// todo: check specific error
 		// don't use the API, the CLI has more informative output
 		fmt.Println("Image not available locally. Trying to pull '" + imageID + "'...")
 		utils.RunDockerCmd("pull", imageID)
