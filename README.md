@@ -81,6 +81,7 @@ brew install dive
 or download a Darwin build from the releases page.
 
 **Windows**
+
 Download the [latest release](https://github.com/wagoodman/dive/releases/download/v0.4.0/dive_0.4.0_windows_amd64.zip)
 
 **Go tools**
