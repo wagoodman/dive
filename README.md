@@ -52,14 +52,14 @@ command.
 
 **Ubuntu/Debian**
 ```bash
-wget https://github.com/wagoodman/dive/releases/download/v0.3.0/dive_0.3.0_linux_amd64.deb
-sudo apt install ./dive_0.3.0_linux_amd64.deb
+wget https://github.com/wagoodman/dive/releases/download/v0.4.0/dive_0.4.0_linux_amd64.deb
+sudo apt install ./dive_0.4.0_linux_amd64.deb
 ```
 
 **RHEL/Centos**
 ```bash
-curl -OL https://github.com/wagoodman/dive/releases/download/v0.3.0/dive_0.3.0_linux_amd64.rpm
-rpm -i dive_0.3.0_linux_amd64.rpm
+curl -OL https://github.com/wagoodman/dive/releases/download/v0.4.0/dive_0.4.0_linux_amd64.rpm
+rpm -i dive_0.4.0_linux_amd64.rpm
 ```
 
 **Arch Linux**
