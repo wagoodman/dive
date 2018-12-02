@@ -10,9 +10,9 @@ import (
 	"github.com/wagoodman/dive/utils"
 )
 
-// analyze takes a docker image tag, digest, or id and displays the
+// doAnalyzeCmd takes a docker image tag, digest, or id and displays the
 // image analysis to the screen
-func analyze(cmd *cobra.Command, args []string) {
+func doAnalyzeCmd(cmd *cobra.Command, args []string) {
 	defer utils.Cleanup()
 	if len(args) == 0 {
 		printVersionFlag, err := cmd.PersistentFlags().GetBool("version")
@@ -33,6 +33,25 @@ func analyze(cmd *cobra.Command, args []string) {
 		utils.Exit(1)
 	}
 	color.New(color.Bold).Println("Analyzing Image")
-	manifest, refTrees, efficiency, inefficiencies := image.InitializeData(userImage)
-	ui.Run(manifest, refTrees, efficiency, inefficiencies)
+
+	ui.Run(fetchAndAnalyze(userImage))
+}
+
+func fetchAndAnalyze(imageID string) *image.AnalysisResult {
+	analyzer := image.GetAnalyzer(imageID)
+
+	fmt.Println("  Fetching image...")
+	err := analyzer.Parse(imageID)
+	if err != nil {
+		fmt.Printf("cannot fetch image: %v\n", err)
+		utils.Exit(1)
+	}
+
+	fmt.Println("  Analyzing image...")
+	result, err := analyzer.Analyze()
+	if err != nil {
+		fmt.Printf("cannot doAnalyzeCmd image: %v\n", err)
+		utils.Exit(1)
+	}
+	return result
 }
