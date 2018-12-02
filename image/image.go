@@ -268,7 +268,10 @@ func getImageReader(imageID string) (io.ReadCloser, int64) {
 	fmt.Println("  Fetching metadata...")
 
 	result, _, err := dockerClient.ImageInspectWithRaw(ctx, imageID)
-	check(err)
+	if err != nil {
+		fmt.Println(err.Error())
+		utils.Exit(1)
+	}
 	totalSize := result.Size
 
 	fmt.Println("  Fetching image...")
