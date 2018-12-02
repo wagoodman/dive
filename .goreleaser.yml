@@ -27,6 +27,10 @@ dockers:
 archive:
   format: tar.gz
 
+  format_overrides:
+    - goos: windows
+      format: zip
+
 nfpm:
   license: MIT
   maintainer: Alex Goodman
