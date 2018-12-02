@@ -101,9 +101,9 @@ func newExport(layers []*image.Layer, refTrees []*filetree.FileTree, efficiency 
 		data.Image.InefficientBytes += uint64(fileData.CumulativeSize)
 
 		data.Image.InefficientFiles[idx] = inefficientFiles{
-			Count: len(fileData.Nodes),
+			Count:     len(fileData.Nodes),
 			SizeBytes: uint64(fileData.CumulativeSize),
-			File: fileData.Path,
+			File:      fileData.Path,
 		}
 	}
 
@@ -112,7 +112,7 @@ func newExport(layers []*image.Layer, refTrees []*filetree.FileTree, efficiency 
 
 func exportStatistics(layers []*image.Layer, refTrees []*filetree.FileTree, efficiency float64, inefficiencies filetree.EfficiencySlice) {
 	data := newExport(layers, refTrees, efficiency, inefficiencies)
-	payload, err := json.MarshalIndent(&data, "" , "  ")
+	payload, err := json.MarshalIndent(&data, "", "  ")
 	if err != nil {
 		panic(err)
 	}
