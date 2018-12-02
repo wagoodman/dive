@@ -78,16 +78,17 @@ The above example assumes [`yay`](https://aur.archlinux.org/packages/yay/) as th
 brew tap wagoodman/dive
 brew install dive
 ```
-or download a Darwin build from the releases page.
+or download the latest Darwin build from the [releases page](https://github.com/wagoodman/dive/releases/download/v0.4.0/dive_0.4.0_darwin_amd64.tar.gz).
 
 **Windows**
 
-Download the [latest release](https://github.com/wagoodman/dive/releases/download/v0.4.0/dive_0.4.0_windows_amd64.zip)
+Download the [latest release](https://github.com/wagoodman/dive/releases/download/v0.4.0/dive_0.4.0_windows_amd64.zip).
 
 **Go tools**
 ```bash
 go get github.com/wagoodman/dive
 ```
+*Note*: installing in this way you will not see a proper version when running `dive -v`.
 
 **Docker**
 ```bash
