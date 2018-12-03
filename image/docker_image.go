@@ -10,16 +10,11 @@ import (
 	"github.com/wagoodman/dive/utils"
 	"golang.org/x/net/context"
 	"io"
+	"io/ioutil"
 	"strings"
 )
 
 var dockerVersion string
-
-func check(e error) {
-	if e != nil {
-		panic(e)
-	}
-}
 
 func newDockerImageAnalyzer() Analyzer {
 	return &dockerImageAnalyzer{}
@@ -108,7 +103,6 @@ func (image *dockerImageAnalyzer) read(tarFile io.ReadCloser) error {
 		layerProgress := fmt.Sprintf("[layer: %2d]", currentLayer)
 
 		name := header.Name
-		var n int
 
 		// some layer tars can be relative layer symlinks to other layer tars
 		if header.Typeflag == tar.TypeSymlink || header.Typeflag == tar.TypeReg {
@@ -116,7 +110,7 @@ func (image *dockerImageAnalyzer) read(tarFile io.ReadCloser) error {
 			if strings.HasSuffix(name, "layer.tar") {
 				currentLayer++
 				if err != nil {
-					logrus.Panic(err)
+					return err
 				}
 				message := fmt.Sprintf("    ├─ %s %s ", layerProgress, "working...")
 				fmt.Printf("\r%s", message)
@@ -124,9 +118,8 @@ func (image *dockerImageAnalyzer) read(tarFile io.ReadCloser) error {
 				layerReader := tar.NewReader(tarReader)
 				image.processLayerTar(name, layerReader, layerProgress)
 			} else if strings.HasSuffix(name, ".json") {
-				var fileBuffer = make([]byte, header.Size)
-				n, err = tarReader.Read(fileBuffer)
-				if err != nil && err != io.EOF || int64(n) != header.Size {
+				fileBuffer, err := ioutil.ReadAll(tarReader)
+				if err != nil {
 					return err
 				}
 				image.jsonFiles[name] = fileBuffer
@@ -200,7 +193,9 @@ func (image *dockerImageAnalyzer) getReader(imageID string) (io.ReadCloser, int6
 	totalSize := result.Size
 
 	readCloser, err := image.client.ImageSave(ctx, []string{imageID})
-	check(err)
+	if err != nil {
+		return nil, -1, err
+	}
 
 	return readCloser, totalSize, nil
 }
