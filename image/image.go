@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"strings"
 
 	"github.com/sirupsen/logrus"
@@ -188,8 +189,6 @@ func InitializeData(imageID string) ([]*Layer, []*filetree.FileTree, float64, fi
 		layerProgress := fmt.Sprintf("[layer: %2d]", currentLayer)
 
 		name := header.Name
-		var n int
-
 		// some layer tars can be relative layer symlinks to other layer tars
 		if header.Typeflag == tar.TypeSymlink || header.Typeflag == tar.TypeReg {
 
@@ -204,9 +203,8 @@ func InitializeData(imageID string) ([]*Layer, []*filetree.FileTree, float64, fi
 				layerReader := tar.NewReader(tarReader)
 				processLayerTar(layerMap, name, layerReader, layerProgress)
 			} else if strings.HasSuffix(name, ".json") {
-				var fileBuffer = make([]byte, header.Size)
-				n, err = tarReader.Read(fileBuffer)
-				if err != nil && err != io.EOF || int64(n) != header.Size {
+				fileBuffer, err := ioutil.ReadAll(tarReader)
+				if err != nil {
 					logrus.Panic(err)
 				}
 				jsonFiles[name] = fileBuffer
