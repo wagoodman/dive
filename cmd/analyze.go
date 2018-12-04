@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/wagoodman/dive/filetree"
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
@@ -34,7 +35,13 @@ func doAnalyzeCmd(cmd *cobra.Command, args []string) {
 	}
 	color.New(color.Bold).Println("Analyzing Image")
 
-	ui.Run(fetchAndAnalyze(userImage))
+	result := fetchAndAnalyze(userImage)
+
+	fmt.Println("  Building cache...")
+	cache := filetree.NewFileTreeCache(result.RefTrees)
+	cache.Build()
+
+	ui.Run(result, cache)
 }
 
 func fetchAndAnalyze(imageID string) *image.AnalysisResult {

@@ -301,7 +301,7 @@ func renderStatusOption(control, title string, selected bool) string {
 }
 
 // Run is the UI entrypoint.
-func Run(analysis *image.AnalysisResult) {
+func Run(analysis *image.AnalysisResult, cache filetree.TreeCache) {
 
 	Formatting.Selected = color.New(color.ReverseVideo, color.Bold).SprintFunc()
 	Formatting.Header = color.New(color.Bold).SprintFunc()
@@ -328,7 +328,7 @@ func Run(analysis *image.AnalysisResult) {
 	Views.Layer = NewLayerView("side", g, analysis.Layers)
 	Views.lookup[Views.Layer.Name] = Views.Layer
 
-	Views.Tree = NewFileTreeView("main", g, filetree.StackRange(analysis.RefTrees, 0, 0), analysis.RefTrees)
+	Views.Tree = NewFileTreeView("main", g, filetree.StackRange(analysis.RefTrees, 0, 0), analysis.RefTrees, cache)
 	Views.lookup[Views.Tree.Name] = Views.Tree
 
 	Views.Status = NewStatusView("status", g)
