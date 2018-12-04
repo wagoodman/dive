@@ -7,7 +7,6 @@ import (
 
 	"github.com/cespare/xxhash"
 	"github.com/sirupsen/logrus"
-	"github.com/spf13/viper"
 )
 
 const (
@@ -16,6 +15,8 @@ const (
 	Added
 	Removed
 )
+
+var GlobalFileTreeCollapse bool
 
 // NewNodeData creates an empty NodeData struct for a FileNode
 func NewNodeData() *NodeData {
@@ -38,7 +39,7 @@ func (data *NodeData) Copy() *NodeData {
 // NewViewInfo creates a default ViewInfo
 func NewViewInfo() (view *ViewInfo) {
 	return &ViewInfo{
-		Collapsed: viper.GetBool("filetree.collapse-dir"),
+		Collapsed: GlobalFileTreeCollapse,
 		Hidden:    false,
 	}
 }

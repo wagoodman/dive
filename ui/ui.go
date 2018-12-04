@@ -10,12 +10,13 @@ import (
 	"github.com/wagoodman/dive/filetree"
 	"github.com/wagoodman/dive/image"
 	"github.com/wagoodman/dive/utils"
+	"github.com/pkg/profile"
 	"log"
 )
 
 const debug = false
 
-// var profileObj = profile.Start(profile.CPUProfile, profile.ProfilePath("."), profile.NoShutdownHook)
+var profileObj = profile.Start(profile.MemProfile, profile.ProfilePath("."), profile.NoShutdownHook)
 
 // debugPrint writes the given string to the debug pane (if the debug pane is enabled)
 func debugPrint(s string) {
@@ -142,7 +143,7 @@ func CursorUp(g *gocui.Gui, v *gocui.View) error {
 // quit is the gocui callback invoked when the user hits Ctrl+C
 func quit(g *gocui.Gui, v *gocui.View) error {
 
-	// profileObj.Stop()
+	profileObj.Stop()
 
 	return gocui.ErrQuit
 }
