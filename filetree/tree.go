@@ -3,7 +3,6 @@ package filetree
 import (
 	"fmt"
 	"github.com/google/uuid"
-	"github.com/sirupsen/logrus"
 	"sort"
 	"strings"
 )
@@ -20,14 +19,7 @@ const (
 	collapsedItem        = "⊕ "
 )
 
-// FileTree represents a set of files, directories, and their relations.
-type FileTree struct {
-	Root     *FileNode
-	Size     int
-	FileSize uint64
-	Name     string
-	Id       uuid.UUID
-}
+
 
 // NewFileTree creates an empty FileTree
 func NewFileTree() (tree *FileTree) {
@@ -287,17 +279,4 @@ func (tree *FileTree) markRemoved(path string) error {
 		return err
 	}
 	return node.AssignDiffType(Removed)
-}
-
-// StackRange combines an array of trees into a single tree
-func StackRange(trees []*FileTree, start, stop int) *FileTree {
-	tree := trees[0].Copy()
-	for idx := start; idx <= stop; idx++ {
-		err := tree.Stack(trees[idx])
-		if err != nil {
-			logrus.Debug("could not stack tree range:", err)
-		}
-	}
-
-	return tree
 }

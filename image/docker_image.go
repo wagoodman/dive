@@ -210,7 +210,7 @@ func (image *dockerImageAnalyzer) processLayerTar(name string, reader *tar.Reade
 	shortName := name[:15]
 	pb := utils.NewProgressBar(int64(len(fileInfos)), 30)
 	for idx, element := range fileInfos {
-		tree.FileSize += uint64(element.TarHeader.FileInfo().Size())
+		tree.FileSize += uint64(element.Size)
 		tree.AddPath(element.Path, element)
 
 		if pb.Update(int64(idx)) {

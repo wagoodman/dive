@@ -318,7 +318,7 @@ func (view *FileTreeView) CursorRight() error {
 	if node == nil {
 		return nil
 	}
-	if !node.Data.FileInfo.TarHeader.FileInfo().IsDir() {
+	if !node.Data.FileInfo.IsDir {
 		return nil
 	}
 	if len(node.Children) == 0 {

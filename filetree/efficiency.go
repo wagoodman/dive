@@ -6,17 +6,6 @@ import (
 	"sort"
 )
 
-// EfficiencyData represents the storage and reference statistics for a given file tree path.
-type EfficiencyData struct {
-	Path              string
-	Nodes             []*FileNode
-	CumulativeSize    int64
-	minDiscoveredSize int64
-}
-
-// EfficiencySlice represents an ordered set of EfficiencyData data structures.
-type EfficiencySlice []*EfficiencyData
-
 // Len is required for sorting.
 func (efs EfficiencySlice) Len() int {
 	return len(efs)
@@ -59,19 +48,19 @@ func Efficiency(trees []*FileTree) (float64, EfficiencySlice) {
 
 		if node.IsWhiteout() {
 			sizer := func(curNode *FileNode) error {
-				sizeBytes += curNode.Data.FileInfo.TarHeader.FileInfo().Size()
+				sizeBytes += curNode.Data.FileInfo.Size
 				return nil
 			}
-			stackedTree := StackRange(trees, 0, currentTree-1)
+			stackedTree := StackTreeRange(trees, 0, currentTree-1)
 			previousTreeNode, err := stackedTree.GetNode(node.Path())
 			if err != nil {
 				logrus.Debug(fmt.Sprintf("CurrentTree: %d : %s", currentTree, err))
-			} else if previousTreeNode.Data.FileInfo.TarHeader.FileInfo().IsDir() {
+			} else if previousTreeNode.Data.FileInfo.IsDir {
 				previousTreeNode.VisitDepthChildFirst(sizer, nil)
 			}
 
 		} else {
-			sizeBytes = node.Data.FileInfo.TarHeader.FileInfo().Size()
+			sizeBytes = node.Data.FileInfo.Size
 		}
 
 		data.CumulativeSize += sizeBytes

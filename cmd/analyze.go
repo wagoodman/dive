@@ -2,10 +2,9 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/wagoodman/dive/filetree"
-
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
+	"github.com/wagoodman/dive/filetree"
 	"github.com/wagoodman/dive/image"
 	"github.com/wagoodman/dive/ui"
 	"github.com/wagoodman/dive/utils"
@@ -37,6 +36,7 @@ func doAnalyzeCmd(cmd *cobra.Command, args []string) {
 
 	result := fetchAndAnalyze(userImage)
 
+
 	fmt.Println("  Building cache...")
 	cache := filetree.NewFileTreeCache(result.RefTrees)
 	cache.Build()
@@ -47,12 +47,14 @@ func doAnalyzeCmd(cmd *cobra.Command, args []string) {
 func fetchAndAnalyze(imageID string) *image.AnalysisResult {
 	analyzer := image.GetAnalyzer(imageID)
 
+
 	fmt.Println("  Fetching image...")
 	err := analyzer.Parse(imageID)
 	if err != nil {
 		fmt.Printf("cannot fetch image: %v\n", err)
 		utils.Exit(1)
 	}
+
 
 	fmt.Println("  Analyzing image...")
 	result, err := analyzer.Analyze()

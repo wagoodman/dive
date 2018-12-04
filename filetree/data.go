@@ -17,30 +17,6 @@ const (
 	Removed
 )
 
-// NodeData is the payload for a FileNode
-type NodeData struct {
-	ViewInfo ViewInfo
-	FileInfo FileInfo
-	DiffType DiffType
-}
-
-// ViewInfo contains UI specific detail for a specific FileNode
-type ViewInfo struct {
-	Collapsed bool
-	Hidden    bool
-}
-
-// FileInfo contains tar metadata for a specific FileNode
-type FileInfo struct {
-	Path      string
-	TypeFlag  byte
-	hash      uint64
-	TarHeader tar.Header
-}
-
-// DiffType defines the comparison result between two FileNodes
-type DiffType int
-
 // NewNodeData creates an empty NodeData struct for a FileNode
 func NewNodeData() *NodeData {
 	return &NodeData{
@@ -74,12 +50,10 @@ func (view *ViewInfo) Copy() (newView *ViewInfo) {
 	return newView
 }
 
-var chuckSize = 2 * 1024 * 1024
-
 func getHashFromReader(reader io.Reader) uint64 {
 	h := xxhash.New()
 
-	buf := make([]byte, chuckSize)
+	buf := make([]byte, 1024)
 	for {
 		n, err := reader.Read(buf)
 		if err != nil && err != io.EOF {
@@ -101,8 +75,13 @@ func NewFileInfo(reader *tar.Reader, header *tar.Header, path string) FileInfo {
 		return FileInfo{
 			Path:      path,
 			TypeFlag:  header.Typeflag,
+			Linkname:  header.Linkname,
 			hash:      0,
-			TarHeader: *header,
+			Size:      header.FileInfo().Size(),
+			Mode:      header.FileInfo().Mode(),
+			Uid:       header.Uid,
+			Gid:       header.Gid,
+			IsDir:     header.FileInfo().IsDir(),
 		}
 	}
 
@@ -111,8 +90,13 @@ func NewFileInfo(reader *tar.Reader, header *tar.Header, path string) FileInfo {
 	return FileInfo{
 		Path:      path,
 		TypeFlag:  header.Typeflag,
+		Linkname:  header.Linkname,
 		hash:      hash,
-		TarHeader: *header,
+		Size:      header.FileInfo().Size(),
+		Mode:      header.FileInfo().Mode(),
+		Uid:       header.Uid,
+		Gid:       header.Gid,
+		IsDir:     header.FileInfo().IsDir(),
 	}
 }
 
@@ -124,8 +108,13 @@ func (data *FileInfo) Copy() *FileInfo {
 	return &FileInfo{
 		Path:      data.Path,
 		TypeFlag:  data.TypeFlag,
+		Linkname:  data.Linkname,
 		hash:      data.hash,
-		TarHeader: data.TarHeader,
+		Size:      data.Size,
+		Mode:      data.Mode,
+		Uid:       data.Uid,
+		Gid:       data.Gid,
+		IsDir:     data.IsDir,
 	}
 }
 

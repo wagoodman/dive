@@ -328,7 +328,7 @@ func Run(analysis *image.AnalysisResult, cache filetree.TreeCache) {
 	Views.Layer = NewLayerView("side", g, analysis.Layers)
 	Views.lookup[Views.Layer.Name] = Views.Layer
 
-	Views.Tree = NewFileTreeView("main", g, filetree.StackRange(analysis.RefTrees, 0, 0), analysis.RefTrees, cache)
+	Views.Tree = NewFileTreeView("main", g, filetree.StackTreeRange(analysis.RefTrees, 0, 0), analysis.RefTrees, cache)
 	Views.lookup[Views.Tree.Name] = Views.Tree
 
 	Views.Status = NewStatusView("status", g)
