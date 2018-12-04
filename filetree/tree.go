@@ -240,7 +240,14 @@ func (tree *FileTree) RemovePath(path string) error {
 // Compare marks the FileNodes in the owning (lower) tree with DiffType annotations when compared to the given (upper) tree.
 func (tree *FileTree) Compare(upper *FileTree) error {
 	// always compare relative to the original, unaltered tree.
-	originalTree := tree.Copy()
+	originalTree := tree
+
+	modifications := map[DiffType][]*FileNode{
+		Removed: make([]*FileNode,0),
+		Changed: make([]*FileNode,0),
+		Unchanged: make([]*FileNode,0),
+		Added: make([]*FileNode,0),
+	}
 
 	graft := func(upperNode *FileNode) error {
 		if upperNode.IsWhiteout() {
@@ -257,19 +264,30 @@ func (tree *FileTree) Compare(upper *FileTree) error {
 				if err != nil {
 					return fmt.Errorf("cannot add new upperNode %s: %v", upperNode.Path(), err.Error())
 				}
-				newNode.AssignDiffType(Added)
+				modifications[Added] = append(modifications[Added], newNode)
 			} else {
 				// check the tree for comparison markings
 				lowerNode, _ := tree.GetNode(upperNode.Path())
 
 				diffType := lowerNode.compare(upperNode)
-				return lowerNode.deriveDiffType(diffType)
+				modifications[diffType] = append(modifications[diffType], lowerNode)
 			}
 		}
 		return nil
 	}
 	// we must visit from the leaves upwards to ensure that diff types can be derived from and assigned to children
-	return upper.VisitDepthChildFirst(graft, nil)
+	err := upper.VisitDepthChildFirst(graft, nil)
+	if err != nil {
+		return err
+	}
+
+	// take note of the comparison results on each note in the owning tree
+	for diff, nodes := range modifications {
+		for _, node := range nodes {
+			node.AssignDiffType(diff)
+		}
+	}
+	return nil
 }
 
 // markRemoved annotates the FileNode at the given path as Removed.
