@@ -16,6 +16,7 @@ import (
 const debug = false
 
 // var profileObj = profile.Start(profile.MemProfile, profile.ProfilePath("."), profile.NoShutdownHook)
+// var onExit func()
 
 // debugPrint writes the given string to the debug pane (if the debug pane is enabled)
 func debugPrint(s string) {
@@ -143,6 +144,7 @@ func CursorUp(g *gocui.Gui, v *gocui.View) error {
 func quit(g *gocui.Gui, v *gocui.View) error {
 
 	// profileObj.Stop()
+	// onExit()
 
 	return gocui.ErrQuit
 }
@@ -343,6 +345,12 @@ func Run(analysis *image.AnalysisResult, cache filetree.TreeCache) {
 	g.Cursor = false
 	//g.Mouse = true
 	g.SetManagerFunc(layout)
+
+	// var profileObj = profile.Start(profile.CPUProfile, profile.ProfilePath("."), profile.NoShutdownHook)
+	//
+	// onExit = func() {
+	// 	profileObj.Stop()
+	// }
 
 	// perform the first update and render now that all resources have been loaded
 	Update()
