@@ -1,6 +1,6 @@
 FROM alpine:latest
 ADD README.md /somefile.txt
-RUN mkdir /root/example
+RUN mkdir -p /root/example/really/nested
 RUN cp /somefile.txt /root/example/somefile1.txt
 RUN chmod 444 /root/example/somefile1.txt
 RUN cp /somefile.txt /root/example/somefile2.txt

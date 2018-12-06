@@ -502,7 +502,7 @@ func TestRemoveOnIterate(t *testing.T) {
 			TypeFlag: 1,
 			hash:     123,
 		}
-		node, err := tree.AddPath(value, fakeData)
+		node, _, err := tree.AddPath(value, fakeData)
 		if err == nil && stringInSlice(node.Path(), []string{"/etc"}) {
 			node.Data.ViewInfo.Hidden = true
 		}

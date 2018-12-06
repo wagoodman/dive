@@ -250,33 +250,33 @@ func (node *FileNode) Path() string {
 
 // deriveDiffType determines a DiffType to the current FileNode. Note: the DiffType of a node is always the DiffType of
 // its attributes and its contents. The contents are the bytes of the file of the children of a directory.
+func (node *FileNode) deriveDiffType(diffType DiffType) error {
+	if node.IsLeaf() {
+		return node.AssignDiffType(diffType)
+	}
+
+	myDiffType := diffType
+	for _, v := range node.Children {
+		myDiffType = myDiffType.merge(v.Data.DiffType)
+
+	}
+
+	return node.AssignDiffType(myDiffType)
+}
 
 // AssignDiffType will assign the given DiffType to this node, possibly affecting child nodes.
 func (node *FileNode) AssignDiffType(diffType DiffType) error {
 	var err error
 
-	// todo, this is an indicator that the root node approach isn't working
-	if node.Path() == "/" {
-		return nil
-	}
-
 	node.Data.DiffType = diffType
 
-	if node.IsLeaf() {
-		return nil
-	} else if diffType == Removed {
+	if diffType == Removed {
 		// if we've removed this node, then all children have been removed as well
 		for _, child := range node.Children {
 			err = child.AssignDiffType(diffType)
 			if err != nil {
 				return err
 			}
-		}
-	} else {
-		myDiffType := diffType
-
-		for _, v := range node.Children {
-			myDiffType = myDiffType.merge(v.Data.DiffType)
 		}
 	}
 

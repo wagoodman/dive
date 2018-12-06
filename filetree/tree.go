@@ -172,7 +172,7 @@ func (tree *FileTree) Stack(upper *FileTree) error {
 				return fmt.Errorf("cannot remove node %s: %v", node.Path(), err.Error())
 			}
 		} else {
-			newNode, err := tree.AddPath(node.Path(), node.Data.FileInfo)
+			newNode, _, err := tree.AddPath(node.Path(), node.Data.FileInfo)
 			if err != nil {
 				return fmt.Errorf("cannot add node %s: %v", newNode.Path(), err.Error())
 			}
@@ -199,9 +199,10 @@ func (tree *FileTree) GetNode(path string) (*FileNode, error) {
 }
 
 // AddPath adds a new node to the tree with the given payload
-func (tree *FileTree) AddPath(path string, data FileInfo) (*FileNode, error) {
+func (tree *FileTree) AddPath(path string, data FileInfo) (*FileNode, []*FileNode, error) {
 	nodeNames := strings.Split(strings.Trim(path, "/"), "/")
 	node := tree.Root
+	addedNodes := make([]*FileNode,0)
 	for idx, name := range nodeNames {
 		if name == "" {
 			continue
@@ -213,10 +214,11 @@ func (tree *FileTree) AddPath(path string, data FileInfo) (*FileNode, error) {
 			// don't attach the payload. The payload is destined for the
 			// Path's end node, not any intermediary node.
 			node = node.AddChild(name, FileInfo{})
+			addedNodes = append(addedNodes, node)
 
 			if node == nil {
 				// the child could not be added
-				return node, fmt.Errorf(fmt.Sprintf("could not add child node '%s'", name))
+				return node, addedNodes, fmt.Errorf(fmt.Sprintf("could not add child node '%s'", name))
 			}
 		}
 
@@ -226,7 +228,7 @@ func (tree *FileTree) AddPath(path string, data FileInfo) (*FileNode, error) {
 		}
 
 	}
-	return node, nil
+	return node, addedNodes, nil
 }
 
 // RemovePath removes a node from the tree given its path.
@@ -238,17 +240,18 @@ func (tree *FileTree) RemovePath(path string) error {
 	return node.Remove()
 }
 
+type compareMark struct {
+	node *FileNode
+	tentative DiffType
+	final DiffType
+}
+
 // Compare marks the FileNodes in the owning (lower) tree with DiffType annotations when compared to the given (upper) tree.
 func (tree *FileTree) Compare(upper *FileTree) error {
 	// always compare relative to the original, unaltered tree.
 	originalTree := tree
 
-	modifications := map[DiffType][]*FileNode{
-		Removed: make([]*FileNode,0),
-		Changed: make([]*FileNode,0),
-		Unchanged: make([]*FileNode,0),
-		Added: make([]*FileNode,0),
-	}
+	modifications := make([]compareMark,0)
 
 	graft := func(upperNode *FileNode) error {
 		if upperNode.IsWhiteout() {
@@ -257,21 +260,25 @@ func (tree *FileTree) Compare(upper *FileTree) error {
 				return fmt.Errorf("cannot remove upperNode %s: %v", upperNode.Path(), err.Error())
 			}
 		} else {
-			// compare against the original tree (to ensure new parents with new children are captured as new instead of modified)
+			// note: since we are not comparing against the original tree (copying the tree is expensive) we may mark the parent
+			// of an added node incorrectly as modified. This will be corrected later.
 			originalLowerNode, _ := originalTree.GetNode(upperNode.Path())
 
 			if originalLowerNode == nil {
-				newNode, err := tree.AddPath(upperNode.Path(), upperNode.Data.FileInfo)
+				_, newNodes, err := tree.AddPath(upperNode.Path(), upperNode.Data.FileInfo)
 				if err != nil {
 					return fmt.Errorf("cannot add new upperNode %s: %v", upperNode.Path(), err.Error())
 				}
-				modifications[Added] = append(modifications[Added], newNode)
+				for idx := len(newNodes)-1; idx >= 0; idx-- {
+					newNode := newNodes[idx]
+					modifications = append(modifications, compareMark{node:newNode, tentative: -1, final: Added})
+				}
+
 			} else {
 				// check the tree for comparison markings
 				lowerNode, _ := tree.GetNode(upperNode.Path())
-
 				diffType := lowerNode.compare(upperNode)
-				modifications[diffType] = append(modifications[diffType], lowerNode)
+				modifications = append(modifications, compareMark{node:lowerNode, tentative: diffType, final: -1})
 			}
 		}
 		return nil
@@ -283,9 +290,13 @@ func (tree *FileTree) Compare(upper *FileTree) error {
 	}
 
 	// take note of the comparison results on each note in the owning tree
-	for diff, nodes := range modifications {
-		for _, node := range nodes {
-			node.AssignDiffType(diff)
+	for _, pair := range modifications {
+		if pair.final > 0 {
+			pair.node.AssignDiffType(pair.final)
+		} else {
+			if pair.node.Data.DiffType == Unchanged {
+				pair.node.deriveDiffType(pair.tentative)
+			}
 		}
 	}
 	return nil
