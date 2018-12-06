@@ -4,12 +4,10 @@ type TreeCacheKey struct {
 	bottomTreeStart, bottomTreeStop, topTreeStart, topTreeStop int
 }
 
-type TreeCache struct{
+type TreeCache struct {
 	refTrees []*FileTree
-	cache map[TreeCacheKey]*FileTree
+	cache    map[TreeCacheKey]*FileTree
 }
-
-
 
 func (cache *TreeCache) Get(bottomTreeStart, bottomTreeStop, topTreeStart, topTreeStop int) *FileTree {
 	key := TreeCacheKey{bottomTreeStart, bottomTreeStop, topTreeStart, topTreeStop}
@@ -71,6 +69,6 @@ func NewFileTreeCache(refTrees []*FileTree) TreeCache {
 
 	return TreeCache{
 		refTrees: refTrees,
-		cache: make(map[TreeCacheKey]*FileTree),
+		cache:    make(map[TreeCacheKey]*FileTree),
 	}
 }

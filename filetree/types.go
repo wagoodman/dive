@@ -39,10 +39,10 @@ type ViewInfo struct {
 
 // FileInfo contains tar metadata for a specific FileNode
 type FileInfo struct {
-	Path      string
-	TypeFlag  byte
+	Path     string
+	TypeFlag byte
 	Linkname string
-	hash      uint64
+	hash     uint64
 	Size     int64
 	Mode     os.FileMode
 	Uid      int
@@ -63,4 +63,3 @@ type EfficiencyData struct {
 
 // EfficiencySlice represents an ordered set of EfficiencyData data structures.
 type EfficiencySlice []*EfficiencyData
-

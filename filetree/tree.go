@@ -20,8 +20,6 @@ const (
 	collapsedItem        = "⊕ "
 )
 
-
-
 // NewFileTree creates an empty FileTree
 func NewFileTree() (tree *FileTree) {
 	tree = new(FileTree)
@@ -202,7 +200,7 @@ func (tree *FileTree) GetNode(path string) (*FileNode, error) {
 func (tree *FileTree) AddPath(path string, data FileInfo) (*FileNode, []*FileNode, error) {
 	nodeNames := strings.Split(strings.Trim(path, "/"), "/")
 	node := tree.Root
-	addedNodes := make([]*FileNode,0)
+	addedNodes := make([]*FileNode, 0)
 	for idx, name := range nodeNames {
 		if name == "" {
 			continue
@@ -241,9 +239,9 @@ func (tree *FileTree) RemovePath(path string) error {
 }
 
 type compareMark struct {
-	node *FileNode
+	node      *FileNode
 	tentative DiffType
-	final DiffType
+	final     DiffType
 }
 
 // Compare marks the FileNodes in the owning (lower) tree with DiffType annotations when compared to the given (upper) tree.
@@ -251,7 +249,7 @@ func (tree *FileTree) Compare(upper *FileTree) error {
 	// always compare relative to the original, unaltered tree.
 	originalTree := tree
 
-	modifications := make([]compareMark,0)
+	modifications := make([]compareMark, 0)
 
 	graft := func(upperNode *FileNode) error {
 		if upperNode.IsWhiteout() {
@@ -269,16 +267,16 @@ func (tree *FileTree) Compare(upper *FileTree) error {
 				if err != nil {
 					return fmt.Errorf("cannot add new upperNode %s: %v", upperNode.Path(), err.Error())
 				}
-				for idx := len(newNodes)-1; idx >= 0; idx-- {
+				for idx := len(newNodes) - 1; idx >= 0; idx-- {
 					newNode := newNodes[idx]
-					modifications = append(modifications, compareMark{node:newNode, tentative: -1, final: Added})
+					modifications = append(modifications, compareMark{node: newNode, tentative: -1, final: Added})
 				}
 
 			} else {
 				// check the tree for comparison markings
 				lowerNode, _ := tree.GetNode(upperNode.Path())
 				diffType := lowerNode.compare(upperNode)
-				modifications = append(modifications, compareMark{node:lowerNode, tentative: diffType, final: -1})
+				modifications = append(modifications, compareMark{node: lowerNode, tentative: diffType, final: -1})
 			}
 		}
 		return nil
@@ -323,4 +321,3 @@ func StackTreeRange(trees []*FileTree, start, stop int) *FileTree {
 	}
 	return tree
 }
-

@@ -74,30 +74,30 @@ func getHashFromReader(reader io.Reader) uint64 {
 func NewFileInfo(reader *tar.Reader, header *tar.Header, path string) FileInfo {
 	if header.Typeflag == tar.TypeDir {
 		return FileInfo{
-			Path:      path,
-			TypeFlag:  header.Typeflag,
-			Linkname:  header.Linkname,
-			hash:      0,
-			Size:      header.FileInfo().Size(),
-			Mode:      header.FileInfo().Mode(),
-			Uid:       header.Uid,
-			Gid:       header.Gid,
-			IsDir:     header.FileInfo().IsDir(),
+			Path:     path,
+			TypeFlag: header.Typeflag,
+			Linkname: header.Linkname,
+			hash:     0,
+			Size:     header.FileInfo().Size(),
+			Mode:     header.FileInfo().Mode(),
+			Uid:      header.Uid,
+			Gid:      header.Gid,
+			IsDir:    header.FileInfo().IsDir(),
 		}
 	}
 
 	hash := getHashFromReader(reader)
 
 	return FileInfo{
-		Path:      path,
-		TypeFlag:  header.Typeflag,
-		Linkname:  header.Linkname,
-		hash:      hash,
-		Size:      header.FileInfo().Size(),
-		Mode:      header.FileInfo().Mode(),
-		Uid:       header.Uid,
-		Gid:       header.Gid,
-		IsDir:     header.FileInfo().IsDir(),
+		Path:     path,
+		TypeFlag: header.Typeflag,
+		Linkname: header.Linkname,
+		hash:     hash,
+		Size:     header.FileInfo().Size(),
+		Mode:     header.FileInfo().Mode(),
+		Uid:      header.Uid,
+		Gid:      header.Gid,
+		IsDir:    header.FileInfo().IsDir(),
 	}
 }
 
@@ -107,15 +107,15 @@ func (data *FileInfo) Copy() *FileInfo {
 		return nil
 	}
 	return &FileInfo{
-		Path:      data.Path,
-		TypeFlag:  data.TypeFlag,
-		Linkname:  data.Linkname,
-		hash:      data.hash,
-		Size:      data.Size,
-		Mode:      data.Mode,
-		Uid:       data.Uid,
-		Gid:       data.Gid,
-		IsDir:     data.IsDir,
+		Path:     data.Path,
+		TypeFlag: data.TypeFlag,
+		Linkname: data.Linkname,
+		hash:     data.hash,
+		Size:     data.Size,
+		Mode:     data.Mode,
+		Uid:      data.Uid,
+		Gid:      data.Gid,
+		IsDir:    data.IsDir,
 	}
 }
 
