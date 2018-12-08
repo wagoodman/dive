@@ -216,10 +216,9 @@ func (image *dockerImageAnalyzer) processLayerTar(name string, layerIdx uint, re
 	pb := utils.NewProgressBar(int64(len(fileInfos)), 30)
 	for idx, element := range fileInfos {
 		tree.FileSize += uint64(element.Size)
-		_, _, err := tree.AddPath(element.Path, element)
-		if err != nil {
-			return err
-		}
+
+		// todo: we should check for errors but also allow whiteout files to be not be added (thus not error out)
+		tree.AddPath(element.Path, element)
 
 		if pb.Update(int64(idx)) {
 			message = fmt.Sprintf("    ├─ %s %s : %s", title, shortName, pb.String())
