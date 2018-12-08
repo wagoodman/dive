@@ -48,7 +48,6 @@ func doBuildCmd(cmd *cobra.Command, args []string) {
 	}
 
 	color.New(color.Bold).Println("Analyzing Image")
-
 	result := fetchAndAnalyze(string(imageId))
 
 	fmt.Println("  Building cache...")

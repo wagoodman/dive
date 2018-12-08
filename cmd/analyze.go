@@ -33,7 +33,6 @@ func doAnalyzeCmd(cmd *cobra.Command, args []string) {
 		utils.Exit(1)
 	}
 	color.New(color.Bold).Println("Analyzing Image")
-
 	result := fetchAndAnalyze(userImage)
 
 	fmt.Println("  Building cache...")
