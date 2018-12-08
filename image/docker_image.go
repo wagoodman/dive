@@ -82,7 +82,6 @@ func (image *dockerImageAnalyzer) Parse(imageID string) error {
 	return nil
 }
 
-// todo: it is bad that this is printing out to the screen
 func (image *dockerImageAnalyzer) read(tarFile io.ReadCloser) error {
 	tarReader := tar.NewReader(tarFile)
 
@@ -100,8 +99,6 @@ func (image *dockerImageAnalyzer) read(tarFile io.ReadCloser) error {
 			utils.Exit(1)
 		}
 
-		layerProgress := fmt.Sprintf("[layer: %2d]", currentLayer)
-
 		name := header.Name
 
 		// some layer tars can be relative layer symlinks to other layer tars
@@ -112,11 +109,11 @@ func (image *dockerImageAnalyzer) read(tarFile io.ReadCloser) error {
 				if err != nil {
 					return err
 				}
-				message := fmt.Sprintf("    ├─ %s %s ", layerProgress, "working...")
-				fmt.Printf("\r%s", message)
-
 				layerReader := tar.NewReader(tarReader)
-				image.processLayerTar(name, layerReader, layerProgress)
+				err := image.processLayerTar(name, currentLayer, layerReader)
+				if err != nil {
+					return err
+				}
 			} else if strings.HasSuffix(name, ".json") {
 				fileBuffer, err := ioutil.ReadAll(tarReader)
 				if err != nil {
@@ -200,33 +197,43 @@ func (image *dockerImageAnalyzer) getReader(imageID string) (io.ReadCloser, int6
 	return readCloser, totalSize, nil
 }
 
-// todo: it is bad that this is printing out to the screen
-func (image *dockerImageAnalyzer) processLayerTar(name string, reader *tar.Reader, layerProgress string) {
+// todo: it is bad that this is printing out to the screen. As the interface gets more flushed out, an event update mechanism should be built in (so the caller can format and print updates)
+func (image *dockerImageAnalyzer) processLayerTar(name string, layerIdx uint, reader *tar.Reader) error {
 	tree := filetree.NewFileTree()
 	tree.Name = name
 
-	fileInfos := image.getFileList(reader)
+	title := fmt.Sprintf("[layer: %2d]", layerIdx)
+	message := fmt.Sprintf("    ├─ %s %s ", title, "working...")
+	fmt.Printf("\r%s", message)
+
+	fileInfos, err := image.getFileList(reader)
+	if err != nil {
+		return err
+	}
 
 	shortName := name[:15]
 	pb := utils.NewProgressBar(int64(len(fileInfos)), 30)
 	for idx, element := range fileInfos {
 		tree.FileSize += uint64(element.TarHeader.FileInfo().Size())
-		tree.AddPath(element.Path, element)
+		_, err := tree.AddPath(element.Path, element)
+		if err != nil {
+			return err
+		}
 
 		if pb.Update(int64(idx)) {
-			message := fmt.Sprintf("    ├─ %s %s : %s", layerProgress, shortName, pb.String())
+			message = fmt.Sprintf("    ├─ %s %s : %s", title, shortName, pb.String())
 			fmt.Printf("\r%s", message)
 		}
 	}
 	pb.Done()
-	message := fmt.Sprintf("    ├─ %s %s : %s", layerProgress, shortName, pb.String())
+	message = fmt.Sprintf("    ├─ %s %s : %s", title, shortName, pb.String())
 	fmt.Printf("\r%s\n", message)
 
 	image.layerMap[tree.Name] = tree
+	return nil
 }
 
-// todo: it is bad that this is printing out to the screen
-func (image *dockerImageAnalyzer) getFileList(tarReader *tar.Reader) []filetree.FileInfo {
+func (image *dockerImageAnalyzer) getFileList(tarReader *tar.Reader) ([]filetree.FileInfo, error) {
 	var files []filetree.FileInfo
 
 	for {
@@ -245,12 +252,12 @@ func (image *dockerImageAnalyzer) getFileList(tarReader *tar.Reader) []filetree.
 
 		switch header.Typeflag {
 		case tar.TypeXGlobalHeader:
-			fmt.Printf("ERRG: XGlobalHeader: %v: %s\n", header.Typeflag, name)
+			return nil, fmt.Errorf("unexptected tar file: (XGlobalHeader): type=%v name=%s", header.Typeflag, name)
 		case tar.TypeXHeader:
-			fmt.Printf("ERRG: XHeader: %v: %s\n", header.Typeflag, name)
+			return nil, fmt.Errorf("unexptected tar file (XHeader): type=%v name=%s", header.Typeflag, name)
 		default:
 			files = append(files, filetree.NewFileInfo(tarReader, header, name))
 		}
 	}
-	return files
+	return files, nil
 }
