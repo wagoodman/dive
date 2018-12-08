@@ -7,7 +7,6 @@ import (
 
 	"github.com/cespare/xxhash"
 	"github.com/sirupsen/logrus"
-	"github.com/spf13/viper"
 )
 
 const (
@@ -17,29 +16,7 @@ const (
 	Removed
 )
 
-// NodeData is the payload for a FileNode
-type NodeData struct {
-	ViewInfo ViewInfo
-	FileInfo FileInfo
-	DiffType DiffType
-}
-
-// ViewInfo contains UI specific detail for a specific FileNode
-type ViewInfo struct {
-	Collapsed bool
-	Hidden    bool
-}
-
-// FileInfo contains tar metadata for a specific FileNode
-type FileInfo struct {
-	Path      string
-	TypeFlag  byte
-	hash      uint64
-	TarHeader tar.Header
-}
-
-// DiffType defines the comparison result between two FileNodes
-type DiffType int
+var GlobalFileTreeCollapse bool
 
 // NewNodeData creates an empty NodeData struct for a FileNode
 func NewNodeData() *NodeData {
@@ -62,7 +39,7 @@ func (data *NodeData) Copy() *NodeData {
 // NewViewInfo creates a default ViewInfo
 func NewViewInfo() (view *ViewInfo) {
 	return &ViewInfo{
-		Collapsed: viper.GetBool("filetree.collapse-dir"),
+		Collapsed: GlobalFileTreeCollapse,
 		Hidden:    false,
 	}
 }
@@ -74,12 +51,10 @@ func (view *ViewInfo) Copy() (newView *ViewInfo) {
 	return newView
 }
 
-var chuckSize = 2 * 1024 * 1024
-
 func getHashFromReader(reader io.Reader) uint64 {
 	h := xxhash.New()
 
-	buf := make([]byte, chuckSize)
+	buf := make([]byte, 1024)
 	for {
 		n, err := reader.Read(buf)
 		if err != nil && err != io.EOF {
@@ -99,20 +74,30 @@ func getHashFromReader(reader io.Reader) uint64 {
 func NewFileInfo(reader *tar.Reader, header *tar.Header, path string) FileInfo {
 	if header.Typeflag == tar.TypeDir {
 		return FileInfo{
-			Path:      path,
-			TypeFlag:  header.Typeflag,
-			hash:      0,
-			TarHeader: *header,
+			Path:     path,
+			TypeFlag: header.Typeflag,
+			Linkname: header.Linkname,
+			hash:     0,
+			Size:     header.FileInfo().Size(),
+			Mode:     header.FileInfo().Mode(),
+			Uid:      header.Uid,
+			Gid:      header.Gid,
+			IsDir:    header.FileInfo().IsDir(),
 		}
 	}
 
 	hash := getHashFromReader(reader)
 
 	return FileInfo{
-		Path:      path,
-		TypeFlag:  header.Typeflag,
-		hash:      hash,
-		TarHeader: *header,
+		Path:     path,
+		TypeFlag: header.Typeflag,
+		Linkname: header.Linkname,
+		hash:     hash,
+		Size:     header.FileInfo().Size(),
+		Mode:     header.FileInfo().Mode(),
+		Uid:      header.Uid,
+		Gid:      header.Gid,
+		IsDir:    header.FileInfo().IsDir(),
 	}
 }
 
@@ -122,10 +107,15 @@ func (data *FileInfo) Copy() *FileInfo {
 		return nil
 	}
 	return &FileInfo{
-		Path:      data.Path,
-		TypeFlag:  data.TypeFlag,
-		hash:      data.hash,
-		TarHeader: data.TarHeader,
+		Path:     data.Path,
+		TypeFlag: data.TypeFlag,
+		Linkname: data.Linkname,
+		hash:     data.hash,
+		Size:     data.Size,
+		Mode:     data.Mode,
+		Uid:      data.Uid,
+		Gid:      data.Gid,
+		IsDir:    data.IsDir,
 	}
 }
 

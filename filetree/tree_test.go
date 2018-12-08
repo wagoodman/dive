@@ -488,7 +488,7 @@ func TestStackRange(t *testing.T) {
 		upperTree.AddPath(value, fakeData)
 	}
 	trees := []*FileTree{lowerTree, upperTree, tree}
-	StackRange(trees, 0, 2)
+	StackTreeRange(trees, 0, 2)
 }
 
 func TestRemoveOnIterate(t *testing.T) {
@@ -502,7 +502,7 @@ func TestRemoveOnIterate(t *testing.T) {
 			TypeFlag: 1,
 			hash:     123,
 		}
-		node, err := tree.AddPath(value, fakeData)
+		node, _, err := tree.AddPath(value, fakeData)
 		if err == nil && stringInSlice(node.Path(), []string{"/etc"}) {
 			node.Data.ViewInfo.Hidden = true
 		}

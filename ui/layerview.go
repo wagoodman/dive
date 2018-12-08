@@ -5,7 +5,6 @@ import (
 	"github.com/spf13/viper"
 	"github.com/wagoodman/dive/utils"
 
-	"github.com/dustin/go-humanize"
 	"github.com/jroimartin/gocui"
 	"github.com/lunixbochs/vtclean"
 	"github.com/wagoodman/dive/image"
@@ -20,7 +19,7 @@ type LayerView struct {
 	view              *gocui.View
 	header            *gocui.View
 	LayerIndex        int
-	Layers            []*image.Layer
+	Layers            []image.Layer
 	CompareMode       CompareType
 	CompareStartIndex int
 	ImageSize         uint64
@@ -30,7 +29,7 @@ type LayerView struct {
 }
 
 // NewDetailsView creates a new view object attached the the global [gocui] screen object.
-func NewLayerView(name string, gui *gocui.Gui, layers []*image.Layer) (layerView *LayerView) {
+func NewLayerView(name string, gui *gocui.Gui, layers []image.Layer) (layerView *LayerView) {
 	layerView = new(LayerView)
 
 	// populate main fields
@@ -131,7 +130,7 @@ func (view *LayerView) SetCursor(layer int) error {
 }
 
 // currentLayer returns the Layer object currently selected.
-func (view *LayerView) currentLayer() *image.Layer {
+func (view *LayerView) currentLayer() image.Layer {
 	return view.Layers[(len(view.Layers)-1)-view.LayerIndex]
 }
 
@@ -181,7 +180,7 @@ func (view *LayerView) renderCompareBar(layerIdx int) string {
 func (view *LayerView) Update() error {
 	view.ImageSize = 0
 	for idx := 0; idx < len(view.Layers); idx++ {
-		view.ImageSize += view.Layers[idx].History.Size
+		view.ImageSize += view.Layers[idx].Size()
 	}
 	return nil
 }
@@ -212,17 +211,6 @@ func (view *LayerView) Render() error {
 			idx := (len(view.Layers) - 1) - revIdx
 
 			layerStr := layer.String()
-			if idx == 0 {
-				var layerId string
-				if len(layer.History.ID) >= 25 {
-					layerId = layer.History.ID[0:25]
-				} else {
-					layerId = fmt.Sprintf("%-25s", layer.History.ID)
-				}
-
-				layerStr = fmt.Sprintf(image.LayerFormat, layerId, humanize.Bytes(uint64(layer.History.Size)), "FROM "+layer.ShortId())
-			}
-
 			compareBar := view.renderCompareBar(idx)
 
 			if idx == view.LayerIndex {

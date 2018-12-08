@@ -12,9 +12,9 @@ import (
 	"io/ioutil"
 )
 
-// analyze takes a docker image tag, digest, or id and displays the
+// doAnalyzeCmd takes a docker image tag, digest, or id and displays the
 // image analysis to the screen
-func analyze(cmd *cobra.Command, args []string) {
+func doAnalyzeCmd(cmd *cobra.Command, args []string) {
 	defer utils.Cleanup()
 	if len(args) == 0 {
 		printVersionFlag, err := cmd.PersistentFlags().GetBool("version")
@@ -35,15 +35,20 @@ func analyze(cmd *cobra.Command, args []string) {
 		utils.Exit(1)
 	}
 	color.New(color.Bold).Println("Analyzing Image")
-	manifest, refTrees, efficiency, inefficiencies := image.InitializeData(userImage)
+	result := fetchAndAnalyze(userImage)
 
 	if exportFile != "" {
-		// todo: support statistics
-		exportStatistics(manifest, refTrees, efficiency, inefficiencies)
+		exportStatistics(result)
 		color.New(color.Bold).Println(fmt.Sprintf("Exported to %s", exportFile))
-	} else {
-		ui.Run(manifest, refTrees, efficiency, inefficiencies)
+		return
 	}
+
+	fmt.Println("  Building cache...")
+	cache := filetree.NewFileTreeCache(result.RefTrees)
+	cache.Build()
+
+	ui.Run(result, cache)
+
 }
 
 type export struct {
@@ -52,8 +57,8 @@ type export struct {
 }
 
 type exportLayer struct {
+	Index     int   `json:"index"`
 	DigestID  string `json:"digestId"`
-	TarID     string `json:"tarId"`
 	SizeBytes uint64 `json:"sizeBytes"`
 	Command   string `json:"command"`
 }
@@ -70,34 +75,34 @@ type inefficientFiles struct {
 	File      string `json:"file"`
 }
 
-func newExport(layers []*image.Layer, refTrees []*filetree.FileTree, efficiency float64, inefficiencies filetree.EfficiencySlice) *export {
+func newExport(analysis *image.AnalysisResult) *export {
 	data := export{}
-	data.Layer = make([]exportLayer, len(layers))
-	data.Image.InefficientFiles = make([]inefficientFiles, len(inefficiencies))
+	data.Layer = make([]exportLayer, len(analysis.Layers))
+	data.Image.InefficientFiles = make([]inefficientFiles, len(analysis.Inefficiencies))
 
 	// export layers in order
-	for revIdx := len(layers) - 1; revIdx >= 0; revIdx-- {
-		layer := layers[revIdx]
-		idx := (len(layers) - 1) - revIdx
+	for revIdx := len(analysis.Layers) - 1; revIdx >= 0; revIdx-- {
+		layer := analysis.Layers[revIdx]
+		idx := (len(analysis.Layers) - 1) - revIdx
 
 		data.Layer[idx] = exportLayer{
-			DigestID:  layer.History.ID,
-			TarID:     layer.TarId(),
-			SizeBytes: layer.History.Size,
-			Command:   layer.History.CreatedBy,
+			Index:     idx,
+			DigestID:  layer.Id(),
+			SizeBytes: layer.Size(),
+			Command:   layer.Command(),
 		}
 	}
 
 	// export image info
 	data.Image.SizeBytes = 0
-	for idx := 0; idx < len(layers); idx++ {
-		data.Image.SizeBytes += layers[idx].History.Size
+	for idx := 0; idx < len(analysis.Layers); idx++ {
+		data.Image.SizeBytes += analysis.Layers[idx].Size()
 	}
 
-	data.Image.EfficiencyScore = efficiency
+	data.Image.EfficiencyScore = analysis.Efficiency
 
-	for idx := 0; idx < len(inefficiencies); idx++ {
-		fileData := inefficiencies[len(inefficiencies)-1-idx]
+	for idx := 0; idx < len(analysis.Inefficiencies); idx++ {
+		fileData := analysis.Inefficiencies[len(analysis.Inefficiencies)-1-idx]
 		data.Image.InefficientBytes += uint64(fileData.CumulativeSize)
 
 		data.Image.InefficientFiles[idx] = inefficientFiles{
@@ -110,8 +115,8 @@ func newExport(layers []*image.Layer, refTrees []*filetree.FileTree, efficiency 
 	return &data
 }
 
-func exportStatistics(layers []*image.Layer, refTrees []*filetree.FileTree, efficiency float64, inefficiencies filetree.EfficiencySlice) {
-	data := newExport(layers, refTrees, efficiency, inefficiencies)
+func exportStatistics(analysis *image.AnalysisResult) {
+	data := newExport(analysis)
 	payload, err := json.MarshalIndent(&data, "", "  ")
 	if err != nil {
 		panic(err)
@@ -120,4 +125,23 @@ func exportStatistics(layers []*image.Layer, refTrees []*filetree.FileTree, effi
 	if err != nil {
 		panic(err)
 	}
+}
+
+func fetchAndAnalyze(imageID string) *image.AnalysisResult {
+	analyzer := image.GetAnalyzer(imageID)
+
+	fmt.Println("  Fetching image...")
+	err := analyzer.Parse(imageID)
+	if err != nil {
+		fmt.Printf("cannot fetch image: %v\n", err)
+		utils.Exit(1)
+	}
+
+	fmt.Println("  Analyzing image...")
+	result, err := analyzer.Analyze()
+	if err != nil {
+		fmt.Printf("cannot doAnalyzeCmd image: %v\n", err)
+		utils.Exit(1)
+	}
+	return result
 }

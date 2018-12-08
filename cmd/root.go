@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/wagoodman/dive/filetree"
 	"github.com/wagoodman/dive/utils"
 	"io/ioutil"
 	"os"
@@ -23,7 +24,7 @@ var rootCmd = &cobra.Command{
 	Long: `This tool provides a way to discover and explore the contents of a docker image. Additionally the tool estimates
 the amount of wasted space and identifies the offending files from the image.`,
 	Args: cobra.MaximumNArgs(1),
-	Run:  analyze,
+	Run:  doAnalyzeCmd,
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -112,6 +113,9 @@ func initConfig() {
 	if err := viper.ReadInConfig(); err == nil {
 		fmt.Println("Using config file:", viper.ConfigFileUsed())
 	}
+
+	// set global defaults (for performance)
+	filetree.GlobalFileTreeCollapse = viper.GetBool("filetree.collapse-dir")
 }
 
 // initLogging sets up the logging object with a formatter and location

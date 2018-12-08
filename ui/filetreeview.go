@@ -30,6 +30,7 @@ type FileTreeView struct {
 	ModelTree             *filetree.FileTree
 	ViewTree              *filetree.FileTree
 	RefTrees              []*filetree.FileTree
+	cache                 filetree.TreeCache
 	HiddenDiffTypes       []bool
 	TreeIndex             uint
 	bufferIndex           uint
@@ -46,7 +47,7 @@ type FileTreeView struct {
 }
 
 // NewFileTreeView creates a new view object attached the the global [gocui] screen object.
-func NewFileTreeView(name string, gui *gocui.Gui, tree *filetree.FileTree, refTrees []*filetree.FileTree) (treeView *FileTreeView) {
+func NewFileTreeView(name string, gui *gocui.Gui, tree *filetree.FileTree, refTrees []*filetree.FileTree, cache filetree.TreeCache) (treeView *FileTreeView) {
 	treeView = new(FileTreeView)
 
 	// populate main fields
@@ -54,6 +55,7 @@ func NewFileTreeView(name string, gui *gocui.Gui, tree *filetree.FileTree, refTr
 	treeView.gui = gui
 	treeView.ModelTree = tree
 	treeView.RefTrees = refTrees
+	treeView.cache = cache
 	treeView.HiddenDiffTypes = make([]bool, 4)
 
 	hiddenTypes := viper.GetStringSlice("diff.hide")
@@ -184,11 +186,7 @@ func (view *FileTreeView) setTreeByLayer(bottomTreeStart, bottomTreeStop, topTre
 	if topTreeStop > len(view.RefTrees)-1 {
 		return fmt.Errorf("invalid layer index given: %d of %d", topTreeStop, len(view.RefTrees)-1)
 	}
-	newTree := filetree.StackRange(view.RefTrees, bottomTreeStart, bottomTreeStop)
-
-	for idx := topTreeStart; idx <= topTreeStop; idx++ {
-		newTree.Compare(view.RefTrees[idx])
-	}
+	newTree := view.cache.Get(bottomTreeStart, bottomTreeStop, topTreeStart, topTreeStop)
 
 	// preserve view state on copy
 	visitor := func(node *filetree.FileNode) error {
@@ -320,7 +318,7 @@ func (view *FileTreeView) CursorRight() error {
 	if node == nil {
 		return nil
 	}
-	if !node.Data.FileInfo.TarHeader.FileInfo().IsDir() {
+	if !node.Data.FileInfo.IsDir {
 		return nil
 	}
 	if len(node.Children) == 0 {
@@ -459,7 +457,7 @@ func filterRegex() *regexp.Regexp {
 		return nil
 	}
 	filterString := strings.TrimSpace(Views.Filter.view.Buffer())
-	if len(filterString) < 1 {
+	if len(filterString) == 0 {
 		return nil
 	}
 
