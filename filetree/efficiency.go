@@ -91,7 +91,12 @@ func Efficiency(trees []*FileTree) (float64, EfficiencySlice) {
 		minimumPathSizes += value.minDiscoveredSize
 		discoveredPathSizes += value.CumulativeSize
 	}
-	score := float64(minimumPathSizes) / float64(discoveredPathSizes)
+	var score float64
+	if discoveredPathSizes == 0 {
+		score = 1.0
+	} else {
+		score = float64(minimumPathSizes) / float64(discoveredPathSizes)
+	}
 
 	sort.Sort(inefficientMatches)
 

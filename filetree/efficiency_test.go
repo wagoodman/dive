@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-func TestEfficencyMap(t *testing.T) {
+func TestEfficency(t *testing.T) {
 	trees := make([]*FileTree, 3)
 	for idx := range trees {
 		trees[idx] = NewFileTree()
@@ -32,7 +32,7 @@ func TestEfficencyMap(t *testing.T) {
 		for _, match := range actualMatches {
 			t.Logf("   match: %+v", match)
 		}
-		t.Fatalf("Expected to find %d inefficient path, but found %d", len(expectedMatches), len(actualMatches))
+		t.Fatalf("Expected to find %d inefficient paths, but found %d", len(expectedMatches), len(actualMatches))
 	}
 
 	if expectedMatches[0].Path != actualMatches[0].Path {
@@ -42,4 +42,26 @@ func TestEfficencyMap(t *testing.T) {
 	if expectedMatches[0].CumulativeSize != actualMatches[0].CumulativeSize {
 		t.Errorf("Expected cumulative size of %v but go %v", expectedMatches[0].CumulativeSize, actualMatches[0].CumulativeSize)
 	}
+}
+
+func TestEfficency_ScratchImage(t *testing.T) {
+	trees := make([]*FileTree, 3)
+	for idx := range trees {
+		trees[idx] = NewFileTree()
+	}
+
+	trees[0].AddPath("/nothing", FileInfo{Size: 0})
+
+	var expectedScore = 1.0
+	var expectedMatches = EfficiencySlice{}
+	actualScore, actualMatches := Efficiency(trees)
+
+	if expectedScore != actualScore {
+		t.Errorf("Expected score of %v but go %v", expectedScore, actualScore)
+	}
+
+	if len(actualMatches) > 0 {
+		t.Fatalf("Expected to find %d inefficient paths, but found %d", len(expectedMatches), len(actualMatches))
+	}
+
 }
