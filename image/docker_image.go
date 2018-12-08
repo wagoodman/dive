@@ -197,7 +197,6 @@ func (image *dockerImageAnalyzer) getReader(imageID string) (io.ReadCloser, int6
 	return readCloser, totalSize, nil
 }
 
-
 // todo: it is bad that this is printing out to the screen. As the interface gets more flushed out, an event update mechanism should be built in (so the caller can format and print updates)
 func (image *dockerImageAnalyzer) processLayerTar(name string, layerIdx uint, reader *tar.Reader) error {
 	tree := filetree.NewFileTree()
@@ -232,7 +231,6 @@ func (image *dockerImageAnalyzer) processLayerTar(name string, layerIdx uint, re
 	image.layerMap[tree.Name] = tree
 	return nil
 }
-
 
 func (image *dockerImageAnalyzer) getFileList(tarReader *tar.Reader) ([]filetree.FileInfo, error) {
 	var files []filetree.FileInfo
