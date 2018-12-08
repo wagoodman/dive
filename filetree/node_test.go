@@ -1,7 +1,6 @@
 package filetree
 
 import (
-	"archive/tar"
 	"testing"
 )
 
@@ -84,7 +83,7 @@ func TestRemoveChild(t *testing.T) {
 func TestPath(t *testing.T) {
 	expected := "/etc/nginx/nginx.conf"
 	tree := NewFileTree()
-	node, _ := tree.AddPath(expected, FileInfo{})
+	node, _, _ := tree.AddPath(expected, FileInfo{})
 
 	actual := node.Path()
 	if expected != actual {
@@ -94,9 +93,9 @@ func TestPath(t *testing.T) {
 
 func TestIsWhiteout(t *testing.T) {
 	tree1 := NewFileTree()
-	p1, _ := tree1.AddPath("/etc/nginx/public1", FileInfo{})
-	p2, _ := tree1.AddPath("/etc/nginx/.wh.public2", FileInfo{})
-	p3, _ := tree1.AddPath("/etc/nginx/public3/.wh..wh..opq", FileInfo{})
+	p1, _, _ := tree1.AddPath("/etc/nginx/public1", FileInfo{})
+	p2, _, _ := tree1.AddPath("/etc/nginx/.wh.public2", FileInfo{})
+	p3, _, _ := tree1.AddPath("/etc/nginx/public3/.wh..wh..opq", FileInfo{})
 
 	if p1.IsWhiteout() != false {
 		t.Errorf("Expected path '%s' to **not** be a whiteout file", p1.Name)
@@ -113,15 +112,13 @@ func TestIsWhiteout(t *testing.T) {
 
 func TestDiffTypeFromAddedChildren(t *testing.T) {
 	tree := NewFileTree()
-	node, _ := tree.AddPath("/usr", *BlankFileChangeInfo("/usr"))
+	node, _, _ := tree.AddPath("/usr", *BlankFileChangeInfo("/usr"))
 	node.Data.DiffType = Unchanged
 
-	info1 := BlankFileChangeInfo("/usr/bin")
-	node, _ = tree.AddPath("/usr/bin", *info1)
+	node, _, _ = tree.AddPath("/usr/bin", *BlankFileChangeInfo("/usr/bin"))
 	node.Data.DiffType = Added
 
-	info2 := BlankFileChangeInfo("/usr/bin2")
-	node, _ = tree.AddPath("/usr/bin2", *info2)
+	node, _, _ = tree.AddPath("/usr/bin2", *BlankFileChangeInfo("/usr/bin2"))
 	node.Data.DiffType = Removed
 
 	tree.Root.Children["usr"].deriveDiffType(Unchanged)
@@ -132,14 +129,14 @@ func TestDiffTypeFromAddedChildren(t *testing.T) {
 }
 func TestDiffTypeFromRemovedChildren(t *testing.T) {
 	tree := NewFileTree()
-	node, _ := tree.AddPath("/usr", *BlankFileChangeInfo("/usr"))
+	node, _, _ := tree.AddPath("/usr", *BlankFileChangeInfo("/usr"))
 
 	info1 := BlankFileChangeInfo("/usr/.wh.bin")
-	node, _ = tree.AddPath("/usr/.wh.bin", *info1)
+	node, _, _ = tree.AddPath("/usr/.wh.bin", *info1)
 	node.Data.DiffType = Removed
 
 	info2 := BlankFileChangeInfo("/usr/.wh.bin2")
-	node, _ = tree.AddPath("/usr/.wh.bin2", *info2)
+	node, _, _ = tree.AddPath("/usr/.wh.bin2", *info2)
 	node.Data.DiffType = Removed
 
 	tree.Root.Children["usr"].deriveDiffType(Unchanged)
@@ -152,9 +149,9 @@ func TestDiffTypeFromRemovedChildren(t *testing.T) {
 
 func TestDirSize(t *testing.T) {
 	tree1 := NewFileTree()
-	tree1.AddPath("/etc/nginx/public1", FileInfo{TarHeader: tar.Header{Size: 100}})
-	tree1.AddPath("/etc/nginx/thing1", FileInfo{TarHeader: tar.Header{Size: 200}})
-	tree1.AddPath("/etc/nginx/public3/thing2", FileInfo{TarHeader: tar.Header{Size: 300}})
+	tree1.AddPath("/etc/nginx/public1", FileInfo{Size: 100})
+	tree1.AddPath("/etc/nginx/thing1", FileInfo{Size: 200})
+	tree1.AddPath("/etc/nginx/public3/thing2", FileInfo{Size: 300})
 
 	node, _ := tree1.GetNode("/etc/nginx")
 	expected, actual := "----------        0:0      600 B ", node.MetadataString()

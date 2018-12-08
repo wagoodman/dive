@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/wagoodman/dive/filetree"
 	"github.com/wagoodman/dive/utils"
 	"io/ioutil"
 	"os"
@@ -110,6 +111,9 @@ func initConfig() {
 	if err := viper.ReadInConfig(); err == nil {
 		fmt.Println("Using config file:", viper.ConfigFileUsed())
 	}
+
+	// set global defaults (for performance)
+	filetree.GlobalFileTreeCollapse = viper.GetBool("filetree.collapse-dir")
 }
 
 // initLogging sets up the logging object with a formatter and location

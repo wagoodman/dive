@@ -15,7 +15,8 @@ import (
 
 const debug = false
 
-// var profileObj = profile.Start(profile.CPUProfile, profile.ProfilePath("."), profile.NoShutdownHook)
+// var profileObj = profile.Start(profile.MemProfile, profile.ProfilePath("."), profile.NoShutdownHook)
+// var onExit func()
 
 // debugPrint writes the given string to the debug pane (if the debug pane is enabled)
 func debugPrint(s string) {
@@ -143,6 +144,7 @@ func CursorUp(g *gocui.Gui, v *gocui.View) error {
 func quit(g *gocui.Gui, v *gocui.View) error {
 
 	// profileObj.Stop()
+	// onExit()
 
 	return gocui.ErrQuit
 }
@@ -301,7 +303,7 @@ func renderStatusOption(control, title string, selected bool) string {
 }
 
 // Run is the UI entrypoint.
-func Run(analysis *image.AnalysisResult) {
+func Run(analysis *image.AnalysisResult, cache filetree.TreeCache) {
 
 	Formatting.Selected = color.New(color.ReverseVideo, color.Bold).SprintFunc()
 	Formatting.Header = color.New(color.Bold).SprintFunc()
@@ -328,7 +330,7 @@ func Run(analysis *image.AnalysisResult) {
 	Views.Layer = NewLayerView("side", g, analysis.Layers)
 	Views.lookup[Views.Layer.Name] = Views.Layer
 
-	Views.Tree = NewFileTreeView("main", g, filetree.StackRange(analysis.RefTrees, 0, 0), analysis.RefTrees)
+	Views.Tree = NewFileTreeView("main", g, filetree.StackTreeRange(analysis.RefTrees, 0, 0), analysis.RefTrees, cache)
 	Views.lookup[Views.Tree.Name] = Views.Tree
 
 	Views.Status = NewStatusView("status", g)
@@ -343,6 +345,12 @@ func Run(analysis *image.AnalysisResult) {
 	g.Cursor = false
 	//g.Mouse = true
 	g.SetManagerFunc(layout)
+
+	// var profileObj = profile.Start(profile.CPUProfile, profile.ProfilePath("."), profile.NoShutdownHook)
+	//
+	// onExit = func() {
+	// 	profileObj.Stop()
+	// }
 
 	// perform the first update and render now that all resources have been loaded
 	Update()

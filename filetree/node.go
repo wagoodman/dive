@@ -22,16 +22,6 @@ var diffTypeColor = map[DiffType]*color.Color{
 	Unchanged: color.New(color.Reset),
 }
 
-// FileNode represents a single file, its relation to files beneath it, the tree it exists in, and the metadata of the given file.
-type FileNode struct {
-	Tree     *FileTree
-	Parent   *FileNode
-	Name     string
-	Data     NodeData
-	Children map[string]*FileNode
-	path     string
-}
-
 // NewNode creates a new FileNode relative to the given parent node with a payload.
 func NewNode(parent *FileNode, name string, data FileInfo) (node *FileNode) {
 	node = new(FileNode)
@@ -124,8 +114,8 @@ func (node *FileNode) String() string {
 	}
 
 	display = node.Name
-	if node.Data.FileInfo.TarHeader.Typeflag == tar.TypeSymlink || node.Data.FileInfo.TarHeader.Typeflag == tar.TypeLink {
-		display += " → " + node.Data.FileInfo.TarHeader.Linkname
+	if node.Data.FileInfo.TypeFlag == tar.TypeSymlink || node.Data.FileInfo.TypeFlag == tar.TypeLink {
+		display += " → " + node.Data.FileInfo.Linkname
 	}
 	return diffTypeColor[node.Data.DiffType].Sprint(display)
 }
@@ -136,25 +126,25 @@ func (node *FileNode) MetadataString() string {
 		return ""
 	}
 
-	fileMode := permbits.FileMode(node.Data.FileInfo.TarHeader.FileInfo().Mode()).String()
+	fileMode := permbits.FileMode(node.Data.FileInfo.Mode).String()
 	dir := "-"
-	if node.Data.FileInfo.TarHeader.FileInfo().IsDir() {
+	if node.Data.FileInfo.IsDir {
 		dir = "d"
 	}
-	user := node.Data.FileInfo.TarHeader.Uid
-	group := node.Data.FileInfo.TarHeader.Gid
+	user := node.Data.FileInfo.Uid
+	group := node.Data.FileInfo.Gid
 	userGroup := fmt.Sprintf("%d:%d", user, group)
 
 	var sizeBytes int64
 
 	if node.IsLeaf() {
-		sizeBytes = node.Data.FileInfo.TarHeader.FileInfo().Size()
+		sizeBytes = node.Data.FileInfo.Size
 	} else {
 		sizer := func(curNode *FileNode) error {
 			// don't include file sizes of children that have been removed (unless the node in question is a removed dir,
 			// then show the accumulated size of removed files)
 			if curNode.Data.DiffType != Removed || node.Data.DiffType == Removed {
-				sizeBytes += curNode.Data.FileInfo.TarHeader.FileInfo().Size()
+				sizeBytes += curNode.Data.FileInfo.Size
 			}
 			return nil
 		}
@@ -264,8 +254,8 @@ func (node *FileNode) deriveDiffType(diffType DiffType) error {
 	if node.IsLeaf() {
 		return node.AssignDiffType(diffType)
 	}
-	myDiffType := diffType
 
+	myDiffType := diffType
 	for _, v := range node.Children {
 		myDiffType = myDiffType.merge(v.Data.DiffType)
 
@@ -274,19 +264,14 @@ func (node *FileNode) deriveDiffType(diffType DiffType) error {
 	return node.AssignDiffType(myDiffType)
 }
 
-// AssignDiffType will assign the given DiffType to this node, possible affecting child nodes.
+// AssignDiffType will assign the given DiffType to this node, possibly affecting child nodes.
 func (node *FileNode) AssignDiffType(diffType DiffType) error {
 	var err error
 
-	// todo, this is an indicator that the root node approach isn't working
-	if node.Path() == "/" {
-		return nil
-	}
-
 	node.Data.DiffType = diffType
 
-	// if we've removed this node, then all children have been removed as well
 	if diffType == Removed {
+		// if we've removed this node, then all children have been removed as well
 		for _, child := range node.Children {
 			err = child.AssignDiffType(diffType)
 			if err != nil {
@@ -294,6 +279,7 @@ func (node *FileNode) AssignDiffType(diffType DiffType) error {
 			}
 		}
 	}
+
 	return nil
 }
 

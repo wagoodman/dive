@@ -214,11 +214,10 @@ func (image *dockerImageAnalyzer) processLayerTar(name string, layerIdx uint, re
 	shortName := name[:15]
 	pb := utils.NewProgressBar(int64(len(fileInfos)), 30)
 	for idx, element := range fileInfos {
-		tree.FileSize += uint64(element.TarHeader.FileInfo().Size())
-		_, err := tree.AddPath(element.Path, element)
-		if err != nil {
-			return err
-		}
+		tree.FileSize += uint64(element.Size)
+
+		// todo: we should check for errors but also allow whiteout files to be not be added (thus not error out)
+		tree.AddPath(element.Path, element)
 
 		if pb.Update(int64(idx)) {
 			message = fmt.Sprintf("    ├─ %s %s : %s", title, shortName, pb.String())
@@ -238,12 +237,9 @@ func (image *dockerImageAnalyzer) getFileList(tarReader *tar.Reader) ([]filetree
 
 	for {
 		header, err := tarReader.Next()
-
 		if err == io.EOF {
 			break
-		}
-
-		if err != nil {
+		} else if err != nil {
 			fmt.Println(err)
 			utils.Exit(1)
 		}
