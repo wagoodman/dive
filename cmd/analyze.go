@@ -34,21 +34,8 @@ func doAnalyzeCmd(cmd *cobra.Command, args []string) {
 		cmd.Help()
 		utils.Exit(1)
 	}
-	color.New(color.Bold).Println("Analyzing Image")
-	result := fetchAndAnalyze(userImage)
 
-	if exportFile != "" {
-		exportStatistics(result)
-		color.New(color.Bold).Println(fmt.Sprintf("Exported to %s", exportFile))
-		return
-	}
-
-	fmt.Println("  Building cache...")
-	cache := filetree.NewFileTreeCache(result.RefTrees)
-	cache.Build()
-
-	ui.Run(result, cache)
-
+	run(userImage)
 }
 
 type export struct {
@@ -57,7 +44,7 @@ type export struct {
 }
 
 type exportLayer struct {
-	Index     int   `json:"index"`
+	Index     int    `json:"index"`
 	DigestID  string `json:"digestId"`
 	SizeBytes uint64 `json:"sizeBytes"`
 	Command   string `json:"command"`
@@ -144,4 +131,21 @@ func fetchAndAnalyze(imageID string) *image.AnalysisResult {
 		utils.Exit(1)
 	}
 	return result
+}
+
+func run(imageID string) {
+	color.New(color.Bold).Println("Analyzing Image")
+	result := fetchAndAnalyze(imageID)
+
+	if exportFile != "" {
+		exportStatistics(result)
+		color.New(color.Bold).Println(fmt.Sprintf("Exported to %s", exportFile))
+		utils.Exit(0)
+	}
+
+	fmt.Println("  Building cache...")
+	cache := filetree.NewFileTreeCache(result.RefTrees)
+	cache.Build()
+
+	ui.Run(result, cache)
 }

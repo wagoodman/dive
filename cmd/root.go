@@ -45,7 +45,7 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.dive.yaml, ~/.config/dive.yaml, or $XDG_CONFIG_HOME/dive.yaml)")
 	rootCmd.PersistentFlags().BoolP("version", "v", false, "display version number")
 
-	rootCmd.Flags().StringVar(&exportFile, "export", "", "Export analysis statistics to a file instead of the TUI")
+	rootCmd.Flags().StringVarP(&exportFile, "json", "j", "", "Skip the interactive TUI and write the layer analysis statistics to a given file.")
 }
 
 // initConfig reads in config file and ENV variables if set.
