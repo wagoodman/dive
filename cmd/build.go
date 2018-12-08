@@ -1,12 +1,8 @@
 package cmd
 
 import (
-	"fmt"
-	"github.com/fatih/color"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"github.com/wagoodman/dive/filetree"
-	"github.com/wagoodman/dive/ui"
 	"github.com/wagoodman/dive/utils"
 	"io/ioutil"
 	"os"
@@ -47,12 +43,5 @@ func doBuildCmd(cmd *cobra.Command, args []string) {
 		log.Fatal(err)
 	}
 
-	color.New(color.Bold).Println("Analyzing Image")
-	result := fetchAndAnalyze(string(imageId))
-
-	fmt.Println("  Building cache...")
-	cache := filetree.NewFileTreeCache(result.RefTrees)
-	cache.Build()
-
-	ui.Run(result, cache)
+	run(string(imageId))
 }
