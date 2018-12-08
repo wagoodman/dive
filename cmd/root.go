@@ -22,7 +22,7 @@ var rootCmd = &cobra.Command{
 	Long: `This tool provides a way to discover and explore the contents of a docker image. Additionally the tool estimates
 the amount of wasted space and identifies the offending files from the image.`,
 	Args: cobra.MaximumNArgs(1),
-	Run:  analyze,
+	Run:  doAnalyzeCmd,
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.

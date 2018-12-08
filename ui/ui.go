@@ -301,7 +301,7 @@ func renderStatusOption(control, title string, selected bool) string {
 }
 
 // Run is the UI entrypoint.
-func Run(layers []*image.Layer, refTrees []*filetree.FileTree, efficiency float64, inefficiencies filetree.EfficiencySlice) {
+func Run(analysis *image.AnalysisResult) {
 
 	Formatting.Selected = color.New(color.ReverseVideo, color.Bold).SprintFunc()
 	Formatting.Header = color.New(color.Bold).SprintFunc()
@@ -325,10 +325,10 @@ func Run(layers []*image.Layer, refTrees []*filetree.FileTree, efficiency float6
 
 	Views.lookup = make(map[string]View)
 
-	Views.Layer = NewLayerView("side", g, layers)
+	Views.Layer = NewLayerView("side", g, analysis.Layers)
 	Views.lookup[Views.Layer.Name] = Views.Layer
 
-	Views.Tree = NewFileTreeView("main", g, filetree.StackRange(refTrees, 0, 0), refTrees)
+	Views.Tree = NewFileTreeView("main", g, filetree.StackRange(analysis.RefTrees, 0, 0), analysis.RefTrees)
 	Views.lookup[Views.Tree.Name] = Views.Tree
 
 	Views.Status = NewStatusView("status", g)
@@ -337,7 +337,7 @@ func Run(layers []*image.Layer, refTrees []*filetree.FileTree, efficiency float6
 	Views.Filter = NewFilterView("command", g)
 	Views.lookup[Views.Filter.Name] = Views.Filter
 
-	Views.Details = NewDetailsView("details", g, efficiency, inefficiencies)
+	Views.Details = NewDetailsView("details", g, analysis.Efficiency, analysis.Inefficiencies)
 	Views.lookup[Views.Details.Name] = Views.Details
 
 	g.Cursor = false

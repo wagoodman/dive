@@ -128,9 +128,10 @@ func (view *DetailsView) Render() error {
 		// update contents
 		view.view.Clear()
 		fmt.Fprintln(view.view, Formatting.Header("Digest: ")+currentLayer.Id())
-		fmt.Fprintln(view.view, Formatting.Header("Tar ID: ")+currentLayer.TarId())
+		// TODO: add back in with view model
+		// fmt.Fprintln(view.view, Formatting.Header("Tar ID: ")+currentLayer.TarId())
 		fmt.Fprintln(view.view, Formatting.Header("Command:"))
-		fmt.Fprintln(view.view, currentLayer.History.CreatedBy)
+		fmt.Fprintln(view.view, currentLayer.Command())
 
 		fmt.Fprintln(view.view, "\n"+Formatting.Header(vtclean.Clean(imageHeaderStr, false)))
 
