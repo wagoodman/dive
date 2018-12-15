@@ -23,9 +23,7 @@ require (
 	github.com/lunixbochs/vtclean v0.0.0-20180621232353-2d01aacdc34a
 	github.com/mattn/go-colorable v0.0.9 // indirect
 	github.com/mattn/go-isatty v0.0.4 // indirect
-	github.com/mattn/go-runewidth v0.0.3 // indirect
 	github.com/mitchellh/go-homedir v1.0.0
-	github.com/nsf/termbox-go v0.0.0-20181027232701-60ab7e3d12ed // indirect
 	github.com/opencontainers/go-digest v1.0.0-rc1 // indirect
 	github.com/opencontainers/image-spec v1.0.1 // indirect
 	github.com/phayes/permbits v0.0.0-20180830030258-59f2482cd460
@@ -33,6 +31,7 @@ require (
 	github.com/sirupsen/logrus v1.2.0
 	github.com/spf13/cobra v0.0.3
 	github.com/spf13/viper v1.2.1
+	github.com/wagoodman/keybinding v0.0.0-20181213133715-6a824da6df05
 	golang.org/x/crypto v0.0.0-20181112202954-3d3f9f413869 // indirect
 	golang.org/x/net v0.0.0-20181114220301-adae6a3d119a
 	golang.org/x/sync v0.0.0-20181108010431-42b317875d0f // indirect

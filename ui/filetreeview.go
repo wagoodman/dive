@@ -5,6 +5,8 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"github.com/wagoodman/dive/utils"
+	"github.com/wagoodman/keybinding"
+	"log"
 	"regexp"
 	"strings"
 
@@ -37,13 +39,13 @@ type FileTreeView struct {
 	bufferIndexUpperBound uint
 	bufferIndexLowerBound uint
 
-	keybindingToggleCollapse  []Key
-	keybindingToggleAdded     []Key
-	keybindingToggleRemoved   []Key
-	keybindingToggleModified  []Key
-	keybindingToggleUnchanged []Key
-	keybindingPageDown        []Key
-	keybindingPageUp          []Key
+	keybindingToggleCollapse  []keybinding.Key
+	keybindingToggleAdded     []keybinding.Key
+	keybindingToggleRemoved   []keybinding.Key
+	keybindingToggleModified  []keybinding.Key
+	keybindingToggleUnchanged []keybinding.Key
+	keybindingPageDown        []keybinding.Key
+	keybindingPageUp          []keybinding.Key
 }
 
 // NewFileTreeView creates a new view object attached the the global [gocui] screen object.
@@ -74,13 +76,41 @@ func NewFileTreeView(name string, gui *gocui.Gui, tree *filetree.FileTree, refTr
 		}
 	}
 
-	treeView.keybindingToggleCollapse = getKeybindings(viper.GetString("keybinding.toggle-collapse-dir"))
-	treeView.keybindingToggleAdded = getKeybindings(viper.GetString("keybinding.toggle-added-files"))
-	treeView.keybindingToggleRemoved = getKeybindings(viper.GetString("keybinding.toggle-removed-files"))
-	treeView.keybindingToggleModified = getKeybindings(viper.GetString("keybinding.toggle-modified-files"))
-	treeView.keybindingToggleUnchanged = getKeybindings(viper.GetString("keybinding.toggle-unchanged-files"))
-	treeView.keybindingPageUp = getKeybindings(viper.GetString("keybinding.page-up"))
-	treeView.keybindingPageDown = getKeybindings(viper.GetString("keybinding.page-down"))
+	var err error
+	treeView.keybindingToggleCollapse, err = keybinding.ParseAll(viper.GetString("keybinding.toggle-collapse-dir"))
+	if err != nil {
+		log.Panicln(err)
+	}
+
+	treeView.keybindingToggleAdded, err = keybinding.ParseAll(viper.GetString("keybinding.toggle-added-files"))
+	if err != nil {
+		log.Panicln(err)
+	}
+
+	treeView.keybindingToggleRemoved, err = keybinding.ParseAll(viper.GetString("keybinding.toggle-removed-files"))
+	if err != nil {
+		log.Panicln(err)
+	}
+
+	treeView.keybindingToggleModified, err = keybinding.ParseAll(viper.GetString("keybinding.toggle-modified-files"))
+	if err != nil {
+		log.Panicln(err)
+	}
+
+	treeView.keybindingToggleUnchanged, err = keybinding.ParseAll(viper.GetString("keybinding.toggle-unchanged-files"))
+	if err != nil {
+		log.Panicln(err)
+	}
+
+	treeView.keybindingPageUp, err = keybinding.ParseAll(viper.GetString("keybinding.page-up"))
+	if err != nil {
+		log.Panicln(err)
+	}
+
+	treeView.keybindingPageDown, err = keybinding.ParseAll(viper.GetString("keybinding.page-down"))
+	if err != nil {
+		log.Panicln(err)
+	}
 
 	return treeView
 }
@@ -114,37 +144,37 @@ func (view *FileTreeView) Setup(v *gocui.View, header *gocui.View) error {
 	}
 
 	for _, key := range view.keybindingPageUp {
-		if err := view.gui.SetKeybinding(view.Name, key.value, key.modifier, func(*gocui.Gui, *gocui.View) error { return view.PageUp() }); err != nil {
+		if err := view.gui.SetKeybinding(view.Name, key.Value, key.Modifier, func(*gocui.Gui, *gocui.View) error { return view.PageUp() }); err != nil {
 			return err
 		}
 	}
 	for _, key := range view.keybindingPageDown {
-		if err := view.gui.SetKeybinding(view.Name, key.value, key.modifier, func(*gocui.Gui, *gocui.View) error { return view.PageDown() }); err != nil {
+		if err := view.gui.SetKeybinding(view.Name, key.Value, key.Modifier, func(*gocui.Gui, *gocui.View) error { return view.PageDown() }); err != nil {
 			return err
 		}
 	}
 	for _, key := range view.keybindingToggleCollapse {
-		if err := view.gui.SetKeybinding(view.Name, key.value, key.modifier, func(*gocui.Gui, *gocui.View) error { return view.toggleCollapse() }); err != nil {
+		if err := view.gui.SetKeybinding(view.Name, key.Value, key.Modifier, func(*gocui.Gui, *gocui.View) error { return view.toggleCollapse() }); err != nil {
 			return err
 		}
 	}
 	for _, key := range view.keybindingToggleAdded {
-		if err := view.gui.SetKeybinding(view.Name, key.value, key.modifier, func(*gocui.Gui, *gocui.View) error { return view.toggleShowDiffType(filetree.Added) }); err != nil {
+		if err := view.gui.SetKeybinding(view.Name, key.Value, key.Modifier, func(*gocui.Gui, *gocui.View) error { return view.toggleShowDiffType(filetree.Added) }); err != nil {
 			return err
 		}
 	}
 	for _, key := range view.keybindingToggleRemoved {
-		if err := view.gui.SetKeybinding(view.Name, key.value, key.modifier, func(*gocui.Gui, *gocui.View) error { return view.toggleShowDiffType(filetree.Removed) }); err != nil {
+		if err := view.gui.SetKeybinding(view.Name, key.Value, key.Modifier, func(*gocui.Gui, *gocui.View) error { return view.toggleShowDiffType(filetree.Removed) }); err != nil {
 			return err
 		}
 	}
 	for _, key := range view.keybindingToggleModified {
-		if err := view.gui.SetKeybinding(view.Name, key.value, key.modifier, func(*gocui.Gui, *gocui.View) error { return view.toggleShowDiffType(filetree.Changed) }); err != nil {
+		if err := view.gui.SetKeybinding(view.Name, key.Value, key.Modifier, func(*gocui.Gui, *gocui.View) error { return view.toggleShowDiffType(filetree.Changed) }); err != nil {
 			return err
 		}
 	}
 	for _, key := range view.keybindingToggleUnchanged {
-		if err := view.gui.SetKeybinding(view.Name, key.value, key.modifier, func(*gocui.Gui, *gocui.View) error { return view.toggleShowDiffType(filetree.Unchanged) }); err != nil {
+		if err := view.gui.SetKeybinding(view.Name, key.Value, key.Modifier, func(*gocui.Gui, *gocui.View) error { return view.toggleShowDiffType(filetree.Unchanged) }); err != nil {
 			return err
 		}
 	}

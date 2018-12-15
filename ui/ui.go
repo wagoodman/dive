@@ -10,6 +10,7 @@ import (
 	"github.com/wagoodman/dive/filetree"
 	"github.com/wagoodman/dive/image"
 	"github.com/wagoodman/dive/utils"
+	"github.com/wagoodman/keybinding"
 	"log"
 )
 
@@ -54,9 +55,9 @@ var Views struct {
 }
 
 var GlobalKeybindings struct {
-	quit       []Key
-	toggleView []Key
-	filterView []Key
+	quit       []keybinding.Key
+	toggleView []keybinding.Key
+	filterView []keybinding.Key
 }
 
 // View defines the a renderable terminal screen pane.
@@ -152,19 +153,19 @@ func quit(g *gocui.Gui, v *gocui.View) error {
 // keyBindings registers global key press actions, valid when in any pane.
 func keyBindings(g *gocui.Gui) error {
 	for _, key := range GlobalKeybindings.quit {
-		if err := g.SetKeybinding("", key.value, key.modifier, quit); err != nil {
+		if err := g.SetKeybinding("", key.Value, key.Modifier, quit); err != nil {
 			return err
 		}
 	}
 
 	for _, key := range GlobalKeybindings.toggleView {
-		if err := g.SetKeybinding("", key.value, key.modifier, toggleView); err != nil {
+		if err := g.SetKeybinding("", key.Value, key.Modifier, toggleView); err != nil {
 			return err
 		}
 	}
 
 	for _, key := range GlobalKeybindings.filterView {
-		if err := g.SetKeybinding("", key.value, key.modifier, toggleFilterView); err != nil {
+		if err := g.SetKeybinding("", key.Value, key.Modifier, toggleFilterView); err != nil {
 			return err
 		}
 	}
@@ -314,9 +315,19 @@ func Run(analysis *image.AnalysisResult, cache filetree.TreeCache) {
 	Formatting.CompareTop = color.New(color.BgMagenta).SprintFunc()
 	Formatting.CompareBottom = color.New(color.BgGreen).SprintFunc()
 
-	GlobalKeybindings.quit = getKeybindings(viper.GetString("keybinding.quit"))
-	GlobalKeybindings.toggleView = getKeybindings(viper.GetString("keybinding.toggle-view"))
-	GlobalKeybindings.filterView = getKeybindings(viper.GetString("keybinding.filter-files"))
+	var err error
+	GlobalKeybindings.quit, err = keybinding.ParseAll(viper.GetString("keybinding.quit"))
+	if err != nil {
+		log.Panicln(err)
+	}
+	GlobalKeybindings.toggleView, err = keybinding.ParseAll(viper.GetString("keybinding.toggle-view"))
+	if err != nil {
+		log.Panicln(err)
+	}
+	GlobalKeybindings.filterView, err = keybinding.ParseAll(viper.GetString("keybinding.filter-files"))
+	if err != nil {
+		log.Panicln(err)
+	}
 
 	g, err := gocui.NewGui(gocui.OutputNormal)
 	if err != nil {

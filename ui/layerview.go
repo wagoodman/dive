@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"github.com/spf13/viper"
 	"github.com/wagoodman/dive/utils"
+	"github.com/wagoodman/keybinding"
+	"log"
 
 	"github.com/jroimartin/gocui"
 	"github.com/lunixbochs/vtclean"
@@ -24,8 +26,8 @@ type LayerView struct {
 	CompareStartIndex int
 	ImageSize         uint64
 
-	keybindingCompareAll   []Key
-	keybindingCompareLayer []Key
+	keybindingCompareAll   []keybinding.Key
+	keybindingCompareLayer []keybinding.Key
 }
 
 // NewDetailsView creates a new view object attached the the global [gocui] screen object.
@@ -46,8 +48,16 @@ func NewLayerView(name string, gui *gocui.Gui, layers []image.Layer) (layerView 
 		utils.PrintAndExit(fmt.Sprintf("unknown layer.show-aggregated-changes value: %v", mode))
 	}
 
-	layerView.keybindingCompareAll = getKeybindings(viper.GetString("keybinding.compare-all"))
-	layerView.keybindingCompareLayer = getKeybindings(viper.GetString("keybinding.compare-layer"))
+	var err error
+	layerView.keybindingCompareAll, err = keybinding.ParseAll(viper.GetString("keybinding.compare-all"))
+	if err != nil {
+		log.Panicln(err)
+	}
+
+	layerView.keybindingCompareLayer, err = keybinding.ParseAll(viper.GetString("keybinding.compare-layer"))
+	if err != nil {
+		log.Panicln(err)
+	}
 
 	return layerView
 }
@@ -75,13 +85,13 @@ func (view *LayerView) Setup(v *gocui.View, header *gocui.View) error {
 	}
 
 	for _, key := range view.keybindingCompareLayer {
-		if err := view.gui.SetKeybinding(view.Name, key.value, key.modifier, func(*gocui.Gui, *gocui.View) error { return view.setCompareMode(CompareLayer) }); err != nil {
+		if err := view.gui.SetKeybinding(view.Name, key.Value, key.Modifier, func(*gocui.Gui, *gocui.View) error { return view.setCompareMode(CompareLayer) }); err != nil {
 			return err
 		}
 	}
 
 	for _, key := range view.keybindingCompareAll {
-		if err := view.gui.SetKeybinding(view.Name, key.value, key.modifier, func(*gocui.Gui, *gocui.View) error { return view.setCompareMode(CompareAll) }); err != nil {
+		if err := view.gui.SetKeybinding(view.Name, key.Value, key.Modifier, func(*gocui.Gui, *gocui.View) error { return view.setCompareMode(CompareAll) }); err != nil {
 			return err
 		}
 	}
