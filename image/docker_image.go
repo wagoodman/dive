@@ -90,7 +90,7 @@ func (image *dockerImageAnalyzer) read(tarFile io.ReadCloser) error {
 		header, err := tarReader.Next()
 
 		if err == io.EOF {
-			fmt.Println("    ╧")
+			fmt.Println("  ╧")
 			break
 		}
 
@@ -167,16 +167,31 @@ func (image *dockerImageAnalyzer) Analyze() (*AnalysisResult, error) {
 
 	efficiency, inefficiencies := filetree.Efficiency(image.trees)
 
+	var sizeBytes, userSizeBytes uint64
 	layers := make([]Layer, len(image.layers))
 	for i, v := range image.layers {
 		layers[i] = v
+		sizeBytes += v.Size()
+		if i != 0 {
+			userSizeBytes += v.Size()
+		}
+	}
+
+	var wastedBytes uint64
+	for idx := 0; idx < len(inefficiencies); idx++ {
+		fileData := inefficiencies[len(inefficiencies)-1-idx]
+		wastedBytes += uint64(fileData.CumulativeSize)
 	}
 
 	return &AnalysisResult{
-		Layers:         layers,
-		RefTrees:       image.trees,
-		Efficiency:     efficiency,
-		Inefficiencies: inefficiencies,
+		Layers:            layers,
+		RefTrees:          image.trees,
+		Efficiency:        efficiency,
+		UserSizeByes:      userSizeBytes,
+		SizeBytes:         sizeBytes,
+		WastedBytes:       wastedBytes,
+		WastedUserPercent: float64(float64(wastedBytes) / float64(userSizeBytes)),
+		Inefficiencies:    inefficiencies,
 	}, nil
 }
 
@@ -203,7 +218,7 @@ func (image *dockerImageAnalyzer) processLayerTar(name string, layerIdx uint, re
 	tree.Name = name
 
 	title := fmt.Sprintf("[layer: %2d]", layerIdx)
-	message := fmt.Sprintf("    ├─ %s %s ", title, "working...")
+	message := fmt.Sprintf("  ├─ %s %s ", title, "working...")
 	fmt.Printf("\r%s", message)
 
 	fileInfos, err := image.getFileList(reader)
@@ -220,12 +235,12 @@ func (image *dockerImageAnalyzer) processLayerTar(name string, layerIdx uint, re
 		tree.AddPath(element.Path, element)
 
 		if pb.Update(int64(idx)) {
-			message = fmt.Sprintf("    ├─ %s %s : %s", title, shortName, pb.String())
+			message = fmt.Sprintf("  ├─ %s %s : %s", title, shortName, pb.String())
 			fmt.Printf("\r%s", message)
 		}
 	}
 	pb.Done()
-	message = fmt.Sprintf("    ├─ %s %s : %s", title, shortName, pb.String())
+	message = fmt.Sprintf("  ├─ %s %s : %s", title, shortName, pb.String())
 	fmt.Printf("\r%s\n", message)
 
 	image.layerMap[tree.Name] = tree

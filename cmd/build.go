@@ -1,11 +1,9 @@
 package cmd
 
 import (
-	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"github.com/wagoodman/dive/runtime"
 	"github.com/wagoodman/dive/utils"
-	"io/ioutil"
-	"os"
 )
 
 // buildCmd represents the build command
@@ -23,25 +21,9 @@ func init() {
 // doBuildCmd implements the steps taken for the build command
 func doBuildCmd(cmd *cobra.Command, args []string) {
 	defer utils.Cleanup()
-	iidfile, err := ioutil.TempFile("/tmp", "dive.*.iid")
-	if err != nil {
-		utils.Cleanup()
-		log.Fatal(err)
-	}
-	defer os.Remove(iidfile.Name())
 
-	allArgs := append([]string{"--iidfile", iidfile.Name()}, args...)
-	err = utils.RunDockerCmd("build", allArgs...)
-	if err != nil {
-		utils.Cleanup()
-		log.Fatal(err)
-	}
-
-	imageId, err := ioutil.ReadFile(iidfile.Name())
-	if err != nil {
-		utils.Cleanup()
-		log.Fatal(err)
-	}
-
-	run(string(imageId))
+	runtime.Run(runtime.Options{
+		BuildArgs:  args,
+		ExportFile: exportFile,
+	})
 }
