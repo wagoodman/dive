@@ -348,9 +348,9 @@ func TestCompareWithAdds(t *testing.T) {
 func TestCompareWithChanges(t *testing.T) {
 	lowerTree := NewFileTree()
 	upperTree := NewFileTree()
-	paths := [...]string{"/etc", "/usr", "/etc/hosts", "/etc/sudoers", "/usr/bin"}
+	changedPaths := []string{"/etc", "/usr", "/etc/hosts", "/etc/sudoers", "/usr/bin"}
 
-	for _, value := range paths {
+	for _, value := range changedPaths {
 		lowerTree.AddPath(value, FileInfo{
 			Path:     value,
 			TypeFlag: 1,
@@ -363,13 +363,53 @@ func TestCompareWithChanges(t *testing.T) {
 		})
 	}
 
+	chmodPath := "/etc/non-data-change"
+
+	lowerTree.AddPath(chmodPath, FileInfo{
+		Path:     chmodPath,
+		TypeFlag: 1,
+		hash:     123,
+		Mode:     0,
+	})
+
+	upperTree.AddPath(chmodPath, FileInfo{
+		Path:     chmodPath,
+		TypeFlag: 1,
+		hash:     123,
+		Mode:     1,
+	})
+
+	changedPaths = append(changedPaths, chmodPath)
+
+	chownPath := "/etc/non-data-change-2"
+
+	lowerTree.AddPath(chmodPath, FileInfo{
+		Path:     chownPath,
+		TypeFlag: 1,
+		hash:     123,
+		Mode:     1,
+		Gid:      0,
+		Uid:      0,
+	})
+
+	upperTree.AddPath(chmodPath, FileInfo{
+		Path:     chownPath,
+		TypeFlag: 1,
+		hash:     123,
+		Mode:     1,
+		Gid:      12,
+		Uid:      12,
+	})
+
+	changedPaths = append(changedPaths, chownPath)
+
 	lowerTree.Compare(upperTree)
 	failedAssertions := []error{}
 	asserter := func(n *FileNode) error {
 		p := n.Path()
 		if p == "/" {
 			return nil
-		} else if stringInSlice(p, []string{"/etc", "/usr", "/etc/hosts", "/etc/sudoers", "/usr/bin"}) {
+		} else if stringInSlice(p, changedPaths) {
 			if err := AssertDiffType(n, Changed); err != nil {
 				failedAssertions = append(failedAssertions, err)
 			}
