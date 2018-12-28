@@ -16,8 +16,13 @@ import (
 
 var dockerVersion string
 
-func newDockerImageAnalyzer() Analyzer {
-	return &dockerImageAnalyzer{}
+func newDockerImageAnalyzer(imageId string) Analyzer {
+	return &dockerImageAnalyzer{
+		// store discovered json files in a map so we can read the image in one pass
+		jsonFiles: make(map[string][]byte),
+		layerMap:  make(map[string]*filetree.FileTree),
+		id:        imageId,
+	}
 }
 
 func newDockerImageManifest(manifestBytes []byte) dockerImageManifest {
@@ -49,40 +54,31 @@ func newDockerImageConfig(configBytes []byte) dockerImageConfig {
 	return imageConfig
 }
 
-func (image *dockerImageAnalyzer) Parse(imageID string) error {
+func (image *dockerImageAnalyzer) Fetch() (io.ReadCloser, error) {
 	var err error
-	image.id = imageID
-	// store discovered json files in a map so we can read the image in one pass
-	image.jsonFiles = make(map[string][]byte)
-	image.layerMap = make(map[string]*filetree.FileTree)
 
 	// pull the image if it does not exist
 	ctx := context.Background()
 	image.client, err = client.NewClientWithOpts(client.WithVersion(dockerVersion), client.FromEnv)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	_, _, err = image.client.ImageInspectWithRaw(ctx, imageID)
+	_, _, err = image.client.ImageInspectWithRaw(ctx, image.id)
 	if err != nil {
 		// don't use the API, the CLI has more informative output
-		fmt.Println("Image not available locally. Trying to pull '" + imageID + "'...")
-		utils.RunDockerCmd("pull", imageID)
+		fmt.Println("Image not available locally. Trying to pull '" + image.id + "'...")
+		utils.RunDockerCmd("pull", image.id)
 	}
 
-	tarFile, _, err := image.getReader(imageID)
+	readCloser, err := image.client.ImageSave(ctx, []string{image.id})
 	if err != nil {
-		return err
+		return nil, err
 	}
-	defer tarFile.Close()
 
-	err = image.read(tarFile)
-	if err != nil {
-		return err
-	}
-	return nil
+	return readCloser, nil
 }
 
-func (image *dockerImageAnalyzer) read(tarFile io.ReadCloser) error {
+func (image *dockerImageAnalyzer) Parse(tarFile io.ReadCloser) error {
 	tarReader := tar.NewReader(tarFile)
 
 	var currentLayer uint
@@ -193,23 +189,6 @@ func (image *dockerImageAnalyzer) Analyze() (*AnalysisResult, error) {
 		WastedUserPercent: float64(float64(wastedBytes) / float64(userSizeBytes)),
 		Inefficiencies:    inefficiencies,
 	}, nil
-}
-
-func (image *dockerImageAnalyzer) getReader(imageID string) (io.ReadCloser, int64, error) {
-
-	ctx := context.Background()
-	result, _, err := image.client.ImageInspectWithRaw(ctx, imageID)
-	if err != nil {
-		return nil, -1, err
-	}
-	totalSize := result.Size
-
-	readCloser, err := image.client.ImageSave(ctx, []string{imageID})
-	if err != nil {
-		return nil, -1, err
-	}
-
-	return readCloser, totalSize, nil
 }
 
 // todo: it is bad that this is printing out to the screen. As the interface gets more flushed out, an event update mechanism should be built in (so the caller can format and print updates)

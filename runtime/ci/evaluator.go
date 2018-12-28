@@ -7,10 +7,11 @@ import (
 	"github.com/spf13/viper"
 	"github.com/wagoodman/dive/image"
 	"io/ioutil"
+	"sort"
 	"strings"
 )
 
-func NewEvaluator(configFile string) *Evaluator {
+func NewEvaluator() *Evaluator {
 	ciConfig := viper.New()
 	ciConfig.SetConfigType("yaml")
 
@@ -18,23 +19,25 @@ func NewEvaluator(configFile string) *Evaluator {
 	ciConfig.SetDefault("rules.highestWastedBytes", "disabled")
 	ciConfig.SetDefault("rules.highestUserWastedPercent", 0.1)
 
-	fileBytes, err := ioutil.ReadFile(configFile)
-	if err == nil {
-		fmt.Printf("  Using CI config: %s\n", configFile)
-		err = ciConfig.ReadConfig(bytes.NewBuffer(fileBytes))
-		if err != nil {
-			panic(err)
-		}
-	} else {
-		fmt.Println("  Using default CI config")
-	}
-
 	return &Evaluator{
 		Config:  ciConfig,
 		Rules:   loadCiRules(),
 		Results: make(map[string]RuleResult),
 		Pass:    true,
 	}
+}
+
+func (ci *Evaluator) LoadConfig(configFile string) error {
+	fileBytes, err := ioutil.ReadFile(configFile)
+	if err != nil {
+		return err
+	}
+
+	err = ci.Config.ReadConfig(bytes.NewBuffer(fileBytes))
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (ci *Evaluator) isRuleEnabled(rule Rule) bool {
@@ -45,7 +48,7 @@ func (ci *Evaluator) isRuleEnabled(rule Rule) bool {
 	return true
 }
 
-func (ci *Evaluator) Evaluate(analysis *image.AnalysisResult) {
+func (ci *Evaluator) Evaluate(analysis *image.AnalysisResult) bool {
 	for _, rule := range ci.Rules {
 		if ci.isRuleEnabled(rule) {
 
@@ -67,34 +70,46 @@ func (ci *Evaluator) Evaluate(analysis *image.AnalysisResult) {
 		} else {
 			ci.Results[rule.Key()] = RuleResult{
 				status:  RuleDisabled,
-				message: "skipped (disabled)",
+				message: "rule disabled",
 			}
 		}
 	}
+
+	ci.Tally.Total = len(ci.Results)
+	for rule, result := range ci.Results {
+		switch result.status {
+		case RulePassed:
+			ci.Tally.Pass++
+		case RuleFailed:
+			ci.Tally.Fail++
+		case RuleWarning:
+			ci.Tally.Warn++
+		case RuleDisabled:
+			ci.Tally.Skip++
+		default:
+			panic(fmt.Errorf("unknown test status (rule='%v'): %v", rule, result.status))
+		}
+	}
+
+	return ci.Pass
 }
 
 func (ci *Evaluator) Report() {
-	numRules := len(ci.Rules)
-	numPass := 0
-	numFail := 0
-	numSkip := 0
-	numWarn := 0
 	status := "PASS"
-	for rule, result := range ci.Results {
+
+	rules := make([]string, 0, len(ci.Results))
+	for name := range ci.Results {
+		rules = append(rules, name)
+	}
+	sort.Strings(rules)
+
+	if ci.Tally.Fail > 0 {
+		status = "FAIL"
+	}
+
+	for _, rule := range rules {
+		result := ci.Results[rule]
 		name := strings.TrimPrefix(rule, "rules.")
-		switch result.status {
-		case RulePassed:
-			numPass++
-		case RuleFailed:
-			numFail++
-			status = "FAIL"
-		case RuleWarning:
-			numWarn++
-		case RuleDisabled:
-			numSkip++
-		default:
-			panic(fmt.Errorf("unknown test status: %v", result.status))
-		}
 		if result.message != "" {
 			fmt.Printf("  %s: %s: %s\n", result.status.String(), name, result.message)
 		} else {
@@ -102,10 +117,10 @@ func (ci *Evaluator) Report() {
 		}
 	}
 
-	summary := fmt.Sprintf("Result:%s [Total:%d] [Passed:%d] [Failed:%d] [Warn:%d] [Skipped:%d]", status, numRules, numPass, numFail, numWarn, numSkip)
+	summary := fmt.Sprintf("Result:%s [Total:%d] [Passed:%d] [Failed:%d] [Warn:%d] [Skipped:%d]", status, ci.Tally.Total, ci.Tally.Pass, ci.Tally.Fail, ci.Tally.Warn, ci.Tally.Skip)
 	if ci.Pass {
 		fmt.Println(aurora.Green(summary))
-	} else if ci.Pass && numWarn > 0 {
+	} else if ci.Pass && ci.Tally.Warn > 0 {
 		fmt.Println(aurora.Blue(summary))
 	} else {
 		fmt.Println(aurora.Red(summary))

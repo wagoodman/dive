@@ -34,5 +34,14 @@ type Evaluator struct {
 	Config  *viper.Viper
 	Rules   []Rule
 	Results map[string]RuleResult
+	Tally   ResultTally
 	Pass    bool
+}
+
+type ResultTally struct {
+	Pass  int
+	Fail  int
+	Skip  int
+	Warn  int
+	Total int
 }

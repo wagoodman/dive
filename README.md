@@ -16,6 +16,13 @@ or if you want to build your image then jump straight into analyzing it:
 dive build -t <some-tag> .
 ```
 
+Additionally you can run this in your CI pipeline to ensure you're keeping wasted space to a minimum (this skips the TUI):
+```
+CI=true dive <your-image>
+```
+
+![Image](.data/demo-ci.png)
+
 **This is beta quality!** *Feel free to submit an issue if you want a new feature or find a bug :)*
 
 ## Basic Features
@@ -46,6 +53,9 @@ You can build a Docker image and do an immediate analysis with one command:
 
 You only need to replace your `docker build` command with the same `dive build`
 command.
+
+**CI Integration**
+Analyze and image and get a pass/fail result based on the image efficiency and wasted space. Simply set `CI=true` in the environment when invoking any valid dive command.
 
 
 ## Installation
@@ -126,6 +136,26 @@ docker run --rm -it \
     -e DOCKER_API_VERSION=1.37
     wagoodman/dive:latest <dive arguments...>
 ```
+
+## CI Integration
+
+When running dive with the environment variable `CI=true` then the dive UI will be bypassed and will instead analyze your docker image, giving it a pass/fail indication via return code. Currently there are three metrics supported via a `.dive-ci` file that you can put at the root of your repo:
+```
+rules:
+  # If the efficiency is measured below X%, mark as failed.
+  # Expressed as a percentage between 0-1.
+  lowestEfficiency: 0.95
+
+  # If the amount of wasted space is at least X or larger than X, mark as failed.
+  # Expressed in B, KB, MB, and GB.
+  highestWastedBytes: 20MB
+
+  # If the amount of wasted space makes up for X% or more of the image, mark as failed.
+  # Note: the base image layer is NOT included in the total image size.
+  # Expressed as a percentage between 0-1; fails if the threshold is met or crossed.
+  highestUserWastedPercent: 0.20
+```
+You can override the CI config path with the `--ci-config` option.
 
 ## KeyBindings
 

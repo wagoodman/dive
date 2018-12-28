@@ -32,7 +32,7 @@ func (status RuleStatus) String() string {
 	case RuleWarning:
 		return aurora.Blue("WARN").String()
 	case RuleDisabled:
-		return "(skip)"
+		return aurora.Blue("SKIP").String()
 	default:
 		return aurora.Inverse("Unknown").String()
 	}

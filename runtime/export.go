@@ -41,14 +41,14 @@ func newExport(analysis *image.AnalysisResult) *export {
 	return &data
 }
 
-func exportResultsToFile(analysis *image.AnalysisResult, exportFilePath string) {
-	data := newExport(analysis)
-	payload, err := json.MarshalIndent(&data, "", "  ")
+func (exp *export) marshal() ([]byte, error) {
+	return json.MarshalIndent(&exp, "", "  ")
+}
+
+func (exp *export) toFile(exportFilePath string) error {
+	payload, err := exp.marshal()
 	if err != nil {
-		panic(err)
+		return err
 	}
-	err = ioutil.WriteFile(exportFilePath, payload, 0644)
-	if err != nil {
-		panic(err)
-	}
+	return ioutil.WriteFile(exportFilePath, payload, 0644)
 }

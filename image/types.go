@@ -3,13 +3,15 @@ package image
 import (
 	"github.com/docker/docker/client"
 	"github.com/wagoodman/dive/filetree"
+	"io"
 )
 
 type Parser interface {
 }
 
 type Analyzer interface {
-	Parse(id string) error
+	Fetch() (io.ReadCloser, error)
+	Parse(io.ReadCloser) error
 	Analyze() (*AnalysisResult, error)
 }
 
