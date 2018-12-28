@@ -11,3 +11,4 @@ RUN rm -rf /root/example/
 ADD .data/ /root/.data/
 RUN cp /root/saved.txt /tmp/saved.again1.txt
 RUN cp /root/saved.txt /root/.data/saved.again2.txt
+RUN chmod +x /root/saved.txt
