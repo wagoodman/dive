@@ -3,13 +3,15 @@ package image
 import (
 	"github.com/docker/docker/client"
 	"github.com/wagoodman/dive/filetree"
+	"io"
 )
 
 type Parser interface {
 }
 
 type Analyzer interface {
-	Parse(id string) error
+	Fetch() (io.ReadCloser, error)
+	Parse(io.ReadCloser) error
 	Analyze() (*AnalysisResult, error)
 }
 
@@ -24,10 +26,14 @@ type Layer interface {
 }
 
 type AnalysisResult struct {
-	Layers         []Layer
-	RefTrees       []*filetree.FileTree
-	Efficiency     float64
-	Inefficiencies filetree.EfficiencySlice
+	Layers            []Layer
+	RefTrees          []*filetree.FileTree
+	Efficiency        float64
+	SizeBytes         uint64
+	UserSizeByes      uint64  // this is all bytes except for the base image
+	WastedUserPercent float64 // = wasted-bytes/user-size-bytes
+	WastedBytes       uint64
+	Inefficiencies    filetree.EfficiencySlice
 }
 
 type dockerImageAnalyzer struct {

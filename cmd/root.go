@@ -16,6 +16,7 @@ import (
 
 var cfgFile string
 var exportFile string
+var ciConfigFile string
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -46,6 +47,7 @@ func init() {
 	rootCmd.PersistentFlags().BoolP("version", "v", false, "display version number")
 
 	rootCmd.Flags().StringVarP(&exportFile, "json", "j", "", "Skip the interactive TUI and write the layer analysis statistics to a given file.")
+	rootCmd.Flags().StringVar(&ciConfigFile, "ci-config", ".dive-ci", "If CI=true in the environment, use the given yaml to drive validation rules.")
 }
 
 // initConfig reads in config file and ENV variables if set.

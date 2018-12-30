@@ -105,7 +105,7 @@ func (view *DetailsView) Render() error {
 		data := view.inefficiencies[len(view.inefficiencies)-1-idx]
 		wastedSpace += data.CumulativeSize
 
-		// todo: make this report scrollable and exportable
+		// todo: make this report scrollable
 		if idx < height {
 			inefficiencyReport += fmt.Sprintf(template, strconv.Itoa(len(data.Nodes)), humanize.Bytes(uint64(data.CumulativeSize)), data.Path)
 		}

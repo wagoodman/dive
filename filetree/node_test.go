@@ -154,7 +154,7 @@ func TestDirSize(t *testing.T) {
 	tree1.AddPath("/etc/nginx/public3/thing2", FileInfo{Size: 300})
 
 	node, _ := tree1.GetNode("/etc/nginx")
-	expected, actual := "----------        0:0      600 B ", node.MetadataString()
+	expected, actual := "----------         0:0      600 B ", node.MetadataString()
 	if expected != actual {
 		t.Errorf("Expected metadata '%s' got '%s'", expected, actual)
 	}

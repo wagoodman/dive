@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	AttributeFormat = "%s%s %10s %10s "
+	AttributeFormat = "%s%s %11s %10s "
 )
 
 var diffTypeColor = map[DiffType]*color.Color{

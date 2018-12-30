@@ -19,3 +19,4 @@
 /.image
 *.log
 /dist
+.cover
