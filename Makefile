@@ -6,7 +6,7 @@ run: build
 	./build/$(BIN) build -t dive-example:latest -f .data/Dockerfile.example .
 
 run-ci: build
-	CI=true ./build/$(BIN) build -t dive-example:latest -f .data/Dockerfile.example .
+	CI=true ./build/$(BIN) dive-example:latest --ci-config .data/.dive-ci
 
 run-large: build
 	./build/$(BIN) amir20/clashleaders:latest

@@ -16,7 +16,7 @@ or if you want to build your image then jump straight into analyzing it:
 dive build -t <some-tag> .
 ```
 
-Additionally you can run this in your CI pipeline to ensure you're keeping wasted space to a minimum (this skips the TUI):
+Additionally you can run this in your CI pipeline to ensure you're keeping wasted space to a minimum (this skips the UI):
 ```
 CI=true dive <your-image>
 ```
@@ -174,7 +174,7 @@ Key Binding                                | Description
 <kbd>PageUp</kbd>                          | Filetree view: scroll up a page
 <kbd>PageDown</kbd>                        | Filetree view: scroll down a page
 
-## Configuration
+## UI Configuration
 
 No configuration is necessary, however, you can create a config file and override values:
 ```yaml
