@@ -2,8 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/wagoodman/dive/filetree"
-	"github.com/wagoodman/dive/utils"
 	"io/ioutil"
 	"os"
 
@@ -12,6 +10,8 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"github.com/wagoodman/dive/filetree"
+	"github.com/wagoodman/dive/utils"
 )
 
 var cfgFile string
@@ -122,12 +122,15 @@ func initConfig() {
 
 // initLogging sets up the logging object with a formatter and location
 func initLogging() {
+	var logFileObj *os.File
+	var err error
 
-	if viper.GetBool("log.enabled") == false {
+	if viper.GetBool("log.enabled") {
+		logFileObj, err = os.OpenFile(viper.GetString("log.path"), os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
+	} else {
 		log.SetOutput(ioutil.Discard)
 	}
 
-	logFileObj, err := os.OpenFile(viper.GetString("log.path"), os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 	}
@@ -140,13 +143,8 @@ func initLogging() {
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 	}
+
 	log.SetLevel(level)
-
-	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-	} else {
-		log.SetOutput(logFileObj)
-	}
-
+	log.SetOutput(logFileObj)
 	log.Debug("Starting Dive...")
 }
