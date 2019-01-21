@@ -43,3 +43,5 @@ brew:
   github:
     owner: wagoodman
     name: homebrew-dive
+  homepage: "https://github.com/wagoodman/dive/"
+  description: "A tool for exploring each layer in a docker image"
