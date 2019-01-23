@@ -161,20 +161,20 @@ You can override the CI config path with the `--ci-config` option.
 
 ## KeyBindings
 
-| Key Binding                               | Description                                    |
-| ----------------------------------------- | ---------------------------------------------- |
-| <kbd>Ctrl + C</kbd>                       | Exit                                           |
-| <kbd>Tab</kbd> or <kbd>Ctrl + Space</kbd> | Switch between the layer and filetree views    |
-| <kbd>Ctrl + F</kbd>                       | Filter files                                   |
-| <kbd>Ctrl + A</kbd>                       | Layer view: see aggregated image modifications |
-| <kbd>Ctrl + L</kbd>                       | Layer view: see current layer modifications    |
-| <kbd>Space</kbd>                          | Filetree view: collapse/uncollapse a directory |
-| <kbd>Ctrl + A</kbd>                       | Filetree view: show/hide added files           |
-| <kbd>Ctrl + R</kbd>                       | Filetree view: show/hide removed files         |
-| <kbd>Ctrl + M</kbd>                       | Filetree view: show/hide modified files        |
-| <kbd>Ctrl + U</kbd>                       | Filetree view: show/hide unmodified files      |
-| <kbd>PageUp</kbd>                         | Filetree view: scroll up a page                |
-| <kbd>PageDown</kbd>                       | Filetree view: scroll down a page              |
+Key Binding                                | Description
+-------------------------------------------|---------------------------------------------------------
+<kbd>Ctrl + C</kbd>                        | Exit
+<kbd>Tab</kbd> or <kbd>Ctrl + Space</kbd>  | Switch between the layer and filetree views
+<kbd>Ctrl + F</kbd>                        | Filter files
+<kbd>Ctrl + A</kbd>                        | Layer view: see aggregated image modifications
+<kbd>Ctrl + L</kbd>                        | Layer view: see current layer modifications
+<kbd>Space</kbd>                           | Filetree view: collapse/uncollapse a directory
+<kbd>Ctrl + A</kbd>                        | Filetree view: show/hide added files
+<kbd>Ctrl + R</kbd>                        | Filetree view: show/hide removed files
+<kbd>Ctrl + M</kbd>                        | Filetree view: show/hide modified files
+<kbd>Ctrl + U</kbd>                        | Filetree view: show/hide unmodified files
+<kbd>PageUp</kbd>                          | Filetree view: scroll up a page
+<kbd>PageDown</kbd>                        | Filetree view: scroll down a page
 
 ## UI Configuration
 
