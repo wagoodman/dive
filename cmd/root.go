@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"strings"
 	"path"
+	"strings"
 
 	"github.com/k0kubun/go-ansi"
 	"github.com/mitchellh/go-homedir"
@@ -132,7 +132,7 @@ func getCfgFile(fromFlag string) string {
 	if fromFlag != "" {
 		return fromFlag
 	}
-	
+
 	home, err := homedir.Dir()
 	if err != nil {
 		fmt.Println(err)
@@ -142,9 +142,7 @@ func getCfgFile(fromFlag string) string {
 	xdgHome := os.Getenv("XDG_CONFIG_HOME")
 	xdgDirs := os.Getenv("XDG_CONFIG_DIRS")
 	xdgPaths := append([]string{xdgHome}, strings.Split(xdgDirs, ":")...)
-	allDirs := append(xdgPaths, home + pathSep + ".config")
-
-	fmt.Println(allDirs)
+	allDirs := append(xdgPaths, home+pathSep+".config")
 
 	for _, val := range allDirs {
 		file := findInPath(val)
