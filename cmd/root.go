@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path"
+	"strings"
 
 	"github.com/k0kubun/go-ansi"
 	"github.com/mitchellh/go-homedir"
@@ -13,6 +15,8 @@ import (
 	"github.com/wagoodman/dive/filetree"
 	"github.com/wagoodman/dive/utils"
 )
+
+const pathSep = string(os.PathSeparator)
 
 var cfgFile string
 var exportFile string
@@ -52,36 +56,8 @@ func init() {
 
 // initConfig reads in config file and ENV variables if set.
 func initConfig() {
-	if cfgFile != "" {
-		// Use config file from the flag.
-		viper.SetConfigFile(cfgFile)
-	} else {
-		// Find home directory.
-		home, err := homedir.Dir()
-		if err != nil {
-			fmt.Println(err)
-			utils.Exit(1)
-		}
-
-		// allow for:
-		//    ~/.dive.yaml
-		//    $XDG_CONFIG_HOME/dive.yaml
-		//    ~/.config/dive.yaml
-		hiddenHomeCfg := home + string(os.PathSeparator) + ".dive.yaml"
-		if _, err := os.Stat(hiddenHomeCfg); os.IsNotExist(err) {
-			viper.SetConfigName("dive")
-
-			xdgHome := os.Getenv("XDG_CONFIG_HOME")
-			if len(xdgHome) > 0 {
-				viper.AddConfigPath(xdgHome)
-			}
-
-			viper.AddConfigPath(home + string(os.PathSeparator) + ".config")
-
-		} else {
-			viper.SetConfigFile(hiddenHomeCfg)
-		}
-	}
+	filepathToCfg := getCfgFile(cfgFile)
+	viper.SetConfigFile(filepathToCfg)
 
 	viper.SetDefault("log.level", log.InfoLevel.String())
 	viper.SetDefault("log.path", "./dive.log")
@@ -147,4 +123,50 @@ func initLogging() {
 	log.SetLevel(level)
 	log.SetOutput(logFileObj)
 	log.Debug("Starting Dive...")
+}
+
+// getCfgFile checks for config file in paths from xdg specs
+// and in $HOME/.config/dive/ directory
+// defaults to $HOME/.dive.yaml
+func getCfgFile(fromFlag string) string {
+	if fromFlag != "" {
+		return fromFlag
+	}
+
+	home, err := homedir.Dir()
+	if err != nil {
+		fmt.Println(err)
+		utils.Exit(0)
+	}
+
+	xdgHome := os.Getenv("XDG_CONFIG_HOME")
+	xdgDirs := os.Getenv("XDG_CONFIG_DIRS")
+	xdgPaths := append([]string{xdgHome}, strings.Split(xdgDirs, ":")...)
+	allDirs := append(xdgPaths, home+pathSep+".config")
+
+	for _, val := range allDirs {
+		file := findInPath(val)
+		if len(file) > 0 {
+			return file
+		}
+	}
+	return home + pathSep + "dive.yaml"
+}
+
+// findInPath returns first "*.yaml" file in path's subdirectory "dive"
+// if not found returns empty string
+func findInPath(pathTo string) string {
+	directory := pathTo + pathSep + "dive"
+	files, err := ioutil.ReadDir(directory)
+	if err != nil {
+		return ""
+	}
+
+	for _, file := range files {
+		filename := file.Name()
+		if path.Ext(filename) == ".yaml" {
+			return directory + pathSep + filename
+		}
+	}
+	return ""
 }
