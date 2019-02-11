@@ -16,6 +16,18 @@ or if you want to build your image then jump straight into analyzing it:
 dive build -t <some-tag> .
 ```
 
+Building on Macbook
+
+```bash
+docker run --rm -it \
+      -v /usr/local/bin/docker:/bin/docker \
+      -v /var/run/docker.sock:/var/run/docker.sock \
+      -v  "$(pwd)":"$(pwd)" \
+      -w "$(pwd)" \
+      -v "$HOME/.dive.yaml":"$HOME/.dive.yaml" \
+      wagoodman/dive:latest build -t <some-tag> .
+```
+
 Additionally you can run this in your CI pipeline to ensure you're keeping wasted space to a minimum (this skips the UI):
 ```
 CI=true dive <your-image>
