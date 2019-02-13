@@ -184,7 +184,7 @@ Key Binding                                | Description
 <kbd>Ctrl + A</kbd>                        | Filetree view: show/hide added files
 <kbd>Ctrl + R</kbd>                        | Filetree view: show/hide removed files
 <kbd>Ctrl + M</kbd>                        | Filetree view: show/hide modified files
-<kbd>Ctrl + U</kbd>                        | Filetree view: show/hide unmodified files
+<kbd>Ctrl + U</kbd>                        | Filetree view: show/hide unchanged files
 <kbd>PageUp</kbd>                          | Filetree view: scroll up a page
 <kbd>PageDown</kbd>                        | Filetree view: scroll down a page
 
@@ -214,7 +214,7 @@ keybinding:
   toggle-added-files: ctrl+a
   toggle-removed-files: ctrl+r
   toggle-modified-files: ctrl+m
-  toggle-unmodified-files: ctrl+u
+  toggle-unchanged-files: ctrl+u
   page-up: pgup
   page-down: pgdn
   
