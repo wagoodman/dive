@@ -7,7 +7,6 @@ import (
 	"path"
 	"strings"
 
-	"github.com/k0kubun/go-ansi"
 	"github.com/mitchellh/go-homedir"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -42,8 +41,6 @@ func Execute() {
 }
 
 func init() {
-	ansi.CursorHide()
-
 	cobra.OnInitialize(initConfig)
 	cobra.OnInitialize(initLogging)
 

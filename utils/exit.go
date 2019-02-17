@@ -3,7 +3,6 @@ package utils
 import (
 	"fmt"
 	"github.com/jroimartin/gocui"
-	"github.com/k0kubun/go-ansi"
 	"github.com/sirupsen/logrus"
 	"os"
 )
@@ -31,5 +30,4 @@ func Cleanup() {
 	if ui != nil {
 		ui.Close()
 	}
-	ansi.CursorShow()
 }
