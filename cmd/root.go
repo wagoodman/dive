@@ -15,8 +15,6 @@ import (
 	"github.com/wagoodman/dive/utils"
 )
 
-const pathSep = string(os.PathSeparator)
-
 var cfgFile string
 var exportFile string
 var ciConfigFile string
@@ -139,7 +137,7 @@ func getCfgFile(fromFlag string) string {
 	xdgHome := os.Getenv("XDG_CONFIG_HOME")
 	xdgDirs := os.Getenv("XDG_CONFIG_DIRS")
 	xdgPaths := append([]string{xdgHome}, strings.Split(xdgDirs, ":")...)
-	allDirs := append(xdgPaths, home+pathSep+".config")
+	allDirs := append(xdgPaths, path.Join(home, ".config"))
 
 	for _, val := range allDirs {
 		file := findInPath(val)
@@ -147,13 +145,13 @@ func getCfgFile(fromFlag string) string {
 			return file
 		}
 	}
-	return home + pathSep + "dive.yaml"
+	return path.Join(home, ".dive.yaml")
 }
 
 // findInPath returns first "*.yaml" file in path's subdirectory "dive"
 // if not found returns empty string
 func findInPath(pathTo string) string {
-	directory := pathTo + pathSep + "dive"
+	directory := path.Join(pathTo, "dive")
 	files, err := ioutil.ReadDir(directory)
 	if err != nil {
 		return ""
@@ -162,7 +160,7 @@ func findInPath(pathTo string) string {
 	for _, file := range files {
 		filename := file.Name()
 		if path.Ext(filename) == ".yaml" {
-			return directory + pathSep + filename
+			return path.Join(directory, filename)
 		}
 	}
 	return ""

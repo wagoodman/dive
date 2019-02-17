@@ -28,6 +28,8 @@ type LayerView struct {
 
 	keybindingCompareAll   []keybinding.Key
 	keybindingCompareLayer []keybinding.Key
+	keybindingPageDown     []keybinding.Key
+	keybindingPageUp       []keybinding.Key
 }
 
 // NewDetailsView creates a new view object attached the the global [gocui] screen object.
@@ -59,6 +61,16 @@ func NewLayerView(name string, gui *gocui.Gui, layers []image.Layer) (layerView 
 		log.Panicln(err)
 	}
 
+	layerView.keybindingPageUp, err = keybinding.ParseAll(viper.GetString("keybinding.page-up"))
+	if err != nil {
+		log.Panicln(err)
+	}
+
+	layerView.keybindingPageDown, err = keybinding.ParseAll(viper.GetString("keybinding.page-down"))
+	if err != nil {
+		log.Panicln(err)
+	}
+
 	return layerView
 }
 
@@ -84,6 +96,17 @@ func (view *LayerView) Setup(v *gocui.View, header *gocui.View) error {
 		return err
 	}
 
+	for _, key := range view.keybindingPageUp {
+		if err := view.gui.SetKeybinding(view.Name, key.Value, key.Modifier, func(*gocui.Gui, *gocui.View) error { return view.PageUp() }); err != nil {
+			return err
+		}
+	}
+	for _, key := range view.keybindingPageDown {
+		if err := view.gui.SetKeybinding(view.Name, key.Value, key.Modifier, func(*gocui.Gui, *gocui.View) error { return view.PageDown() }); err != nil {
+			return err
+		}
+	}
+
 	for _, key := range view.keybindingCompareLayer {
 		if err := view.gui.SetKeybinding(view.Name, key.Value, key.Modifier, func(*gocui.Gui, *gocui.View) error { return view.setCompareMode(CompareLayer) }); err != nil {
 			return err
@@ -99,6 +122,13 @@ func (view *LayerView) Setup(v *gocui.View, header *gocui.View) error {
 	return view.Render()
 }
 
+// height obtains the height of the current pane (taking into account the lost space due to the header).
+func (view *LayerView) height() uint {
+	_, height := view.view.Size()
+	return uint(height - 1)
+}
+
+
 // IsVisible indicates if the layer view pane is currently initialized.
 func (view *LayerView) IsVisible() bool {
 	if view == nil {
@@ -106,6 +136,45 @@ func (view *LayerView) IsVisible() bool {
 	}
 	return true
 }
+
+// PageDown moves to next page putting the cursor on top
+func (view *LayerView) PageDown() error {
+	step := int(view.height())+1
+	targetLayerIndex := view.LayerIndex + step
+
+	if targetLayerIndex > len(view.Layers) {
+		step -= targetLayerIndex - (len(view.Layers) -1)
+		targetLayerIndex = view.LayerIndex + step
+	}
+
+	if step > 0 {
+		err := CursorStep(view.gui, view.view, step)
+		if err == nil {
+			view.SetCursor(view.LayerIndex + step)
+		}
+	}
+	return nil
+}
+
+// PageUp moves to previous page putting the cursor on top
+func (view *LayerView) PageUp() error {
+	step := int(view.height())+1
+	targetLayerIndex := view.LayerIndex - step
+
+	if targetLayerIndex < 0 {
+		step += targetLayerIndex
+		targetLayerIndex = view.LayerIndex - step
+	}
+
+	if step > 0 {
+		err := CursorStep(view.gui, view.view, -step)
+		if err == nil {
+			view.SetCursor(view.LayerIndex - step)
+		}
+	}
+	return nil
+}
+
 
 // CursorDown moves the cursor down in the layer pane (selecting a higher layer).
 func (view *LayerView) CursorDown() error {

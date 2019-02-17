@@ -110,31 +110,29 @@ func toggleFilterView(g *gocui.Gui, v *gocui.View) error {
 
 // CursorDown moves the cursor down in the currently selected gocui pane, scrolling the screen as needed.
 func CursorDown(g *gocui.Gui, v *gocui.View) error {
-	cx, cy := v.Cursor()
-
-	// if there isn't a next line
-	line, err := v.Line(cy + 1)
-	if err != nil {
-		// todo: handle error
-	}
-	if len(line) == 0 {
-		return errors.New("unable to move cursor down, empty line")
-	}
-	if err := v.SetCursor(cx, cy+1); err != nil {
-		ox, oy := v.Origin()
-		if err := v.SetOrigin(ox, oy+1); err != nil {
-			return err
-		}
-	}
-	return nil
+	return CursorStep(g, v,1)
 }
 
 // CursorUp moves the cursor up in the currently selected gocui pane, scrolling the screen as needed.
 func CursorUp(g *gocui.Gui, v *gocui.View) error {
-	ox, oy := v.Origin()
+	return CursorStep(g, v,-1)
+}
+
+// Moves the cursor the given step distance, setting the origin to the new cursor line
+func CursorStep(g *gocui.Gui, v *gocui.View, step int) error {
 	cx, cy := v.Cursor()
-	if err := v.SetCursor(cx, cy-1); err != nil && oy > 0 {
-		if err := v.SetOrigin(ox, oy-1); err != nil {
+
+	// if there isn't a next line
+	line, err := v.Line(cy+step)
+	if err != nil {
+		// todo: handle error
+	}
+	if len(line) == 0 {
+		return errors.New("unable to move the cursor, empty line")
+	}
+	if err := v.SetCursor(cx, cy+step); err != nil {
+		ox, oy := v.Origin()
+		if err := v.SetOrigin(ox, oy+step); err != nil {
 			return err
 		}
 	}
