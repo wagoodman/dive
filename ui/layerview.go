@@ -128,7 +128,6 @@ func (view *LayerView) height() uint {
 	return uint(height - 1)
 }
 
-
 // IsVisible indicates if the layer view pane is currently initialized.
 func (view *LayerView) IsVisible() bool {
 	if view == nil {
@@ -139,11 +138,11 @@ func (view *LayerView) IsVisible() bool {
 
 // PageDown moves to next page putting the cursor on top
 func (view *LayerView) PageDown() error {
-	step := int(view.height())+1
+	step := int(view.height()) + 1
 	targetLayerIndex := view.LayerIndex + step
 
 	if targetLayerIndex > len(view.Layers) {
-		step -= targetLayerIndex - (len(view.Layers) -1)
+		step -= targetLayerIndex - (len(view.Layers) - 1)
 		targetLayerIndex = view.LayerIndex + step
 	}
 
@@ -158,7 +157,7 @@ func (view *LayerView) PageDown() error {
 
 // PageUp moves to previous page putting the cursor on top
 func (view *LayerView) PageUp() error {
-	step := int(view.height())+1
+	step := int(view.height()) + 1
 	targetLayerIndex := view.LayerIndex - step
 
 	if targetLayerIndex < 0 {
@@ -174,7 +173,6 @@ func (view *LayerView) PageUp() error {
 	}
 	return nil
 }
-
 
 // CursorDown moves the cursor down in the layer pane (selecting a higher layer).
 func (view *LayerView) CursorDown() error {
