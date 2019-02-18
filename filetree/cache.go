@@ -23,9 +23,8 @@ func (cache *TreeCache) Get(bottomTreeStart, bottomTreeStop, topTreeStart, topTr
 
 func (cache *TreeCache) buildTree(key TreeCacheKey) *FileTree {
 	newTree := StackTreeRange(cache.refTrees, key.bottomTreeStart, key.bottomTreeStop)
-
 	for idx := key.topTreeStart; idx <= key.topTreeStop; idx++ {
-		newTree.Compare(cache.refTrees[idx])
+		newTree.CompareAndMark(cache.refTrees[idx])
 	}
 	return newTree
 }

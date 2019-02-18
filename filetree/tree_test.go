@@ -268,7 +268,7 @@ func TestCompareWithNoChanges(t *testing.T) {
 		lowerTree.AddPath(value, fakeData)
 		upperTree.AddPath(value, fakeData)
 	}
-	lowerTree.Compare(upperTree)
+	lowerTree.CompareAndMark(upperTree)
 	asserter := func(n *FileNode) error {
 		if n.Path() == "/" {
 			return nil
@@ -307,7 +307,7 @@ func TestCompareWithAdds(t *testing.T) {
 	}
 
 	failedAssertions := []error{}
-	err := lowerTree.Compare(upperTree)
+	err := lowerTree.CompareAndMark(upperTree)
 	if err != nil {
 		t.Errorf("Expected tree compare to have no errors, got: %v", err)
 	}
@@ -403,7 +403,7 @@ func TestCompareWithChanges(t *testing.T) {
 
 	changedPaths = append(changedPaths, chownPath)
 
-	lowerTree.Compare(upperTree)
+	lowerTree.CompareAndMark(upperTree)
 	failedAssertions := []error{}
 	asserter := func(n *FileNode) error {
 		p := n.Path()
@@ -458,7 +458,7 @@ func TestCompareWithRemoves(t *testing.T) {
 		upperTree.AddPath(value, fakeData)
 	}
 
-	lowerTree.Compare(upperTree)
+	lowerTree.CompareAndMark(upperTree)
 	failedAssertions := []error{}
 	asserter := func(n *FileNode) error {
 		p := n.Path()

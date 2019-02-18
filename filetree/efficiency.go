@@ -56,7 +56,10 @@ func Efficiency(trees []*FileTree) (float64, EfficiencySlice) {
 			if err != nil {
 				logrus.Debug(fmt.Sprintf("CurrentTree: %d : %s", currentTree, err))
 			} else if previousTreeNode.Data.FileInfo.IsDir {
-				previousTreeNode.VisitDepthChildFirst(sizer, nil)
+				err = previousTreeNode.VisitDepthChildFirst(sizer, nil)
+				if err != nil {
+					logrus.Errorf("unable to propagate whiteout dir: %+v", err)
+				}
 			}
 
 		} else {
@@ -80,7 +83,10 @@ func Efficiency(trees []*FileTree) (float64, EfficiencySlice) {
 	}
 	for idx, tree := range trees {
 		currentTree = idx
-		tree.VisitDepthChildFirst(visitor, visitEvaluator)
+		err := tree.VisitDepthChildFirst(visitor, visitEvaluator)
+		if err != nil {
+			logrus.Errorf("unable to propagate ref tree: %+v", err)
+		}
 	}
 
 	// calculate the score
