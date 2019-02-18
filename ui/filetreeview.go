@@ -226,7 +226,10 @@ func (view *FileTreeView) setTreeByLayer(bottomTreeStart, bottomTreeStop, topTre
 		}
 		return nil
 	}
-	view.ModelTree.VisitDepthChildFirst(visitor, nil)
+	err := view.ModelTree.VisitDepthChildFirst(visitor, nil)
+	if err != nil {
+		logrus.Errorf("unable to propagate layer tree: %+v", err)
+	}
 
 	view.resetCursor()
 
@@ -504,12 +507,13 @@ func (view *FileTreeView) Update() error {
 	regex := filterRegex()
 
 	// keep the view selection in parity with the current DiffType selection
-	view.ModelTree.VisitDepthChildFirst(func(node *filetree.FileNode) error {
+	err := view.ModelTree.VisitDepthChildFirst(func(node *filetree.FileNode) error {
 		node.Data.ViewInfo.Hidden = view.HiddenDiffTypes[node.Data.DiffType]
 		visibleChild := false
 		for _, child := range node.Children {
 			if !child.Data.ViewInfo.Hidden {
 				visibleChild = true
+				node.Data.ViewInfo.Hidden = false
 			}
 		}
 		if regex != nil && !visibleChild {
@@ -519,14 +523,23 @@ func (view *FileTreeView) Update() error {
 		return nil
 	}, nil)
 
+	if err != nil {
+		logrus.Errorf("unable to propagate model tree: %+v", err)
+	}
+
 	// make a new tree with only visible nodes
 	view.ViewTree = view.ModelTree.Copy()
-	view.ViewTree.VisitDepthParentFirst(func(node *filetree.FileNode) error {
+	err = view.ViewTree.VisitDepthParentFirst(func(node *filetree.FileNode) error {
 		if node.Data.ViewInfo.Hidden {
 			view.ViewTree.RemovePath(node.Path())
 		}
 		return nil
 	}, nil)
+
+	if err != nil {
+		logrus.Errorf("unable to propagate view tree: %+v", err)
+	}
+
 	return nil
 }
 

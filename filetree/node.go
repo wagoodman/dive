@@ -3,6 +3,7 @@ package filetree
 import (
 	"archive/tar"
 	"fmt"
+	"github.com/sirupsen/logrus"
 	"sort"
 	"strings"
 
@@ -149,7 +150,10 @@ func (node *FileNode) MetadataString() string {
 			return nil
 		}
 
-		node.VisitDepthChildFirst(sizer, nil)
+		err := node.VisitDepthChildFirst(sizer, nil)
+		if err != nil {
+			logrus.Errorf("unable to propagate node for metadata: %+v", err)
+		}
 	}
 
 	size := humanize.Bytes(uint64(sizeBytes))
@@ -258,7 +262,6 @@ func (node *FileNode) deriveDiffType(diffType DiffType) error {
 	myDiffType := diffType
 	for _, v := range node.Children {
 		myDiffType = myDiffType.merge(v.Data.DiffType)
-
 	}
 
 	return node.AssignDiffType(myDiffType)
