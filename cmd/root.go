@@ -59,13 +59,14 @@ func initConfig() {
 	viper.SetDefault("log.enabled", true)
 	// keybindings: status view / global
 	viper.SetDefault("keybinding.quit", "ctrl+c")
-	viper.SetDefault("keybinding.toggle-view", "tab, ctrl+space")
+	viper.SetDefault("keybinding.toggle-view", "tab")
 	viper.SetDefault("keybinding.filter-files", "ctrl+f, ctrl+slash")
 	// keybindings: layer view
 	viper.SetDefault("keybinding.compare-all", "ctrl+a")
 	viper.SetDefault("keybinding.compare-layer", "ctrl+l")
 	// keybindings: filetree view
 	viper.SetDefault("keybinding.toggle-collapse-dir", "space")
+	viper.SetDefault("keybinding.toggle-collapse-all-dir", "ctrl+space")
 	viper.SetDefault("keybinding.toggle-added-files", "ctrl+a")
 	viper.SetDefault("keybinding.toggle-removed-files", "ctrl+r")
 	viper.SetDefault("keybinding.toggle-modified-files", "ctrl+m")

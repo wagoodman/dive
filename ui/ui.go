@@ -295,9 +295,9 @@ func Render() {
 // renderStatusOption formats key help bindings-to-title pairs.
 func renderStatusOption(control, title string, selected bool) string {
 	if selected {
-		return Formatting.StatusSelected("▏") + Formatting.StatusControlSelected(control) + Formatting.StatusSelected("  "+title+" ")
+		return Formatting.StatusSelected("▏") + Formatting.StatusControlSelected(control) + Formatting.StatusSelected(" "+title+" ")
 	} else {
-		return Formatting.StatusNormal("▏") + Formatting.StatusControlNormal(control) + Formatting.StatusNormal("  "+title+" ")
+		return Formatting.StatusNormal("▏") + Formatting.StatusControlNormal(control) + Formatting.StatusNormal(" "+title+" ")
 	}
 }
 
