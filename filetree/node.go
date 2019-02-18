@@ -303,7 +303,6 @@ func (node *FileNode) compare(other *FileNode) DiffType {
 	if node.Name != other.Name {
 		panic("comparing mismatched nodes")
 	}
-	// TODO: fails on nil
 
 	return node.Data.FileInfo.Compare(other.Data.FileInfo)
 }

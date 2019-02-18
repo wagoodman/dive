@@ -140,18 +140,18 @@ func (image *dockerImageAnalyzer) Analyze() (*AnalysisResult, error) {
 	// as you iterate chronologically through history (ignoring history items that have no layer contents)
 	layerIdx := len(image.trees) - 1
 	tarPathIdx := 0
-	for idx := 0; idx < len(config.History); idx++ {
+	for histIdx := 0; histIdx < len(config.History); histIdx++ {
 		// ignore empty layers, we are only observing layers with content
-		if config.History[idx].EmptyLayer {
+		if config.History[histIdx].EmptyLayer {
 			continue
 		}
 
 		tree := image.trees[(len(image.trees)-1)-layerIdx]
-		config.History[idx].Size = uint64(tree.FileSize)
+		config.History[histIdx].Size = uint64(tree.FileSize)
 
 		image.layers[layerIdx] = &dockerLayer{
-			history: config.History[idx],
-			index:   layerIdx,
+			history: config.History[histIdx],
+			index:   tarPathIdx,
 			tree:    image.trees[layerIdx],
 			tarPath: manifest.LayerTarPaths[tarPathIdx],
 		}
