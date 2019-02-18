@@ -39,13 +39,14 @@ type FileTreeView struct {
 	bufferIndexUpperBound uint
 	bufferIndexLowerBound uint
 
-	keybindingToggleCollapse  []keybinding.Key
-	keybindingToggleAdded     []keybinding.Key
-	keybindingToggleRemoved   []keybinding.Key
-	keybindingToggleModified  []keybinding.Key
-	keybindingToggleUnchanged []keybinding.Key
-	keybindingPageDown        []keybinding.Key
-	keybindingPageUp          []keybinding.Key
+	keybindingToggleCollapse    []keybinding.Key
+	keybindingToggleCollapseAll []keybinding.Key
+	keybindingToggleAdded       []keybinding.Key
+	keybindingToggleRemoved     []keybinding.Key
+	keybindingToggleModified    []keybinding.Key
+	keybindingToggleUnchanged   []keybinding.Key
+	keybindingPageDown          []keybinding.Key
+	keybindingPageUp            []keybinding.Key
 }
 
 // NewFileTreeView creates a new view object attached the the global [gocui] screen object.
@@ -78,6 +79,11 @@ func NewFileTreeView(name string, gui *gocui.Gui, tree *filetree.FileTree, refTr
 
 	var err error
 	treeView.keybindingToggleCollapse, err = keybinding.ParseAll(viper.GetString("keybinding.toggle-collapse-dir"))
+	if err != nil {
+		log.Panicln(err)
+	}
+
+	treeView.keybindingToggleCollapseAll, err = keybinding.ParseAll(viper.GetString("keybinding.toggle-collapse-all-dir"))
 	if err != nil {
 		log.Panicln(err)
 	}
@@ -155,6 +161,11 @@ func (view *FileTreeView) Setup(v *gocui.View, header *gocui.View) error {
 	}
 	for _, key := range view.keybindingToggleCollapse {
 		if err := view.gui.SetKeybinding(view.Name, key.Value, key.Modifier, func(*gocui.Gui, *gocui.View) error { return view.toggleCollapse() }); err != nil {
+			return err
+		}
+	}
+	for _, key := range view.keybindingToggleCollapseAll {
+		if err := view.gui.SetKeybinding(view.Name, key.Value, key.Modifier, func(*gocui.Gui, *gocui.View) error { return view.toggleCollapseAll() }); err != nil {
 			return err
 		}
 	}
@@ -466,9 +477,35 @@ func (view *FileTreeView) getAbsPositionNode() (node *filetree.FileNode) {
 // toggleCollapse will collapse/expand the selected FileNode.
 func (view *FileTreeView) toggleCollapse() error {
 	node := view.getAbsPositionNode()
-	if node != nil {
+	if node != nil && node.Data.FileInfo.IsDir {
 		node.Data.ViewInfo.Collapsed = !node.Data.ViewInfo.Collapsed
 	}
+	view.Update()
+	return view.Render()
+}
+
+// toggleCollapseAll will collapse/expand the all directories.
+func (view *FileTreeView) toggleCollapseAll() error {
+	node := view.getAbsPositionNode()
+	var collapseTargetState bool
+	if node != nil && node.Data.FileInfo.IsDir {
+		collapseTargetState = !node.Data.ViewInfo.Collapsed
+	}
+
+	visitor := func(curNode *filetree.FileNode) error {
+		curNode.Data.ViewInfo.Collapsed = collapseTargetState
+		return nil
+	}
+
+	evaluator := func(curNode *filetree.FileNode) bool {
+		return curNode.Data.FileInfo.IsDir
+	}
+
+	err := view.ModelTree.VisitDepthChildFirst(visitor, evaluator)
+	if err != nil {
+		logrus.Panic(err)
+	}
+
 	view.Update()
 	return view.Render()
 }
@@ -589,8 +626,9 @@ func (view *FileTreeView) Render() error {
 // KeyHelp indicates all the possible actions a user can take while the current pane is selected.
 func (view *FileTreeView) KeyHelp() string {
 	return renderStatusOption(view.keybindingToggleCollapse[0].String(), "Collapse dir", false) +
-		renderStatusOption(view.keybindingToggleAdded[0].String(), "Added files", !view.HiddenDiffTypes[filetree.Added]) +
-		renderStatusOption(view.keybindingToggleRemoved[0].String(), "Removed files", !view.HiddenDiffTypes[filetree.Removed]) +
-		renderStatusOption(view.keybindingToggleModified[0].String(), "Modified files", !view.HiddenDiffTypes[filetree.Changed]) +
-		renderStatusOption(view.keybindingToggleUnchanged[0].String(), "Unmodified files", !view.HiddenDiffTypes[filetree.Unchanged])
+		renderStatusOption(view.keybindingToggleCollapseAll[0].String(), "Collapse all dir", false) +
+		renderStatusOption(view.keybindingToggleAdded[0].String(), "Added", !view.HiddenDiffTypes[filetree.Added]) +
+		renderStatusOption(view.keybindingToggleRemoved[0].String(), "Removed", !view.HiddenDiffTypes[filetree.Removed]) +
+		renderStatusOption(view.keybindingToggleModified[0].String(), "Modified", !view.HiddenDiffTypes[filetree.Changed]) +
+		renderStatusOption(view.keybindingToggleUnchanged[0].String(), "Unmodified", !view.HiddenDiffTypes[filetree.Unchanged])
 }

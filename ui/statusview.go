@@ -77,5 +77,5 @@ func (view *StatusView) Render() error {
 func (view *StatusView) KeyHelp() string {
 	return renderStatusOption(GlobalKeybindings.quit[0].String(), "Quit", false) +
 		renderStatusOption(GlobalKeybindings.toggleView[0].String(), "Switch view", false) +
-		renderStatusOption(GlobalKeybindings.filterView[0].String(), "Filter files", Views.Filter.IsVisible())
+		renderStatusOption(GlobalKeybindings.filterView[0].String(), "Filter", Views.Filter.IsVisible())
 }
