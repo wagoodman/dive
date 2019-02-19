@@ -4,14 +4,11 @@ import (
 	"fmt"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
-	"github.com/wagoodman/dive/utils"
 	"github.com/wagoodman/keybinding"
-	"log"
 	"regexp"
 	"strings"
 
 	"github.com/jroimartin/gocui"
-	"github.com/lunixbochs/vtclean"
 	"github.com/wagoodman/dive/filetree"
 )
 
@@ -25,19 +22,11 @@ type CompareType int
 // FileTreeView holds the UI objects and data models for populating the right pane. Specifically the pane that
 // shows selected layer or aggregate file ASCII tree.
 type FileTreeView struct {
-	Name                  string
-	gui                   *gocui.Gui
-	view                  *gocui.View
-	header                *gocui.View
-	ModelTree             *filetree.FileTree
-	ViewTree              *filetree.FileTree
-	RefTrees              []*filetree.FileTree
-	cache                 filetree.TreeCache
-	HiddenDiffTypes       []bool
-	TreeIndex             uint
-	bufferIndex           uint
-	bufferIndexUpperBound uint
-	bufferIndexLowerBound uint
+	Name   string
+	gui    *gocui.Gui
+	view   *gocui.View
+	header *gocui.View
+	vm     *FileTreeViewModel
 
 	keybindingToggleCollapse    []keybinding.Key
 	keybindingToggleCollapseAll []keybinding.Key
@@ -56,66 +45,47 @@ func NewFileTreeView(name string, gui *gocui.Gui, tree *filetree.FileTree, refTr
 	// populate main fields
 	treeView.Name = name
 	treeView.gui = gui
-	treeView.ModelTree = tree
-	treeView.RefTrees = refTrees
-	treeView.cache = cache
-	treeView.HiddenDiffTypes = make([]bool, 4)
-
-	hiddenTypes := viper.GetStringSlice("diff.hide")
-	for _, hType := range hiddenTypes {
-		switch t := strings.ToLower(hType); t {
-		case "added":
-			treeView.HiddenDiffTypes[filetree.Added] = true
-		case "removed":
-			treeView.HiddenDiffTypes[filetree.Removed] = true
-		case "changed":
-			treeView.HiddenDiffTypes[filetree.Changed] = true
-		case "unchanged":
-			treeView.HiddenDiffTypes[filetree.Unchanged] = true
-		default:
-			utils.PrintAndExit(fmt.Sprintf("unknown diff.hide value: %s", t))
-		}
-	}
+	treeView.vm = NewFileTreeViewModel(tree, refTrees, cache)
 
 	var err error
 	treeView.keybindingToggleCollapse, err = keybinding.ParseAll(viper.GetString("keybinding.toggle-collapse-dir"))
 	if err != nil {
-		log.Panicln(err)
+		logrus.Error(err)
 	}
 
 	treeView.keybindingToggleCollapseAll, err = keybinding.ParseAll(viper.GetString("keybinding.toggle-collapse-all-dir"))
 	if err != nil {
-		log.Panicln(err)
+		logrus.Error(err)
 	}
 
 	treeView.keybindingToggleAdded, err = keybinding.ParseAll(viper.GetString("keybinding.toggle-added-files"))
 	if err != nil {
-		log.Panicln(err)
+		logrus.Error(err)
 	}
 
 	treeView.keybindingToggleRemoved, err = keybinding.ParseAll(viper.GetString("keybinding.toggle-removed-files"))
 	if err != nil {
-		log.Panicln(err)
+		logrus.Error(err)
 	}
 
 	treeView.keybindingToggleModified, err = keybinding.ParseAll(viper.GetString("keybinding.toggle-modified-files"))
 	if err != nil {
-		log.Panicln(err)
+		logrus.Error(err)
 	}
 
 	treeView.keybindingToggleUnchanged, err = keybinding.ParseAll(viper.GetString("keybinding.toggle-unchanged-files"))
 	if err != nil {
-		log.Panicln(err)
+		logrus.Error(err)
 	}
 
 	treeView.keybindingPageUp, err = keybinding.ParseAll(viper.GetString("keybinding.page-up"))
 	if err != nil {
-		log.Panicln(err)
+		logrus.Error(err)
 	}
 
 	treeView.keybindingPageDown, err = keybinding.ParseAll(viper.GetString("keybinding.page-down"))
 	if err != nil {
-		log.Panicln(err)
+		logrus.Error(err)
 	}
 
 	return treeView
@@ -190,9 +160,6 @@ func (view *FileTreeView) Setup(v *gocui.View, header *gocui.View) error {
 		}
 	}
 
-	view.bufferIndexLowerBound = 0
-	view.bufferIndexUpperBound = view.height() // don't include the header or footer in the view size
-
 	view.Update()
 	view.Render()
 
@@ -216,63 +183,16 @@ func (view *FileTreeView) IsVisible() bool {
 // resetCursor moves the cursor back to the top of the buffer and translates to the top of the buffer.
 func (view *FileTreeView) resetCursor() {
 	view.view.SetCursor(0, 0)
-	view.TreeIndex = 0
-	view.bufferIndex = 0
-	view.bufferIndexLowerBound = 0
-	view.bufferIndexUpperBound = view.height()
+	view.vm.resetCursor()
 }
 
 // setTreeByLayer populates the view model by stacking the indicated image layer file trees.
 func (view *FileTreeView) setTreeByLayer(bottomTreeStart, bottomTreeStop, topTreeStart, topTreeStop int) error {
-	if topTreeStop > len(view.RefTrees)-1 {
-		return fmt.Errorf("invalid layer index given: %d of %d", topTreeStop, len(view.RefTrees)-1)
-	}
-	newTree := view.cache.Get(bottomTreeStart, bottomTreeStop, topTreeStart, topTreeStop)
-
-	// preserve view state on copy
-	visitor := func(node *filetree.FileNode) error {
-		newNode, err := newTree.GetNode(node.Path())
-		if err == nil {
-			newNode.Data.ViewInfo = node.Data.ViewInfo
-		}
-		return nil
-	}
-	err := view.ModelTree.VisitDepthChildFirst(visitor, nil)
-	if err != nil {
-		logrus.Errorf("unable to propagate layer tree: %+v", err)
-	}
-
+	view.vm.setTreeByLayer(bottomTreeStart, bottomTreeStop, topTreeStart, topTreeStop)
 	view.resetCursor()
 
-	view.ModelTree = newTree
 	view.Update()
 	return view.Render()
-}
-
-// doCursorUp performs the internal view's buffer adjustments on cursor up. Note: this is independent of the gocui buffer.
-func (view *FileTreeView) doCursorUp() {
-	view.TreeIndex--
-	if view.TreeIndex < view.bufferIndexLowerBound {
-		view.bufferIndexUpperBound--
-		view.bufferIndexLowerBound--
-	}
-
-	if view.bufferIndex > 0 {
-		view.bufferIndex--
-	}
-}
-
-// doCursorDown performs the internal view's buffer adjustments on cursor down. Note: this is independent of the gocui buffer.
-func (view *FileTreeView) doCursorDown() {
-	view.TreeIndex++
-	if view.TreeIndex > view.bufferIndexUpperBound {
-		view.bufferIndexUpperBound++
-		view.bufferIndexLowerBound++
-	}
-	view.bufferIndex++
-	if view.bufferIndex > view.height() {
-		view.bufferIndex = view.height()
-	}
 }
 
 // CursorDown moves the cursor down and renders the view.
@@ -280,8 +200,10 @@ func (view *FileTreeView) doCursorDown() {
 // Instead we are keeping an upper and lower bounds of the tree string to render and only flushing
 // this range into the view buffer. This is much faster when tree sizes are large.
 func (view *FileTreeView) CursorDown() error {
-	view.doCursorDown()
-	return view.Render()
+	if view.vm.CursorDown() {
+		return view.Render()
+	}
+	return nil
 }
 
 // CursorUp moves the cursor up and renders the view.
@@ -289,8 +211,7 @@ func (view *FileTreeView) CursorDown() error {
 // Instead we are keeping an upper and lower bounds of the tree string to render and only flushing
 // this range into the view buffer. This is much faster when tree sizes are large.
 func (view *FileTreeView) CursorUp() error {
-	if view.TreeIndex > 0 {
-		view.doCursorUp()
+	if view.vm.CursorUp() {
 		return view.Render()
 	}
 	return nil
@@ -298,87 +219,19 @@ func (view *FileTreeView) CursorUp() error {
 
 // CursorLeft moves the cursor up until we reach the Parent Node or top of the tree
 func (view *FileTreeView) CursorLeft() error {
-	var visitor func(*filetree.FileNode) error
-	var evaluator func(*filetree.FileNode) bool
-	var dfsCounter, newIndex uint
-	oldIndex := view.TreeIndex
-	currentNode := view.getAbsPositionNode()
-	if currentNode == nil {
-		return nil
-	}
-	parentPath := currentNode.Parent.Path()
-
-	visitor = func(curNode *filetree.FileNode) error {
-		if strings.Compare(parentPath, curNode.Path()) == 0 {
-			newIndex = dfsCounter
-		}
-		dfsCounter++
-		return nil
-	}
-	var filterBytes []byte
-	var filterRegex *regexp.Regexp
-	read, err := Views.Filter.view.Read(filterBytes)
-	if read > 0 && err == nil {
-		regex, err := regexp.Compile(string(filterBytes))
-		if err == nil {
-			filterRegex = regex
-		}
-	}
-
-	evaluator = func(curNode *filetree.FileNode) bool {
-		regexMatch := true
-		if filterRegex != nil {
-			match := filterRegex.Find([]byte(curNode.Path()))
-			regexMatch = match != nil
-		}
-		return !curNode.Parent.Data.ViewInfo.Collapsed && !curNode.Data.ViewInfo.Hidden && regexMatch
-	}
-
-	err = view.ModelTree.VisitDepthParentFirst(visitor, evaluator)
+	err := view.vm.CursorLeft(filterRegex())
 	if err != nil {
-		logrus.Panic(err)
+		return err
 	}
-
-	view.TreeIndex = newIndex
-	moveIndex := oldIndex - newIndex
-	if newIndex < view.bufferIndexLowerBound {
-		view.bufferIndexUpperBound = view.TreeIndex + view.height()
-		view.bufferIndexLowerBound = view.TreeIndex
-	}
-
-	if view.bufferIndex > moveIndex {
-		view.bufferIndex = view.bufferIndex - moveIndex
-	} else {
-		view.bufferIndex = 0
-	}
-
 	view.Update()
 	return view.Render()
 }
 
 // CursorRight descends into directory expanding it if needed
 func (view *FileTreeView) CursorRight() error {
-	node := view.getAbsPositionNode()
-	if node == nil {
-		return nil
-	}
-	if !node.Data.FileInfo.IsDir {
-		return nil
-	}
-	if len(node.Children) == 0 {
-		return nil
-	}
-	if node.Data.ViewInfo.Collapsed {
-		node.Data.ViewInfo.Collapsed = false
-	}
-	view.TreeIndex++
-	if view.TreeIndex > view.bufferIndexUpperBound {
-		view.bufferIndexUpperBound++
-		view.bufferIndexLowerBound++
-	}
-	view.bufferIndex++
-	if view.bufferIndex > view.height() {
-		view.bufferIndex = view.height()
+	err := view.vm.CursorRight(filterRegex())
+	if err != nil {
+		return err
 	}
 	view.Update()
 	return view.Render()
@@ -386,99 +239,32 @@ func (view *FileTreeView) CursorRight() error {
 
 // PageDown moves to next page putting the cursor on top
 func (view *FileTreeView) PageDown() error {
-	nextBufferIndexLowerBound := view.bufferIndexLowerBound + view.height()
-	nextBufferIndexUpperBound := view.bufferIndexUpperBound + view.height()
-
-	treeString := view.ViewTree.StringBetween(nextBufferIndexLowerBound, nextBufferIndexUpperBound, true)
-	lines := strings.Split(treeString, "\n")
-
-	newLines := uint(len(lines)) - 1
-	if view.height() >= newLines {
-		nextBufferIndexLowerBound = view.bufferIndexLowerBound + newLines
-		nextBufferIndexUpperBound = view.bufferIndexUpperBound + newLines
-	}
-	view.bufferIndexLowerBound = nextBufferIndexLowerBound
-	view.bufferIndexUpperBound = nextBufferIndexUpperBound
-
-	if view.TreeIndex < nextBufferIndexLowerBound {
-		view.bufferIndex = 0
-		view.TreeIndex = nextBufferIndexLowerBound
-	} else {
-		view.bufferIndex = view.bufferIndex - newLines
+	err := view.vm.PageDown()
+	if err != nil {
+		return err
 	}
 	return view.Render()
 }
 
 // PageUp moves to previous page putting the cursor on top
 func (view *FileTreeView) PageUp() error {
-	nextBufferIndexLowerBound := view.bufferIndexLowerBound - view.height()
-	nextBufferIndexUpperBound := view.bufferIndexUpperBound - view.height()
-
-	treeString := view.ViewTree.StringBetween(nextBufferIndexLowerBound, nextBufferIndexUpperBound, true)
-	lines := strings.Split(treeString, "\n")
-
-	newLines := uint(len(lines)) - 2
-	if view.height() >= newLines {
-		nextBufferIndexLowerBound = view.bufferIndexLowerBound - newLines
-		nextBufferIndexUpperBound = view.bufferIndexUpperBound - newLines
-	}
-	view.bufferIndexLowerBound = nextBufferIndexLowerBound
-	view.bufferIndexUpperBound = nextBufferIndexUpperBound
-
-	if view.TreeIndex > (nextBufferIndexUpperBound - 1) {
-		view.bufferIndex = 0
-		view.TreeIndex = nextBufferIndexLowerBound
-	} else {
-		view.bufferIndex = view.bufferIndex + newLines
+	err := view.vm.PageUp()
+	if err != nil {
+		return err
 	}
 	return view.Render()
 }
 
 // getAbsPositionNode determines the selected screen cursor's location in the file tree, returning the selected FileNode.
 func (view *FileTreeView) getAbsPositionNode() (node *filetree.FileNode) {
-	var visitor func(*filetree.FileNode) error
-	var evaluator func(*filetree.FileNode) bool
-	var dfsCounter uint
-
-	visitor = func(curNode *filetree.FileNode) error {
-		if dfsCounter == view.TreeIndex {
-			node = curNode
-		}
-		dfsCounter++
-		return nil
-	}
-	var filterBytes []byte
-	var filterRegex *regexp.Regexp
-	read, err := Views.Filter.view.Read(filterBytes)
-	if read > 0 && err == nil {
-		regex, err := regexp.Compile(string(filterBytes))
-		if err == nil {
-			filterRegex = regex
-		}
-	}
-
-	evaluator = func(curNode *filetree.FileNode) bool {
-		regexMatch := true
-		if filterRegex != nil {
-			match := filterRegex.Find([]byte(curNode.Path()))
-			regexMatch = match != nil
-		}
-		return !curNode.Parent.Data.ViewInfo.Collapsed && !curNode.Data.ViewInfo.Hidden && regexMatch
-	}
-
-	err = view.ModelTree.VisitDepthParentFirst(visitor, evaluator)
-	if err != nil {
-		logrus.Panic(err)
-	}
-
-	return node
+	return view.vm.getAbsPositionNode(filterRegex())
 }
 
 // toggleCollapse will collapse/expand the selected FileNode.
 func (view *FileTreeView) toggleCollapse() error {
-	node := view.getAbsPositionNode()
-	if node != nil && node.Data.FileInfo.IsDir {
-		node.Data.ViewInfo.Collapsed = !node.Data.ViewInfo.Collapsed
+	err := view.vm.toggleCollapse(filterRegex())
+	if err != nil {
+		return err
 	}
 	view.Update()
 	return view.Render()
@@ -486,36 +272,18 @@ func (view *FileTreeView) toggleCollapse() error {
 
 // toggleCollapseAll will collapse/expand the all directories.
 func (view *FileTreeView) toggleCollapseAll() error {
-	node := view.getAbsPositionNode()
-	var collapseTargetState bool
-	if node != nil && node.Data.FileInfo.IsDir {
-		collapseTargetState = !node.Data.ViewInfo.Collapsed
-	}
-
-	visitor := func(curNode *filetree.FileNode) error {
-		curNode.Data.ViewInfo.Collapsed = collapseTargetState
-		return nil
-	}
-
-	evaluator := func(curNode *filetree.FileNode) bool {
-		return curNode.Data.FileInfo.IsDir
-	}
-
-	err := view.ModelTree.VisitDepthChildFirst(visitor, evaluator)
+	err := view.vm.toggleCollapseAll(filterRegex())
 	if err != nil {
-		logrus.Panic(err)
+		return err
 	}
-
 	view.Update()
 	return view.Render()
 }
 
 // toggleShowDiffType will show/hide the selected DiffType in the filetree pane.
 func (view *FileTreeView) toggleShowDiffType(diffType filetree.DiffType) error {
-	view.HiddenDiffTypes[diffType] = !view.HiddenDiffTypes[diffType]
-
+	view.vm.toggleShowDiffType(diffType)
 	view.resetCursor()
-
 	Update()
 	Render()
 	return nil
@@ -541,83 +309,30 @@ func filterRegex() *regexp.Regexp {
 
 // Update refreshes the state objects for future rendering.
 func (view *FileTreeView) Update() error {
-	regex := filterRegex()
-
-	// keep the view selection in parity with the current DiffType selection
-	err := view.ModelTree.VisitDepthChildFirst(func(node *filetree.FileNode) error {
-		node.Data.ViewInfo.Hidden = view.HiddenDiffTypes[node.Data.DiffType]
-		visibleChild := false
-		for _, child := range node.Children {
-			if !child.Data.ViewInfo.Hidden {
-				visibleChild = true
-				node.Data.ViewInfo.Hidden = false
-			}
-		}
-		if regex != nil && !visibleChild {
-			match := regex.FindString(node.Path())
-			node.Data.ViewInfo.Hidden = len(match) == 0
-		}
-		return nil
-	}, nil)
-
-	if err != nil {
-		logrus.Errorf("unable to propagate model tree: %+v", err)
-	}
-
-	// make a new tree with only visible nodes
-	view.ViewTree = view.ModelTree.Copy()
-	err = view.ViewTree.VisitDepthParentFirst(func(node *filetree.FileNode) error {
-		if node.Data.ViewInfo.Hidden {
-			view.ViewTree.RemovePath(node.Path())
-		}
-		return nil
-	}, nil)
-
-	if err != nil {
-		logrus.Errorf("unable to propagate view tree: %+v", err)
-	}
-
-	return nil
+	return view.vm.Update(filterRegex())
 }
 
 // Render flushes the state objects (file tree) to the pane.
 func (view *FileTreeView) Render() error {
-	treeString := view.ViewTree.StringBetween(view.bufferIndexLowerBound, view.bufferIndexUpperBound, true)
-	lines := strings.Split(treeString, "\n")
 
-	// undo a cursor down that has gone past bottom of the visible tree
-	if view.bufferIndex >= uint(len(lines))-1 {
-		view.doCursorUp()
-	}
+	// this should be in update
+	// // undo a cursor down that has gone past bottom of the visible tree
+	// if view.bufferIndex >= uint(len(lines))-1 {
+	// 	view.doCursorUp()
+	// }
 
-	title := "Current Layer Contents"
-	if Views.Layer.CompareMode == CompareAll {
-		title = "Aggregated Layer Contents"
-	}
-
-	// indicate when selected
-	if view.gui.CurrentView() == view.view {
-		title = "● " + title
-	}
+	width, _ := view.gui.Size()
 
 	view.gui.Update(func(g *gocui.Gui) error {
+		view.vm.Render(Views.Layer.CompareMode, width)
 		// update the header
 		view.header.Clear()
-		width, _ := g.Size()
-		headerStr := fmt.Sprintf("[%s]%s\n", title, strings.Repeat("─", width*2))
-		headerStr += fmt.Sprintf(filetree.AttributeFormat+" %s", "P", "ermission", "UID:GID", "Size", "Filetree")
-		fmt.Fprintln(view.header, Formatting.Header(vtclean.Clean(headerStr, false)))
+		fmt.Fprint(view.header, view.vm.headerBuf.String())
 
 		// update the contents
 		view.view.Clear()
-		for idx, line := range lines {
-			if uint(idx) == view.bufferIndex {
-				fmt.Fprintln(view.view, Formatting.Selected(vtclean.Clean(line, false)))
-			} else {
-				fmt.Fprintln(view.view, line)
-			}
-		}
-		// todo: should we check error on the view println?
+		fmt.Fprint(view.header, view.vm.mainBuf.String())
+
 		return nil
 	})
 	return nil
@@ -627,8 +342,8 @@ func (view *FileTreeView) Render() error {
 func (view *FileTreeView) KeyHelp() string {
 	return renderStatusOption(view.keybindingToggleCollapse[0].String(), "Collapse dir", false) +
 		renderStatusOption(view.keybindingToggleCollapseAll[0].String(), "Collapse all dir", false) +
-		renderStatusOption(view.keybindingToggleAdded[0].String(), "Added", !view.HiddenDiffTypes[filetree.Added]) +
-		renderStatusOption(view.keybindingToggleRemoved[0].String(), "Removed", !view.HiddenDiffTypes[filetree.Removed]) +
-		renderStatusOption(view.keybindingToggleModified[0].String(), "Modified", !view.HiddenDiffTypes[filetree.Changed]) +
-		renderStatusOption(view.keybindingToggleUnchanged[0].String(), "Unmodified", !view.HiddenDiffTypes[filetree.Unchanged])
+		renderStatusOption(view.keybindingToggleAdded[0].String(), "Added", !view.vm.HiddenDiffTypes[filetree.Added]) +
+		renderStatusOption(view.keybindingToggleRemoved[0].String(), "Removed", !view.vm.HiddenDiffTypes[filetree.Removed]) +
+		renderStatusOption(view.keybindingToggleModified[0].String(), "Modified", !view.vm.HiddenDiffTypes[filetree.Changed]) +
+		renderStatusOption(view.keybindingToggleUnchanged[0].String(), "Unmodified", !view.vm.HiddenDiffTypes[filetree.Unchanged])
 }

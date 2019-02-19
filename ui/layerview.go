@@ -2,14 +2,13 @@ package ui
 
 import (
 	"fmt"
-	"github.com/spf13/viper"
-	"github.com/wagoodman/dive/utils"
-	"github.com/wagoodman/keybinding"
-	"log"
-
 	"github.com/jroimartin/gocui"
 	"github.com/lunixbochs/vtclean"
+	"github.com/sirupsen/logrus"
+	"github.com/spf13/viper"
 	"github.com/wagoodman/dive/image"
+	"github.com/wagoodman/dive/utils"
+	"github.com/wagoodman/keybinding"
 	"strings"
 )
 
@@ -53,22 +52,22 @@ func NewLayerView(name string, gui *gocui.Gui, layers []image.Layer) (layerView 
 	var err error
 	layerView.keybindingCompareAll, err = keybinding.ParseAll(viper.GetString("keybinding.compare-all"))
 	if err != nil {
-		log.Panicln(err)
+		logrus.Error(err)
 	}
 
 	layerView.keybindingCompareLayer, err = keybinding.ParseAll(viper.GetString("keybinding.compare-layer"))
 	if err != nil {
-		log.Panicln(err)
+		logrus.Error(err)
 	}
 
 	layerView.keybindingPageUp, err = keybinding.ParseAll(viper.GetString("keybinding.page-up"))
 	if err != nil {
-		log.Panicln(err)
+		logrus.Error(err)
 	}
 
 	layerView.keybindingPageDown, err = keybinding.ParseAll(viper.GetString("keybinding.page-down"))
 	if err != nil {
-		log.Panicln(err)
+		logrus.Error(err)
 	}
 
 	return layerView

@@ -11,7 +11,6 @@ import (
 	"github.com/wagoodman/dive/image"
 	"github.com/wagoodman/dive/utils"
 	"github.com/wagoodman/keybinding"
-	"log"
 )
 
 const debug = false
@@ -316,20 +315,20 @@ func Run(analysis *image.AnalysisResult, cache filetree.TreeCache) {
 	var err error
 	GlobalKeybindings.quit, err = keybinding.ParseAll(viper.GetString("keybinding.quit"))
 	if err != nil {
-		log.Panicln(err)
+		logrus.Error(err)
 	}
 	GlobalKeybindings.toggleView, err = keybinding.ParseAll(viper.GetString("keybinding.toggle-view"))
 	if err != nil {
-		log.Panicln(err)
+		logrus.Error(err)
 	}
 	GlobalKeybindings.filterView, err = keybinding.ParseAll(viper.GetString("keybinding.filter-files"))
 	if err != nil {
-		log.Panicln(err)
+		logrus.Error(err)
 	}
 
 	g, err := gocui.NewGui(gocui.OutputNormal)
 	if err != nil {
-		log.Panicln(err)
+		logrus.Error(err)
 	}
 	utils.SetUi(g)
 	defer g.Close()
@@ -366,11 +365,11 @@ func Run(analysis *image.AnalysisResult, cache filetree.TreeCache) {
 	Render()
 
 	if err := keyBindings(g); err != nil {
-		log.Panicln(err)
+		logrus.Error(err)
 	}
 
 	if err := g.MainLoop(); err != nil && err != gocui.ErrQuit {
-		log.Panicln(err)
+		logrus.Error(err)
 	}
 	utils.Exit(0)
 }
