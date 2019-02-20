@@ -20,8 +20,8 @@ const debug = false
 
 // debugPrint writes the given string to the debug pane (if the debug pane is enabled)
 func debugPrint(s string) {
-	if debug && Views.Tree != nil && Views.Tree.gui != nil {
-		v, _ := Views.Tree.gui.View("debug")
+	if debug && Controllers.Tree != nil && Controllers.Tree.gui != nil {
+		v, _ := Controllers.Tree.gui.View("debug")
 		if v != nil {
 			if len(v.BufferLines()) > 20 {
 				v.Clear()
@@ -43,13 +43,13 @@ var Formatting struct {
 	CompareBottom         func(...interface{}) string
 }
 
-// Views contains all rendered UI panes.
-var Views struct {
-	Tree    *FileTreeView
-	Layer   *LayerView
-	Status  *StatusView
-	Filter  *FilterView
-	Details *DetailsView
+// Controllers contains all rendered UI panes.
+var Controllers struct {
+	Tree    *FileTreeController
+	Layer   *LayerController
+	Status  *StatusController
+	Filter  *FilterController
+	Details *DetailsController
 	lookup  map[string]View
 }
 
@@ -72,13 +72,13 @@ type View interface {
 
 // toggleView switches between the file view and the layer view and re-renders the screen.
 func toggleView(g *gocui.Gui, v *gocui.View) error {
-	if v == nil || v.Name() == Views.Layer.Name {
-		_, err := g.SetCurrentView(Views.Tree.Name)
+	if v == nil || v.Name() == Controllers.Layer.Name {
+		_, err := g.SetCurrentView(Controllers.Tree.Name)
 		Update()
 		Render()
 		return err
 	} else {
-		_, err := g.SetCurrentView(Views.Layer.Name)
+		_, err := g.SetCurrentView(Controllers.Layer.Name)
 		Update()
 		Render()
 		return err
@@ -89,14 +89,14 @@ func toggleView(g *gocui.Gui, v *gocui.View) error {
 // toggleFilterView shows/hides the file tree filter pane.
 func toggleFilterView(g *gocui.Gui, v *gocui.View) error {
 	// delete all user input from the tree view
-	Views.Filter.view.Clear()
-	Views.Filter.view.SetCursor(0, 0)
+	Controllers.Filter.view.Clear()
+	Controllers.Filter.view.SetCursor(0, 0)
 
 	// toggle hiding
-	Views.Filter.hidden = !Views.Filter.hidden
+	Controllers.Filter.hidden = !Controllers.Filter.hidden
 
-	if !Views.Filter.hidden {
-		_, err := g.SetCurrentView(Views.Filter.Name)
+	if !Controllers.Filter.hidden {
+		_, err := g.SetCurrentView(Controllers.Filter.Name)
 		if err != nil {
 			return err
 		}
@@ -211,7 +211,7 @@ func layout(g *gocui.Gui) error {
 	statusBarIndex := 1
 	filterBarIndex := 2
 
-	layersHeight := len(Views.Layer.Layers) + headerRows + 1 // layers + header + base image layer row
+	layersHeight := len(Controllers.Layer.Layers) + headerRows + 1 // layers + header + base image layer row
 	maxLayerHeight := int(0.75 * float64(maxY))
 	if layersHeight > maxLayerHeight {
 		layersHeight = maxLayerHeight
@@ -220,7 +220,7 @@ func layout(g *gocui.Gui) error {
 	var view, header *gocui.View
 	var viewErr, headerErr, err error
 
-	if Views.Filter.hidden {
+	if Controllers.Filter.hidden {
 		bottomRows--
 		filterBarHeight = 0
 	}
@@ -235,47 +235,47 @@ func layout(g *gocui.Gui) error {
 	}
 
 	// Layers
-	view, viewErr = g.SetView(Views.Layer.Name, -1, -1+headerRows, splitCols, layersHeight)
-	header, headerErr = g.SetView(Views.Layer.Name+"header", -1, -1, splitCols, headerRows)
+	view, viewErr = g.SetView(Controllers.Layer.Name, -1, -1+headerRows, splitCols, layersHeight)
+	header, headerErr = g.SetView(Controllers.Layer.Name+"header", -1, -1, splitCols, headerRows)
 	if isNewView(viewErr, headerErr) {
-		Views.Layer.Setup(view, header)
+		Controllers.Layer.Setup(view, header)
 
-		if _, err = g.SetCurrentView(Views.Layer.Name); err != nil {
+		if _, err = g.SetCurrentView(Controllers.Layer.Name); err != nil {
 			return err
 		}
 		// since we are selecting the view, we should rerender to indicate it is selected
-		Views.Layer.Render()
+		Controllers.Layer.Render()
 	}
 
 	// Details
-	view, viewErr = g.SetView(Views.Details.Name, -1, -1+layersHeight+headerRows, splitCols, maxY-bottomRows)
-	header, headerErr = g.SetView(Views.Details.Name+"header", -1, -1+layersHeight, splitCols, layersHeight+headerRows)
+	view, viewErr = g.SetView(Controllers.Details.Name, -1, -1+layersHeight+headerRows, splitCols, maxY-bottomRows)
+	header, headerErr = g.SetView(Controllers.Details.Name+"header", -1, -1+layersHeight, splitCols, layersHeight+headerRows)
 	if isNewView(viewErr, headerErr) {
-		Views.Details.Setup(view, header)
+		Controllers.Details.Setup(view, header)
 	}
 
 	// Filetree
 	offset := 0
-	if !Views.Tree.vm.ShowAttributes {
+	if !Controllers.Tree.vm.ShowAttributes {
 		offset = 1
 	}
-	view, viewErr = g.SetView(Views.Tree.Name, splitCols, -1+headerRows-offset, debugCols, maxY-bottomRows)
-	header, headerErr = g.SetView(Views.Tree.Name+"header", splitCols, -1, debugCols, headerRows-offset)
+	view, viewErr = g.SetView(Controllers.Tree.Name, splitCols, -1+headerRows-offset, debugCols, maxY-bottomRows)
+	header, headerErr = g.SetView(Controllers.Tree.Name+"header", splitCols, -1, debugCols, headerRows-offset)
 	if isNewView(viewErr, headerErr) {
-		Views.Tree.Setup(view, header)
+		Controllers.Tree.Setup(view, header)
 	}
 
 	// Status Bar
-	view, viewErr = g.SetView(Views.Status.Name, -1, maxY-statusBarHeight-statusBarIndex, maxX, maxY-(statusBarIndex-1))
+	view, viewErr = g.SetView(Controllers.Status.Name, -1, maxY-statusBarHeight-statusBarIndex, maxX, maxY-(statusBarIndex-1))
 	if isNewView(viewErr, headerErr) {
-		Views.Status.Setup(view, nil)
+		Controllers.Status.Setup(view, nil)
 	}
 
 	// Filter Bar
-	view, viewErr = g.SetView(Views.Filter.Name, len(Views.Filter.headerStr)-1, maxY-filterBarHeight-filterBarIndex, maxX, maxY-(filterBarIndex-1))
-	header, headerErr = g.SetView(Views.Filter.Name+"header", -1, maxY-filterBarHeight-filterBarIndex, len(Views.Filter.headerStr), maxY-(filterBarIndex-1))
+	view, viewErr = g.SetView(Controllers.Filter.Name, len(Controllers.Filter.headerStr)-1, maxY-filterBarHeight-filterBarIndex, maxX, maxY-(filterBarIndex-1))
+	header, headerErr = g.SetView(Controllers.Filter.Name+"header", -1, maxY-filterBarHeight-filterBarIndex, len(Controllers.Filter.headerStr), maxY-(filterBarIndex-1))
 	if isNewView(viewErr, headerErr) {
-		Views.Filter.Setup(view, header)
+		Controllers.Filter.Setup(view, header)
 	}
 
 	return nil
@@ -283,14 +283,14 @@ func layout(g *gocui.Gui) error {
 
 // Update refreshes the state objects for future rendering.
 func Update() {
-	for _, view := range Views.lookup {
+	for _, view := range Controllers.lookup {
 		view.Update()
 	}
 }
 
 // Render flushes the state objects to the screen.
 func Render() {
-	for _, view := range Views.lookup {
+	for _, view := range Controllers.lookup {
 		if view.IsVisible() {
 			view.Render()
 		}
@@ -339,22 +339,22 @@ func Run(analysis *image.AnalysisResult, cache filetree.TreeCache) {
 	utils.SetUi(g)
 	defer g.Close()
 
-	Views.lookup = make(map[string]View)
+	Controllers.lookup = make(map[string]View)
 
-	Views.Layer = NewLayerView("side", g, analysis.Layers)
-	Views.lookup[Views.Layer.Name] = Views.Layer
+	Controllers.Layer = NewLayerController("side", g, analysis.Layers)
+	Controllers.lookup[Controllers.Layer.Name] = Controllers.Layer
 
-	Views.Tree = NewFileTreeView("main", g, filetree.StackTreeRange(analysis.RefTrees, 0, 0), analysis.RefTrees, cache)
-	Views.lookup[Views.Tree.Name] = Views.Tree
+	Controllers.Tree = NewFileTreeController("main", g, filetree.StackTreeRange(analysis.RefTrees, 0, 0), analysis.RefTrees, cache)
+	Controllers.lookup[Controllers.Tree.Name] = Controllers.Tree
 
-	Views.Status = NewStatusView("status", g)
-	Views.lookup[Views.Status.Name] = Views.Status
+	Controllers.Status = NewStatusController("status", g)
+	Controllers.lookup[Controllers.Status.Name] = Controllers.Status
 
-	Views.Filter = NewFilterView("command", g)
-	Views.lookup[Views.Filter.Name] = Views.Filter
+	Controllers.Filter = NewFilterController("command", g)
+	Controllers.lookup[Controllers.Filter.Name] = Controllers.Filter
 
-	Views.Details = NewDetailsView("details", g, analysis.Efficiency, analysis.Inefficiencies)
-	Views.lookup[Views.Details.Name] = Views.Details
+	Controllers.Details = NewDetailsController("details", g, analysis.Efficiency, analysis.Inefficiencies)
+	Controllers.lookup[Controllers.Details.Name] = Controllers.Details
 
 	g.Cursor = false
 	//g.Mouse = true

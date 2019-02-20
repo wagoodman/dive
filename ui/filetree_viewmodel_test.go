@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func TestFilterTreeTest(t *testing.T) {
+func TestFileTreeTest(t *testing.T) {
 	result, err := image.TestLoadDockerImageTar("../.data/test-docker-image.tar")
 	if err != nil {
 		t.Fatalf("Test_Export: unable to fetch analysis: %v", err)

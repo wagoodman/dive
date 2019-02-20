@@ -34,7 +34,7 @@ type FileTreeViewModel struct {
 	mainBuf   bytes.Buffer
 }
 
-// NewFileTreeView creates a new view object attached the the global [gocui] screen object.
+// NewFileTreeController creates a new view object attached the the global [gocui] screen object.
 func NewFileTreeViewModel(tree *filetree.FileTree, refTrees []*filetree.FileTree, cache filetree.TreeCache) (treeViewModel *FileTreeViewModel) {
 	treeViewModel = new(FileTreeViewModel)
 
