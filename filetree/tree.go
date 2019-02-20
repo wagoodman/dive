@@ -125,8 +125,8 @@ func (tree *FileTree) String(showAttributes bool) string {
 }
 
 // StringBetween returns a partial tree in an ASCII representation.
-func (tree *FileTree) StringBetween(start, stop uint, showAttributes bool) string {
-	return tree.renderStringTreeBetween(int(start), int(stop), showAttributes)
+func (tree *FileTree) StringBetween(start, stop int, showAttributes bool) string {
+	return tree.renderStringTreeBetween(start, stop, showAttributes)
 }
 
 // Copy returns a copy of the given FileTree

@@ -94,6 +94,12 @@ func (view *LayerView) Setup(v *gocui.View, header *gocui.View) error {
 	if err := view.gui.SetKeybinding(view.Name, gocui.KeyArrowUp, gocui.ModNone, func(*gocui.Gui, *gocui.View) error { return view.CursorUp() }); err != nil {
 		return err
 	}
+	if err := view.gui.SetKeybinding(view.Name, gocui.KeyArrowRight, gocui.ModNone, func(*gocui.Gui, *gocui.View) error { return view.CursorDown() }); err != nil {
+		return err
+	}
+	if err := view.gui.SetKeybinding(view.Name, gocui.KeyArrowLeft, gocui.ModNone, func(*gocui.Gui, *gocui.View) error { return view.CursorUp() }); err != nil {
+		return err
+	}
 
 	for _, key := range view.keybindingPageUp {
 		if err := view.gui.SetKeybinding(view.Name, key.Value, key.Modifier, func(*gocui.Gui, *gocui.View) error { return view.PageUp() }); err != nil {
@@ -277,7 +283,8 @@ func (view *LayerView) Render() error {
 		view.header.Clear()
 		width, _ := g.Size()
 		headerStr := fmt.Sprintf("[%s]%s\n", title, strings.Repeat("─", width*2))
-		headerStr += fmt.Sprintf("Cmp "+image.LayerFormat, "Image ID", "Size", "Command")
+		// headerStr += fmt.Sprintf("Cmp "+image.LayerFormat, "Layer Digest", "Size", "Command")
+		headerStr += fmt.Sprintf("Cmp"+image.LayerFormat, "Size", "Command")
 		fmt.Fprintln(view.header, Formatting.Header(vtclean.Clean(headerStr, false)))
 
 		// update contents
@@ -290,9 +297,9 @@ func (view *LayerView) Render() error {
 			compareBar := view.renderCompareBar(idx)
 
 			if idx == view.LayerIndex {
-				fmt.Fprintln(view.view, compareBar+"  "+Formatting.Selected(layerStr))
+				fmt.Fprintln(view.view, compareBar+" "+Formatting.Selected(layerStr))
 			} else {
-				fmt.Fprintln(view.view, compareBar+"  "+layerStr)
+				fmt.Fprintln(view.view, compareBar+" "+layerStr)
 			}
 
 		}

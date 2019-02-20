@@ -77,11 +77,13 @@ func toggleView(g *gocui.Gui, v *gocui.View) error {
 		Update()
 		Render()
 		return err
+	} else {
+		_, err := g.SetCurrentView(Views.Layer.Name)
+		Update()
+		Render()
+		return err
 	}
-	_, err := g.SetCurrentView(Views.Layer.Name)
-	Update()
-	Render()
-	return err
+	return nil
 }
 
 // toggleFilterView shows/hides the file tree filter pane.
@@ -253,8 +255,12 @@ func layout(g *gocui.Gui) error {
 	}
 
 	// Filetree
-	view, viewErr = g.SetView(Views.Tree.Name, splitCols, -1+headerRows, debugCols, maxY-bottomRows)
-	header, headerErr = g.SetView(Views.Tree.Name+"header", splitCols, -1, debugCols, headerRows)
+	offset := 0
+	if !Views.Tree.vm.ShowAttributes {
+		offset = 1
+	}
+	view, viewErr = g.SetView(Views.Tree.Name, splitCols, -1+headerRows-offset, debugCols, maxY-bottomRows)
+	header, headerErr = g.SetView(Views.Tree.Name+"header", splitCols, -1, debugCols, headerRows-offset)
 	if isNewView(viewErr, headerErr) {
 		Views.Tree.Setup(view, header)
 	}

@@ -2,6 +2,7 @@ package ui
 
 import (
 	"fmt"
+	"github.com/lunixbochs/vtclean"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"github.com/wagoodman/keybinding"
@@ -30,6 +31,7 @@ type FileTreeView struct {
 
 	keybindingToggleCollapse    []keybinding.Key
 	keybindingToggleCollapseAll []keybinding.Key
+	keybindingToggleAttributes    []keybinding.Key
 	keybindingToggleAdded       []keybinding.Key
 	keybindingToggleRemoved     []keybinding.Key
 	keybindingToggleModified    []keybinding.Key
@@ -54,6 +56,11 @@ func NewFileTreeView(name string, gui *gocui.Gui, tree *filetree.FileTree, refTr
 	}
 
 	treeView.keybindingToggleCollapseAll, err = keybinding.ParseAll(viper.GetString("keybinding.toggle-collapse-all-dir"))
+	if err != nil {
+		logrus.Error(err)
+	}
+
+	treeView.keybindingToggleAttributes, err = keybinding.ParseAll(viper.GetString("keybinding.toggle-filetree-attributes"))
 	if err != nil {
 		logrus.Error(err)
 	}
@@ -139,6 +146,11 @@ func (view *FileTreeView) Setup(v *gocui.View, header *gocui.View) error {
 			return err
 		}
 	}
+	for _, key := range view.keybindingToggleAttributes {
+		if err := view.gui.SetKeybinding(view.Name, key.Value, key.Modifier, func(*gocui.Gui, *gocui.View) error { return view.toggleAttributes() }); err != nil {
+			return err
+		}
+	}
 	for _, key := range view.keybindingToggleAdded {
 		if err := view.gui.SetKeybinding(view.Name, key.Value, key.Modifier, func(*gocui.Gui, *gocui.View) error { return view.toggleShowDiffType(filetree.Added) }); err != nil {
 			return err
@@ -160,16 +172,12 @@ func (view *FileTreeView) Setup(v *gocui.View, header *gocui.View) error {
 		}
 	}
 
+	_, height := view.view.Size()
+	view.vm.Setup(0, height)
 	view.Update()
 	view.Render()
 
 	return nil
-}
-
-// height obtains the height of the current pane (taking into account the lost space due to headers and footers).
-func (view *FileTreeView) height() uint {
-	_, height := view.view.Size()
-	return uint(height - 2)
 }
 
 // IsVisible indicates if the file tree view pane is currently initialized
@@ -188,8 +196,11 @@ func (view *FileTreeView) resetCursor() {
 
 // setTreeByLayer populates the view model by stacking the indicated image layer file trees.
 func (view *FileTreeView) setTreeByLayer(bottomTreeStart, bottomTreeStop, topTreeStart, topTreeStop int) error {
-	view.vm.setTreeByLayer(bottomTreeStart, bottomTreeStop, topTreeStart, topTreeStop)
-	view.resetCursor()
+	err := view.vm.setTreeByLayer(bottomTreeStart, bottomTreeStop, topTreeStart, topTreeStop)
+	if err != nil {
+		return err
+	}
+	// view.resetCursor()
 
 	view.Update()
 	return view.Render()
@@ -280,10 +291,22 @@ func (view *FileTreeView) toggleCollapseAll() error {
 	return view.Render()
 }
 
+// toggleAttributes will show/hide file attributes
+func (view *FileTreeView) toggleAttributes() error {
+	err := view.vm.toggleAttributes()
+	if err != nil {
+		return err
+	}
+	// we need to render the changes to the status pane as well
+	Update()
+	Render()
+	return nil
+}
+
 // toggleShowDiffType will show/hide the selected DiffType in the filetree pane.
 func (view *FileTreeView) toggleShowDiffType(diffType filetree.DiffType) error {
 	view.vm.toggleShowDiffType(diffType)
-	view.resetCursor()
+	// we need to render the changes to the status pane as well
 	Update()
 	Render()
 	return nil
@@ -309,29 +332,45 @@ func filterRegex() *regexp.Regexp {
 
 // Update refreshes the state objects for future rendering.
 func (view *FileTreeView) Update() error {
-	return view.vm.Update(filterRegex())
+	var width, height int
+
+	if view.view != nil {
+		width, height = view.view.Size()
+	} else {
+		// before the TUI is setup there may not be a view to reference. Use the entire screen as reference.
+		width, height = view.gui.Size()
+	}
+	// height should account for the header
+	return view.vm.Update(filterRegex(), width, height-1)
 }
 
 // Render flushes the state objects (file tree) to the pane.
 func (view *FileTreeView) Render() error {
+	title := "Current Layer Contents"
+	if Views.Layer.CompareMode == CompareAll {
+		title = "Aggregated Layer Contents"
+	}
 
-	// this should be in update
-	// // undo a cursor down that has gone past bottom of the visible tree
-	// if view.bufferIndex >= uint(len(lines))-1 {
-	// 	view.doCursorUp()
-	// }
-
-	width, _ := view.gui.Size()
+	// indicate when selected
+	if view.gui.CurrentView() == view.view {
+		title = "● " + title
+	}
 
 	view.gui.Update(func(g *gocui.Gui) error {
-		view.vm.Render(Views.Layer.CompareMode, width)
 		// update the header
 		view.header.Clear()
-		fmt.Fprint(view.header, view.vm.headerBuf.String())
+		width, _ := g.Size()
+		headerStr := fmt.Sprintf("[%s]%s\n", title, strings.Repeat("─", width*2))
+		if view.vm.ShowAttributes {
+			headerStr += fmt.Sprintf(filetree.AttributeFormat+" %s", "P", "ermission", "UID:GID", "Size", "Filetree")
+		}
+
+		fmt.Fprintln(view.header, Formatting.Header(vtclean.Clean(headerStr, false)))
 
 		// update the contents
 		view.view.Clear()
-		fmt.Fprint(view.header, view.vm.mainBuf.String())
+		view.vm.Render()
+		fmt.Fprint(view.view, view.vm.mainBuf.String())
 
 		return nil
 	})
@@ -345,5 +384,6 @@ func (view *FileTreeView) KeyHelp() string {
 		renderStatusOption(view.keybindingToggleAdded[0].String(), "Added", !view.vm.HiddenDiffTypes[filetree.Added]) +
 		renderStatusOption(view.keybindingToggleRemoved[0].String(), "Removed", !view.vm.HiddenDiffTypes[filetree.Removed]) +
 		renderStatusOption(view.keybindingToggleModified[0].String(), "Modified", !view.vm.HiddenDiffTypes[filetree.Changed]) +
-		renderStatusOption(view.keybindingToggleUnchanged[0].String(), "Unmodified", !view.vm.HiddenDiffTypes[filetree.Unchanged])
+		renderStatusOption(view.keybindingToggleUnchanged[0].String(), "Unmodified", !view.vm.HiddenDiffTypes[filetree.Unchanged]) +
+	    renderStatusOption(view.keybindingToggleAttributes[0].String(), "Attributes", view.vm.ShowAttributes)
 }

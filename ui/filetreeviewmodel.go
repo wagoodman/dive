@@ -20,15 +20,17 @@ type FileTreeViewModel struct {
 	ViewTree              *filetree.FileTree
 	RefTrees              []*filetree.FileTree
 	cache                 filetree.TreeCache
-	refHeight             uint
-	HiddenDiffTypes       []bool
-	TreeIndex             uint
-	bufferIndex           uint
-	bufferIndexUpperBound uint
-	bufferIndexLowerBound uint
 
-	selected  bool
-	headerBuf bytes.Buffer
+	ShowAttributes        bool
+	HiddenDiffTypes       []bool
+	TreeIndex             int
+	bufferIndex           int
+	bufferIndexUpperBound int
+	bufferIndexLowerBound int
+
+	refHeight             int
+	refWidth              int
+
 	mainBuf   bytes.Buffer
 }
 
@@ -37,6 +39,7 @@ func NewFileTreeViewModel(tree *filetree.FileTree, refTrees []*filetree.FileTree
 	treeViewModel = new(FileTreeViewModel)
 
 	// populate main fields
+	treeViewModel.ShowAttributes = viper.GetBool("filetree.show-attributes")
 	treeViewModel.ModelTree = tree
 	treeViewModel.RefTrees = refTrees
 	treeViewModel.cache = cache
@@ -62,16 +65,16 @@ func NewFileTreeViewModel(tree *filetree.FileTree, refTrees []*filetree.FileTree
 }
 
 // Setup initializes the UI concerns within the context of a global [gocui] view object.
-func (vm *FileTreeViewModel) Setup(lowerBound, upperBound uint) error {
-
+func (vm *FileTreeViewModel) Setup(lowerBound, upperBound int) {
 	vm.bufferIndexLowerBound = lowerBound
 	vm.bufferIndexUpperBound = upperBound
-
-	return nil
 }
 
-// height obtains the height of the current pane (taking into account the lost space due to headers and footers).
-func (vm *FileTreeViewModel) height() uint {
+// height returns the current height and considers the header
+func (vm *FileTreeViewModel) height() int {
+	if vm.ShowAttributes {
+		return vm.refHeight - 1
+	}
 	return vm.refHeight
 }
 
@@ -126,7 +129,6 @@ func (vm *FileTreeViewModel) CursorUp() bool {
 		vm.bufferIndexUpperBound--
 		vm.bufferIndexLowerBound--
 	}
-
 	if vm.bufferIndex > 0 {
 		vm.bufferIndex--
 	}
@@ -152,7 +154,7 @@ func (vm *FileTreeViewModel) CursorDown() bool {
 func (vm *FileTreeViewModel) CursorLeft(filterRegex *regexp.Regexp) error {
 	var visitor func(*filetree.FileNode) error
 	var evaluator func(*filetree.FileNode) bool
-	var dfsCounter, newIndex uint
+	var dfsCounter, newIndex int
 	oldIndex := vm.TreeIndex
 	currentNode := vm.getAbsPositionNode(filterRegex)
 
@@ -238,10 +240,11 @@ func (vm *FileTreeViewModel) PageDown() error {
 	nextBufferIndexLowerBound := vm.bufferIndexLowerBound + vm.height()
 	nextBufferIndexUpperBound := vm.bufferIndexUpperBound + vm.height()
 
-	treeString := vm.ViewTree.StringBetween(nextBufferIndexLowerBound, nextBufferIndexUpperBound, true)
+	// todo: this work should be saved or passed to render...
+	treeString := vm.ViewTree.StringBetween(nextBufferIndexLowerBound, nextBufferIndexUpperBound, vm.ShowAttributes)
 	lines := strings.Split(treeString, "\n")
 
-	newLines := uint(len(lines)) - 1
+	newLines := len(lines) - 1
 	if vm.height() >= newLines {
 		nextBufferIndexLowerBound = vm.bufferIndexLowerBound + newLines
 		nextBufferIndexUpperBound = vm.bufferIndexUpperBound + newLines
@@ -265,10 +268,11 @@ func (vm *FileTreeViewModel) PageUp() error {
 	nextBufferIndexLowerBound := vm.bufferIndexLowerBound - vm.height()
 	nextBufferIndexUpperBound := vm.bufferIndexUpperBound - vm.height()
 
-	treeString := vm.ViewTree.StringBetween(nextBufferIndexLowerBound, nextBufferIndexUpperBound, true)
+	// todo: this work should be saved or passed to render...
+	treeString := vm.ViewTree.StringBetween(nextBufferIndexLowerBound, nextBufferIndexUpperBound, vm.ShowAttributes)
 	lines := strings.Split(treeString, "\n")
 
-	newLines := uint(len(lines)) - 2
+	newLines := len(lines) - 2
 	if vm.height() >= newLines {
 		nextBufferIndexLowerBound = vm.bufferIndexLowerBound - newLines
 		nextBufferIndexUpperBound = vm.bufferIndexUpperBound - newLines
@@ -290,7 +294,7 @@ func (vm *FileTreeViewModel) PageUp() error {
 func (vm *FileTreeViewModel) getAbsPositionNode(filterRegex *regexp.Regexp) (node *filetree.FileNode) {
 	var visitor func(*filetree.FileNode) error
 	var evaluator func(*filetree.FileNode) bool
-	var dfsCounter uint
+	var dfsCounter int
 
 	visitor = func(curNode *filetree.FileNode) error {
 		if dfsCounter == vm.TreeIndex {
@@ -351,6 +355,12 @@ func (vm *FileTreeViewModel) toggleCollapseAll(filterRegex *regexp.Regexp) error
 	return nil
 }
 
+// toggleCollapse will collapse/expand the selected FileNode.
+func (vm *FileTreeViewModel) toggleAttributes() error {
+	vm.ShowAttributes = !vm.ShowAttributes
+	return nil
+}
+
 // toggleShowDiffType will show/hide the selected DiffType in the filetree pane.
 func (vm *FileTreeViewModel) toggleShowDiffType(diffType filetree.DiffType) error {
 	vm.HiddenDiffTypes[diffType] = !vm.HiddenDiffTypes[diffType]
@@ -359,7 +369,9 @@ func (vm *FileTreeViewModel) toggleShowDiffType(diffType filetree.DiffType) erro
 }
 
 // Update refreshes the state objects for future rendering.
-func (vm *FileTreeViewModel) Update(filterRegex *regexp.Regexp) error {
+func (vm *FileTreeViewModel) Update(filterRegex *regexp.Regexp, width, height int) error {
+	vm.refWidth = width
+	vm.refHeight = height
 
 	// keep the vm selection in parity with the current DiffType selection
 	err := vm.ModelTree.VisitDepthChildFirst(func(node *filetree.FileNode) error {
@@ -401,33 +413,29 @@ func (vm *FileTreeViewModel) Update(filterRegex *regexp.Regexp) error {
 }
 
 // Render flushes the state objects (file tree) to the pane.
-func (vm *FileTreeViewModel) Render(compare CompareType, width int) error {
-	treeString := vm.ViewTree.StringBetween(vm.bufferIndexLowerBound, vm.bufferIndexUpperBound, true)
-	lines := strings.Split(treeString, "\n")
-
-	title := "Current Layer Contents"
-	if compare == CompareAll {
-		title = "Aggregated Layer Contents"
-	}
-
-	if vm.selected {
-		title = "● " + title
-	}
-
-	// update the header
-	vm.headerBuf.Reset()
-	headerStr := fmt.Sprintf("[%s]%s\n", title, strings.Repeat("─", width*2))
-	headerStr += fmt.Sprintf(filetree.AttributeFormat+" %s", "P", "ermission", "UID:GID", "Size", "Filetree")
-	fmt.Fprintln(&vm.headerBuf, Formatting.Header(vtclean.Clean(headerStr, false)))
-
+func (vm *FileTreeViewModel) render(tree []string) error {
 	// update the contents
 	vm.mainBuf.Reset()
-	for idx, line := range lines {
-		if uint(idx) == vm.bufferIndex {
+	for idx, line := range tree {
+		if idx == vm.bufferIndex {
 			fmt.Fprintln(&vm.mainBuf, Formatting.Selected(vtclean.Clean(line, false)))
 		} else {
 			fmt.Fprintln(&vm.mainBuf, line)
 		}
 	}
+	return nil
+}
+
+// Render flushes the state objects (file tree) to the pane.
+func (vm *FileTreeViewModel) Render() error {
+	treeString := vm.ViewTree.StringBetween(vm.bufferIndexLowerBound, vm.bufferIndexUpperBound, vm.ShowAttributes)
+	lines := strings.Split(treeString, "\n")
+
+	// don't allow the cursor to go below the tree
+	// if vm.bufferIndex > len(lines) {
+	// 	vm.bufferIndex = len(lines)
+	// }
+
+	vm.render(lines)
 	return nil
 }
