@@ -31,7 +31,7 @@ type FileTreeController struct {
 
 	keybindingToggleCollapse    []keybinding.Key
 	keybindingToggleCollapseAll []keybinding.Key
-	keybindingToggleAttributes    []keybinding.Key
+	keybindingToggleAttributes  []keybinding.Key
 	keybindingToggleAdded       []keybinding.Key
 	keybindingToggleRemoved     []keybinding.Key
 	keybindingToggleModified    []keybinding.Key
@@ -330,6 +330,12 @@ func filterRegex() *regexp.Regexp {
 	return regex
 }
 
+// onLayoutChange is called by the UI framework to inform the view-model of the new screen dimensions
+func (controller *FileTreeController) onLayoutChange() error {
+	controller.Update()
+	return controller.Render()
+}
+
 // Update refreshes the state objects for future rendering.
 func (controller *FileTreeController) Update() error {
 	var width, height int
@@ -385,5 +391,5 @@ func (controller *FileTreeController) KeyHelp() string {
 		renderStatusOption(controller.keybindingToggleRemoved[0].String(), "Removed", !controller.vm.HiddenDiffTypes[filetree.Removed]) +
 		renderStatusOption(controller.keybindingToggleModified[0].String(), "Modified", !controller.vm.HiddenDiffTypes[filetree.Changed]) +
 		renderStatusOption(controller.keybindingToggleUnchanged[0].String(), "Unmodified", !controller.vm.HiddenDiffTypes[filetree.Unchanged]) +
-	    renderStatusOption(controller.keybindingToggleAttributes[0].String(), "Attributes", controller.vm.ShowAttributes)
+		renderStatusOption(controller.keybindingToggleAttributes[0].String(), "Attributes", controller.vm.ShowAttributes)
 }

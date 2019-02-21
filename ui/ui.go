@@ -71,19 +71,15 @@ type View interface {
 }
 
 // toggleView switches between the file view and the layer view and re-renders the screen.
-func toggleView(g *gocui.Gui, v *gocui.View) error {
+func toggleView(g *gocui.Gui, v *gocui.View) (err error) {
 	if v == nil || v.Name() == Controllers.Layer.Name {
-		_, err := g.SetCurrentView(Controllers.Tree.Name)
-		Update()
-		Render()
-		return err
+		_, err = g.SetCurrentView(Controllers.Tree.Name)
 	} else {
-		_, err := g.SetCurrentView(Controllers.Layer.Name)
-		Update()
-		Render()
-		return err
+		_, err = g.SetCurrentView(Controllers.Layer.Name)
 	}
-	return nil
+	Update()
+	Render()
+	return err
 }
 
 // toggleFilterView shows/hides the file tree filter pane.
@@ -264,6 +260,7 @@ func layout(g *gocui.Gui) error {
 	if isNewView(viewErr, headerErr) {
 		Controllers.Tree.Setup(view, header)
 	}
+	Controllers.Tree.onLayoutChange()
 
 	// Status Bar
 	view, viewErr = g.SetView(Controllers.Status.Name, -1, maxY-statusBarHeight-statusBarIndex, maxX, maxY-(statusBarIndex-1))

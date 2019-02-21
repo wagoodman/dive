@@ -16,10 +16,10 @@ import (
 // FileTreeViewModel holds the UI objects and data models for populating the right pane. Specifically the pane that
 // shows selected layer or aggregate file ASCII tree.
 type FileTreeViewModel struct {
-	ModelTree             *filetree.FileTree
-	ViewTree              *filetree.FileTree
-	RefTrees              []*filetree.FileTree
-	cache                 filetree.TreeCache
+	ModelTree *filetree.FileTree
+	ViewTree  *filetree.FileTree
+	RefTrees  []*filetree.FileTree
+	cache     filetree.TreeCache
 
 	CollapseAll           bool
 	ShowAttributes        bool
@@ -28,10 +28,10 @@ type FileTreeViewModel struct {
 	bufferIndex           int
 	bufferIndexLowerBound int
 
-	refHeight             int
-	refWidth              int
+	refHeight int
+	refWidth  int
 
-	mainBuf   bytes.Buffer
+	mainBuf bytes.Buffer
 }
 
 // NewFileTreeController creates a new view object attached the the global [gocui] screen object.
@@ -141,15 +141,16 @@ func (vm *FileTreeViewModel) CursorUp() bool {
 
 // doCursorDown performs the internal view's buffer adjustments on cursor down. Note: this is independent of the gocui buffer.
 func (vm *FileTreeViewModel) CursorDown() bool {
-	// todo: check to see if this is possible
-	vm.TreeIndex++
-	if vm.TreeIndex > vm.bufferIndexUpperBound() {
-		vm.bufferIndexLowerBound++
-	}
-	vm.bufferIndex++
-
-	if vm.bufferIndex > vm.height() {
-		vm.bufferIndex = vm.height()
+	logrus.Debug(vm.ModelTree.VisibleSize())
+	if vm.TreeIndex < vm.ModelTree.VisibleSize() {
+		vm.TreeIndex++
+		if vm.TreeIndex > vm.bufferIndexUpperBound() {
+			vm.bufferIndexLowerBound++
+		}
+		vm.bufferIndex++
+		if vm.bufferIndex > vm.height() {
+			vm.bufferIndex = vm.height()
+		}
 	}
 	return true
 }
@@ -407,29 +408,18 @@ func (vm *FileTreeViewModel) Update(filterRegex *regexp.Regexp, width, height in
 }
 
 // Render flushes the state objects (file tree) to the pane.
-func (vm *FileTreeViewModel) render(tree []string) error {
+func (vm *FileTreeViewModel) Render() error {
+	treeString := vm.ViewTree.StringBetween(vm.bufferIndexLowerBound, vm.bufferIndexUpperBound(), vm.ShowAttributes)
+	lines := strings.Split(treeString, "\n")
+
 	// update the contents
 	vm.mainBuf.Reset()
-	for idx, line := range tree {
+	for idx, line := range lines {
 		if idx == vm.bufferIndex {
 			fmt.Fprintln(&vm.mainBuf, Formatting.Selected(vtclean.Clean(line, false)))
 		} else {
 			fmt.Fprintln(&vm.mainBuf, line)
 		}
 	}
-	return nil
-}
-
-// Render flushes the state objects (file tree) to the pane.
-func (vm *FileTreeViewModel) Render() error {
-	treeString := vm.ViewTree.StringBetween(vm.bufferIndexLowerBound, vm.bufferIndexUpperBound(), vm.ShowAttributes)
-	lines := strings.Split(treeString, "\n")
-
-	// don't allow the cursor to go below the tree
-	// if vm.bufferIndex > len(lines) {
-	// 	vm.bufferIndex = len(lines)
-	// }
-
-	vm.render(lines)
 	return nil
 }
