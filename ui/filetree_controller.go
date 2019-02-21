@@ -283,7 +283,7 @@ func (controller *FileTreeController) toggleCollapse() error {
 
 // toggleCollapseAll will collapse/expand the all directories.
 func (controller *FileTreeController) toggleCollapseAll() error {
-	err := controller.vm.toggleCollapseAll(filterRegex())
+	err := controller.vm.toggleCollapseAll()
 	if err != nil {
 		return err
 	}

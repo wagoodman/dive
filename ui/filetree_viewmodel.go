@@ -21,6 +21,7 @@ type FileTreeViewModel struct {
 	RefTrees              []*filetree.FileTree
 	cache                 filetree.TreeCache
 
+	CollapseAll           bool
 	ShowAttributes        bool
 	HiddenDiffTypes       []bool
 	TreeIndex             int
@@ -40,6 +41,7 @@ func NewFileTreeViewModel(tree *filetree.FileTree, refTrees []*filetree.FileTree
 
 	// populate main fields
 	treeViewModel.ShowAttributes = viper.GetBool("filetree.show-attributes")
+	treeViewModel.CollapseAll = viper.GetBool("filetree.collapse-dir")
 	treeViewModel.ModelTree = tree
 	treeViewModel.RefTrees = refTrees
 	treeViewModel.cache = cache
@@ -331,15 +333,11 @@ func (vm *FileTreeViewModel) toggleCollapse(filterRegex *regexp.Regexp) error {
 }
 
 // toggleCollapseAll will collapse/expand the all directories.
-func (vm *FileTreeViewModel) toggleCollapseAll(filterRegex *regexp.Regexp) error {
-	node := vm.getAbsPositionNode(filterRegex)
-	var collapseTargetState bool
-	if node != nil && node.Data.FileInfo.IsDir {
-		collapseTargetState = !node.Data.ViewInfo.Collapsed
-	}
+func (vm *FileTreeViewModel) toggleCollapseAll() error {
+	vm.CollapseAll = !vm.CollapseAll
 
 	visitor := func(curNode *filetree.FileNode) error {
-		curNode.Data.ViewInfo.Collapsed = collapseTargetState
+		curNode.Data.ViewInfo.Collapsed = vm.CollapseAll
 		return nil
 	}
 
