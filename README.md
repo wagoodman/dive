@@ -188,6 +188,7 @@ Key Binding                                | Description
 <kbd>Ctrl + R</kbd>                        | Filetree view: show/hide removed files
 <kbd>Ctrl + M</kbd>                        | Filetree view: show/hide modified files
 <kbd>Ctrl + U</kbd>                        | Filetree view: show/hide unmodified files
+<kbd>Ctrl + B</kbd>                        | Filetree view: show/hide file attributes
 
 ## UI Configuration
 
@@ -203,7 +204,7 @@ log:
 keybinding:
   # Global bindings
   quit: ctrl+c
-  toggle-view: tab, ctrl+space
+  toggle-view: tab
   filter-files: ctrl+f, ctrl+slash
 
   # Layer view specific bindings  
@@ -212,10 +213,12 @@ keybinding:
 
   # File view specific bindings
   toggle-collapse-dir: space
+  toggle-collapse-all-dir: ctrl+space
   toggle-added-files: ctrl+a
   toggle-removed-files: ctrl+r
   toggle-modified-files: ctrl+m
   toggle-unmodified-files: ctrl+u
+  toggle-filetree-attributes: ctrl+b
   page-up: pgup
   page-down: pgdn
   
@@ -233,6 +236,9 @@ filetree:
 
   # The percentage of screen width the filetree should take on the screen (must be >0 and <1)
   pane-width: 0.5
+  
+  # Show the file attributes next to the filetree
+  show-attributes: true
 
 layer:
   # Enable showing all changes from this layer and ever previous layer

@@ -26,7 +26,6 @@ type FileTreeViewModel struct {
 	HiddenDiffTypes       []bool
 	TreeIndex             int
 	bufferIndex           int
-	bufferIndexUpperBound int
 	bufferIndexLowerBound int
 
 	refHeight             int
@@ -67,9 +66,9 @@ func NewFileTreeViewModel(tree *filetree.FileTree, refTrees []*filetree.FileTree
 }
 
 // Setup initializes the UI concerns within the context of a global [gocui] view object.
-func (vm *FileTreeViewModel) Setup(lowerBound, upperBound int) {
+func (vm *FileTreeViewModel) Setup(lowerBound, height int) {
 	vm.bufferIndexLowerBound = lowerBound
-	vm.bufferIndexUpperBound = upperBound
+	vm.refHeight = height
 }
 
 // height returns the current height and considers the header
@@ -78,6 +77,11 @@ func (vm *FileTreeViewModel) height() int {
 		return vm.refHeight - 1
 	}
 	return vm.refHeight
+}
+
+// bufferIndexUpperBound returns the current upper bounds for the view
+func (vm *FileTreeViewModel) bufferIndexUpperBound() int {
+	return vm.bufferIndexLowerBound + vm.height()
 }
 
 // IsVisible indicates if the file tree view pane is currently initialized
@@ -93,7 +97,6 @@ func (vm *FileTreeViewModel) resetCursor() {
 	vm.TreeIndex = 0
 	vm.bufferIndex = 0
 	vm.bufferIndexLowerBound = 0
-	vm.bufferIndexUpperBound = vm.height()
 }
 
 // setTreeByLayer populates the view model by stacking the indicated image layer file trees.
@@ -128,7 +131,6 @@ func (vm *FileTreeViewModel) CursorUp() bool {
 	}
 	vm.TreeIndex--
 	if vm.TreeIndex < vm.bufferIndexLowerBound {
-		vm.bufferIndexUpperBound--
 		vm.bufferIndexLowerBound--
 	}
 	if vm.bufferIndex > 0 {
@@ -141,11 +143,11 @@ func (vm *FileTreeViewModel) CursorUp() bool {
 func (vm *FileTreeViewModel) CursorDown() bool {
 	// todo: check to see if this is possible
 	vm.TreeIndex++
-	if vm.TreeIndex > vm.bufferIndexUpperBound {
-		vm.bufferIndexUpperBound++
+	if vm.TreeIndex > vm.bufferIndexUpperBound() {
 		vm.bufferIndexLowerBound++
 	}
 	vm.bufferIndex++
+
 	if vm.bufferIndex > vm.height() {
 		vm.bufferIndex = vm.height()
 	}
@@ -191,7 +193,6 @@ func (vm *FileTreeViewModel) CursorLeft(filterRegex *regexp.Regexp) error {
 	vm.TreeIndex = newIndex
 	moveIndex := oldIndex - newIndex
 	if newIndex < vm.bufferIndexLowerBound {
-		vm.bufferIndexUpperBound = vm.TreeIndex + vm.height()
 		vm.bufferIndexLowerBound = vm.TreeIndex
 	}
 
@@ -224,8 +225,7 @@ func (vm *FileTreeViewModel) CursorRight(filterRegex *regexp.Regexp) error {
 	}
 
 	vm.TreeIndex++
-	if vm.TreeIndex > vm.bufferIndexUpperBound {
-		vm.bufferIndexUpperBound++
+	if vm.TreeIndex > vm.bufferIndexUpperBound() {
 		vm.bufferIndexLowerBound++
 	}
 
@@ -240,7 +240,7 @@ func (vm *FileTreeViewModel) CursorRight(filterRegex *regexp.Regexp) error {
 // PageDown moves to next page putting the cursor on top
 func (vm *FileTreeViewModel) PageDown() error {
 	nextBufferIndexLowerBound := vm.bufferIndexLowerBound + vm.height()
-	nextBufferIndexUpperBound := vm.bufferIndexUpperBound + vm.height()
+	nextBufferIndexUpperBound := nextBufferIndexLowerBound + vm.height()
 
 	// todo: this work should be saved or passed to render...
 	treeString := vm.ViewTree.StringBetween(nextBufferIndexLowerBound, nextBufferIndexUpperBound, vm.ShowAttributes)
@@ -249,11 +249,9 @@ func (vm *FileTreeViewModel) PageDown() error {
 	newLines := len(lines) - 1
 	if vm.height() >= newLines {
 		nextBufferIndexLowerBound = vm.bufferIndexLowerBound + newLines
-		nextBufferIndexUpperBound = vm.bufferIndexUpperBound + newLines
 	}
 
 	vm.bufferIndexLowerBound = nextBufferIndexLowerBound
-	vm.bufferIndexUpperBound = nextBufferIndexUpperBound
 
 	if vm.TreeIndex < nextBufferIndexLowerBound {
 		vm.bufferIndex = 0
@@ -268,7 +266,7 @@ func (vm *FileTreeViewModel) PageDown() error {
 // PageUp moves to previous page putting the cursor on top
 func (vm *FileTreeViewModel) PageUp() error {
 	nextBufferIndexLowerBound := vm.bufferIndexLowerBound - vm.height()
-	nextBufferIndexUpperBound := vm.bufferIndexUpperBound - vm.height()
+	nextBufferIndexUpperBound := nextBufferIndexLowerBound + vm.height()
 
 	// todo: this work should be saved or passed to render...
 	treeString := vm.ViewTree.StringBetween(nextBufferIndexLowerBound, nextBufferIndexUpperBound, vm.ShowAttributes)
@@ -277,11 +275,9 @@ func (vm *FileTreeViewModel) PageUp() error {
 	newLines := len(lines) - 2
 	if vm.height() >= newLines {
 		nextBufferIndexLowerBound = vm.bufferIndexLowerBound - newLines
-		nextBufferIndexUpperBound = vm.bufferIndexUpperBound - newLines
 	}
 
 	vm.bufferIndexLowerBound = nextBufferIndexLowerBound
-	vm.bufferIndexUpperBound = nextBufferIndexUpperBound
 
 	if vm.TreeIndex > (nextBufferIndexUpperBound - 1) {
 		vm.bufferIndex = 0
@@ -426,7 +422,7 @@ func (vm *FileTreeViewModel) render(tree []string) error {
 
 // Render flushes the state objects (file tree) to the pane.
 func (vm *FileTreeViewModel) Render() error {
-	treeString := vm.ViewTree.StringBetween(vm.bufferIndexLowerBound, vm.bufferIndexUpperBound, vm.ShowAttributes)
+	treeString := vm.ViewTree.StringBetween(vm.bufferIndexLowerBound, vm.bufferIndexUpperBound(), vm.ShowAttributes)
 	lines := strings.Split(treeString, "\n")
 
 	// don't allow the cursor to go below the tree
