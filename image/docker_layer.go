@@ -8,7 +8,8 @@ import (
 )
 
 const (
-	LayerFormat = "%-25s %7s  %s"
+	// LayerFormat = "%-15s %7s  %s"
+	LayerFormat = "%7s  %s"
 )
 
 // ShortId returns the truncated id of the current layer.
@@ -43,9 +44,9 @@ func (layer *dockerLayer) Command() string {
 
 // ShortId returns the truncated id of the current layer.
 func (layer *dockerLayer) ShortId() string {
-	rangeBound := 25
+	rangeBound := 15
 	id := layer.Id()
-	if length := len(id); length < 25 {
+	if length := len(id); length < 15 {
 		rangeBound = length
 	}
 	id = id[0:rangeBound]
@@ -63,12 +64,14 @@ func (layer *dockerLayer) String() string {
 
 	if layer.index == 0 {
 		return fmt.Sprintf(LayerFormat,
-			layer.ShortId(),
+			// layer.ShortId(),
+			// fmt.Sprintf("%d",layer.Index()),
 			humanize.Bytes(layer.Size()),
 			"FROM "+layer.ShortId())
 	}
 	return fmt.Sprintf(LayerFormat,
-		layer.ShortId(),
+		// layer.ShortId(),
+		// fmt.Sprintf("%d",layer.Index()),
 		humanize.Bytes(layer.Size()),
 		layer.Command())
 }

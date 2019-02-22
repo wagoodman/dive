@@ -119,14 +119,32 @@ func (tree *FileTree) renderStringTreeBetween(startRow, stopRow int, showAttribu
 	return result
 }
 
+func (tree *FileTree) VisibleSize() int {
+	var size int
+
+	visitor := func(node *FileNode) error {
+		size++
+		return nil
+	}
+	visitEvaluator := func(node *FileNode) bool {
+		return !node.Data.ViewInfo.Collapsed && !node.Data.ViewInfo.Hidden
+	}
+	err := tree.VisitDepthParentFirst(visitor, visitEvaluator)
+	if err != nil {
+		logrus.Errorf("unable to determine visible tree size: %+v", err)
+	}
+
+	return size
+}
+
 // String returns the entire tree in an ASCII representation.
 func (tree *FileTree) String(showAttributes bool) string {
 	return tree.renderStringTreeBetween(0, tree.Size, showAttributes)
 }
 
 // StringBetween returns a partial tree in an ASCII representation.
-func (tree *FileTree) StringBetween(start, stop uint, showAttributes bool) string {
-	return tree.renderStringTreeBetween(int(start), int(stop), showAttributes)
+func (tree *FileTree) StringBetween(start, stop int, showAttributes bool) string {
+	return tree.renderStringTreeBetween(start, stop, showAttributes)
 }
 
 // Copy returns a copy of the given FileTree

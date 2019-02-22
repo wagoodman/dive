@@ -1,0 +1,9 @@
+drwxr-xr-x         0:0     1.2 MB  ├─⊕ bin
+drwxr-xr-x         0:0        0 B  ├── dev
+drwxr-xr-x         0:0     1.0 kB  ├─⊕ etc
+drwxr-xr-x 65534:65534        0 B  ├── home
+drwx------         0:0        0 B  ├── root
+drwxrwxrwx         0:0        0 B  ├── tmp
+drwxr-xr-x         0:0        0 B  ├─⊕ usr
+drwxr-xr-x         0:0        0 B  └─⊕ var
+

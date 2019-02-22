@@ -29,6 +29,7 @@ require (
 	github.com/opencontainers/image-spec v1.0.1 // indirect
 	github.com/phayes/permbits v0.0.0-20180830030258-59f2482cd460
 	github.com/pkg/errors v0.8.0 // indirect
+	github.com/sergi/go-diff v1.0.0
 	github.com/sirupsen/logrus v1.2.0
 	github.com/spf13/cobra v0.0.3
 	github.com/spf13/viper v1.2.1
