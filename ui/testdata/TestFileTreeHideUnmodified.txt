@@ -1,0 +1,10 @@
+drwx------         0:0      19 kB  ├── root
+drwxr-xr-x         0:0      13 kB  │   ├── example
+drwxr-xr-x         0:0        0 B  │   │   ├── really
+drwxr-xr-x         0:0        0 B  │   │   │   └── nested
+-r--r--r--         0:0     6.4 kB  │   │   ├── somefile1.txt
+-rw-r--r--         0:0     6.4 kB  │   │   ├── somefile2.txt
+-rw-r--r--         0:0     6.4 kB  │   │   └── somefile3.txt
+-rw-r--r--         0:0     6.4 kB  │   └── saved.txt
+-rw-rw-r--         0:0     6.4 kB  └── somefile.txt
+

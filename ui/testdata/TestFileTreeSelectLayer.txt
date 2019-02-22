@@ -1,0 +1,23 @@
+drwxr-xr-x         0:0     1.2 MB  ├─⊕ bin
+drwxr-xr-x         0:0        0 B  ├── dev
+drwxr-xr-x         0:0     1.0 kB  ├── etc
+-rw-rw-r--         0:0      307 B  │   ├── group
+-rw-r--r--         0:0      127 B  │   ├── localtime
+drwxr-xr-x         0:0        0 B  │   ├── network
+drwxr-xr-x         0:0        0 B  │   │   ├── if-down.d
+drwxr-xr-x         0:0        0 B  │   │   ├── if-post-down.d
+drwxr-xr-x         0:0        0 B  │   │   ├── if-pre-up.d
+drwxr-xr-x         0:0        0 B  │   │   └── if-up.d
+-rw-r--r--         0:0      340 B  │   ├── passwd
+-rw-------         0:0      243 B  │   └── shadow
+drwxr-xr-x 65534:65534        0 B  ├── home
+drwx------         0:0        0 B  ├── root
+-rw-rw-r--         0:0     6.4 kB  ├── somefile.txt
+drwxrwxrwx         0:0        0 B  ├── tmp
+drwxr-xr-x         0:0        0 B  ├── usr
+drwxr-xr-x         1:1        0 B  │   └── sbin
+drwxr-xr-x         0:0        0 B  └── var
+drwxr-xr-x         0:0        0 B      ├── spool
+drwxr-xr-x         8:8        0 B      │   └── mail
+drwxr-xr-x         0:0        0 B      └── www
+

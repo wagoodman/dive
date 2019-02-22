@@ -141,16 +141,16 @@ func (vm *FileTreeViewModel) CursorUp() bool {
 
 // doCursorDown performs the internal view's buffer adjustments on cursor down. Note: this is independent of the gocui buffer.
 func (vm *FileTreeViewModel) CursorDown() bool {
-	logrus.Debug(vm.ModelTree.VisibleSize())
-	if vm.TreeIndex < vm.ModelTree.VisibleSize() {
-		vm.TreeIndex++
-		if vm.TreeIndex > vm.bufferIndexUpperBound() {
-			vm.bufferIndexLowerBound++
-		}
-		vm.bufferIndex++
-		if vm.bufferIndex > vm.height() {
-			vm.bufferIndex = vm.height()
-		}
+	if vm.TreeIndex >= vm.ModelTree.VisibleSize() {
+		return false
+	}
+	vm.TreeIndex++
+	if vm.TreeIndex > vm.bufferIndexUpperBound() {
+		vm.bufferIndexLowerBound++
+	}
+	vm.bufferIndex++
+	if vm.bufferIndex > vm.height() {
+		vm.bufferIndex = vm.height()
 	}
 	return true
 }
@@ -378,7 +378,8 @@ func (vm *FileTreeViewModel) Update(filterRegex *regexp.Regexp, width, height in
 				node.Data.ViewInfo.Hidden = false
 			}
 		}
-		if filterRegex != nil && !visibleChild {
+		// hide nodes that do not match the current file filter regex (also don't unhide nodes that are already hidden)
+		if filterRegex != nil && !visibleChild && !node.Data.ViewInfo.Hidden {
 			match := filterRegex.FindString(node.Path())
 			node.Data.ViewInfo.Hidden = len(match) == 0
 		}

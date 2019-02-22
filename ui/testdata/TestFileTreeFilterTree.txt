@@ -1,0 +1,7 @@
+drwxr-xr-x         0:0        0 B  └── etc
+drwxr-xr-x         0:0        0 B      └── network
+drwxr-xr-x         0:0        0 B          ├── if-down.d
+drwxr-xr-x         0:0        0 B          ├── if-post-down.d
+drwxr-xr-x         0:0        0 B          ├── if-pre-up.d
+drwxr-xr-x         0:0        0 B          └── if-up.d
+
