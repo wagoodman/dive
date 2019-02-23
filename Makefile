@@ -28,8 +28,9 @@ coverage: build
 	./.scripts/test.sh
 
 validate:
-	@! gofmt -s -d -l . 2>&1 | grep -vE '^\.git/'
+	grep -R 'const allowTestDataCapture = false' ui/
 	go vet ./...
+	@! gofmt -s -d -l . 2>&1 | grep -vE '^\.git/'
 
 lint: build
 	golint -set_exit_status $$(go list ./...)

@@ -13,7 +13,7 @@ import (
 	"testing"
 )
 
-const allowTestDataCapture = true
+const allowTestDataCapture = false
 
 func fileExists(filename string) bool {
 	info, err := os.Stat(filename)
