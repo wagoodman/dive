@@ -1,5 +1,9 @@
 language: go
 
+os: 
+  - linux
+  - linux-ppc64le
+
 go:
 - '1.9.x'
 - '1.10.x'
