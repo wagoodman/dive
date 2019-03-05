@@ -4,14 +4,18 @@ import (
 	"archive/tar"
 	"encoding/json"
 	"fmt"
+	"io"
+	"io/ioutil"
+	"net/http"
+	"os"
+	"strings"
+
+	"github.com/docker/cli/cli/connhelper"
 	"github.com/docker/docker/client"
 	"github.com/sirupsen/logrus"
 	"github.com/wagoodman/dive/filetree"
 	"github.com/wagoodman/dive/utils"
 	"golang.org/x/net/context"
-	"io"
-	"io/ioutil"
-	"strings"
 )
 
 var dockerVersion string
@@ -59,7 +63,33 @@ func (image *dockerImageAnalyzer) Fetch() (io.ReadCloser, error) {
 
 	// pull the image if it does not exist
 	ctx := context.Background()
-	image.client, err = client.NewClientWithOpts(client.WithVersion(dockerVersion), client.FromEnv)
+
+	host := os.Getenv("DOCKER_HOST")
+	var clientOpts []func(*client.Client) error
+
+	switch strings.Split(host, ":")[0] {
+	case "ssh":
+		helper, err := connhelper.GetConnectionHelper(host)
+		if err != nil {
+			fmt.Println("docker host", err)
+		}
+		clientOpts = append(clientOpts, func(c *client.Client) error {
+			httpClient := &http.Client{
+				Transport: &http.Transport{
+					DialContext: helper.Dialer,
+				},
+			}
+			return client.WithHTTPClient(httpClient)(c)
+		})
+		clientOpts = append(clientOpts, client.WithHost(helper.Host))
+		clientOpts = append(clientOpts, client.WithDialContext(helper.Dialer))
+
+	default:
+		clientOpts = append(clientOpts, client.FromEnv)
+	}
+
+	clientOpts = append(clientOpts, client.WithVersion(dockerVersion))
+	image.client, err = client.NewClientWithOpts(clientOpts...)
 	if err != nil {
 		return nil, err
 	}
