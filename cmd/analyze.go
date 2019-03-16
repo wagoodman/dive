@@ -30,6 +30,8 @@ func doAnalyzeCmd(cmd *cobra.Command, args []string) {
 		utils.Exit(1)
 	}
 
+	initLogging()
+
 	runtime.Run(runtime.Options{
 		ImageId:      userImage,
 		ExportFile:   exportFile,
