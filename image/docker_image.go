@@ -168,27 +168,39 @@ func (image *dockerImageAnalyzer) Analyze() (*AnalysisResult, error) {
 
 	// note that the image config stores images in reverse chronological order, so iterate backwards through layers
 	// as you iterate chronologically through history (ignoring history items that have no layer contents)
-	layerIdx := len(image.trees) - 1
+	// Note: history is not required metadata in a docker image!
 	tarPathIdx := 0
-	for histIdx := 0; histIdx < len(config.History); histIdx++ {
-		// ignore empty layers, we are only observing layers with content
-		if config.History[histIdx].EmptyLayer {
-			continue
-		}
+	histIdx := 0
+	for layerIdx := len(image.trees) - 1; layerIdx >= 0; layerIdx-- {
 
 		tree := image.trees[(len(image.trees)-1)-layerIdx]
-		config.History[histIdx].Size = uint64(tree.FileSize)
+
+		// ignore empty layers, we are only observing layers with content
+		historyObj := dockerImageHistoryEntry{
+			CreatedBy: "(missing)",
+		}
+		for nextHistIdx := histIdx; nextHistIdx < len(config.History); nextHistIdx++ {
+			if !config.History[nextHistIdx].EmptyLayer {
+				histIdx = nextHistIdx
+				break
+			}
+		}
+		if  histIdx < len(config.History) && !config.History[histIdx].EmptyLayer {
+			historyObj = config.History[histIdx]
+			histIdx++
+		}
 
 		image.layers[layerIdx] = &dockerLayer{
-			history: config.History[histIdx],
+			history: historyObj,
 			index:   tarPathIdx,
 			tree:    image.trees[layerIdx],
 			tarPath: manifest.LayerTarPaths[tarPathIdx],
 		}
+		image.layers[layerIdx].history.Size = uint64(tree.FileSize)
 
-		layerIdx--
 		tarPathIdx++
 	}
+
 
 	efficiency, inefficiencies := filetree.Efficiency(image.trees)
 
