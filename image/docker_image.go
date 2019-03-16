@@ -185,7 +185,7 @@ func (image *dockerImageAnalyzer) Analyze() (*AnalysisResult, error) {
 				break
 			}
 		}
-		if  histIdx < len(config.History) && !config.History[histIdx].EmptyLayer {
+		if histIdx < len(config.History) && !config.History[histIdx].EmptyLayer {
 			historyObj = config.History[histIdx]
 			histIdx++
 		}
@@ -200,7 +200,6 @@ func (image *dockerImageAnalyzer) Analyze() (*AnalysisResult, error) {
 
 		tarPathIdx++
 	}
-
 
 	efficiency, inefficiencies := filetree.Efficiency(image.trees)
 
