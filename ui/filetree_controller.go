@@ -331,9 +331,12 @@ func filterRegex() *regexp.Regexp {
 }
 
 // onLayoutChange is called by the UI framework to inform the view-model of the new screen dimensions
-func (controller *FileTreeController) onLayoutChange() error {
+func (controller *FileTreeController) onLayoutChange(resized bool) error {
 	controller.Update()
-	return controller.Render()
+	if resized {
+		return controller.Render()
+	}
+	return nil
 }
 
 // Update refreshes the state objects for future rendering.

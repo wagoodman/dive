@@ -59,6 +59,8 @@ var GlobalKeybindings struct {
 	filterView []keybinding.Key
 }
 
+var lastX, lastY int
+
 // View defines the a renderable terminal screen pane.
 type View interface {
 	Setup(*gocui.View, *gocui.View) error
@@ -187,6 +189,14 @@ func layout(g *gocui.Gui) error {
 	// TODO: this logic should be refactored into an abstraction that takes care of the math for us
 
 	maxX, maxY := g.Size()
+	var resized bool
+	if maxX != lastX {
+		resized = true
+	}
+	if maxY != lastY {
+		resized = true
+	}
+	lastX, lastY = maxX, maxY
 	fileTreeSplitRatio := viper.GetFloat64("filetree.pane-width")
 	if fileTreeSplitRatio >= 1 || fileTreeSplitRatio <= 0 {
 		logrus.Errorf("invalid config value: 'filetree.pane-width' should be 0 < value < 1, given '%v'", fileTreeSplitRatio)
@@ -260,7 +270,7 @@ func layout(g *gocui.Gui) error {
 	if isNewView(viewErr, headerErr) {
 		Controllers.Tree.Setup(view, header)
 	}
-	Controllers.Tree.onLayoutChange()
+	Controllers.Tree.onLayoutChange(resized)
 
 	// Status Bar
 	view, viewErr = g.SetView(Controllers.Status.Name, -1, maxY-statusBarHeight-statusBarIndex, maxX, maxY-(statusBarIndex-1))
