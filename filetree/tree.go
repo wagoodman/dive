@@ -127,12 +127,22 @@ func (tree *FileTree) VisibleSize() int {
 		return nil
 	}
 	visitEvaluator := func(node *FileNode) bool {
-		return !node.Data.ViewInfo.Collapsed && !node.Data.ViewInfo.Hidden
+		if node.Data.FileInfo.IsDir {
+			// we won't visit a collapsed dir, but we need to count it
+			if node.Data.ViewInfo.Collapsed {
+				size++
+			}
+			return !node.Data.ViewInfo.Collapsed && !node.Data.ViewInfo.Hidden
+		}
+		return !node.Data.ViewInfo.Hidden
 	}
 	err := tree.VisitDepthParentFirst(visitor, visitEvaluator)
 	if err != nil {
 		logrus.Errorf("unable to determine visible tree size: %+v", err)
 	}
+
+	// don't include root
+	size--
 
 	return size
 }

@@ -287,6 +287,9 @@ func (controller *FileTreeController) toggleCollapseAll() error {
 	if err != nil {
 		return err
 	}
+	if controller.vm.CollapseAll {
+		controller.resetCursor()
+	}
 	controller.Update()
 	return controller.Render()
 }
