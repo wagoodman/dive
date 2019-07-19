@@ -148,7 +148,6 @@ func (controller *LayerController) PageDown() error {
 
 	if targetLayerIndex > len(controller.Layers) {
 		step -= targetLayerIndex - (len(controller.Layers) - 1)
-		targetLayerIndex = controller.LayerIndex + step
 	}
 
 	if step > 0 {
@@ -167,7 +166,6 @@ func (controller *LayerController) PageUp() error {
 
 	if targetLayerIndex < 0 {
 		step += targetLayerIndex
-		targetLayerIndex = controller.LayerIndex - step
 	}
 
 	if step > 0 {
