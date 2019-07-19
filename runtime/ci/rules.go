@@ -2,10 +2,11 @@ package ci
 
 import (
 	"fmt"
+	"strconv"
+
 	"github.com/dustin/go-humanize"
 	"github.com/logrusorgru/aurora"
 	"github.com/wagoodman/dive/image"
-	"strconv"
 )
 
 func newGenericCiRule(key string, evaluator func(*image.AnalysisResult, string) (RuleStatus, string)) *GenericCiRule {

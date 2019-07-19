@@ -2,8 +2,9 @@ package filetree
 
 import (
 	"fmt"
-	"github.com/sirupsen/logrus"
 	"sort"
+
+	"github.com/sirupsen/logrus"
 )
 
 // Len is required for sorting.

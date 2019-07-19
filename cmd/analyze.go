@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+
 	"github.com/spf13/cobra"
 	"github.com/wagoodman/dive/runtime"
 	"github.com/wagoodman/dive/utils"

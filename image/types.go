@@ -1,9 +1,10 @@
 package image
 
 import (
+	"io"
+
 	"github.com/docker/docker/client"
 	"github.com/wagoodman/dive/filetree"
-	"io"
 )
 
 type Parser interface {

@@ -1,8 +1,9 @@
 package filetree
 
 import (
-	"github.com/google/uuid"
 	"os"
+
+	"github.com/google/uuid"
 )
 
 // FileTree represents a set of files, directories, and their relations.

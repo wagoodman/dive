@@ -3,6 +3,7 @@ package ui
 import (
 	"errors"
 	"fmt"
+
 	"github.com/fatih/color"
 	"github.com/jroimartin/gocui"
 	"github.com/sirupsen/logrus"
