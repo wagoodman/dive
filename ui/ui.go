@@ -176,7 +176,7 @@ func isNewView(errs ...error) bool {
 		if err == nil {
 			return false
 		}
-		if err != nil && err != gocui.ErrUnknownView {
+		if err != gocui.ErrUnknownView {
 			return false
 		}
 	}
