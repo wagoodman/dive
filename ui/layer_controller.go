@@ -135,10 +135,7 @@ func (controller *LayerController) height() uint {
 
 // IsVisible indicates if the layer view pane is currently initialized.
 func (controller *LayerController) IsVisible() bool {
-	if controller == nil {
-		return false
-	}
-	return true
+	return controller != nil
 }
 
 // PageDown moves to next page putting the cursor on top

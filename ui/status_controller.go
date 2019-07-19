@@ -40,10 +40,7 @@ func (controller *StatusController) Setup(v *gocui.View, header *gocui.View) err
 
 // IsVisible indicates if the status view pane is currently initialized.
 func (controller *StatusController) IsVisible() bool {
-	if controller == nil {
-		return false
-	}
-	return true
+	return controller != nil
 }
 
 // CursorDown moves the cursor down in the details pane (currently indicates nothing).

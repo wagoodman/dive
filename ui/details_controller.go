@@ -62,10 +62,7 @@ func (controller *DetailsController) Setup(v *gocui.View, header *gocui.View) er
 
 // IsVisible indicates if the details view pane is currently initialized.
 func (controller *DetailsController) IsVisible() bool {
-	if controller == nil {
-		return false
-	}
-	return true
+	return controller != nil
 }
 
 // CursorDown moves the cursor down in the details pane (currently indicates nothing).

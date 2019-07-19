@@ -182,10 +182,7 @@ func (controller *FileTreeController) Setup(v *gocui.View, header *gocui.View) e
 
 // IsVisible indicates if the file tree view pane is currently initialized
 func (controller *FileTreeController) IsVisible() bool {
-	if controller == nil {
-		return false
-	}
-	return true
+	return controller != nil
 }
 
 // resetCursor moves the cursor back to the top of the buffer and translates to the top of the buffer.
