@@ -62,10 +62,7 @@ func (controller *DetailsController) Setup(v *gocui.View, header *gocui.View) er
 
 // IsVisible indicates if the details view pane is currently initialized.
 func (controller *DetailsController) IsVisible() bool {
-	if controller == nil {
-		return false
-	}
-	return true
+	return controller != nil
 }
 
 // CursorDown moves the cursor down in the details pane (currently indicates nothing).
@@ -123,23 +120,23 @@ func (controller *DetailsController) Render() error {
 		layerHeaderStr := fmt.Sprintf("[Layer Details]%s", strings.Repeat("─", width-15))
 		imageHeaderStr := fmt.Sprintf("[Image Details]%s", strings.Repeat("─", width-15))
 
-		fmt.Fprintln(controller.header, Formatting.Header(vtclean.Clean(layerHeaderStr, false)))
+		_, _ = fmt.Fprintln(controller.header, Formatting.Header(vtclean.Clean(layerHeaderStr, false)))
 
 		// update contents
 		controller.view.Clear()
-		fmt.Fprintln(controller.view, Formatting.Header("Digest: ")+currentLayer.Id())
+		_, _ = fmt.Fprintln(controller.view, Formatting.Header("Digest: ")+currentLayer.Id())
 		// TODO: add back in with controller model
 		// fmt.Fprintln(view.view, Formatting.Header("Tar ID: ")+currentLayer.TarId())
-		fmt.Fprintln(controller.view, Formatting.Header("Command:"))
-		fmt.Fprintln(controller.view, currentLayer.Command())
+		_, _ = fmt.Fprintln(controller.view, Formatting.Header("Command:"))
+		_, _ = fmt.Fprintln(controller.view, currentLayer.Command())
 
-		fmt.Fprintln(controller.view, "\n"+Formatting.Header(vtclean.Clean(imageHeaderStr, false)))
+		_, _ = fmt.Fprintln(controller.view, "\n"+Formatting.Header(vtclean.Clean(imageHeaderStr, false)))
 
-		fmt.Fprintln(controller.view, imageSizeStr)
-		fmt.Fprintln(controller.view, wastedSpaceStr)
-		fmt.Fprintln(controller.view, effStr+"\n")
+		_, _ = fmt.Fprintln(controller.view, imageSizeStr)
+		_, _ = fmt.Fprintln(controller.view, wastedSpaceStr)
+		_, _ = fmt.Fprintln(controller.view, effStr+"\n")
 
-		fmt.Fprintln(controller.view, inefficiencyReport)
+		_, _ = fmt.Fprintln(controller.view, inefficiencyReport)
 		return nil
 	})
 	return nil

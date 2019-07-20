@@ -325,9 +325,15 @@ func (tree *FileTree) CompareAndMark(upper *FileTree) error {
 	// take note of the comparison results on each note in the owning tree.
 	for _, pair := range modifications {
 		if pair.final > 0 {
-			pair.lowerNode.AssignDiffType(pair.final)
+			err = pair.lowerNode.AssignDiffType(pair.final)
+			if err != nil {
+				return err
+			}
 		} else if pair.lowerNode.Data.DiffType == Unchanged {
-			pair.lowerNode.deriveDiffType(pair.tentative)
+			err = pair.lowerNode.deriveDiffType(pair.tentative)
+			if err != nil {
+				return err
+			}
 		}
 
 		// persist the upper's payload on the owning tree

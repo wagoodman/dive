@@ -4,19 +4,31 @@ import (
 	"testing"
 )
 
+func checkError(t *testing.T, err error, message string) {
+	if err != nil {
+		t.Errorf(message+": %+v", err)
+	}
+}
+
 func TestEfficency(t *testing.T) {
 	trees := make([]*FileTree, 3)
 	for idx := range trees {
 		trees[idx] = NewFileTree()
 	}
 
-	trees[0].AddPath("/etc/nginx/nginx.conf", FileInfo{Size: 2000})
-	trees[0].AddPath("/etc/nginx/public", FileInfo{Size: 3000})
+	_, _, err := trees[0].AddPath("/etc/nginx/nginx.conf", FileInfo{Size: 2000})
+	checkError(t, err, "could not setup test")
 
-	trees[1].AddPath("/etc/nginx/nginx.conf", FileInfo{Size: 5000})
-	trees[1].AddPath("/etc/athing", FileInfo{Size: 10000})
+	_, _, err = trees[0].AddPath("/etc/nginx/public", FileInfo{Size: 3000})
+	checkError(t, err, "could not setup test")
 
-	trees[2].AddPath("/etc/.wh.nginx", *BlankFileChangeInfo("/etc/.wh.nginx"))
+	_, _, err = trees[1].AddPath("/etc/nginx/nginx.conf", FileInfo{Size: 5000})
+	checkError(t, err, "could not setup test")
+	_, _, err = trees[1].AddPath("/etc/athing", FileInfo{Size: 10000})
+	checkError(t, err, "could not setup test")
+
+	_, _, err = trees[2].AddPath("/etc/.wh.nginx", *BlankFileChangeInfo("/etc/.wh.nginx"))
+	checkError(t, err, "could not setup test")
 
 	var expectedScore = 0.75
 	var expectedMatches = EfficiencySlice{
@@ -50,7 +62,8 @@ func TestEfficency_ScratchImage(t *testing.T) {
 		trees[idx] = NewFileTree()
 	}
 
-	trees[0].AddPath("/nothing", FileInfo{Size: 0})
+	_, _, err := trees[0].AddPath("/nothing", FileInfo{Size: 0})
+	checkError(t, err, "could not setup test")
 
 	var expectedScore = 1.0
 	var expectedMatches = EfficiencySlice{}

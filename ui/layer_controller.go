@@ -135,10 +135,7 @@ func (controller *LayerController) height() uint {
 
 // IsVisible indicates if the layer view pane is currently initialized.
 func (controller *LayerController) IsVisible() bool {
-	if controller == nil {
-		return false
-	}
-	return true
+	return controller != nil
 }
 
 // PageDown moves to next page putting the cursor on top
@@ -148,13 +145,12 @@ func (controller *LayerController) PageDown() error {
 
 	if targetLayerIndex > len(controller.Layers) {
 		step -= targetLayerIndex - (len(controller.Layers) - 1)
-		targetLayerIndex = controller.LayerIndex + step
 	}
 
 	if step > 0 {
 		err := CursorStep(controller.gui, controller.view, step)
 		if err == nil {
-			controller.SetCursor(controller.LayerIndex + step)
+			return controller.SetCursor(controller.LayerIndex + step)
 		}
 	}
 	return nil
@@ -167,13 +163,12 @@ func (controller *LayerController) PageUp() error {
 
 	if targetLayerIndex < 0 {
 		step += targetLayerIndex
-		targetLayerIndex = controller.LayerIndex - step
 	}
 
 	if step > 0 {
 		err := CursorStep(controller.gui, controller.view, -step)
 		if err == nil {
-			controller.SetCursor(controller.LayerIndex - step)
+			return controller.SetCursor(controller.LayerIndex - step)
 		}
 	}
 	return nil
@@ -184,7 +179,7 @@ func (controller *LayerController) CursorDown() error {
 	if controller.LayerIndex < len(controller.Layers) {
 		err := CursorDown(controller.gui, controller.view)
 		if err == nil {
-			controller.SetCursor(controller.LayerIndex + 1)
+			return controller.SetCursor(controller.LayerIndex + 1)
 		}
 	}
 	return nil
@@ -195,7 +190,7 @@ func (controller *LayerController) CursorUp() error {
 	if controller.LayerIndex > 0 {
 		err := CursorUp(controller.gui, controller.view)
 		if err == nil {
-			controller.SetCursor(controller.LayerIndex - 1)
+			return controller.SetCursor(controller.LayerIndex - 1)
 		}
 	}
 	return nil
@@ -204,11 +199,14 @@ func (controller *LayerController) CursorUp() error {
 // SetCursor resets the cursor and orients the file tree view based on the given layer index.
 func (controller *LayerController) SetCursor(layer int) error {
 	controller.LayerIndex = layer
-	Controllers.Tree.setTreeByLayer(controller.getCompareIndexes())
-	Controllers.Details.Render()
-	controller.Render()
+	err := Controllers.Tree.setTreeByLayer(controller.getCompareIndexes())
+	if err != nil {
+		return err
+	}
 
-	return nil
+	_ = Controllers.Details.Render()
+
+	return controller.Render()
 }
 
 // currentLayer returns the Layer object currently selected.
@@ -285,7 +283,7 @@ func (controller *LayerController) Render() error {
 		headerStr := fmt.Sprintf("[%s]%s\n", title, strings.Repeat("─", width*2))
 		// headerStr += fmt.Sprintf("Cmp "+image.LayerFormat, "Layer Digest", "Size", "Command")
 		headerStr += fmt.Sprintf("Cmp"+image.LayerFormat, "Size", "Command")
-		fmt.Fprintln(controller.header, Formatting.Header(vtclean.Clean(headerStr, false)))
+		_, _ = fmt.Fprintln(controller.header, Formatting.Header(vtclean.Clean(headerStr, false)))
 
 		// update contents
 		controller.view.Clear()
@@ -297,9 +295,9 @@ func (controller *LayerController) Render() error {
 			compareBar := controller.renderCompareBar(idx)
 
 			if idx == controller.LayerIndex {
-				fmt.Fprintln(controller.view, compareBar+" "+Formatting.Selected(layerStr))
+				_, _ = fmt.Fprintln(controller.view, compareBar+" "+Formatting.Selected(layerStr))
 			} else {
-				fmt.Fprintln(controller.view, compareBar+" "+layerStr)
+				_, _ = fmt.Fprintln(controller.view, compareBar+" "+layerStr)
 			}
 
 		}

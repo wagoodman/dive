@@ -100,7 +100,10 @@ func (node *FileNode) Remove() error {
 		return fmt.Errorf("cannot remove the tree root")
 	}
 	for _, child := range node.Children {
-		child.Remove()
+		err := child.Remove()
+		if err != nil {
+			return err
+		}
 	}
 	delete(node.Parent.Children, node.Name)
 	node.Tree.Size--

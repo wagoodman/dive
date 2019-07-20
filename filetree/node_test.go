@@ -56,7 +56,8 @@ func TestRemoveChild(t *testing.T) {
 	forth := two.AddChild("forth", FileInfo{})
 	two.AddChild("fifth", FileInfo{})
 
-	forth.Remove()
+	err := forth.Remove()
+	checkError(t, err, "unable to setup test")
 
 	expected, actual = 4, tree.Size
 	if expected != actual {
@@ -67,7 +68,8 @@ func TestRemoveChild(t *testing.T) {
 		t.Errorf("Expected 'forth' node to be deleted.")
 	}
 
-	two.Remove()
+	err = two.Remove()
+	checkError(t, err, "unable to setup test")
 
 	expected, actual = 2, tree.Size
 	if expected != actual {
@@ -121,7 +123,8 @@ func TestDiffTypeFromAddedChildren(t *testing.T) {
 	node, _, _ = tree.AddPath("/usr/bin2", *BlankFileChangeInfo("/usr/bin2"))
 	node.Data.DiffType = Removed
 
-	tree.Root.Children["usr"].deriveDiffType(Unchanged)
+	err := tree.Root.Children["usr"].deriveDiffType(Unchanged)
+	checkError(t, err, "unable to setup test")
 
 	if tree.Root.Children["usr"].Data.DiffType != Changed {
 		t.Errorf("Expected Changed but got %v", tree.Root.Children["usr"].Data.DiffType)
@@ -129,17 +132,18 @@ func TestDiffTypeFromAddedChildren(t *testing.T) {
 }
 func TestDiffTypeFromRemovedChildren(t *testing.T) {
 	tree := NewFileTree()
-	node, _, _ := tree.AddPath("/usr", *BlankFileChangeInfo("/usr"))
+	_, _, _ = tree.AddPath("/usr", *BlankFileChangeInfo("/usr"))
 
 	info1 := BlankFileChangeInfo("/usr/.wh.bin")
-	node, _, _ = tree.AddPath("/usr/.wh.bin", *info1)
+	node, _, _ := tree.AddPath("/usr/.wh.bin", *info1)
 	node.Data.DiffType = Removed
 
 	info2 := BlankFileChangeInfo("/usr/.wh.bin2")
 	node, _, _ = tree.AddPath("/usr/.wh.bin2", *info2)
 	node.Data.DiffType = Removed
 
-	tree.Root.Children["usr"].deriveDiffType(Unchanged)
+	err := tree.Root.Children["usr"].deriveDiffType(Unchanged)
+	checkError(t, err, "unable to setup test")
 
 	if tree.Root.Children["usr"].Data.DiffType != Changed {
 		t.Errorf("Expected Changed but got %v", tree.Root.Children["usr"].Data.DiffType)
@@ -149,9 +153,12 @@ func TestDiffTypeFromRemovedChildren(t *testing.T) {
 
 func TestDirSize(t *testing.T) {
 	tree1 := NewFileTree()
-	tree1.AddPath("/etc/nginx/public1", FileInfo{Size: 100})
-	tree1.AddPath("/etc/nginx/thing1", FileInfo{Size: 200})
-	tree1.AddPath("/etc/nginx/public3/thing2", FileInfo{Size: 300})
+	_, _, err := tree1.AddPath("/etc/nginx/public1", FileInfo{Size: 100})
+	checkError(t, err, "unable to setup test")
+	_, _, err = tree1.AddPath("/etc/nginx/thing1", FileInfo{Size: 200})
+	checkError(t, err, "unable to setup test")
+	_, _, err = tree1.AddPath("/etc/nginx/public3/thing2", FileInfo{Size: 300})
+	checkError(t, err, "unable to setup test")
 
 	node, _ := tree1.GetNode("/etc/nginx")
 	expected, actual := "----------         0:0      600 B ", node.MetadataString()

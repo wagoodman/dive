@@ -64,7 +64,10 @@ func getHashFromReader(reader io.Reader) uint64 {
 			break
 		}
 
-		h.Write(buf[:n])
+		_, err = h.Write(buf[:n])
+		if err != nil {
+			logrus.Panic(err)
+		}
 	}
 
 	return h.Sum64()
