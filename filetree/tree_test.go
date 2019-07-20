@@ -172,6 +172,30 @@ func TestAddPath(t *testing.T) {
 
 }
 
+func TestAddWhiteoutPath(t *testing.T) {
+	tree := NewFileTree()
+	node, _, err := tree.AddPath("usr/local/lib/python3.7/site-packages/pip/.wh..wh..opq", FileInfo{})
+	if err != nil {
+		t.Errorf("expected no error but got: %v", err)
+	}
+	if node != nil {
+		t.Errorf("expected node to be nil, but got: %v", node)
+	}
+	expected :=
+		`└── usr
+    └── local
+        └── lib
+            └── python3.7
+                └── site-packages
+                    └── pip
+`
+	actual := tree.String(false)
+
+	if expected != actual {
+		t.Errorf("Expected tree string:\n--->%s<---\nGot:\n--->%s<---", expected, actual)
+	}
+}
+
 func TestRemovePath(t *testing.T) {
 	tree := NewFileTree()
 	_, _, err := tree.AddPath("/etc/nginx/nginx.conf", FileInfo{})
@@ -275,9 +299,12 @@ func TestStack(t *testing.T) {
 		t.Errorf("could not setup test: %v", err)
 	}
 	// ignore opaque whiteout files entirely
-	_, _, err = tree2.AddPath("/.wh..wh..opq", FileInfo{})
-	if err == nil {
-		t.Errorf("expected error on whiteout file add, got none")
+	node, _, err := tree2.AddPath("/.wh..wh..opq", FileInfo{})
+	if err != nil {
+		t.Errorf("expected no error on whiteout file add, but got %v", err)
+	}
+	if node != nil {
+		t.Errorf("expected no node on whiteout file add, but got %v", node)
 	}
 
 	err = tree1.Stack(tree2)
@@ -296,7 +323,7 @@ func TestStack(t *testing.T) {
         └── systemd
 `
 
-	node, err := tree1.GetNode(payloadKey)
+	node, err = tree1.GetNode(payloadKey)
 	if err != nil {
 		t.Errorf("Expected '%s' to still exist, but it doesn't", payloadKey)
 	}

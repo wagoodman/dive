@@ -241,6 +241,11 @@ func (tree *FileTree) AddPath(path string, data FileInfo) (*FileNode, []*FileNod
 		if node.Children[name] != nil {
 			node = node.Children[name]
 		} else {
+			// don't add paths that should be deleted
+			if strings.HasPrefix(name, doubleWhiteoutPrefix) {
+				return nil, addedNodes, nil
+			}
+
 			// don't attach the payload. The payload is destined for the
 			// Path's end node, not any intermediary node.
 			node = node.AddChild(name, FileInfo{})
@@ -248,7 +253,7 @@ func (tree *FileTree) AddPath(path string, data FileInfo) (*FileNode, []*FileNod
 
 			if node == nil {
 				// the child could not be added
-				return node, addedNodes, fmt.Errorf(fmt.Sprintf("could not add child node '%s'", name))
+				return node, addedNodes, fmt.Errorf(fmt.Sprintf("could not add child node: '%s' (path:'%s')", name, path))
 			}
 		}
 
