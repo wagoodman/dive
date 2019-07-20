@@ -87,12 +87,30 @@ func TestString(t *testing.T) {
 
 func TestStringBetween(t *testing.T) {
 	tree := NewFileTree()
-	tree.AddPath("/etc/nginx/nginx.conf", FileInfo{})
-	tree.AddPath("/etc/nginx/public", FileInfo{})
-	tree.AddPath("/var/run/systemd", FileInfo{})
-	tree.AddPath("/var/run/bashful", FileInfo{})
-	tree.AddPath("/tmp", FileInfo{})
-	tree.AddPath("/tmp/nonsense", FileInfo{})
+	_, _, err := tree.AddPath("/etc/nginx/nginx.conf", FileInfo{})
+	if err != nil {
+		t.Errorf("could not setup test: %v", err)
+	}
+	_, _, err = tree.AddPath("/etc/nginx/public", FileInfo{})
+	if err != nil {
+		t.Errorf("could not setup test: %v", err)
+	}
+	_, _, err = tree.AddPath("/var/run/systemd", FileInfo{})
+	if err != nil {
+		t.Errorf("could not setup test: %v", err)
+	}
+	_, _, err = tree.AddPath("/var/run/bashful", FileInfo{})
+	if err != nil {
+		t.Errorf("could not setup test: %v", err)
+	}
+	_, _, err = tree.AddPath("/tmp", FileInfo{})
+	if err != nil {
+		t.Errorf("could not setup test: %v", err)
+	}
+	_, _, err = tree.AddPath("/tmp/nonsense", FileInfo{})
+	if err != nil {
+		t.Errorf("could not setup test: %v", err)
+	}
 
 	expected :=
 		`│       └── public
@@ -109,12 +127,30 @@ func TestStringBetween(t *testing.T) {
 
 func TestAddPath(t *testing.T) {
 	tree := NewFileTree()
-	tree.AddPath("/etc/nginx/nginx.conf", FileInfo{})
-	tree.AddPath("/etc/nginx/public", FileInfo{})
-	tree.AddPath("/var/run/systemd", FileInfo{})
-	tree.AddPath("/var/run/bashful", FileInfo{})
-	tree.AddPath("/tmp", FileInfo{})
-	tree.AddPath("/tmp/nonsense", FileInfo{})
+	_, _, err := tree.AddPath("/etc/nginx/nginx.conf", FileInfo{})
+	if err != nil {
+		t.Errorf("could not setup test: %v", err)
+	}
+	_, _, err = tree.AddPath("/etc/nginx/public", FileInfo{})
+	if err != nil {
+		t.Errorf("could not setup test: %v", err)
+	}
+	_, _, err = tree.AddPath("/var/run/systemd", FileInfo{})
+	if err != nil {
+		t.Errorf("could not setup test: %v", err)
+	}
+	_, _, err = tree.AddPath("/var/run/bashful", FileInfo{})
+	if err != nil {
+		t.Errorf("could not setup test: %v", err)
+	}
+	_, _, err = tree.AddPath("/tmp", FileInfo{})
+	if err != nil {
+		t.Errorf("could not setup test: %v", err)
+	}
+	_, _, err = tree.AddPath("/tmp/nonsense", FileInfo{})
+	if err != nil {
+		t.Errorf("could not setup test: %v", err)
+	}
 
 	expected :=
 		`├── etc
@@ -136,17 +172,65 @@ func TestAddPath(t *testing.T) {
 
 }
 
+func TestAddWhiteoutPath(t *testing.T) {
+	tree := NewFileTree()
+	node, _, err := tree.AddPath("usr/local/lib/python3.7/site-packages/pip/.wh..wh..opq", FileInfo{})
+	if err != nil {
+		t.Errorf("expected no error but got: %v", err)
+	}
+	if node != nil {
+		t.Errorf("expected node to be nil, but got: %v", node)
+	}
+	expected :=
+		`└── usr
+    └── local
+        └── lib
+            └── python3.7
+                └── site-packages
+                    └── pip
+`
+	actual := tree.String(false)
+
+	if expected != actual {
+		t.Errorf("Expected tree string:\n--->%s<---\nGot:\n--->%s<---", expected, actual)
+	}
+}
+
 func TestRemovePath(t *testing.T) {
 	tree := NewFileTree()
-	tree.AddPath("/etc/nginx/nginx.conf", FileInfo{})
-	tree.AddPath("/etc/nginx/public", FileInfo{})
-	tree.AddPath("/var/run/systemd", FileInfo{})
-	tree.AddPath("/var/run/bashful", FileInfo{})
-	tree.AddPath("/tmp", FileInfo{})
-	tree.AddPath("/tmp/nonsense", FileInfo{})
+	_, _, err := tree.AddPath("/etc/nginx/nginx.conf", FileInfo{})
+	if err != nil {
+		t.Errorf("could not setup test: %v", err)
+	}
+	_, _, err = tree.AddPath("/etc/nginx/public", FileInfo{})
+	if err != nil {
+		t.Errorf("could not setup test: %v", err)
+	}
+	_, _, err = tree.AddPath("/var/run/systemd", FileInfo{})
+	if err != nil {
+		t.Errorf("could not setup test: %v", err)
+	}
+	_, _, err = tree.AddPath("/var/run/bashful", FileInfo{})
+	if err != nil {
+		t.Errorf("could not setup test: %v", err)
+	}
+	_, _, err = tree.AddPath("/tmp", FileInfo{})
+	if err != nil {
+		t.Errorf("could not setup test: %v", err)
+	}
+	_, _, err = tree.AddPath("/tmp/nonsense", FileInfo{})
+	if err != nil {
+		t.Errorf("could not setup test: %v", err)
+	}
 
-	tree.RemovePath("/var/run/bashful")
-	tree.RemovePath("/tmp")
+	err = tree.RemovePath("/var/run/bashful")
+	if err != nil {
+		t.Errorf("could not setup test: %v", err)
+	}
+	err = tree.RemovePath("/tmp")
+	if err != nil {
+		t.Errorf("could not setup test: %v", err)
+	}
 
 	expected :=
 		`├── etc
@@ -173,24 +257,57 @@ func TestStack(t *testing.T) {
 
 	tree1 := NewFileTree()
 
-	tree1.AddPath("/etc/nginx/public", FileInfo{})
-	tree1.AddPath(payloadKey, FileInfo{})
-	tree1.AddPath("/var/run/bashful", FileInfo{})
-	tree1.AddPath("/tmp", FileInfo{})
-	tree1.AddPath("/tmp/nonsense", FileInfo{})
+	_, _, err := tree1.AddPath("/etc/nginx/public", FileInfo{})
+	if err != nil {
+		t.Errorf("could not setup test: %v", err)
+	}
+	_, _, err = tree1.AddPath(payloadKey, FileInfo{})
+	if err != nil {
+		t.Errorf("could not setup test: %v", err)
+	}
+	_, _, err = tree1.AddPath("/var/run/bashful", FileInfo{})
+	if err != nil {
+		t.Errorf("could not setup test: %v", err)
+	}
+	_, _, err = tree1.AddPath("/tmp", FileInfo{})
+	if err != nil {
+		t.Errorf("could not setup test: %v", err)
+	}
+	_, _, err = tree1.AddPath("/tmp/nonsense", FileInfo{})
+	if err != nil {
+		t.Errorf("could not setup test: %v", err)
+	}
 
 	tree2 := NewFileTree()
 	// add new files
-	tree2.AddPath("/etc/nginx/nginx.conf", FileInfo{})
+	_, _, err = tree2.AddPath("/etc/nginx/nginx.conf", FileInfo{})
+	if err != nil {
+		t.Errorf("could not setup test: %v", err)
+	}
 	// modify current files
-	tree2.AddPath(payloadKey, payloadValue)
+	_, _, err = tree2.AddPath(payloadKey, payloadValue)
+	if err != nil {
+		t.Errorf("could not setup test: %v", err)
+	}
 	// whiteout the following files
-	tree2.AddPath("/var/run/.wh.bashful", FileInfo{})
-	tree2.AddPath("/.wh.tmp", FileInfo{})
+	_, _, err = tree2.AddPath("/var/run/.wh.bashful", FileInfo{})
+	if err != nil {
+		t.Errorf("could not setup test: %v", err)
+	}
+	_, _, err = tree2.AddPath("/.wh.tmp", FileInfo{})
+	if err != nil {
+		t.Errorf("could not setup test: %v", err)
+	}
 	// ignore opaque whiteout files entirely
-	tree2.AddPath("/.wh..wh..opq", FileInfo{})
+	node, _, err := tree2.AddPath("/.wh..wh..opq", FileInfo{})
+	if err != nil {
+		t.Errorf("expected no error on whiteout file add, but got %v", err)
+	}
+	if node != nil {
+		t.Errorf("expected no node on whiteout file add, but got %v", node)
+	}
 
-	err := tree1.Stack(tree2)
+	err = tree1.Stack(tree2)
 
 	if err != nil {
 		t.Errorf("Could not stack refTrees: %v", err)
@@ -206,12 +323,12 @@ func TestStack(t *testing.T) {
         └── systemd
 `
 
-	node, err := tree1.GetNode(payloadKey)
+	node, err = tree1.GetNode(payloadKey)
 	if err != nil {
 		t.Errorf("Expected '%s' to still exist, but it doesn't", payloadKey)
 	}
 
-	if node.Data.FileInfo.Path != payloadValue.Path {
+	if node == nil || node.Data.FileInfo.Path != payloadValue.Path {
 		t.Errorf("Expected '%s' value to be %+v but got %+v", payloadKey, payloadValue, node.Data.FileInfo)
 	}
 
@@ -225,15 +342,39 @@ func TestStack(t *testing.T) {
 
 func TestCopy(t *testing.T) {
 	tree := NewFileTree()
-	tree.AddPath("/etc/nginx/nginx.conf", FileInfo{})
-	tree.AddPath("/etc/nginx/public", FileInfo{})
-	tree.AddPath("/var/run/systemd", FileInfo{})
-	tree.AddPath("/var/run/bashful", FileInfo{})
-	tree.AddPath("/tmp", FileInfo{})
-	tree.AddPath("/tmp/nonsense", FileInfo{})
+	_, _, err := tree.AddPath("/etc/nginx/nginx.conf", FileInfo{})
+	if err != nil {
+		t.Errorf("could not setup test: %v", err)
+	}
+	_, _, err = tree.AddPath("/etc/nginx/public", FileInfo{})
+	if err != nil {
+		t.Errorf("could not setup test: %v", err)
+	}
+	_, _, err = tree.AddPath("/var/run/systemd", FileInfo{})
+	if err != nil {
+		t.Errorf("could not setup test: %v", err)
+	}
+	_, _, err = tree.AddPath("/var/run/bashful", FileInfo{})
+	if err != nil {
+		t.Errorf("could not setup test: %v", err)
+	}
+	_, _, err = tree.AddPath("/tmp", FileInfo{})
+	if err != nil {
+		t.Errorf("could not setup test: %v", err)
+	}
+	_, _, err = tree.AddPath("/tmp/nonsense", FileInfo{})
+	if err != nil {
+		t.Errorf("could not setup test: %v", err)
+	}
 
-	tree.RemovePath("/var/run/bashful")
-	tree.RemovePath("/tmp")
+	err = tree.RemovePath("/var/run/bashful")
+	if err != nil {
+		t.Errorf("could not setup test: %v", err)
+	}
+	err = tree.RemovePath("/tmp")
+	if err != nil {
+		t.Errorf("could not setup test: %v", err)
+	}
 
 	expected :=
 		`├── etc
@@ -265,10 +406,19 @@ func TestCompareWithNoChanges(t *testing.T) {
 			TypeFlag: 1,
 			hash:     123,
 		}
-		lowerTree.AddPath(value, fakeData)
-		upperTree.AddPath(value, fakeData)
+		_, _, err := lowerTree.AddPath(value, fakeData)
+		if err != nil {
+			t.Errorf("could not setup test: %v", err)
+		}
+		_, _, err = upperTree.AddPath(value, fakeData)
+		if err != nil {
+			t.Errorf("could not setup test: %v", err)
+		}
 	}
-	lowerTree.CompareAndMark(upperTree)
+	err := lowerTree.CompareAndMark(upperTree)
+	if err != nil {
+		t.Errorf("could not setup test: %v", err)
+	}
 	asserter := func(n *FileNode) error {
 		if n.Path() == "/" {
 			return nil
@@ -278,7 +428,7 @@ func TestCompareWithNoChanges(t *testing.T) {
 		}
 		return nil
 	}
-	err := lowerTree.VisitDepthChildFirst(asserter, nil)
+	err = lowerTree.VisitDepthChildFirst(asserter, nil)
 	if err != nil {
 		t.Error(err)
 	}
@@ -291,19 +441,25 @@ func TestCompareWithAdds(t *testing.T) {
 	upperPaths := [...]string{"/etc", "/etc/sudoers", "/usr", "/etc/hosts", "/usr/bin", "/usr/bin/bash", "/a/new/path"}
 
 	for _, value := range lowerPaths {
-		lowerTree.AddPath(value, FileInfo{
+		_, _, err := lowerTree.AddPath(value, FileInfo{
 			Path:     value,
 			TypeFlag: 1,
 			hash:     123,
 		})
+		if err != nil {
+			t.Errorf("could not setup test: %v", err)
+		}
 	}
 
 	for _, value := range upperPaths {
-		upperTree.AddPath(value, FileInfo{
+		_, _, err := upperTree.AddPath(value, FileInfo{
 			Path:     value,
 			TypeFlag: 1,
 			hash:     123,
 		})
+		if err != nil {
+			t.Errorf("could not setup test: %v", err)
+		}
 	}
 
 	failedAssertions := []error{}
@@ -351,39 +507,51 @@ func TestCompareWithChanges(t *testing.T) {
 	changedPaths := []string{"/etc", "/usr", "/etc/hosts", "/etc/sudoers", "/usr/bin"}
 
 	for _, value := range changedPaths {
-		lowerTree.AddPath(value, FileInfo{
+		_, _, err := lowerTree.AddPath(value, FileInfo{
 			Path:     value,
 			TypeFlag: 1,
 			hash:     123,
 		})
-		upperTree.AddPath(value, FileInfo{
+		if err != nil {
+			t.Errorf("could not setup test: %v", err)
+		}
+		_, _, err = upperTree.AddPath(value, FileInfo{
 			Path:     value,
 			TypeFlag: 1,
 			hash:     456,
 		})
+		if err != nil {
+			t.Errorf("could not setup test: %v", err)
+		}
 	}
 
 	chmodPath := "/etc/non-data-change"
 
-	lowerTree.AddPath(chmodPath, FileInfo{
+	_, _, err := lowerTree.AddPath(chmodPath, FileInfo{
 		Path:     chmodPath,
 		TypeFlag: 1,
 		hash:     123,
 		Mode:     0,
 	})
+	if err != nil {
+		t.Errorf("could not setup test: %v", err)
+	}
 
-	upperTree.AddPath(chmodPath, FileInfo{
+	_, _, err = upperTree.AddPath(chmodPath, FileInfo{
 		Path:     chmodPath,
 		TypeFlag: 1,
 		hash:     123,
 		Mode:     1,
 	})
+	if err != nil {
+		t.Errorf("could not setup test: %v", err)
+	}
 
 	changedPaths = append(changedPaths, chmodPath)
 
 	chownPath := "/etc/non-data-change-2"
 
-	lowerTree.AddPath(chmodPath, FileInfo{
+	_, _, err = lowerTree.AddPath(chmodPath, FileInfo{
 		Path:     chownPath,
 		TypeFlag: 1,
 		hash:     123,
@@ -391,8 +559,11 @@ func TestCompareWithChanges(t *testing.T) {
 		Gid:      0,
 		Uid:      0,
 	})
+	if err != nil {
+		t.Errorf("could not setup test: %v", err)
+	}
 
-	upperTree.AddPath(chmodPath, FileInfo{
+	_, _, err = upperTree.AddPath(chmodPath, FileInfo{
 		Path:     chownPath,
 		TypeFlag: 1,
 		hash:     123,
@@ -400,10 +571,17 @@ func TestCompareWithChanges(t *testing.T) {
 		Gid:      12,
 		Uid:      12,
 	})
+	if err != nil {
+		t.Errorf("could not setup test: %v", err)
+	}
 
 	changedPaths = append(changedPaths, chownPath)
 
-	lowerTree.CompareAndMark(upperTree)
+	err = lowerTree.CompareAndMark(upperTree)
+	if err != nil {
+		t.Errorf("unable to compare and mark: %+v", err)
+	}
+
 	failedAssertions := []error{}
 	asserter := func(n *FileNode) error {
 		p := n.Path()
@@ -420,7 +598,7 @@ func TestCompareWithChanges(t *testing.T) {
 		}
 		return nil
 	}
-	err := lowerTree.VisitDepthChildFirst(asserter, nil)
+	err = lowerTree.VisitDepthChildFirst(asserter, nil)
 	if err != nil {
 		t.Errorf("Expected no errors when visiting nodes, got: %+v", err)
 	}
@@ -446,7 +624,10 @@ func TestCompareWithRemoves(t *testing.T) {
 			TypeFlag: 1,
 			hash:     123,
 		}
-		lowerTree.AddPath(value, fakeData)
+		_, _, err := lowerTree.AddPath(value, fakeData)
+		if err != nil {
+			t.Errorf("could not setup test: %v", err)
+		}
 	}
 
 	for _, value := range upperPaths {
@@ -455,10 +636,16 @@ func TestCompareWithRemoves(t *testing.T) {
 			TypeFlag: 1,
 			hash:     123,
 		}
-		upperTree.AddPath(value, fakeData)
+		_, _, err := upperTree.AddPath(value, fakeData)
+		if err != nil {
+			t.Errorf("could not setup test: %v", err)
+		}
 	}
 
-	lowerTree.CompareAndMark(upperTree)
+	err := lowerTree.CompareAndMark(upperTree)
+	if err != nil {
+		t.Errorf("could not setup test: %v", err)
+	}
 	failedAssertions := []error{}
 	asserter := func(n *FileNode) error {
 		p := n.Path()
@@ -479,7 +666,7 @@ func TestCompareWithRemoves(t *testing.T) {
 		}
 		return nil
 	}
-	err := lowerTree.VisitDepthChildFirst(asserter, nil)
+	err = lowerTree.VisitDepthChildFirst(asserter, nil)
 	if err != nil {
 		t.Errorf("Expected no errors when visiting nodes, got: %+v", err)
 	}
@@ -495,15 +682,39 @@ func TestCompareWithRemoves(t *testing.T) {
 
 func TestStackRange(t *testing.T) {
 	tree := NewFileTree()
-	tree.AddPath("/etc/nginx/nginx.conf", FileInfo{})
-	tree.AddPath("/etc/nginx/public", FileInfo{})
-	tree.AddPath("/var/run/systemd", FileInfo{})
-	tree.AddPath("/var/run/bashful", FileInfo{})
-	tree.AddPath("/tmp", FileInfo{})
-	tree.AddPath("/tmp/nonsense", FileInfo{})
+	_, _, err := tree.AddPath("/etc/nginx/nginx.conf", FileInfo{})
+	if err != nil {
+		t.Errorf("could not setup test: %v", err)
+	}
+	_, _, err = tree.AddPath("/etc/nginx/public", FileInfo{})
+	if err != nil {
+		t.Errorf("could not setup test: %v", err)
+	}
+	_, _, err = tree.AddPath("/var/run/systemd", FileInfo{})
+	if err != nil {
+		t.Errorf("could not setup test: %v", err)
+	}
+	_, _, err = tree.AddPath("/var/run/bashful", FileInfo{})
+	if err != nil {
+		t.Errorf("could not setup test: %v", err)
+	}
+	_, _, err = tree.AddPath("/tmp", FileInfo{})
+	if err != nil {
+		t.Errorf("could not setup test: %v", err)
+	}
+	_, _, err = tree.AddPath("/tmp/nonsense", FileInfo{})
+	if err != nil {
+		t.Errorf("could not setup test: %v", err)
+	}
 
-	tree.RemovePath("/var/run/bashful")
-	tree.RemovePath("/tmp")
+	err = tree.RemovePath("/var/run/bashful")
+	if err != nil {
+		t.Errorf("could not setup test: %v", err)
+	}
+	err = tree.RemovePath("/tmp")
+	if err != nil {
+		t.Errorf("could not setup test: %v", err)
+	}
 
 	lowerTree := NewFileTree()
 	upperTree := NewFileTree()
@@ -516,7 +727,10 @@ func TestStackRange(t *testing.T) {
 			TypeFlag: 1,
 			hash:     123,
 		}
-		lowerTree.AddPath(value, fakeData)
+		_, _, err = lowerTree.AddPath(value, fakeData)
+		if err != nil {
+			t.Errorf("could not setup test: %v", err)
+		}
 	}
 
 	for _, value := range upperPaths {
@@ -525,7 +739,10 @@ func TestStackRange(t *testing.T) {
 			TypeFlag: 1,
 			hash:     456,
 		}
-		upperTree.AddPath(value, fakeData)
+		_, _, err = upperTree.AddPath(value, fakeData)
+		if err != nil {
+			t.Errorf("could not setup test: %v", err)
+		}
 	}
 	trees := []*FileTree{lowerTree, upperTree, tree}
 	StackTreeRange(trees, 0, 2)
@@ -548,12 +765,18 @@ func TestRemoveOnIterate(t *testing.T) {
 		}
 	}
 
-	tree.VisitDepthChildFirst(func(node *FileNode) error {
+	err := tree.VisitDepthChildFirst(func(node *FileNode) error {
 		if node.Data.ViewInfo.Hidden {
-			tree.RemovePath(node.Path())
+			err := tree.RemovePath(node.Path())
+			if err != nil {
+				t.Errorf("could not setup test: %v", err)
+			}
 		}
 		return nil
 	}, nil)
+	if err != nil {
+		t.Errorf("could not setup test: %v", err)
+	}
 
 	expected :=
 		`└── usr

@@ -2,7 +2,6 @@ package ui
 
 import (
 	"errors"
-	"fmt"
 	"github.com/fatih/color"
 	"github.com/jroimartin/gocui"
 	"github.com/sirupsen/logrus"
@@ -19,17 +18,17 @@ const debug = false
 // var onExit func()
 
 // debugPrint writes the given string to the debug pane (if the debug pane is enabled)
-func debugPrint(s string) {
-	if debug && Controllers.Tree != nil && Controllers.Tree.gui != nil {
-		v, _ := Controllers.Tree.gui.View("debug")
-		if v != nil {
-			if len(v.BufferLines()) > 20 {
-				v.Clear()
-			}
-			_, _ = fmt.Fprintln(v, s)
-		}
-	}
-}
+// func debugPrint(s string) {
+// 	if Controllers.Tree != nil && Controllers.Tree.gui != nil {
+// 		v, _ := Controllers.Tree.gui.View("debug")
+// 		if v != nil {
+// 			if len(v.BufferLines()) > 20 {
+// 				v.Clear()
+// 			}
+// 			_, _ = fmt.Fprintln(v, s)
+// 		}
+// 	}
+// }
 
 // Formatting defines standard functions for formatting UI sections.
 var Formatting struct {
@@ -88,7 +87,10 @@ func toggleView(g *gocui.Gui, v *gocui.View) (err error) {
 func toggleFilterView(g *gocui.Gui, v *gocui.View) error {
 	// delete all user input from the tree view
 	Controllers.Filter.view.Clear()
-	Controllers.Filter.view.SetCursor(0, 0)
+	err := Controllers.Filter.view.SetCursor(0, 0)
+	if err != nil {
+		return err
+	}
 
 	// toggle hiding
 	Controllers.Filter.hidden = !Controllers.Filter.hidden
@@ -101,7 +103,7 @@ func toggleFilterView(g *gocui.Gui, v *gocui.View) error {
 		Update()
 		Render()
 	} else {
-		toggleView(g, v)
+		return toggleView(g, v)
 	}
 
 	return nil
@@ -124,7 +126,7 @@ func CursorStep(g *gocui.Gui, v *gocui.View, step int) error {
 	// if there isn't a next line
 	line, err := v.Line(cy + step)
 	if err != nil {
-		// todo: handle error
+		return err
 	}
 	if len(line) == 0 {
 		return errors.New("unable to move the cursor, empty line")
@@ -176,7 +178,7 @@ func isNewView(errs ...error) bool {
 		if err == nil {
 			return false
 		}
-		if err != nil && err != gocui.ErrUnknownView {
+		if err != gocui.ErrUnknownView {
 			return false
 		}
 	}
@@ -244,20 +246,20 @@ func layout(g *gocui.Gui) error {
 	view, viewErr = g.SetView(Controllers.Layer.Name, -1, -1+headerRows, splitCols, layersHeight)
 	header, headerErr = g.SetView(Controllers.Layer.Name+"header", -1, -1, splitCols, headerRows)
 	if isNewView(viewErr, headerErr) {
-		Controllers.Layer.Setup(view, header)
+		_ = Controllers.Layer.Setup(view, header)
 
 		if _, err = g.SetCurrentView(Controllers.Layer.Name); err != nil {
 			return err
 		}
 		// since we are selecting the view, we should rerender to indicate it is selected
-		Controllers.Layer.Render()
+		_ = Controllers.Layer.Render()
 	}
 
 	// Details
 	view, viewErr = g.SetView(Controllers.Details.Name, -1, -1+layersHeight+headerRows, splitCols, maxY-bottomRows)
 	header, headerErr = g.SetView(Controllers.Details.Name+"header", -1, -1+layersHeight, splitCols, layersHeight+headerRows)
 	if isNewView(viewErr, headerErr) {
-		Controllers.Details.Setup(view, header)
+		_ = Controllers.Details.Setup(view, header)
 	}
 
 	// Filetree
@@ -268,21 +270,21 @@ func layout(g *gocui.Gui) error {
 	view, viewErr = g.SetView(Controllers.Tree.Name, splitCols, -1+headerRows-offset, debugCols, maxY-bottomRows)
 	header, headerErr = g.SetView(Controllers.Tree.Name+"header", splitCols, -1, debugCols, headerRows-offset)
 	if isNewView(viewErr, headerErr) {
-		Controllers.Tree.Setup(view, header)
+		_ = Controllers.Tree.Setup(view, header)
 	}
-	Controllers.Tree.onLayoutChange(resized)
+	_ = Controllers.Tree.onLayoutChange(resized)
 
 	// Status Bar
 	view, viewErr = g.SetView(Controllers.Status.Name, -1, maxY-statusBarHeight-statusBarIndex, maxX, maxY-(statusBarIndex-1))
 	if isNewView(viewErr, headerErr) {
-		Controllers.Status.Setup(view, nil)
+		_ = Controllers.Status.Setup(view, nil)
 	}
 
 	// Filter Bar
 	view, viewErr = g.SetView(Controllers.Filter.Name, len(Controllers.Filter.headerStr)-1, maxY-filterBarHeight-filterBarIndex, maxX, maxY-(filterBarIndex-1))
 	header, headerErr = g.SetView(Controllers.Filter.Name+"header", -1, maxY-filterBarHeight-filterBarIndex, len(Controllers.Filter.headerStr), maxY-(filterBarIndex-1))
 	if isNewView(viewErr, headerErr) {
-		Controllers.Filter.Setup(view, header)
+		_ = Controllers.Filter.Setup(view, header)
 	}
 
 	return nil
@@ -291,7 +293,7 @@ func layout(g *gocui.Gui) error {
 // Update refreshes the state objects for future rendering.
 func Update() {
 	for _, view := range Controllers.lookup {
-		view.Update()
+		_ = view.Update()
 	}
 }
 
@@ -299,7 +301,7 @@ func Update() {
 func Render() {
 	for _, view := range Controllers.lookup {
 		if view.IsVisible() {
-			view.Render()
+			_ = view.Render()
 		}
 	}
 }

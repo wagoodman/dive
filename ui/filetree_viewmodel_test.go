@@ -218,9 +218,10 @@ func TestFileTreePageDown(t *testing.T) {
 	width, height := 100, 10
 	vm.Setup(0, height)
 	vm.ShowAttributes = true
-	vm.Update(nil, width, height)
+	err := vm.Update(nil, width, height)
+	checkError(t, err, "unable to update")
 
-	err := vm.PageDown()
+	err = vm.PageDown()
 	checkError(t, err, "unable to page down")
 
 	err = vm.PageDown()
@@ -240,9 +241,10 @@ func TestFileTreePageUp(t *testing.T) {
 	vm.ShowAttributes = true
 
 	// these operations have a render step for intermediate results, which require at least one update to be done first
-	vm.Update(nil, width, height)
+	err := vm.Update(nil, width, height)
+	checkError(t, err, "unable to update")
 
-	err := vm.PageDown()
+	err = vm.PageDown()
 	checkError(t, err, "unable to page down")
 
 	err = vm.PageDown()
@@ -319,16 +321,13 @@ func TestFileTreeHideAddedRemovedModified(t *testing.T) {
 	}
 
 	// hide added files
-	err = vm.toggleShowDiffType(filetree.Added)
-	checkError(t, err, "unable hide added files")
+	vm.toggleShowDiffType(filetree.Added)
 
 	// hide modified files
-	err = vm.toggleShowDiffType(filetree.Changed)
-	checkError(t, err, "unable hide added files")
+	vm.toggleShowDiffType(filetree.Changed)
 
 	// hide removed files
-	err = vm.toggleShowDiffType(filetree.Removed)
-	checkError(t, err, "unable hide added files")
+	vm.toggleShowDiffType(filetree.Removed)
 
 	runTestCase(t, vm, width, height, nil)
 }
@@ -351,8 +350,7 @@ func TestFileTreeHideUnmodified(t *testing.T) {
 	}
 
 	// hide unmodified files
-	err = vm.toggleShowDiffType(filetree.Unchanged)
-	checkError(t, err, "unable hide added files")
+	vm.toggleShowDiffType(filetree.Unchanged)
 
 	runTestCase(t, vm, width, height, nil)
 }
@@ -375,8 +373,7 @@ func TestFileTreeHideTypeWithFilter(t *testing.T) {
 	}
 
 	// hide added files
-	err = vm.toggleShowDiffType(filetree.Added)
-	checkError(t, err, "unable hide added files")
+	vm.toggleShowDiffType(filetree.Added)
 
 	regex, err := regexp.Compile("saved")
 	if err != nil {

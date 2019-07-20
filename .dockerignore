@@ -1,8 +1,10 @@
 /.git
 /.data
+/.cover
 /dist
 /ui
 /utils
 /image
 /cmd
 /build
+coverage.txt

@@ -48,9 +48,7 @@ func (controller *FilterController) Setup(v *gocui.View, header *gocui.View) err
 	controller.header.Wrap = false
 	controller.header.Frame = false
 
-	controller.Render()
-
-	return nil
+	return controller.Render()
 }
 
 // IsVisible indicates if the filter view pane is currently initialized
@@ -89,8 +87,8 @@ func (controller *FilterController) Edit(v *gocui.View, key gocui.Key, ch rune, 
 		v.EditDelete(true)
 	}
 	if Controllers.Tree != nil {
-		Controllers.Tree.Update()
-		Controllers.Tree.Render()
+		_ = Controllers.Tree.Update()
+		_ = Controllers.Tree.Render()
 	}
 }
 
@@ -103,9 +101,9 @@ func (controller *FilterController) Update() error {
 func (controller *FilterController) Render() error {
 	controller.gui.Update(func(g *gocui.Gui) error {
 		// render the header
-		fmt.Fprintln(controller.header, Formatting.Header(controller.headerStr))
+		_, err := fmt.Fprintln(controller.header, Formatting.Header(controller.headerStr))
 
-		return nil
+		return err
 	})
 	return nil
 }
