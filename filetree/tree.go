@@ -334,7 +334,7 @@ func (tree *FileTree) CompareAndMark(upper *FileTree) error {
 			if err != nil {
 				return err
 			}
-		} else if pair.lowerNode.Data.DiffType == Unchanged {
+		} else if pair.lowerNode.Data.DiffType == Unmodified {
 			err = pair.lowerNode.deriveDiffType(pair.tentative)
 			if err != nil {
 				return err

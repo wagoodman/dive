@@ -423,7 +423,7 @@ func TestCompareWithNoChanges(t *testing.T) {
 		if n.Path() == "/" {
 			return nil
 		}
-		if (n.Data.DiffType) != Unchanged {
+		if (n.Data.DiffType) != Unmodified {
 			t.Errorf("Expecting node at %s to have DiffType unchanged, but had %v", n.Path(), n.Data.DiffType)
 		}
 		return nil
@@ -477,11 +477,11 @@ func TestCompareWithAdds(t *testing.T) {
 				failedAssertions = append(failedAssertions, err)
 			}
 		} else if stringInSlice(p, []string{"/usr/bin", "/usr"}) {
-			if err := AssertDiffType(n, Changed); err != nil {
+			if err := AssertDiffType(n, Modified); err != nil {
 				failedAssertions = append(failedAssertions, err)
 			}
 		} else {
-			if err := AssertDiffType(n, Unchanged); err != nil {
+			if err := AssertDiffType(n, Unmodified); err != nil {
 				failedAssertions = append(failedAssertions, err)
 			}
 		}
@@ -588,11 +588,11 @@ func TestCompareWithChanges(t *testing.T) {
 		if p == "/" {
 			return nil
 		} else if stringInSlice(p, changedPaths) {
-			if err := AssertDiffType(n, Changed); err != nil {
+			if err := AssertDiffType(n, Modified); err != nil {
 				failedAssertions = append(failedAssertions, err)
 			}
 		} else {
-			if err := AssertDiffType(n, Unchanged); err != nil {
+			if err := AssertDiffType(n, Unmodified); err != nil {
 				failedAssertions = append(failedAssertions, err)
 			}
 		}
@@ -656,11 +656,11 @@ func TestCompareWithRemoves(t *testing.T) {
 				failedAssertions = append(failedAssertions, err)
 			}
 		} else if stringInSlice(p, []string{"/usr", "/root"}) {
-			if err := AssertDiffType(n, Changed); err != nil {
+			if err := AssertDiffType(n, Modified); err != nil {
 				failedAssertions = append(failedAssertions, err)
 			}
 		} else {
-			if err := AssertDiffType(n, Unchanged); err != nil {
+			if err := AssertDiffType(n, Unmodified); err != nil {
 				failedAssertions = append(failedAssertions, err)
 			}
 		}

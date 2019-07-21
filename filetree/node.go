@@ -17,10 +17,10 @@ const (
 )
 
 var diffTypeColor = map[DiffType]*color.Color{
-	Added:     color.New(color.FgGreen),
-	Removed:   color.New(color.FgRed),
-	Changed:   color.New(color.FgYellow),
-	Unchanged: color.New(color.Reset),
+	Added:      color.New(color.FgGreen),
+	Removed:    color.New(color.FgRed),
+	Modified:   color.New(color.FgYellow),
+	Unmodified: color.New(color.Reset),
 }
 
 // NewNode creates a new FileNode relative to the given parent node with a payload.
@@ -292,7 +292,7 @@ func (node *FileNode) AssignDiffType(diffType DiffType) error {
 // compare the current node against the given node, returning a definitive DiffType.
 func (node *FileNode) compare(other *FileNode) DiffType {
 	if node == nil && other == nil {
-		return Unchanged
+		return Unmodified
 	}
 
 	if node == nil && other != nil {

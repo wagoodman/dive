@@ -115,7 +115,7 @@ func TestIsWhiteout(t *testing.T) {
 func TestDiffTypeFromAddedChildren(t *testing.T) {
 	tree := NewFileTree()
 	node, _, _ := tree.AddPath("/usr", *BlankFileChangeInfo("/usr"))
-	node.Data.DiffType = Unchanged
+	node.Data.DiffType = Unmodified
 
 	node, _, _ = tree.AddPath("/usr/bin", *BlankFileChangeInfo("/usr/bin"))
 	node.Data.DiffType = Added
@@ -123,11 +123,11 @@ func TestDiffTypeFromAddedChildren(t *testing.T) {
 	node, _, _ = tree.AddPath("/usr/bin2", *BlankFileChangeInfo("/usr/bin2"))
 	node.Data.DiffType = Removed
 
-	err := tree.Root.Children["usr"].deriveDiffType(Unchanged)
+	err := tree.Root.Children["usr"].deriveDiffType(Unmodified)
 	checkError(t, err, "unable to setup test")
 
-	if tree.Root.Children["usr"].Data.DiffType != Changed {
-		t.Errorf("Expected Changed but got %v", tree.Root.Children["usr"].Data.DiffType)
+	if tree.Root.Children["usr"].Data.DiffType != Modified {
+		t.Errorf("Expected Modified but got %v", tree.Root.Children["usr"].Data.DiffType)
 	}
 }
 func TestDiffTypeFromRemovedChildren(t *testing.T) {
@@ -142,11 +142,11 @@ func TestDiffTypeFromRemovedChildren(t *testing.T) {
 	node, _, _ = tree.AddPath("/usr/.wh.bin2", *info2)
 	node.Data.DiffType = Removed
 
-	err := tree.Root.Children["usr"].deriveDiffType(Unchanged)
+	err := tree.Root.Children["usr"].deriveDiffType(Unmodified)
 	checkError(t, err, "unable to setup test")
 
-	if tree.Root.Children["usr"].Data.DiffType != Changed {
-		t.Errorf("Expected Changed but got %v", tree.Root.Children["usr"].Data.DiffType)
+	if tree.Root.Children["usr"].Data.DiffType != Modified {
+		t.Errorf("Expected Modified but got %v", tree.Root.Children["usr"].Data.DiffType)
 	}
 
 }

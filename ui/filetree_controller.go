@@ -35,7 +35,7 @@ type FileTreeController struct {
 	keybindingToggleAdded       []keybinding.Key
 	keybindingToggleRemoved     []keybinding.Key
 	keybindingToggleModified    []keybinding.Key
-	keybindingToggleUnchanged   []keybinding.Key
+	keybindingToggleUnmodified  []keybinding.Key
 	keybindingPageDown          []keybinding.Key
 	keybindingPageUp            []keybinding.Key
 }
@@ -80,9 +80,13 @@ func NewFileTreeController(name string, gui *gocui.Gui, tree *filetree.FileTree,
 		logrus.Error(err)
 	}
 
-	controller.keybindingToggleUnchanged, err = keybinding.ParseAll(viper.GetString("keybinding.toggle-unchanged-files"))
+	// support legacy behavior first, then use default behavior
+	controller.keybindingToggleUnmodified, err = keybinding.ParseAll(viper.GetString("keybinding.toggle-unchanged-files"))
 	if err != nil {
-		logrus.Error(err)
+		controller.keybindingToggleUnmodified, err = keybinding.ParseAll(viper.GetString("keybinding.toggle-unmodified-files"))
+		if err != nil {
+			logrus.Error(err)
+		}
 	}
 
 	controller.keybindingPageUp, err = keybinding.ParseAll(viper.GetString("keybinding.page-up"))
@@ -162,12 +166,12 @@ func (controller *FileTreeController) Setup(v *gocui.View, header *gocui.View) e
 		}
 	}
 	for _, key := range controller.keybindingToggleModified {
-		if err := controller.gui.SetKeybinding(controller.Name, key.Value, key.Modifier, func(*gocui.Gui, *gocui.View) error { return controller.toggleShowDiffType(filetree.Changed) }); err != nil {
+		if err := controller.gui.SetKeybinding(controller.Name, key.Value, key.Modifier, func(*gocui.Gui, *gocui.View) error { return controller.toggleShowDiffType(filetree.Modified) }); err != nil {
 			return err
 		}
 	}
-	for _, key := range controller.keybindingToggleUnchanged {
-		if err := controller.gui.SetKeybinding(controller.Name, key.Value, key.Modifier, func(*gocui.Gui, *gocui.View) error { return controller.toggleShowDiffType(filetree.Unchanged) }); err != nil {
+	for _, key := range controller.keybindingToggleUnmodified {
+		if err := controller.gui.SetKeybinding(controller.Name, key.Value, key.Modifier, func(*gocui.Gui, *gocui.View) error { return controller.toggleShowDiffType(filetree.Unmodified) }); err != nil {
 			return err
 		}
 	}
@@ -392,7 +396,7 @@ func (controller *FileTreeController) KeyHelp() string {
 		renderStatusOption(controller.keybindingToggleCollapseAll[0].String(), "Collapse all dir", false) +
 		renderStatusOption(controller.keybindingToggleAdded[0].String(), "Added", !controller.vm.HiddenDiffTypes[filetree.Added]) +
 		renderStatusOption(controller.keybindingToggleRemoved[0].String(), "Removed", !controller.vm.HiddenDiffTypes[filetree.Removed]) +
-		renderStatusOption(controller.keybindingToggleModified[0].String(), "Modified", !controller.vm.HiddenDiffTypes[filetree.Changed]) +
-		renderStatusOption(controller.keybindingToggleUnchanged[0].String(), "Unmodified", !controller.vm.HiddenDiffTypes[filetree.Unchanged]) +
+		renderStatusOption(controller.keybindingToggleModified[0].String(), "Modified", !controller.vm.HiddenDiffTypes[filetree.Modified]) +
+		renderStatusOption(controller.keybindingToggleUnmodified[0].String(), "Unmodified", !controller.vm.HiddenDiffTypes[filetree.Unmodified]) +
 		renderStatusOption(controller.keybindingToggleAttributes[0].String(), "Attributes", controller.vm.ShowAttributes)
 }
