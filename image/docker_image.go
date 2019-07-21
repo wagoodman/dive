@@ -199,7 +199,7 @@ func (image *dockerImageAnalyzer) Analyze() (*AnalysisResult, error) {
 			tree:    image.trees[layerIdx],
 			tarPath: manifest.LayerTarPaths[tarPathIdx],
 		}
-		image.layers[layerIdx].history.Size = uint64(tree.FileSize)
+		image.layers[layerIdx].history.Size = tree.FileSize
 
 		tarPathIdx++
 	}
@@ -229,7 +229,7 @@ func (image *dockerImageAnalyzer) Analyze() (*AnalysisResult, error) {
 		UserSizeByes:      userSizeBytes,
 		SizeBytes:         sizeBytes,
 		WastedBytes:       wastedBytes,
-		WastedUserPercent: float64(float64(wastedBytes) / float64(userSizeBytes)),
+		WastedUserPercent: float64(wastedBytes) / float64(userSizeBytes),
 		Inefficiencies:    inefficiencies,
 	}, nil
 }
