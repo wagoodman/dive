@@ -1,6 +1,6 @@
 # dive
 [![Go Report Card](https://goreportcard.com/badge/github.com/wagoodman/dive)](https://goreportcard.com/report/github.com/wagoodman/dive)
-[![Pipeline Status](https://api.travis-ci.org/wagoodman/dive.svg?branch=master)](https://travis-ci.org/wagoodman/dive)
+[![Pipeline Status](https://gitlab.com/wagoodman/dive/badges/master/pipeline.svg)](https://gitlab.com/wagoodman/dive/pipelines?scope=branches&page=1)
 
 **A tool for exploring a docker image, layer contents, and discovering ways to shrink your Docker image size.**
 
