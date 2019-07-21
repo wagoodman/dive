@@ -2,9 +2,10 @@ package utils
 
 import (
 	"fmt"
+	"os"
+
 	"github.com/jroimartin/gocui"
 	"github.com/sirupsen/logrus"
-	"os"
 )
 
 var ui *gocui.Gui

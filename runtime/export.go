@@ -2,8 +2,9 @@ package runtime
 
 import (
 	"encoding/json"
-	"github.com/wagoodman/dive/image"
 	"io/ioutil"
+
+	"github.com/wagoodman/dive/image"
 )
 
 func newExport(analysis *image.AnalysisResult) *export {

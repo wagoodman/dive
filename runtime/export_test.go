@@ -1,8 +1,9 @@
 package runtime
 
 import (
-	"github.com/wagoodman/dive/image"
 	"testing"
+
+	"github.com/wagoodman/dive/image"
 )
 
 func Test_Export(t *testing.T) {

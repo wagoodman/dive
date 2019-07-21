@@ -1,10 +1,11 @@
 package ci
 
 import (
-	"github.com/spf13/viper"
-	"github.com/wagoodman/dive/image"
 	"strings"
 	"testing"
+
+	"github.com/spf13/viper"
+	"github.com/wagoodman/dive/image"
 )
 
 func Test_Evaluator(t *testing.T) {

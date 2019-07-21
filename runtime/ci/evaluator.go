@@ -3,12 +3,13 @@ package ci
 import (
 	"bytes"
 	"fmt"
-	"github.com/logrusorgru/aurora"
-	"github.com/spf13/viper"
-	"github.com/wagoodman/dive/image"
 	"io/ioutil"
 	"sort"
 	"strings"
+
+	"github.com/logrusorgru/aurora"
+	"github.com/spf13/viper"
+	"github.com/wagoodman/dive/image"
 )
 
 func NewEvaluator() *Evaluator {

@@ -2,12 +2,13 @@ package ui
 
 import (
 	"fmt"
+	"regexp"
+	"strings"
+
 	"github.com/lunixbochs/vtclean"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"github.com/wagoodman/keybinding"
-	"regexp"
-	"strings"
 
 	"github.com/jroimartin/gocui"
 	"github.com/wagoodman/dive/filetree"

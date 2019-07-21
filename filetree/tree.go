@@ -2,10 +2,11 @@ package filetree
 
 import (
 	"fmt"
-	"github.com/google/uuid"
-	"github.com/sirupsen/logrus"
 	"sort"
 	"strings"
+
+	"github.com/google/uuid"
+	"github.com/sirupsen/logrus"
 )
 
 const (

@@ -3,11 +3,12 @@ package ui
 import (
 	"bytes"
 	"fmt"
+	"regexp"
+	"strings"
+
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"github.com/wagoodman/dive/utils"
-	"regexp"
-	"strings"
 
 	"github.com/lunixbochs/vtclean"
 	"github.com/wagoodman/dive/filetree"

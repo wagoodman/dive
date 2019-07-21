@@ -2,15 +2,16 @@ package ui
 
 import (
 	"bytes"
-	"github.com/fatih/color"
-	"github.com/sergi/go-diff/diffmatchpatch"
-	"github.com/wagoodman/dive/filetree"
-	"github.com/wagoodman/dive/image"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
 	"testing"
+
+	"github.com/fatih/color"
+	"github.com/sergi/go-diff/diffmatchpatch"
+	"github.com/wagoodman/dive/filetree"
+	"github.com/wagoodman/dive/image"
 )
 
 const allowTestDataCapture = false

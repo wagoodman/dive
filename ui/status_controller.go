@@ -3,8 +3,9 @@ package ui
 import (
 	"fmt"
 
-	"github.com/jroimartin/gocui"
 	"strings"
+
+	"github.com/jroimartin/gocui"
 )
 
 // StatusController holds the UI objects and data models for populating the bottom-most pane. Specifically the panel

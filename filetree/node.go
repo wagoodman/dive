@@ -3,9 +3,10 @@ package filetree
 import (
 	"archive/tar"
 	"fmt"
-	"github.com/sirupsen/logrus"
 	"sort"
 	"strings"
+
+	"github.com/sirupsen/logrus"
 
 	"github.com/dustin/go-humanize"
 	"github.com/fatih/color"

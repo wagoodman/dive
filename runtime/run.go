@@ -2,6 +2,11 @@ package runtime
 
 import (
 	"fmt"
+	"io/ioutil"
+	"log"
+	"os"
+	"strconv"
+
 	"github.com/dustin/go-humanize"
 	"github.com/logrusorgru/aurora"
 	"github.com/wagoodman/dive/filetree"
@@ -9,10 +14,6 @@ import (
 	"github.com/wagoodman/dive/runtime/ci"
 	"github.com/wagoodman/dive/ui"
 	"github.com/wagoodman/dive/utils"
-	"io/ioutil"
-	"log"
-	"os"
-	"strconv"
 )
 
 func title(s string) string {

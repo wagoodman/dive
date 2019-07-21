@@ -2,6 +2,8 @@ package ui
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/jroimartin/gocui"
 	"github.com/lunixbochs/vtclean"
 	"github.com/sirupsen/logrus"
@@ -9,7 +11,6 @@ import (
 	"github.com/wagoodman/dive/image"
 	"github.com/wagoodman/dive/utils"
 	"github.com/wagoodman/keybinding"
-	"strings"
 )
 
 // LayerController holds the UI objects and data models for populating the lower-left pane. Specifically the pane that

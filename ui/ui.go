@@ -2,6 +2,7 @@ package ui
 
 import (
 	"errors"
+
 	"github.com/fatih/color"
 	"github.com/jroimartin/gocui"
 	"github.com/sirupsen/logrus"
