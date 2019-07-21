@@ -10,8 +10,8 @@ import (
 )
 
 const (
-	Unchanged DiffType = iota
-	Changed
+	Unmodified DiffType = iota
+	Modified
 	Added
 	Removed
 )
@@ -23,7 +23,7 @@ func NewNodeData() *NodeData {
 	return &NodeData{
 		ViewInfo: *NewViewInfo(),
 		FileInfo: FileInfo{},
-		DiffType: Unchanged,
+		DiffType: Unmodified,
 	}
 }
 
@@ -64,7 +64,10 @@ func getHashFromReader(reader io.Reader) uint64 {
 			break
 		}
 
-		h.Write(buf[:n])
+		_, err = h.Write(buf[:n])
+		if err != nil {
+			logrus.Panic(err)
+		}
 	}
 
 	return h.Sum64()
@@ -126,19 +129,19 @@ func (data *FileInfo) Compare(other FileInfo) DiffType {
 			data.Mode == other.Mode &&
 			data.Uid == other.Uid &&
 			data.Gid == other.Gid {
-			return Unchanged
+			return Unmodified
 		}
 	}
-	return Changed
+	return Modified
 }
 
 // String of a DiffType
 func (diff DiffType) String() string {
 	switch diff {
-	case Unchanged:
-		return "Unchanged"
-	case Changed:
-		return "Changed"
+	case Unmodified:
+		return "Unmodified"
+	case Modified:
+		return "Modified"
 	case Added:
 		return "Added"
 	case Removed:
@@ -154,5 +157,5 @@ func (diff DiffType) merge(other DiffType) DiffType {
 	if diff == other {
 		return diff
 	}
-	return Changed
+	return Modified
 }

@@ -10,23 +10,23 @@ func TestAssignDiffType(t *testing.T) {
 	if err != nil {
 		t.Errorf("Expected no error from fetching path. got: %v", err)
 	}
-	node.Data.DiffType = Changed
-	if tree.Root.Children["usr"].Data.DiffType != Changed {
+	node.Data.DiffType = Modified
+	if tree.Root.Children["usr"].Data.DiffType != Modified {
 		t.Fail()
 	}
 }
 
 func TestMergeDiffTypes(t *testing.T) {
-	a := Unchanged
-	b := Unchanged
+	a := Unmodified
+	b := Unmodified
 	merged := a.merge(b)
-	if merged != Unchanged {
+	if merged != Unmodified {
 		t.Errorf("Expected Unchaged (0) but got %v", merged)
 	}
-	a = Changed
-	b = Unchanged
+	a = Modified
+	b = Unmodified
 	merged = a.merge(b)
-	if merged != Changed {
+	if merged != Modified {
 		t.Errorf("Expected Unchaged (0) but got %v", merged)
 	}
 }

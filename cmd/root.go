@@ -70,7 +70,7 @@ func initConfig() {
 	viper.SetDefault("keybinding.toggle-added-files", "ctrl+a")
 	viper.SetDefault("keybinding.toggle-removed-files", "ctrl+r")
 	viper.SetDefault("keybinding.toggle-modified-files", "ctrl+m")
-	viper.SetDefault("keybinding.toggle-unchanged-files", "ctrl+u")
+	viper.SetDefault("keybinding.toggle-unmodified-files", "ctrl+u")
 	viper.SetDefault("keybinding.page-up", "pgup")
 	viper.SetDefault("keybinding.page-down", "pgdn")
 

@@ -54,10 +54,10 @@ func NewFileTreeViewModel(tree *filetree.FileTree, refTrees []*filetree.FileTree
 			treeViewModel.HiddenDiffTypes[filetree.Added] = true
 		case "removed":
 			treeViewModel.HiddenDiffTypes[filetree.Removed] = true
-		case "changed":
-			treeViewModel.HiddenDiffTypes[filetree.Changed] = true
-		case "unchanged":
-			treeViewModel.HiddenDiffTypes[filetree.Unchanged] = true
+		case "modified":
+			treeViewModel.HiddenDiffTypes[filetree.Modified] = true
+		case "unmodified":
+			treeViewModel.HiddenDiffTypes[filetree.Unmodified] = true
 		default:
 			utils.PrintAndExit(fmt.Sprintf("unknown diff.hide value: %s", t))
 		}
@@ -87,10 +87,7 @@ func (vm *FileTreeViewModel) bufferIndexUpperBound() int {
 
 // IsVisible indicates if the file tree view pane is currently initialized
 func (vm *FileTreeViewModel) IsVisible() bool {
-	if vm == nil {
-		return false
-	}
-	return true
+	return vm != nil
 }
 
 // resetCursor moves the cursor back to the top of the buffer and translates to the top of the buffer.
@@ -358,10 +355,8 @@ func (vm *FileTreeViewModel) toggleAttributes() error {
 }
 
 // toggleShowDiffType will show/hide the selected DiffType in the filetree pane.
-func (vm *FileTreeViewModel) toggleShowDiffType(diffType filetree.DiffType) error {
+func (vm *FileTreeViewModel) toggleShowDiffType(diffType filetree.DiffType) {
 	vm.HiddenDiffTypes[diffType] = !vm.HiddenDiffTypes[diffType]
-
-	return nil
 }
 
 // Update refreshes the state objects for future rendering.
@@ -396,7 +391,10 @@ func (vm *FileTreeViewModel) Update(filterRegex *regexp.Regexp, width, height in
 	vm.ViewTree = vm.ModelTree.Copy()
 	err = vm.ViewTree.VisitDepthParentFirst(func(node *filetree.FileNode) error {
 		if node.Data.ViewInfo.Hidden {
-			vm.ViewTree.RemovePath(node.Path())
+			err1 := vm.ViewTree.RemovePath(node.Path())
+			if err1 != nil {
+				return err1
+			}
 		}
 		return nil
 	}, nil)

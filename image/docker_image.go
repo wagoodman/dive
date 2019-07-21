@@ -97,7 +97,10 @@ func (image *dockerImageAnalyzer) Fetch() (io.ReadCloser, error) {
 	if err != nil {
 		// don't use the API, the CLI has more informative output
 		fmt.Println("Image not available locally. Trying to pull '" + image.id + "'...")
-		utils.RunDockerCmd("pull", image.id)
+		err = utils.RunDockerCmd("pull", image.id)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	readCloser, err := image.client.ImageSave(ctx, []string{image.id})
@@ -243,7 +246,10 @@ func (image *dockerImageAnalyzer) processLayerTar(name string, layerIdx uint, re
 	for _, element := range fileInfos {
 		tree.FileSize += uint64(element.Size)
 
-		tree.AddPath(element.Path, element)
+		_, _, err := tree.AddPath(element.Path, element)
+		if err != nil {
+			return err
+		}
 	}
 
 	image.layerMap[tree.Name] = tree

@@ -14,23 +14,26 @@ run-large: build
 build:
 	go build -o build/$(BIN)
 
-release: test validate
+release: test-coverage validate
 	./.scripts/tag.sh
 	goreleaser --rm-dist
 
 install:
 	go install ./...
 
-test: build
-	go test -cover -v ./...
+ci: clean validate test-coverage
 
-coverage: build
-	./.scripts/test.sh
+test: build
+	go test -cover -v -race ./...
+
+test-coverage: build
+	./.scripts/test-coverage.sh
 
 validate:
 	grep -R 'const allowTestDataCapture = false' ui/
 	go vet ./...
-	@! gofmt -s -d -l . 2>&1 | grep -vE '^\.git/'
+	@! gofmt -s -l . 2>&1 | grep -vE '^\.git/' | grep -vE '^\.cache/'
+	golangci-lint run
 
 lint: build
 	golint -set_exit_status $$(go list ./...)
@@ -40,7 +43,6 @@ generate-test-data:
 
 clean:
 	rm -rf build
-	rm -rf vendor
 	go clean
 
-.PHONY: build install test lint clean release validate generate-test-data
+.PHONY: build install test lint clean release validate generate-test-data test-coverage ci

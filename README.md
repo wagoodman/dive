@@ -1,6 +1,6 @@
 # dive
 [![Go Report Card](https://goreportcard.com/badge/github.com/wagoodman/dive)](https://goreportcard.com/report/github.com/wagoodman/dive)
-[![Pipeline Status](https://api.travis-ci.org/wagoodman/dive.svg?branch=master)](https://travis-ci.org/wagoodman/dive)
+[![Pipeline Status](https://gitlab.com/wagoodman/dive/badges/master/pipeline.svg)](https://gitlab.com/wagoodman/dive/pipelines?scope=branches&page=1)
 
 **A tool for exploring a docker image, layer contents, and discovering ways to shrink your Docker image size.**
 
@@ -147,7 +147,7 @@ or if you are running with a docker image:
 ```bash
 docker run --rm -it \
     -v /var/run/docker.sock:/var/run/docker.sock \
-    -e DOCKER_API_VERSION=1.37
+    -e DOCKER_API_VERSION=1.37 \
     wagoodman/dive:latest <dive arguments...>
 ```
 
@@ -189,6 +189,8 @@ Key Binding                                | Description
 <kbd>Ctrl + M</kbd>                        | Filetree view: show/hide modified files
 <kbd>Ctrl + U</kbd>                        | Filetree view: show/hide unmodified files
 <kbd>Ctrl + B</kbd>                        | Filetree view: show/hide file attributes
+<kbd>PageUp</kbd>                          | Filetree view: scroll up a page
+<kbd>PageDown</kbd>                        | Filetree view: scroll down a page
 
 ## UI Configuration
 

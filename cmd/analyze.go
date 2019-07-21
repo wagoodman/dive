@@ -20,14 +20,14 @@ func doAnalyzeCmd(cmd *cobra.Command, args []string) {
 		}
 
 		fmt.Println("No image argument given")
-		cmd.Help()
+		_ = cmd.Help()
 		utils.Exit(1)
 	}
 
 	userImage := args[0]
 	if userImage == "" {
 		fmt.Println("No image argument given")
-		cmd.Help()
+		_ = cmd.Help()
 		utils.Exit(1)
 	}
 

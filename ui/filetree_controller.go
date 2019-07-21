@@ -36,7 +36,7 @@ type FileTreeController struct {
 	keybindingToggleAdded       []keybinding.Key
 	keybindingToggleRemoved     []keybinding.Key
 	keybindingToggleModified    []keybinding.Key
-	keybindingToggleUnchanged   []keybinding.Key
+	keybindingToggleUnmodified  []keybinding.Key
 	keybindingPageDown          []keybinding.Key
 	keybindingPageUp            []keybinding.Key
 }
@@ -81,9 +81,13 @@ func NewFileTreeController(name string, gui *gocui.Gui, tree *filetree.FileTree,
 		logrus.Error(err)
 	}
 
-	controller.keybindingToggleUnchanged, err = keybinding.ParseAll(viper.GetString("keybinding.toggle-unchanged-files"))
+	// support legacy behavior first, then use default behavior
+	controller.keybindingToggleUnmodified, err = keybinding.ParseAll(viper.GetString("keybinding.toggle-unchanged-files"))
 	if err != nil {
-		logrus.Error(err)
+		controller.keybindingToggleUnmodified, err = keybinding.ParseAll(viper.GetString("keybinding.toggle-unmodified-files"))
+		if err != nil {
+			logrus.Error(err)
+		}
 	}
 
 	controller.keybindingPageUp, err = keybinding.ParseAll(viper.GetString("keybinding.page-up"))
@@ -163,35 +167,32 @@ func (controller *FileTreeController) Setup(v *gocui.View, header *gocui.View) e
 		}
 	}
 	for _, key := range controller.keybindingToggleModified {
-		if err := controller.gui.SetKeybinding(controller.Name, key.Value, key.Modifier, func(*gocui.Gui, *gocui.View) error { return controller.toggleShowDiffType(filetree.Changed) }); err != nil {
+		if err := controller.gui.SetKeybinding(controller.Name, key.Value, key.Modifier, func(*gocui.Gui, *gocui.View) error { return controller.toggleShowDiffType(filetree.Modified) }); err != nil {
 			return err
 		}
 	}
-	for _, key := range controller.keybindingToggleUnchanged {
-		if err := controller.gui.SetKeybinding(controller.Name, key.Value, key.Modifier, func(*gocui.Gui, *gocui.View) error { return controller.toggleShowDiffType(filetree.Unchanged) }); err != nil {
+	for _, key := range controller.keybindingToggleUnmodified {
+		if err := controller.gui.SetKeybinding(controller.Name, key.Value, key.Modifier, func(*gocui.Gui, *gocui.View) error { return controller.toggleShowDiffType(filetree.Unmodified) }); err != nil {
 			return err
 		}
 	}
 
 	_, height := controller.view.Size()
 	controller.vm.Setup(0, height)
-	controller.Update()
-	controller.Render()
+	_ = controller.Update()
+	_ = controller.Render()
 
 	return nil
 }
 
 // IsVisible indicates if the file tree view pane is currently initialized
 func (controller *FileTreeController) IsVisible() bool {
-	if controller == nil {
-		return false
-	}
-	return true
+	return controller != nil
 }
 
 // resetCursor moves the cursor back to the top of the buffer and translates to the top of the buffer.
 func (controller *FileTreeController) resetCursor() {
-	controller.view.SetCursor(0, 0)
+	_ = controller.view.SetCursor(0, 0)
 	controller.vm.resetCursor()
 }
 
@@ -203,7 +204,7 @@ func (controller *FileTreeController) setTreeByLayer(bottomTreeStart, bottomTree
 	}
 	// controller.resetCursor()
 
-	controller.Update()
+	_ = controller.Update()
 	return controller.Render()
 }
 
@@ -235,7 +236,7 @@ func (controller *FileTreeController) CursorLeft() error {
 	if err != nil {
 		return err
 	}
-	controller.Update()
+	_ = controller.Update()
 	return controller.Render()
 }
 
@@ -245,7 +246,7 @@ func (controller *FileTreeController) CursorRight() error {
 	if err != nil {
 		return err
 	}
-	controller.Update()
+	_ = controller.Update()
 	return controller.Render()
 }
 
@@ -268,9 +269,9 @@ func (controller *FileTreeController) PageUp() error {
 }
 
 // getAbsPositionNode determines the selected screen cursor's location in the file tree, returning the selected FileNode.
-func (controller *FileTreeController) getAbsPositionNode() (node *filetree.FileNode) {
-	return controller.vm.getAbsPositionNode(filterRegex())
-}
+// func (controller *FileTreeController) getAbsPositionNode() (node *filetree.FileNode) {
+// 	return controller.vm.getAbsPositionNode(filterRegex())
+// }
 
 // toggleCollapse will collapse/expand the selected FileNode.
 func (controller *FileTreeController) toggleCollapse() error {
@@ -278,7 +279,7 @@ func (controller *FileTreeController) toggleCollapse() error {
 	if err != nil {
 		return err
 	}
-	controller.Update()
+	_ = controller.Update()
 	return controller.Render()
 }
 
@@ -291,7 +292,7 @@ func (controller *FileTreeController) toggleCollapseAll() error {
 	if controller.vm.CollapseAll {
 		controller.resetCursor()
 	}
-	controller.Update()
+	_ = controller.Update()
 	return controller.Render()
 }
 
@@ -336,7 +337,7 @@ func filterRegex() *regexp.Regexp {
 
 // onLayoutChange is called by the UI framework to inform the view-model of the new screen dimensions
 func (controller *FileTreeController) onLayoutChange(resized bool) error {
-	controller.Update()
+	_ = controller.Update()
 	if resized {
 		return controller.Render()
 	}
@@ -378,12 +379,12 @@ func (controller *FileTreeController) Render() error {
 			headerStr += fmt.Sprintf(filetree.AttributeFormat+" %s", "P", "ermission", "UID:GID", "Size", "Filetree")
 		}
 
-		fmt.Fprintln(controller.header, Formatting.Header(vtclean.Clean(headerStr, false)))
+		_, _ = fmt.Fprintln(controller.header, Formatting.Header(vtclean.Clean(headerStr, false)))
 
 		// update the contents
 		controller.view.Clear()
-		controller.vm.Render()
-		fmt.Fprint(controller.view, controller.vm.mainBuf.String())
+		_ = controller.vm.Render()
+		_, _ = fmt.Fprint(controller.view, controller.vm.mainBuf.String())
 
 		return nil
 	})
@@ -396,7 +397,7 @@ func (controller *FileTreeController) KeyHelp() string {
 		renderStatusOption(controller.keybindingToggleCollapseAll[0].String(), "Collapse all dir", false) +
 		renderStatusOption(controller.keybindingToggleAdded[0].String(), "Added", !controller.vm.HiddenDiffTypes[filetree.Added]) +
 		renderStatusOption(controller.keybindingToggleRemoved[0].String(), "Removed", !controller.vm.HiddenDiffTypes[filetree.Removed]) +
-		renderStatusOption(controller.keybindingToggleModified[0].String(), "Modified", !controller.vm.HiddenDiffTypes[filetree.Changed]) +
-		renderStatusOption(controller.keybindingToggleUnchanged[0].String(), "Unmodified", !controller.vm.HiddenDiffTypes[filetree.Unchanged]) +
+		renderStatusOption(controller.keybindingToggleModified[0].String(), "Modified", !controller.vm.HiddenDiffTypes[filetree.Modified]) +
+		renderStatusOption(controller.keybindingToggleUnmodified[0].String(), "Unmodified", !controller.vm.HiddenDiffTypes[filetree.Unmodified]) +
 		renderStatusOption(controller.keybindingToggleAttributes[0].String(), "Attributes", controller.vm.ShowAttributes)
 }
