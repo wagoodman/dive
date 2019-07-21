@@ -18,6 +18,7 @@ func (cache *TreeCache) Get(bottomTreeStart, bottomTreeStop, topTreeStart, topTr
 	if value, exists := cache.cache[key]; exists {
 		return value
 	}
+
 	value := cache.buildTree(key)
 	cache.cache[key] = value
 	return value
