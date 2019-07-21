@@ -20,3 +20,4 @@
 *.log
 /dist
 .cover
+coverage.txt

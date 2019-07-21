@@ -4,14 +4,18 @@ import (
 	"archive/tar"
 	"encoding/json"
 	"fmt"
+	"io"
+	"io/ioutil"
+	"net/http"
+	"os"
+	"strings"
+
+	"github.com/docker/cli/cli/connhelper"
 	"github.com/docker/docker/client"
 	"github.com/sirupsen/logrus"
 	"github.com/wagoodman/dive/filetree"
 	"github.com/wagoodman/dive/utils"
 	"golang.org/x/net/context"
-	"io"
-	"io/ioutil"
-	"strings"
 )
 
 var dockerVersion string
@@ -59,7 +63,33 @@ func (image *dockerImageAnalyzer) Fetch() (io.ReadCloser, error) {
 
 	// pull the image if it does not exist
 	ctx := context.Background()
-	image.client, err = client.NewClientWithOpts(client.WithVersion(dockerVersion), client.FromEnv)
+
+	host := os.Getenv("DOCKER_HOST")
+	var clientOpts []func(*client.Client) error
+
+	switch strings.Split(host, ":")[0] {
+	case "ssh":
+		helper, err := connhelper.GetConnectionHelper(host)
+		if err != nil {
+			fmt.Println("docker host", err)
+		}
+		clientOpts = append(clientOpts, func(c *client.Client) error {
+			httpClient := &http.Client{
+				Transport: &http.Transport{
+					DialContext: helper.Dialer,
+				},
+			}
+			return client.WithHTTPClient(httpClient)(c)
+		})
+		clientOpts = append(clientOpts, client.WithHost(helper.Host))
+		clientOpts = append(clientOpts, client.WithDialContext(helper.Dialer))
+
+	default:
+		clientOpts = append(clientOpts, client.FromEnv)
+	}
+
+	clientOpts = append(clientOpts, client.WithVersion(dockerVersion))
+	image.client, err = client.NewClientWithOpts(clientOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -67,7 +97,10 @@ func (image *dockerImageAnalyzer) Fetch() (io.ReadCloser, error) {
 	if err != nil {
 		// don't use the API, the CLI has more informative output
 		fmt.Println("Image not available locally. Trying to pull '" + image.id + "'...")
-		utils.RunDockerCmd("pull", image.id)
+		err = utils.RunDockerCmd("pull", image.id)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	readCloser, err := image.client.ImageSave(ctx, []string{image.id})
@@ -86,7 +119,6 @@ func (image *dockerImageAnalyzer) Parse(tarFile io.ReadCloser) error {
 		header, err := tarReader.Next()
 
 		if err == io.EOF {
-			fmt.Println("  ╧")
 			break
 		}
 
@@ -139,25 +171,36 @@ func (image *dockerImageAnalyzer) Analyze() (*AnalysisResult, error) {
 
 	// note that the image config stores images in reverse chronological order, so iterate backwards through layers
 	// as you iterate chronologically through history (ignoring history items that have no layer contents)
-	layerIdx := len(image.trees) - 1
+	// Note: history is not required metadata in a docker image!
 	tarPathIdx := 0
-	for idx := 0; idx < len(config.History); idx++ {
-		// ignore empty layers, we are only observing layers with content
-		if config.History[idx].EmptyLayer {
-			continue
-		}
+	histIdx := 0
+	for layerIdx := len(image.trees) - 1; layerIdx >= 0; layerIdx-- {
 
 		tree := image.trees[(len(image.trees)-1)-layerIdx]
-		config.History[idx].Size = uint64(tree.FileSize)
+
+		// ignore empty layers, we are only observing layers with content
+		historyObj := dockerImageHistoryEntry{
+			CreatedBy: "(missing)",
+		}
+		for nextHistIdx := histIdx; nextHistIdx < len(config.History); nextHistIdx++ {
+			if !config.History[nextHistIdx].EmptyLayer {
+				histIdx = nextHistIdx
+				break
+			}
+		}
+		if histIdx < len(config.History) && !config.History[histIdx].EmptyLayer {
+			historyObj = config.History[histIdx]
+			histIdx++
+		}
 
 		image.layers[layerIdx] = &dockerLayer{
-			history: config.History[idx],
-			index:   layerIdx,
+			history: historyObj,
+			index:   tarPathIdx,
 			tree:    image.trees[layerIdx],
 			tarPath: manifest.LayerTarPaths[tarPathIdx],
 		}
+		image.layers[layerIdx].history.Size = uint64(tree.FileSize)
 
-		layerIdx--
 		tarPathIdx++
 	}
 
@@ -191,36 +234,23 @@ func (image *dockerImageAnalyzer) Analyze() (*AnalysisResult, error) {
 	}, nil
 }
 
-// todo: it is bad that this is printing out to the screen. As the interface gets more flushed out, an event update mechanism should be built in (so the caller can format and print updates)
 func (image *dockerImageAnalyzer) processLayerTar(name string, layerIdx uint, reader *tar.Reader) error {
 	tree := filetree.NewFileTree()
 	tree.Name = name
-
-	title := fmt.Sprintf("[layer: %2d]", layerIdx)
-	message := fmt.Sprintf("  ├─ %s %s ", title, "working...")
-	fmt.Printf("\r%s", message)
 
 	fileInfos, err := image.getFileList(reader)
 	if err != nil {
 		return err
 	}
 
-	shortName := name[:15]
-	pb := utils.NewProgressBar(int64(len(fileInfos)), 30)
-	for idx, element := range fileInfos {
+	for _, element := range fileInfos {
 		tree.FileSize += uint64(element.Size)
 
-		// todo: we should check for errors but also allow whiteout files to be not be added (thus not error out)
-		tree.AddPath(element.Path, element)
-
-		if pb.Update(int64(idx)) {
-			message = fmt.Sprintf("  ├─ %s %s : %s", title, shortName, pb.String())
-			fmt.Printf("\r%s", message)
+		_, _, err := tree.AddPath(element.Path, element)
+		if err != nil {
+			return err
 		}
 	}
-	pb.Done()
-	message = fmt.Sprintf("  ├─ %s %s : %s", title, shortName, pb.String())
-	fmt.Printf("\r%s\n", message)
 
 	image.layerMap[tree.Name] = tree
 	return nil

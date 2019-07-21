@@ -7,7 +7,6 @@ import (
 	"path"
 	"strings"
 
-	"github.com/k0kubun/go-ansi"
 	"github.com/mitchellh/go-homedir"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -15,8 +14,6 @@ import (
 	"github.com/wagoodman/dive/filetree"
 	"github.com/wagoodman/dive/utils"
 )
-
-const pathSep = string(os.PathSeparator)
 
 var cfgFile string
 var exportFile string
@@ -42,12 +39,9 @@ func Execute() {
 }
 
 func init() {
-	ansi.CursorHide()
-
 	cobra.OnInitialize(initConfig)
-	cobra.OnInitialize(initLogging)
 
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.dive.yaml, ~/.config/dive.yaml, or $XDG_CONFIG_HOME/dive.yaml)")
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.dive.yaml, ~/.config/dive/*.yaml, or $XDG_CONFIG_HOME/dive.yaml)")
 	rootCmd.PersistentFlags().BoolP("version", "v", false, "display version number")
 
 	rootCmd.Flags().StringVarP(&exportFile, "json", "j", "", "Skip the interactive TUI and write the layer analysis statistics to a given file.")
@@ -64,13 +58,15 @@ func initConfig() {
 	viper.SetDefault("log.enabled", true)
 	// keybindings: status view / global
 	viper.SetDefault("keybinding.quit", "ctrl+c")
-	viper.SetDefault("keybinding.toggle-view", "tab, ctrl+space")
+	viper.SetDefault("keybinding.toggle-view", "tab")
 	viper.SetDefault("keybinding.filter-files", "ctrl+f, ctrl+slash")
 	// keybindings: layer view
 	viper.SetDefault("keybinding.compare-all", "ctrl+a")
 	viper.SetDefault("keybinding.compare-layer", "ctrl+l")
 	// keybindings: filetree view
 	viper.SetDefault("keybinding.toggle-collapse-dir", "space")
+	viper.SetDefault("keybinding.toggle-collapse-all-dir", "ctrl+space")
+	viper.SetDefault("keybinding.toggle-filetree-attributes", "ctrl+b")
 	viper.SetDefault("keybinding.toggle-added-files", "ctrl+a")
 	viper.SetDefault("keybinding.toggle-removed-files", "ctrl+r")
 	viper.SetDefault("keybinding.toggle-modified-files", "ctrl+m")
@@ -84,6 +80,7 @@ func initConfig() {
 
 	viper.SetDefault("filetree.collapse-dir", false)
 	viper.SetDefault("filetree.pane-width", 0.5)
+	viper.SetDefault("filetree.show-attributes", true)
 
 	viper.AutomaticEnv() // read in environment variables that match
 
@@ -142,7 +139,7 @@ func getCfgFile(fromFlag string) string {
 	xdgHome := os.Getenv("XDG_CONFIG_HOME")
 	xdgDirs := os.Getenv("XDG_CONFIG_DIRS")
 	xdgPaths := append([]string{xdgHome}, strings.Split(xdgDirs, ":")...)
-	allDirs := append(xdgPaths, home+pathSep+".config")
+	allDirs := append(xdgPaths, path.Join(home, ".config"))
 
 	for _, val := range allDirs {
 		file := findInPath(val)
@@ -150,13 +147,13 @@ func getCfgFile(fromFlag string) string {
 			return file
 		}
 	}
-	return home + pathSep + "dive.yaml"
+	return path.Join(home, ".dive.yaml")
 }
 
 // findInPath returns first "*.yaml" file in path's subdirectory "dive"
 // if not found returns empty string
 func findInPath(pathTo string) string {
-	directory := pathTo + pathSep + "dive"
+	directory := path.Join(pathTo, "dive")
 	files, err := ioutil.ReadDir(directory)
 	if err != nil {
 		return ""
@@ -165,7 +162,7 @@ func findInPath(pathTo string) string {
 	for _, file := range files {
 		filename := file.Name()
 		if path.Ext(filename) == ".yaml" {
-			return directory + pathSep + filename
+			return path.Join(directory, filename)
 		}
 	}
 	return ""

@@ -1,5 +1,9 @@
 package filetree
 
+import (
+	"github.com/sirupsen/logrus"
+)
+
 type TreeCacheKey struct {
 	bottomTreeStart, bottomTreeStop, topTreeStart, topTreeStop int
 }
@@ -13,8 +17,6 @@ func (cache *TreeCache) Get(bottomTreeStart, bottomTreeStop, topTreeStart, topTr
 	key := TreeCacheKey{bottomTreeStart, bottomTreeStop, topTreeStart, topTreeStop}
 	if value, exists := cache.cache[key]; exists {
 		return value
-	} else {
-
 	}
 	value := cache.buildTree(key)
 	cache.cache[key] = value
@@ -23,9 +25,11 @@ func (cache *TreeCache) Get(bottomTreeStart, bottomTreeStop, topTreeStart, topTr
 
 func (cache *TreeCache) buildTree(key TreeCacheKey) *FileTree {
 	newTree := StackTreeRange(cache.refTrees, key.bottomTreeStart, key.bottomTreeStop)
-
 	for idx := key.topTreeStart; idx <= key.topTreeStop; idx++ {
-		newTree.Compare(cache.refTrees[idx])
+		err := newTree.CompareAndMark(cache.refTrees[idx])
+		if err != nil {
+			logrus.Errorf("unable to build tree: %+v", err)
+		}
 	}
 	return newTree
 }

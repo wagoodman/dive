@@ -17,7 +17,7 @@ func newExport(analysis *image.AnalysisResult) *export {
 		idx := (len(analysis.Layers) - 1) - revIdx
 
 		data.Layer[idx] = exportLayer{
-			Index:     idx,
+			Index:     layer.Index(),
 			DigestID:  layer.Id(),
 			SizeBytes: layer.Size(),
 			Command:   layer.Command(),

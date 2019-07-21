@@ -1,0 +1,11 @@
+-rwxr-xr-x         0:0        0 B  │   ├── arch → bin/[
+-rwxr-xr-x         0:0        0 B  │   ├── arp → bin/[
+-rwxr-xr-x         0:0        0 B  │   ├── arping → bin/[
+-rwxr-xr-x         0:0        0 B  │   ├── ash → bin/[
+-rwxr-xr-x         0:0        0 B  │   ├── awk → bin/[
+-rwxr-xr-x         0:0        0 B  │   ├── base64 → bin/[
+-rwxr-xr-x         0:0        0 B  │   ├── basename → bin/[
+-rwxr-xr-x         0:0        0 B  │   ├── beep → bin/[
+-rwxr-xr-x         0:0        0 B  │   ├── blkdiscard → bin/[
+-rwxr-xr-x         0:0        0 B  │   ├── blkid → bin/[
+

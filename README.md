@@ -1,6 +1,6 @@
 # dive
 [![Go Report Card](https://goreportcard.com/badge/github.com/wagoodman/dive)](https://goreportcard.com/report/github.com/wagoodman/dive)
-[![Pipeline Status](https://api.travis-ci.org/wagoodman/dive.svg?branch=master)](https://travis-ci.org/wagoodman/dive)
+[![Pipeline Status](https://gitlab.com/wagoodman/dive/badges/master/pipeline.svg)](https://gitlab.com/wagoodman/dive/pipelines?scope=branches&page=1)
 
 **A tool for exploring a docker image, layer contents, and discovering ways to shrink your Docker image size.**
 
@@ -74,14 +74,14 @@ Analyze and image and get a pass/fail result based on the image efficiency and w
 
 **Ubuntu/Debian**
 ```bash
-wget https://github.com/wagoodman/dive/releases/download/v0.6.0/dive_0.6.0_linux_amd64.deb
-sudo apt install ./dive_0.6.0_linux_amd64.deb
+wget https://github.com/wagoodman/dive/releases/download/v0.7.2/dive_0.7.2_linux_amd64.deb
+sudo apt install ./dive_0.7.2_linux_amd64.deb
 ```
 
 **RHEL/Centos**
 ```bash
-curl -OL https://github.com/wagoodman/dive/releases/download/v0.6.0/dive_0.6.0_linux_amd64.rpm
-rpm -i dive_0.6.0_linux_amd64.rpm
+curl -OL https://github.com/wagoodman/dive/releases/download/v0.7.2/dive_0.7.2_linux_amd64.rpm
+rpm -i dive_0.7.2_linux_amd64.rpm
 ```
 
 **Arch Linux**
@@ -100,11 +100,11 @@ The above example assumes [`yay`](https://aur.archlinux.org/packages/yay/) as th
 brew tap wagoodman/dive
 brew install dive
 ```
-or download the latest Darwin build from the [releases page](https://github.com/wagoodman/dive/releases/download/v0.6.0/dive_0.6.0_darwin_amd64.tar.gz).
+or download the latest Darwin build from the [releases page](https://github.com/wagoodman/dive/releases/download/v0.7.2/dive_0.7.2_darwin_amd64.tar.gz).
 
 **Windows**
 
-Download the [latest release](https://github.com/wagoodman/dive/releases/download/v0.6.0/dive_0.6.0_windows_amd64.zip).
+Download the [latest release](https://github.com/wagoodman/dive/releases/download/v0.7.2/dive_0.7.2_windows_amd64.zip).
 
 **Go tools**
 Requires Go version 1.9 or higher.
@@ -176,15 +176,19 @@ You can override the CI config path with the `--ci-config` option.
 Key Binding                                | Description
 -------------------------------------------|---------------------------------------------------------
 <kbd>Ctrl + C</kbd>                        | Exit
-<kbd>Tab</kbd> or <kbd>Ctrl + Space</kbd>  | Switch between the layer and filetree views
+<kbd>Tab</kbd>                             | Switch between the layer and filetree views
 <kbd>Ctrl + F</kbd>                        | Filter files
+<kbd>PageUp</kbd>                          | Scroll up a page
+<kbd>PageDown</kbd>                        | Scroll down a page
 <kbd>Ctrl + A</kbd>                        | Layer view: see aggregated image modifications
 <kbd>Ctrl + L</kbd>                        | Layer view: see current layer modifications
 <kbd>Space</kbd>                           | Filetree view: collapse/uncollapse a directory
+<kbd>Ctrl + Space</kbd>                    | Filetree view: collapse/uncollapse all directories
 <kbd>Ctrl + A</kbd>                        | Filetree view: show/hide added files
 <kbd>Ctrl + R</kbd>                        | Filetree view: show/hide removed files
 <kbd>Ctrl + M</kbd>                        | Filetree view: show/hide modified files
-<kbd>Ctrl + U</kbd>                        | Filetree view: show/hide unchanged files
+<kbd>Ctrl + U</kbd>                        | Filetree view: show/hide unmodified files
+<kbd>Ctrl + B</kbd>                        | Filetree view: show/hide file attributes
 <kbd>PageUp</kbd>                          | Filetree view: scroll up a page
 <kbd>PageDown</kbd>                        | Filetree view: scroll down a page
 
@@ -202,7 +206,7 @@ log:
 keybinding:
   # Global bindings
   quit: ctrl+c
-  toggle-view: tab, ctrl+space
+  toggle-view: tab
   filter-files: ctrl+f, ctrl+slash
 
   # Layer view specific bindings  
@@ -211,10 +215,12 @@ keybinding:
 
   # File view specific bindings
   toggle-collapse-dir: space
+  toggle-collapse-all-dir: ctrl+space
   toggle-added-files: ctrl+a
   toggle-removed-files: ctrl+r
   toggle-modified-files: ctrl+m
-  toggle-unchanged-files: ctrl+u
+  toggle-unmodified-files: ctrl+u
+  toggle-filetree-attributes: ctrl+b
   page-up: pgup
   page-down: pgdn
   
@@ -232,6 +238,9 @@ filetree:
 
   # The percentage of screen width the filetree should take on the screen (must be >0 and <1)
   pane-width: 0.5
+  
+  # Show the file attributes next to the filetree
+  show-attributes: true
 
 layer:
   # Enable showing all changes from this layer and ever previous layer

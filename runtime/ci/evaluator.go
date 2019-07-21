@@ -42,10 +42,7 @@ func (ci *Evaluator) LoadConfig(configFile string) error {
 
 func (ci *Evaluator) isRuleEnabled(rule Rule) bool {
 	value := ci.Config.GetString(rule.Key())
-	if value == "disabled" {
-		return false
-	}
-	return true
+	return value != "disabled"
 }
 
 func (ci *Evaluator) Evaluate(analysis *image.AnalysisResult) bool {

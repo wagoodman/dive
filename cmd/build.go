@@ -22,6 +22,8 @@ func init() {
 func doBuildCmd(cmd *cobra.Command, args []string) {
 	defer utils.Cleanup()
 
+	initLogging()
+
 	runtime.Run(runtime.Options{
 		BuildArgs:  args,
 		ExportFile: exportFile,
