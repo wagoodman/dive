@@ -324,7 +324,7 @@ func TestFileTreeHideAddedRemovedModified(t *testing.T) {
 	vm.toggleShowDiffType(filetree.Added)
 
 	// hide modified files
-	vm.toggleShowDiffType(filetree.Changed)
+	vm.toggleShowDiffType(filetree.Modified)
 
 	// hide removed files
 	vm.toggleShowDiffType(filetree.Removed)
@@ -350,7 +350,7 @@ func TestFileTreeHideUnmodified(t *testing.T) {
 	}
 
 	// hide unmodified files
-	vm.toggleShowDiffType(filetree.Unchanged)
+	vm.toggleShowDiffType(filetree.Unmodified)
 
 	runTestCase(t, vm, width, height, nil)
 }

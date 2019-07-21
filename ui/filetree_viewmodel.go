@@ -53,10 +53,10 @@ func NewFileTreeViewModel(tree *filetree.FileTree, refTrees []*filetree.FileTree
 			treeViewModel.HiddenDiffTypes[filetree.Added] = true
 		case "removed":
 			treeViewModel.HiddenDiffTypes[filetree.Removed] = true
-		case "changed":
-			treeViewModel.HiddenDiffTypes[filetree.Changed] = true
-		case "unchanged":
-			treeViewModel.HiddenDiffTypes[filetree.Unchanged] = true
+		case "modified":
+			treeViewModel.HiddenDiffTypes[filetree.Modified] = true
+		case "unmodified":
+			treeViewModel.HiddenDiffTypes[filetree.Unmodified] = true
 		default:
 			utils.PrintAndExit(fmt.Sprintf("unknown diff.hide value: %s", t))
 		}
