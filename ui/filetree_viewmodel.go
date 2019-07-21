@@ -196,7 +196,7 @@ func (vm *FileTreeViewModel) CursorLeft(filterRegex *regexp.Regexp) error {
 	}
 
 	if vm.bufferIndex > moveIndex {
-		vm.bufferIndex = vm.bufferIndex - moveIndex
+		vm.bufferIndex -= moveIndex
 	} else {
 		vm.bufferIndex = 0
 	}
@@ -256,7 +256,7 @@ func (vm *FileTreeViewModel) PageDown() error {
 		vm.bufferIndex = 0
 		vm.TreeIndex = nextBufferIndexLowerBound
 	} else {
-		vm.bufferIndex = vm.bufferIndex - newLines
+		vm.bufferIndex -= newLines
 	}
 
 	return nil
@@ -282,7 +282,7 @@ func (vm *FileTreeViewModel) PageUp() error {
 		vm.bufferIndex = 0
 		vm.TreeIndex = nextBufferIndexLowerBound
 	} else {
-		vm.bufferIndex = vm.bufferIndex + newLines
+		vm.bufferIndex += newLines
 	}
 	return nil
 }
