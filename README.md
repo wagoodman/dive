@@ -147,7 +147,7 @@ or if you are running with a docker image:
 ```bash
 docker run --rm -it \
     -v /var/run/docker.sock:/var/run/docker.sock \
-    -e DOCKER_API_VERSION=1.37
+    -e DOCKER_API_VERSION=1.37 \
     wagoodman/dive:latest <dive arguments...>
 ```
 
