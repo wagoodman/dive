@@ -5,7 +5,6 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
-	"strconv"
 
 	"github.com/dustin/go-humanize"
 	"github.com/logrusorgru/aurora"
@@ -25,15 +24,9 @@ func runCi(analysis *image.AnalysisResult, options Options) {
 	fmt.Printf("  wastedBytes: %d bytes (%s)\n", analysis.WastedBytes, humanize.Bytes(analysis.WastedBytes))
 	fmt.Printf("  userWastedPercent: %2.4f %%\n", analysis.WastedUserPercent*100)
 
-	fmt.Println(title("Run CI Validations..."))
-	evaluator := ci.NewEvaluator()
+	evaluator := ci.NewEvaluator(options.CiConfig)
 
-	err := evaluator.LoadConfig(options.CiConfigFile)
-	if err != nil {
-		fmt.Println("  Using default CI config")
-	} else {
-		fmt.Printf("  Using CI config: %s\n", options.CiConfigFile)
-	}
+	fmt.Println(title("Run CI Validations..."))
 
 	pass := evaluator.Evaluate(analysis)
 	evaluator.Report()
@@ -71,7 +64,6 @@ func runBuild(buildArgs []string) string {
 func Run(options Options) {
 	doExport := options.ExportFile != ""
 	doBuild := len(options.BuildArgs) > 0
-	isCi, _ := strconv.ParseBool(os.Getenv("CI"))
 
 	if doBuild {
 		fmt.Println(title("Building image..."))
@@ -115,7 +107,7 @@ func Run(options Options) {
 		}
 	}
 
-	if isCi {
+	if options.Ci {
 		runCi(result, options)
 	} else {
 		if doExport {

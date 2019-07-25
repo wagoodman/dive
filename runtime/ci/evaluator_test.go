@@ -28,13 +28,12 @@ func Test_Evaluator(t *testing.T) {
 	}
 
 	for _, test := range table {
-		evaluator := NewEvaluator()
-
 		ciConfig := viper.New()
 		ciConfig.SetDefault("rules.lowestEfficiency", test.efficiency)
 		ciConfig.SetDefault("rules.highestWastedBytes", test.wastedBytes)
 		ciConfig.SetDefault("rules.highestUserWastedPercent", test.wastedPercent)
-		evaluator.Config = ciConfig
+
+		evaluator := NewEvaluator(ciConfig)
 
 		pass := evaluator.Evaluate(result)
 

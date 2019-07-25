@@ -4,15 +4,45 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/spf13/viper"
+
 	"github.com/dustin/go-humanize"
 	"github.com/logrusorgru/aurora"
 	"github.com/wagoodman/dive/image"
 )
 
-func newGenericCiRule(key string, evaluator func(*image.AnalysisResult, string) (RuleStatus, string)) *GenericCiRule {
+const (
+	RuleUnknown = iota
+	RulePassed
+	RuleFailed
+	RuleWarning
+	RuleDisabled
+)
+
+type Rule interface {
+	Key() string
+	Configuration() string
+	Evaluate(*image.AnalysisResult) (RuleStatus, string)
+}
+
+type GenericCiRule struct {
+	key         string
+	configValue string
+	evaluator   func(*image.AnalysisResult, string) (RuleStatus, string)
+}
+
+type RuleStatus int
+
+type RuleResult struct {
+	status  RuleStatus
+	message string
+}
+
+func newGenericCiRule(key string, configValue string, evaluator func(*image.AnalysisResult, string) (RuleStatus, string)) *GenericCiRule {
 	return &GenericCiRule{
-		key:       key,
-		evaluator: evaluator,
+		key:         key,
+		configValue: configValue,
+		evaluator:   evaluator,
 	}
 }
 
@@ -20,8 +50,12 @@ func (rule *GenericCiRule) Key() string {
 	return rule.key
 }
 
-func (rule *GenericCiRule) Evaluate(result *image.AnalysisResult, value string) (RuleStatus, string) {
-	return rule.evaluator(result, value)
+func (rule *GenericCiRule) Configuration() string {
+	return rule.configValue
+}
+
+func (rule *GenericCiRule) Evaluate(result *image.AnalysisResult) (RuleStatus, string) {
+	return rule.evaluator(result, rule.configValue)
 }
 
 func (status RuleStatus) String() string {
@@ -39,11 +73,12 @@ func (status RuleStatus) String() string {
 	}
 }
 
-func loadCiRules() []Rule {
+func loadCiRules(config *viper.Viper) []Rule {
 	var rules = make([]Rule, 0)
-
+	var ruleKey = "lowestEfficiency"
 	rules = append(rules, newGenericCiRule(
-		"rules.lowestEfficiency",
+		ruleKey,
+		config.GetString(fmt.Sprintf("rules.%s", ruleKey)),
 		func(analysis *image.AnalysisResult, value string) (RuleStatus, string) {
 			lowestEfficiency, err := strconv.ParseFloat(value, 64)
 			if err != nil {
@@ -56,8 +91,10 @@ func loadCiRules() []Rule {
 		},
 	))
 
+	ruleKey = "highestWastedBytes"
 	rules = append(rules, newGenericCiRule(
-		"rules.highestWastedBytes",
+		ruleKey,
+		config.GetString(fmt.Sprintf("rules.%s", ruleKey)),
 		func(analysis *image.AnalysisResult, value string) (RuleStatus, string) {
 			highestWastedBytes, err := humanize.ParseBytes(value)
 			if err != nil {
@@ -70,8 +107,10 @@ func loadCiRules() []Rule {
 		},
 	))
 
+	ruleKey = "highestUserWastedPercent"
 	rules = append(rules, newGenericCiRule(
-		"rules.highestUserWastedPercent",
+		ruleKey,
+		config.GetString(fmt.Sprintf("rules.%s", ruleKey)),
 		func(analysis *image.AnalysisResult, value string) (RuleStatus, string) {
 			highestUserWastedPercent, err := strconv.ParseFloat(value, 64)
 			if err != nil {

@@ -18,6 +18,8 @@ import (
 var cfgFile string
 var exportFile string
 var ciConfigFile string
+var ciConfig = viper.New()
+var isCi bool
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -39,13 +41,26 @@ func Execute() {
 }
 
 func init() {
+	initCli()
 	cobra.OnInitialize(initConfig)
+}
 
+func initCli() {
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.dive.yaml, ~/.config/dive/*.yaml, or $XDG_CONFIG_HOME/dive.yaml)")
 	rootCmd.PersistentFlags().BoolP("version", "v", false, "display version number")
-
+	rootCmd.Flags().BoolVar(&isCi, "ci", false, "Skip the interactive TUI and validate against CI rules (same as env var CI=true)")
 	rootCmd.Flags().StringVarP(&exportFile, "json", "j", "", "Skip the interactive TUI and write the layer analysis statistics to a given file.")
 	rootCmd.Flags().StringVar(&ciConfigFile, "ci-config", ".dive-ci", "If CI=true in the environment, use the given yaml to drive validation rules.")
+
+	rootCmd.Flags().String("lowestEfficiency", "0.9", "(only valid with --ci given) lowest allowable image efficiency, otherwise CI validation will fail.")
+	rootCmd.Flags().String("highestWastedBytes", "disabled", "(only valid with --ci given) highest allowable bytes wasted, otherwise CI validation will fail.")
+	rootCmd.Flags().String("highestUserWastedPercent", "0.1", "(only valid with --ci given) highest allowable percentage of bytes wasted, otherwise CI validation will fail.")
+
+	for _, key := range []string{"lowestEfficiency", "highestWastedBytes", "highestUserWastedPercent"} {
+		if err := ciConfig.BindPFlag(fmt.Sprintf("rules.%s", key), rootCmd.Flags().Lookup(key)); err != nil {
+			log.Fatal("Unable to bind flag:", err)
+		}
+	}
 }
 
 // initConfig reads in config file and ENV variables if set.
@@ -55,7 +70,7 @@ func initConfig() {
 
 	viper.SetDefault("log.level", log.InfoLevel.String())
 	viper.SetDefault("log.path", "./dive.log")
-	viper.SetDefault("log.enabled", true)
+	viper.SetDefault("log.enabled", false)
 	// keybindings: status view / global
 	viper.SetDefault("keybinding.quit", "ctrl+c")
 	viper.SetDefault("keybinding.toggle-view", "tab")
