@@ -17,18 +17,22 @@ const (
 	RuleFailed
 	RuleWarning
 	RuleDisabled
+	RuleMisconfigured
+	RuleConfigured
 )
 
 type Rule interface {
 	Key() string
 	Configuration() string
+	Validate() error
 	Evaluate(*image.AnalysisResult) (RuleStatus, string)
 }
 
 type GenericCiRule struct {
-	key         string
-	configValue string
-	evaluator   func(*image.AnalysisResult, string) (RuleStatus, string)
+	key             string
+	configValue     string
+	configValidator func(string) error
+	evaluator       func(*image.AnalysisResult, string) (RuleStatus, string)
 }
 
 type RuleStatus int
@@ -38,11 +42,12 @@ type RuleResult struct {
 	message string
 }
 
-func newGenericCiRule(key string, configValue string, evaluator func(*image.AnalysisResult, string) (RuleStatus, string)) *GenericCiRule {
+func newGenericCiRule(key string, configValue string, validator func(string) error, evaluator func(*image.AnalysisResult, string) (RuleStatus, string)) *GenericCiRule {
 	return &GenericCiRule{
-		key:         key,
-		configValue: configValue,
-		evaluator:   evaluator,
+		key:             key,
+		configValue:     configValue,
+		configValidator: validator,
+		evaluator:       evaluator,
 	}
 }
 
@@ -52,6 +57,10 @@ func (rule *GenericCiRule) Key() string {
 
 func (rule *GenericCiRule) Configuration() string {
 	return rule.configValue
+}
+
+func (rule *GenericCiRule) Validate() error {
+	return rule.configValidator(rule.configValue)
 }
 
 func (rule *GenericCiRule) Evaluate(result *image.AnalysisResult) (RuleStatus, string) {
@@ -68,6 +77,10 @@ func (status RuleStatus) String() string {
 		return aurora.Blue("WARN").String()
 	case RuleDisabled:
 		return aurora.Blue("SKIP").String()
+	case RuleMisconfigured:
+		return aurora.Bold(aurora.Inverse(aurora.Red("MISCONFIGURED"))).String()
+	case RuleConfigured:
+		return "CONFIGURED   "
 	default:
 		return aurora.Inverse("Unknown").String()
 	}
@@ -79,6 +92,16 @@ func loadCiRules(config *viper.Viper) []Rule {
 	rules = append(rules, newGenericCiRule(
 		ruleKey,
 		config.GetString(fmt.Sprintf("rules.%s", ruleKey)),
+		func(value string) error {
+			lowestEfficiency, err := strconv.ParseFloat(value, 64)
+			if err != nil {
+				return fmt.Errorf("invalid config value ('%v'): %v", value, err)
+			}
+			if lowestEfficiency < 0 || lowestEfficiency > 1 {
+				return fmt.Errorf("lowestEfficiency config value is outside allowed range (0-1), given '%s'", value)
+			}
+			return nil
+		},
 		func(analysis *image.AnalysisResult, value string) (RuleStatus, string) {
 			lowestEfficiency, err := strconv.ParseFloat(value, 64)
 			if err != nil {
@@ -95,6 +118,13 @@ func loadCiRules(config *viper.Viper) []Rule {
 	rules = append(rules, newGenericCiRule(
 		ruleKey,
 		config.GetString(fmt.Sprintf("rules.%s", ruleKey)),
+		func(value string) error {
+			_, err := humanize.ParseBytes(value)
+			if err != nil {
+				return fmt.Errorf("invalid config value ('%v'): %v", value, err)
+			}
+			return nil
+		},
 		func(analysis *image.AnalysisResult, value string) (RuleStatus, string) {
 			highestWastedBytes, err := humanize.ParseBytes(value)
 			if err != nil {
@@ -111,6 +141,16 @@ func loadCiRules(config *viper.Viper) []Rule {
 	rules = append(rules, newGenericCiRule(
 		ruleKey,
 		config.GetString(fmt.Sprintf("rules.%s", ruleKey)),
+		func(value string) error {
+			highestUserWastedPercent, err := strconv.ParseFloat(value, 64)
+			if err != nil {
+				return fmt.Errorf("invalid config value ('%v'): %v", value, err)
+			}
+			if highestUserWastedPercent < 0 || highestUserWastedPercent > 1 {
+				return fmt.Errorf("highestUserWastedPercent config value is outside allowed range (0-1), given '%s'", value)
+			}
+			return nil
+		},
 		func(analysis *image.AnalysisResult, value string) (RuleStatus, string) {
 			highestUserWastedPercent, err := strconv.ParseFloat(value, 64)
 			if err != nil {

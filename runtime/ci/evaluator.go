@@ -12,10 +12,11 @@ import (
 )
 
 type Evaluator struct {
-	Rules   []Rule
-	Results map[string]RuleResult
-	Tally   ResultTally
-	Pass    bool
+	Rules         []Rule
+	Results       map[string]RuleResult
+	Tally         ResultTally
+	Pass          bool
+	Misconfigured bool
 }
 
 type ResultTally struct {
@@ -39,6 +40,38 @@ func (ci *Evaluator) isRuleEnabled(rule Rule) bool {
 }
 
 func (ci *Evaluator) Evaluate(analysis *image.AnalysisResult) bool {
+	canEvaluate := true
+	for _, rule := range ci.Rules {
+		if !ci.isRuleEnabled(rule) {
+			ci.Results[rule.Key()] = RuleResult{
+				status:  RuleConfigured,
+				message: "rule disabled",
+			}
+			continue
+		}
+
+		err := rule.Validate()
+		if err != nil {
+			ci.Results[rule.Key()] = RuleResult{
+				status:  RuleMisconfigured,
+				message: err.Error(),
+			}
+			canEvaluate = false
+		} else {
+			ci.Results[rule.Key()] = RuleResult{
+				status:  RuleConfigured,
+				message: "test",
+			}
+		}
+
+	}
+
+	if !canEvaluate {
+		ci.Pass = false
+		ci.Misconfigured = true
+		return ci.Pass
+	}
+
 	for _, rule := range ci.Rules {
 		if !ci.isRuleEnabled(rule) {
 			ci.Results[rule.Key()] = RuleResult{
@@ -50,7 +83,7 @@ func (ci *Evaluator) Evaluate(analysis *image.AnalysisResult) bool {
 
 		status, message := rule.Evaluate(analysis)
 
-		if _, exists := ci.Results[rule.Key()]; exists {
+		if value, exists := ci.Results[rule.Key()]; exists && value.status != RuleConfigured && value.status != RuleMisconfigured {
 			panic(fmt.Errorf("CI rule result recorded twice: %s", rule.Key()))
 		}
 
@@ -105,6 +138,11 @@ func (ci *Evaluator) Report() {
 		} else {
 			fmt.Printf("  %s: %s\n", result.status.String(), name)
 		}
+	}
+
+	if ci.Misconfigured {
+		fmt.Println(aurora.Red("CI Misconfigured"))
+		return
 	}
 
 	summary := fmt.Sprintf("Result:%s [Total:%d] [Passed:%d] [Failed:%d] [Warn:%d] [Skipped:%d]", status, ci.Tally.Total, ci.Tally.Pass, ci.Tally.Fail, ci.Tally.Warn, ci.Tally.Skip)
