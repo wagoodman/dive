@@ -93,13 +93,14 @@ yay -S dive
 ```
 
 The above example assumes [`yay`](https://aur.archlinux.org/packages/yay/) as the tool for installing AUR packages.
-*Note*: the AUR repository is **not** controlled by the dive project maintainer. 
+*Note*: the AUR repository is **not** controlled by the dive project maintainer.
 
 **Mac**
+
 ```bash
-brew tap wagoodman/dive
 brew install dive
 ```
+
 or download the latest Darwin build from the [releases page](https://github.com/wagoodman/dive/releases/download/v0.7.2/dive_0.7.2_darwin_amd64.tar.gz).
 
 **Windows**
@@ -119,7 +120,7 @@ go get github.com/wagoodman/dive
 docker pull wagoodman/dive
 ```
 
-or 
+or
 
 ```bash
 docker pull quay.io/wagoodman/dive
@@ -142,7 +143,7 @@ docker run --rm -it `
 **Note:** depending on the version of docker you are running locally you may need to specify the docker API version as an environment variable:
 ```bash
    DOCKER_API_VERSION=1.37 dive ...
-``` 
+```
 or if you are running with a docker image:
 ```bash
 docker run --rm -it \
@@ -209,7 +210,7 @@ keybinding:
   toggle-view: tab
   filter-files: ctrl+f, ctrl+slash
 
-  # Layer view specific bindings  
+  # Layer view specific bindings
   compare-all: ctrl+a
   compare-layer: ctrl+l
 
@@ -223,9 +224,9 @@ keybinding:
   toggle-filetree-attributes: ctrl+b
   page-up: pgup
   page-down: pgdn
-  
+
 diff:
-  # You can change the default files show in the filetree (right pane). All diff types are shown by default. 
+  # You can change the default files show in the filetree (right pane). All diff types are shown by default.
   hide:
     - added
     - removed
@@ -238,7 +239,7 @@ filetree:
 
   # The percentage of screen width the filetree should take on the screen (must be >0 and <1)
   pane-width: 0.5
-  
+
   # Show the file attributes next to the filetree
   show-attributes: true
 
