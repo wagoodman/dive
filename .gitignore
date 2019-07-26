@@ -21,3 +21,6 @@
 /dist
 .cover
 coverage.txt
+
+# ignore the binary
+dive

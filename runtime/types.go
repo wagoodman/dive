@@ -1,10 +1,15 @@
 package runtime
 
+import (
+	"github.com/spf13/viper"
+)
+
 type Options struct {
-	ImageId      string
-	ExportFile   string
-	CiConfigFile string
-	BuildArgs    []string
+	Ci         bool
+	ImageId    string
+	ExportFile string
+	CiConfig   *viper.Viper
+	BuildArgs  []string
 }
 
 type export struct {

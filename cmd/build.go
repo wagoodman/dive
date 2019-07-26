@@ -25,7 +25,9 @@ func doBuildCmd(cmd *cobra.Command, args []string) {
 	initLogging()
 
 	runtime.Run(runtime.Options{
+		Ci:         isCi,
 		BuildArgs:  args,
 		ExportFile: exportFile,
+		CiConfig:   ciConfig,
 	})
 }

@@ -1,76 +1,101 @@
 package ci
 
 import (
-	"bytes"
 	"fmt"
-	"io/ioutil"
 	"sort"
 	"strings"
 
-	"github.com/logrusorgru/aurora"
 	"github.com/spf13/viper"
+
+	"github.com/logrusorgru/aurora"
 	"github.com/wagoodman/dive/image"
 )
 
-func NewEvaluator() *Evaluator {
-	ciConfig := viper.New()
-	ciConfig.SetConfigType("yaml")
+type Evaluator struct {
+	Rules         []Rule
+	Results       map[string]RuleResult
+	Tally         ResultTally
+	Pass          bool
+	Misconfigured bool
+}
 
-	ciConfig.SetDefault("rules.lowestEfficiency", 0.9)
-	ciConfig.SetDefault("rules.highestWastedBytes", "disabled")
-	ciConfig.SetDefault("rules.highestUserWastedPercent", 0.1)
+type ResultTally struct {
+	Pass  int
+	Fail  int
+	Skip  int
+	Warn  int
+	Total int
+}
 
+func NewEvaluator(config *viper.Viper) *Evaluator {
 	return &Evaluator{
-		Config:  ciConfig,
-		Rules:   loadCiRules(),
+		Rules:   loadCiRules(config),
 		Results: make(map[string]RuleResult),
 		Pass:    true,
 	}
 }
 
-func (ci *Evaluator) LoadConfig(configFile string) error {
-	fileBytes, err := ioutil.ReadFile(configFile)
-	if err != nil {
-		return err
-	}
-
-	err = ci.Config.ReadConfig(bytes.NewBuffer(fileBytes))
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
 func (ci *Evaluator) isRuleEnabled(rule Rule) bool {
-	value := ci.Config.GetString(rule.Key())
-	return value != "disabled"
+	return rule.Configuration() != "disabled"
 }
 
 func (ci *Evaluator) Evaluate(analysis *image.AnalysisResult) bool {
+	canEvaluate := true
 	for _, rule := range ci.Rules {
-		if ci.isRuleEnabled(rule) {
-
-			value := ci.Config.GetString(rule.Key())
-			status, message := rule.Evaluate(analysis, value)
-
-			if _, exists := ci.Results[rule.Key()]; exists {
-				panic(fmt.Errorf("CI rule result recorded twice: %s", rule.Key()))
-			}
-
-			if status == RuleFailed {
-				ci.Pass = false
-			}
-
+		if !ci.isRuleEnabled(rule) {
 			ci.Results[rule.Key()] = RuleResult{
-				status:  status,
-				message: message,
+				status:  RuleConfigured,
+				message: "rule disabled",
 			}
+			continue
+		}
+
+		err := rule.Validate()
+		if err != nil {
+			ci.Results[rule.Key()] = RuleResult{
+				status:  RuleMisconfigured,
+				message: err.Error(),
+			}
+			canEvaluate = false
 		} else {
+			ci.Results[rule.Key()] = RuleResult{
+				status:  RuleConfigured,
+				message: "test",
+			}
+		}
+
+	}
+
+	if !canEvaluate {
+		ci.Pass = false
+		ci.Misconfigured = true
+		return ci.Pass
+	}
+
+	for _, rule := range ci.Rules {
+		if !ci.isRuleEnabled(rule) {
 			ci.Results[rule.Key()] = RuleResult{
 				status:  RuleDisabled,
 				message: "rule disabled",
 			}
+			continue
 		}
+
+		status, message := rule.Evaluate(analysis)
+
+		if value, exists := ci.Results[rule.Key()]; exists && value.status != RuleConfigured && value.status != RuleMisconfigured {
+			panic(fmt.Errorf("CI rule result recorded twice: %s", rule.Key()))
+		}
+
+		if status == RuleFailed {
+			ci.Pass = false
+		}
+
+		ci.Results[rule.Key()] = RuleResult{
+			status:  status,
+			message: message,
+		}
+
 	}
 
 	ci.Tally.Total = len(ci.Results)
@@ -113,6 +138,11 @@ func (ci *Evaluator) Report() {
 		} else {
 			fmt.Printf("  %s: %s\n", result.status.String(), name)
 		}
+	}
+
+	if ci.Misconfigured {
+		fmt.Println(aurora.Red("CI Misconfigured"))
+		return
 	}
 
 	summary := fmt.Sprintf("Result:%s [Total:%d] [Passed:%d] [Failed:%d] [Warn:%d] [Skipped:%d]", status, ci.Tally.Total, ci.Tally.Pass, ci.Tally.Fail, ci.Tally.Warn, ci.Tally.Skip)
