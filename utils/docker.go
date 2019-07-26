@@ -12,6 +12,7 @@ func RunDockerCmd(cmdStr string, args ...string) error {
 	allArgs := cleanArgs(append([]string{cmdStr}, args...))
 
 	cmd := exec.Command("docker", allArgs...)
+	cmd.Env = os.Environ()
 
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr

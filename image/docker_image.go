@@ -85,6 +85,11 @@ func (image *dockerImageAnalyzer) Fetch() (io.ReadCloser, error) {
 		clientOpts = append(clientOpts, client.WithDialContext(helper.Dialer))
 
 	default:
+
+		if os.Getenv("DOCKER_TLS_VERIFY") != "" && os.Getenv("DOCKER_CERT_PATH") == "" {
+			os.Setenv("DOCKER_CERT_PATH", "~/.docker")
+		}
+
 		clientOpts = append(clientOpts, client.FromEnv)
 	}
 
