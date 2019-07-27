@@ -10,7 +10,6 @@ import (
 	"github.com/logrusorgru/aurora"
 	"github.com/wagoodman/dive/filetree"
 	"github.com/wagoodman/dive/image"
-	"github.com/wagoodman/dive/runtime/ci"
 	"github.com/wagoodman/dive/ui"
 	"github.com/wagoodman/dive/utils"
 )
@@ -24,9 +23,7 @@ func runCi(analysis *image.AnalysisResult, options Options) {
 	fmt.Printf("  wastedBytes: %d bytes (%s)\n", analysis.WastedBytes, humanize.Bytes(analysis.WastedBytes))
 	fmt.Printf("  userWastedPercent: %2.4f %%\n", analysis.WastedUserPercent*100)
 
-	evaluator := ci.NewEvaluator(options.CiConfig)
-
-	fmt.Println(title("Run CI Validations..."))
+	evaluator := NewCiEvaluator(options.CiConfig)
 
 	pass := evaluator.Evaluate(analysis)
 	evaluator.Report()

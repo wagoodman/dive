@@ -1,4 +1,4 @@
-package ci
+package runtime
 
 import (
 	"fmt"
@@ -21,7 +21,7 @@ const (
 	RuleConfigured
 )
 
-type Rule interface {
+type CiRule interface {
 	Key() string
 	Configuration() string
 	Validate() error
@@ -86,8 +86,8 @@ func (status RuleStatus) String() string {
 	}
 }
 
-func loadCiRules(config *viper.Viper) []Rule {
-	var rules = make([]Rule, 0)
+func loadCiRules(config *viper.Viper) []CiRule {
+	var rules = make([]CiRule, 0)
 	var ruleKey = "lowestEfficiency"
 	rules = append(rules, newGenericCiRule(
 		ruleKey,
