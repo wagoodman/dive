@@ -14,6 +14,18 @@ builds:
 dockers:
   -
     binary: dive
+    dockerfile: Dockerfile.slim
+    image_templates:
+      - "wagoodman/dive:{{ .Tag }}-slim"
+      - "wagoodman/dive:v{{ .Major }}-slim"
+      - "wagoodman/dive:v{{ .Major }}.{{ .Minor }}-slim"
+      - "wagoodman/dive:slim"
+      - "quay.io/wagoodman/dive:{{ .Tag }}-slim"
+      - "quay.io/wagoodman/dive:v{{ .Major }}-slim"
+      - "quay.io/wagoodman/dive:v{{ .Major }}.{{ .Minor }}-slim"
+      - "quay.io/wagoodman/dive:slim"
+  -
+    binary: dive
     dockerfile: Dockerfile
     image_templates:
     - "wagoodman/dive:{{ .Tag }}"
