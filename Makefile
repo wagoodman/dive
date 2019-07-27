@@ -12,7 +12,7 @@ run-large: build
 	./build/$(BIN) amir20/clashleaders:latest
 
 build:
-	go build -o build/$(BIN)
+	CGO_ENABLED=0 go build -o build/$(BIN)
 
 release: test-coverage validate
 	./.scripts/tag.sh

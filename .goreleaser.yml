@@ -14,6 +14,7 @@ builds:
 dockers:
   -
     binary: dive
+    dockerfile: Dockerfile
     image_templates:
     - "wagoodman/dive:{{ .Tag }}"
     - "wagoodman/dive:v{{ .Major }}"
