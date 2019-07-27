@@ -14,6 +14,19 @@ builds:
 dockers:
   -
     binary: dive
+    dockerfile: Dockerfile.slim
+    image_templates:
+      - "wagoodman/dive:{{ .Tag }}-slim"
+      - "wagoodman/dive:v{{ .Major }}-slim"
+      - "wagoodman/dive:v{{ .Major }}.{{ .Minor }}-slim"
+      - "wagoodman/dive:slim"
+      - "quay.io/wagoodman/dive:{{ .Tag }}-slim"
+      - "quay.io/wagoodman/dive:v{{ .Major }}-slim"
+      - "quay.io/wagoodman/dive:v{{ .Major }}.{{ .Minor }}-slim"
+      - "quay.io/wagoodman/dive:slim"
+  -
+    binary: dive
+    dockerfile: Dockerfile
     image_templates:
     - "wagoodman/dive:{{ .Tag }}"
     - "wagoodman/dive:v{{ .Major }}"
@@ -23,7 +36,18 @@ dockers:
     - "quay.io/wagoodman/dive:v{{ .Major }}"
     - "quay.io/wagoodman/dive:v{{ .Major }}.{{ .Minor }}"
     - "quay.io/wagoodman/dive:latest"
-
+  -
+    binary: dive
+    dockerfile: Dockerfile.full
+    image_templates:
+      - "wagoodman/dive:{{ .Tag }}-full"
+      - "wagoodman/dive:v{{ .Major }}-full"
+      - "wagoodman/dive:v{{ .Major }}.{{ .Minor }}-full"
+      - "wagoodman/dive:full"
+      - "quay.io/wagoodman/dive:{{ .Tag }}-full"
+      - "quay.io/wagoodman/dive:v{{ .Major }}-full"
+      - "quay.io/wagoodman/dive:v{{ .Major }}.{{ .Minor }}-full"
+      - "quay.io/wagoodman/dive:full"
 archive:
   format: tar.gz
 

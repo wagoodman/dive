@@ -6,9 +6,13 @@ import (
 	"strings"
 )
 
+func IsDockerClientAvailable() bool {
+	_, err := exec.LookPath("docker")
+	return err == nil
+}
+
 // RunDockerCmd runs a given Docker command in the current tty
 func RunDockerCmd(cmdStr string, args ...string) error {
-
 	allArgs := cleanArgs(append([]string{cmdStr}, args...))
 
 	cmd := exec.Command("docker", allArgs...)

@@ -100,6 +100,11 @@ func (image *dockerImageAnalyzer) Fetch() (io.ReadCloser, error) {
 	}
 	_, _, err = image.client.ImageInspectWithRaw(ctx, image.id)
 	if err != nil {
+
+		if !utils.IsDockerClientAvailable() {
+			return nil, fmt.Errorf("cannot find docker client executable")
+		}
+
 		// don't use the API, the CLI has more informative output
 		fmt.Println("Image not available locally. Trying to pull '" + image.id + "'...")
 		err = utils.RunDockerCmd("pull", image.id)
