@@ -157,7 +157,7 @@ When running dive with the environment variable `CI=true` then the dive UI will 
 ```
 rules:
   # If the efficiency is measured below X%, mark as failed.
-  # Expressed as a percentage between 0-1.
+  # Expressed as a ratio between 0-1.
   lowestEfficiency: 0.95
 
   # If the amount of wasted space is at least X or larger than X, mark as failed.
@@ -166,7 +166,7 @@ rules:
 
   # If the amount of wasted space makes up for X% or more of the image, mark as failed.
   # Note: the base image layer is NOT included in the total image size.
-  # Expressed as a percentage between 0-1; fails if the threshold is met or crossed.
+  # Expressed as a ratio between 0-1; fails if the threshold is met or crossed.
   highestUserWastedPercent: 0.20
 ```
 You can override the CI config path with the `--ci-config` option.
