@@ -52,9 +52,9 @@ func initCli() {
 	rootCmd.Flags().StringVarP(&exportFile, "json", "j", "", "Skip the interactive TUI and write the layer analysis statistics to a given file.")
 	rootCmd.Flags().StringVar(&ciConfigFile, "ci-config", ".dive-ci", "If CI=true in the environment, use the given yaml to drive validation rules.")
 
-	rootCmd.Flags().String("lowestEfficiency", "0.9", "(only valid with --ci given) lowest allowable image efficiency, otherwise CI validation will fail.")
+	rootCmd.Flags().String("lowestEfficiency", "0.9", "(only valid with --ci given) lowest allowable image efficiency (as a ratio between 0-1), otherwise CI validation will fail.")
 	rootCmd.Flags().String("highestWastedBytes", "disabled", "(only valid with --ci given) highest allowable bytes wasted, otherwise CI validation will fail.")
-	rootCmd.Flags().String("highestUserWastedPercent", "0.1", "(only valid with --ci given) highest allowable percentage of bytes wasted, otherwise CI validation will fail.")
+	rootCmd.Flags().String("highestUserWastedPercent", "0.1", "(only valid with --ci given) highest allowable percentage of bytes wasted (as a ratio between 0-1), otherwise CI validation will fail.")
 
 	for _, key := range []string{"lowestEfficiency", "highestWastedBytes", "highestUserWastedPercent"} {
 		if err := ciConfig.BindPFlag(fmt.Sprintf("rules.%s", key), rootCmd.Flags().Lookup(key)); err != nil {
