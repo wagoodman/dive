@@ -109,7 +109,7 @@ func Test_Export(t *testing.T) {
     "sizeBytes": 1220598,
     "inefficientBytes": 32025,
     "efficiencyScore": 0.9844212134184309,
-    "inefficientFiles": [
+    "ReferenceFile": [
       {
         "count": 2,
         "sizeBytes": 12810,

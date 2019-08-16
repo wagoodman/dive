@@ -1,4 +1,4 @@
-package ci
+package runtime
 
 import (
 	"strings"
@@ -10,7 +10,7 @@ import (
 
 func Test_Evaluator(t *testing.T) {
 
-	result, err := image.TestLoadDockerImageTar("../../.data/test-docker-image.tar")
+	result, err := image.TestLoadDockerImageTar("../.data/test-docker-image.tar")
 	if err != nil {
 		t.Fatalf("Test_Export: unable to fetch analysis: %v", err)
 	}
@@ -35,7 +35,7 @@ func Test_Evaluator(t *testing.T) {
 		ciConfig.SetDefault("rules.highestWastedBytes", test.wastedBytes)
 		ciConfig.SetDefault("rules.highestUserWastedPercent", test.wastedPercent)
 
-		evaluator := NewEvaluator(ciConfig)
+		evaluator := NewCiEvaluator(ciConfig)
 
 		pass := evaluator.Evaluate(result)
 

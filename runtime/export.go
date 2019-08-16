@@ -7,10 +7,29 @@ import (
 	"github.com/wagoodman/dive/image"
 )
 
+type export struct {
+	Layer []exportLayer `json:"layer"`
+	Image exportImage   `json:"image"`
+}
+
+type exportLayer struct {
+	Index     int    `json:"index"`
+	DigestID  string `json:"digestId"`
+	SizeBytes uint64 `json:"sizeBytes"`
+	Command   string `json:"command"`
+}
+
+type exportImage struct {
+	SizeBytes        uint64          `json:"sizeBytes"`
+	InefficientBytes uint64          `json:"inefficientBytes"`
+	EfficiencyScore  float64         `json:"efficiencyScore"`
+	InefficientFiles []ReferenceFile `json:"ReferenceFile"`
+}
+
 func newExport(analysis *image.AnalysisResult) *export {
 	data := export{}
 	data.Layer = make([]exportLayer, len(analysis.Layers))
-	data.Image.InefficientFiles = make([]inefficientFiles, len(analysis.Inefficiencies))
+	data.Image.InefficientFiles = make([]ReferenceFile, len(analysis.Inefficiencies))
 
 	// export layers in order
 	for revIdx := len(analysis.Layers) - 1; revIdx >= 0; revIdx-- {
@@ -32,10 +51,10 @@ func newExport(analysis *image.AnalysisResult) *export {
 	for idx := 0; idx < len(analysis.Inefficiencies); idx++ {
 		fileData := analysis.Inefficiencies[len(analysis.Inefficiencies)-1-idx]
 
-		data.Image.InefficientFiles[idx] = inefficientFiles{
-			Count:     len(fileData.Nodes),
-			SizeBytes: uint64(fileData.CumulativeSize),
-			File:      fileData.Path,
+		data.Image.InefficientFiles[idx] = ReferenceFile{
+			References: len(fileData.Nodes),
+			SizeBytes:  uint64(fileData.CumulativeSize),
+			Path:       fileData.Path,
 		}
 	}
 

@@ -1,8 +1,10 @@
-package ci
+package runtime
 
 import (
 	"fmt"
+	"github.com/dustin/go-humanize"
 	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/spf13/viper"
@@ -11,12 +13,13 @@ import (
 	"github.com/wagoodman/dive/image"
 )
 
-type Evaluator struct {
-	Rules         []Rule
-	Results       map[string]RuleResult
-	Tally         ResultTally
-	Pass          bool
-	Misconfigured bool
+type CiEvaluator struct {
+	Rules            []CiRule
+	Results          map[string]RuleResult
+	Tally            ResultTally
+	Pass             bool
+	Misconfigured    bool
+	InefficientFiles []ReferenceFile
 }
 
 type ResultTally struct {
@@ -27,19 +30,19 @@ type ResultTally struct {
 	Total int
 }
 
-func NewEvaluator(config *viper.Viper) *Evaluator {
-	return &Evaluator{
+func NewCiEvaluator(config *viper.Viper) *CiEvaluator {
+	return &CiEvaluator{
 		Rules:   loadCiRules(config),
 		Results: make(map[string]RuleResult),
 		Pass:    true,
 	}
 }
 
-func (ci *Evaluator) isRuleEnabled(rule Rule) bool {
+func (ci *CiEvaluator) isRuleEnabled(rule CiRule) bool {
 	return rule.Configuration() != "disabled"
 }
 
-func (ci *Evaluator) Evaluate(analysis *image.AnalysisResult) bool {
+func (ci *CiEvaluator) Evaluate(analysis *image.AnalysisResult) bool {
 	canEvaluate := true
 	for _, rule := range ci.Rules {
 		if !ci.isRuleEnabled(rule) {
@@ -72,6 +75,18 @@ func (ci *Evaluator) Evaluate(analysis *image.AnalysisResult) bool {
 		return ci.Pass
 	}
 
+	// capture inefficient files
+	for idx := 0; idx < len(analysis.Inefficiencies); idx++ {
+		fileData := analysis.Inefficiencies[len(analysis.Inefficiencies)-1-idx]
+
+		ci.InefficientFiles = append(ci.InefficientFiles, ReferenceFile{
+			References: len(fileData.Nodes),
+			SizeBytes:  uint64(fileData.CumulativeSize),
+			Path:       fileData.Path,
+		})
+	}
+
+	// evaluate results against the configured CI rules
 	for _, rule := range ci.Rules {
 		if !ci.isRuleEnabled(rule) {
 			ci.Results[rule.Key()] = RuleResult{
@@ -117,7 +132,22 @@ func (ci *Evaluator) Evaluate(analysis *image.AnalysisResult) bool {
 	return ci.Pass
 }
 
-func (ci *Evaluator) Report() {
+func (ci *CiEvaluator) Report() {
+	fmt.Println(title("Inefficient Files:"))
+
+	template := "%5s  %12s  %-s\n"
+	fmt.Printf(template, "Count", "Wasted Space", "File Path")
+
+	if len(ci.InefficientFiles) == 0 {
+		fmt.Println("None")
+	} else {
+		for _, file := range ci.InefficientFiles {
+			fmt.Printf(template, strconv.Itoa(file.References), humanize.Bytes(uint64(file.SizeBytes)), file.Path)
+		}
+	}
+
+	fmt.Println(title("Results:"))
+
 	status := "PASS"
 
 	rules := make([]string, 0, len(ci.Results))
