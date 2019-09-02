@@ -1,15 +1,9 @@
-FROM alpine:3.10
-
+FROM alpine:3.10 AS build
 ARG DOCKER_CLI_VERSION="19.03.1"
-ENV DOWNLOAD_URL="https://download.docker.com/linux/static/stable/x86_64/docker-$DOCKER_CLI_VERSION.tgz"
-
 RUN apk --update add curl \
-    && mkdir -p /tmp/download \
-    && curl -L $DOWNLOAD_URL | tar -xz -C /tmp/download \
-    && mv /tmp/download/docker/docker /usr/local/bin/ \
-    && rm -rf /tmp/download \
-    && apk del curl \
-    && rm -rf /var/cache/apk/*
+ && curl -L https://download.docker.com/linux/static/stable/x86_64/docker-$DOCKER_CLI_VERSION.tgz | tar -xzf - docker/docker --strip-component=1 -C /tmp
 
+FROM alpine:3.10
+COPY --from=build /tmp/docker /usr/local/bin
 COPY dive /
 ENTRYPOINT ["/dive"]
