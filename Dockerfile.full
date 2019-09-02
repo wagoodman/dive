@@ -3,7 +3,8 @@ ARG DOCKER_CLI_VERSION="19.03.1"
 RUN apk --update add curl \
  && curl -L https://download.docker.com/linux/static/stable/x86_64/docker-$DOCKER_CLI_VERSION.tgz | tar -xzf - docker/docker --strip-component=1 -C /tmp
 
-FROM alpine:3.10
-COPY --from=build /tmp/docker /usr/local/bin
+FROM scratch
+COPY --from=build /tmp/docker /
 COPY dive /
+ENV PATH /
 ENTRYPOINT ["/dive"]
