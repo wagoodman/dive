@@ -20,7 +20,6 @@ Building on Macbook
 
 ```bash
 docker run --rm -it \
-      -v /usr/local/bin/docker:/bin/docker \
       -v /var/run/docker.sock:/var/run/docker.sock \
       -v  "$(pwd)":"$(pwd)" \
       -w "$(pwd)" \
