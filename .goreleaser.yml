@@ -13,7 +13,8 @@ builds:
 
 dockers:
   -
-    binary: dive
+    binaries:
+      - dive
     dockerfile: Dockerfile.slim
     image_templates:
       - "wagoodman/dive:{{ .Tag }}-slim"
@@ -25,7 +26,8 @@ dockers:
       - "quay.io/wagoodman/dive:v{{ .Major }}.{{ .Minor }}-slim"
       - "quay.io/wagoodman/dive:slim"
   -
-    binary: dive
+    binaries:
+      - dive
     dockerfile: Dockerfile
     image_templates:
     - "wagoodman/dive:{{ .Tag }}"
@@ -37,7 +39,8 @@ dockers:
     - "quay.io/wagoodman/dive:v{{ .Major }}.{{ .Minor }}"
     - "quay.io/wagoodman/dive:latest"
   -
-    binary: dive
+    binaries:
+      - dive
     dockerfile: Dockerfile.full
     image_templates:
       - "wagoodman/dive:{{ .Tag }}-full"
