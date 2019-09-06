@@ -2,7 +2,6 @@ package ui
 
 import (
 	"fmt"
-
 	"github.com/jroimartin/gocui"
 )
 

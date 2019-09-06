@@ -88,10 +88,6 @@ func toggleView(g *gocui.Gui, v *gocui.View) (err error) {
 func toggleFilterView(g *gocui.Gui, v *gocui.View) error {
 	// delete all user input from the tree view
 	Controllers.Filter.view.Clear()
-	err := Controllers.Filter.view.SetCursor(0, 0)
-	if err != nil {
-		return err
-	}
 
 	// toggle hiding
 	Controllers.Filter.hidden = !Controllers.Filter.hidden
@@ -104,7 +100,15 @@ func toggleFilterView(g *gocui.Gui, v *gocui.View) error {
 		Update()
 		Render()
 	} else {
-		return toggleView(g, v)
+		err := toggleView(g, v)
+		if err != nil {
+			return err
+		}
+
+		err = Controllers.Filter.view.SetCursor(0, 0)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -381,11 +385,11 @@ func Run(analysis *image.AnalysisResult, cache filetree.TreeCache) {
 	Render()
 
 	if err := keyBindings(g); err != nil {
-		logrus.Error(err)
+		logrus.Error("keybinding error: ", err)
 	}
 
 	if err := g.MainLoop(); err != nil && err != gocui.ErrQuit {
-		logrus.Error(err)
+		logrus.Error("main loop error: ", err)
 	}
 	utils.Exit(0)
 }
