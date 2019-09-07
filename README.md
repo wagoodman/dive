@@ -73,14 +73,14 @@ Analyze and image and get a pass/fail result based on the image efficiency and w
 
 **Ubuntu/Debian**
 ```bash
-wget https://github.com/wagoodman/dive/releases/download/v0.8.0/dive_0.8.0_linux_amd64.deb
-sudo apt install ./dive_0.8.0_linux_amd64.deb
+wget https://github.com/wagoodman/dive/releases/download/v0.8.1/dive_0.8.1_linux_amd64.deb
+sudo apt install ./dive_0.8.1_linux_amd64.deb
 ```
 
 **RHEL/Centos**
 ```bash
-curl -OL https://github.com/wagoodman/dive/releases/download/v0.8.0/dive_0.8.0_linux_amd64.rpm
-rpm -i dive_0.8.0_linux_amd64.rpm
+curl -OL https://github.com/wagoodman/dive/releases/download/v0.8.1/dive_0.8.1_linux_amd64.rpm
+rpm -i dive_0.8.1_linux_amd64.rpm
 ```
 
 **Arch Linux**
@@ -92,7 +92,6 @@ yay -S dive
 ```
 
 The above example assumes [`yay`](https://aur.archlinux.org/packages/yay/) as the tool for installing AUR packages.
-*Note*: the AUR repository is **not** controlled by the dive project maintainer.
 
 **Mac**
 
@@ -100,11 +99,11 @@ The above example assumes [`yay`](https://aur.archlinux.org/packages/yay/) as th
 brew install dive
 ```
 
-or download the latest Darwin build from the [releases page](https://github.com/wagoodman/dive/releases/download/v0.8.0/dive_0.8.0_darwin_amd64.tar.gz).
+or download the latest Darwin build from the [releases page](https://github.com/wagoodman/dive/releases/download/v0.8.1/dive_0.8.1_darwin_amd64.tar.gz).
 
 **Windows**
 
-Download the [latest release](https://github.com/wagoodman/dive/releases/download/v0.8.0/dive_0.8.0_windows_amd64.zip).
+Download the [latest release](https://github.com/wagoodman/dive/releases/download/v0.8.1/dive_0.8.1_windows_amd64.zip).
 
 **Go tools**
 Requires Go version 1.9 or higher.
