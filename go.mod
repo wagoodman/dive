@@ -6,7 +6,7 @@ require (
 	github.com/Nvveen/Gotty v0.0.0-20120604004816-cd527374f1e5 // indirect
 	github.com/cespare/xxhash v1.1.0
 	github.com/docker/cli v0.0.0-20190303104010-8ddde26af67f
-	github.com/docker/distribution v0.0.0-20181126153310-93e082742a009850ac46962150b2f652a822c5ff // indirect
+	github.com/docker/distribution 93e082742a009850ac46962150b2f652a822c5ff // indirect
 	github.com/docker/docker v0.0.0-20181126153310-0b7cb16dde4a20d024c7be59801d63bcfd18611b
 	github.com/docker/go-connections v0.4.0 // indirect
 	github.com/docker/go-units v0.3.3 // indirect
