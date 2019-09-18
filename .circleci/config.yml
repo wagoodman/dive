@@ -1,0 +1,70 @@
+version: 2
+
+jobs:
+  golang-1.11-pipeline:
+    working_directory: /home/circleci/app
+    docker:
+      - image: circleci/golang:1.11
+        environment:
+          GO111MODULE: "on"
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - golang-1.11-{{ checksum "go.sum" }}
+      - run: make setup
+      - save_cache:
+          key: golang-1.11-{{ checksum "go.sum" }}
+          paths:
+            - "/go/pkg/mod"
+      - run:
+          name: run static analysis & tests
+          command: make ci
+
+  golang-1.12-pipeline:
+    working_directory: /home/circleci/app
+    docker:
+      - image: circleci/golang:1.12
+        environment:
+          GO111MODULE: "on"
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - golang-1.12-{{ checksum "go.sum" }}
+      - run: make setup
+      - save_cache:
+          key: golang-1.12-{{ checksum "go.sum" }}
+          paths:
+            - "/go/pkg/mod"
+      - run:
+          name: run static analysis & tests
+          command: make ci
+
+  golang-1.13-pipeline:
+    working_directory: /home/circleci/app
+    docker:
+      - image: circleci/golang:1.13
+        environment:
+          GO111MODULE: "on"
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - golang-1.13-{{ checksum "go.sum" }}
+      - run: make setup
+      - save_cache:
+          key: golang-1.13-{{ checksum "go.sum" }}
+          paths:
+            - "/go/pkg/mod"
+      - run:
+          name: run static analysis & tests
+          command: make ci
+
+workflows:
+  version: 2
+  commit:
+    jobs:
+      - golang-1.11-pipeline
+      - golang-1.12-pipeline
+      - golang-1.13-pipeline

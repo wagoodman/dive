@@ -41,6 +41,10 @@ lint: build
 generate-test-data:
 	docker build -t dive-test:latest -f .data/Dockerfile.test-image . && docker image save -o .data/test-docker-image.tar dive-test:latest && echo "Exported test data!"
 
+setup:
+	go get ./...
+	curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b /go/bin v1.18.0
+
 clean:
 	rm -rf build
 	go clean
