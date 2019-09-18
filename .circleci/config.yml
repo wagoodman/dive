@@ -12,8 +12,7 @@ jobs:
       - restore_cache:
           keys:
             - golang-1.11-{{ checksum "go.sum" }}
-      - run: go get ./...
-      - run: curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b /go/bin v1.17.1
+      - run: make setup
       - save_cache:
           key: golang-1.11-{{ checksum "go.sum" }}
           paths:
@@ -33,8 +32,7 @@ jobs:
       - restore_cache:
           keys:
             - golang-1.12-{{ checksum "go.sum" }}
-      - run: go get ./...
-      - run: curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b /go/bin v1.17.1
+      - run: make setup
       - save_cache:
           key: golang-1.12-{{ checksum "go.sum" }}
           paths:
@@ -54,8 +52,7 @@ jobs:
       - restore_cache:
           keys:
             - golang-1.13-{{ checksum "go.sum" }}
-      - run: go get ./...
-      - run: curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b /go/bin v1.17.1
+      - run: make setup
       - save_cache:
           key: golang-1.13-{{ checksum "go.sum" }}
           paths:
