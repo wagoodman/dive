@@ -2,13 +2,13 @@ package ui
 
 import (
 	"fmt"
+	"github.com/wagoodman/dive/dive/filetree"
 	"strconv"
 	"strings"
 
 	"github.com/dustin/go-humanize"
 	"github.com/jroimartin/gocui"
 	"github.com/lunixbochs/vtclean"
-	"github.com/wagoodman/dive/filetree"
 )
 
 // DetailsController holds the UI objects and data models for populating the lower-left pane. Specifically the pane that

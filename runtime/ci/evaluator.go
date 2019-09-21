@@ -1,8 +1,10 @@
-package runtime
+package ci
 
 import (
 	"fmt"
 	"github.com/dustin/go-humanize"
+	"github.com/wagoodman/dive/dive/image"
+	"github.com/wagoodman/dive/utils"
 	"sort"
 	"strconv"
 	"strings"
@@ -10,7 +12,6 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/logrusorgru/aurora"
-	"github.com/wagoodman/dive/image"
 )
 
 type CiEvaluator struct {
@@ -133,7 +134,7 @@ func (ci *CiEvaluator) Evaluate(analysis *image.AnalysisResult) bool {
 }
 
 func (ci *CiEvaluator) Report() {
-	fmt.Println(title("Inefficient Files:"))
+	fmt.Println(utils.TitleFormat("Inefficient Files:"))
 
 	template := "%5s  %12s  %-s\n"
 	fmt.Printf(template, "Count", "Wasted Space", "File Path")
@@ -142,11 +143,11 @@ func (ci *CiEvaluator) Report() {
 		fmt.Println("None")
 	} else {
 		for _, file := range ci.InefficientFiles {
-			fmt.Printf(template, strconv.Itoa(file.References), humanize.Bytes(uint64(file.SizeBytes)), file.Path)
+			fmt.Printf(template, strconv.Itoa(file.References), humanize.Bytes(file.SizeBytes), file.Path)
 		}
 	}
 
-	fmt.Println(title("Results:"))
+	fmt.Println(utils.TitleFormat("Results:"))
 
 	status := "PASS"
 

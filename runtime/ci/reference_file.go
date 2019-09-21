@@ -1,4 +1,4 @@
-package runtime
+package ci
 
 type ReferenceFile struct {
 	References int    `json:"count"`

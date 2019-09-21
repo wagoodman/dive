@@ -2,13 +2,13 @@ package ui
 
 import (
 	"fmt"
+	"github.com/wagoodman/dive/dive/image"
 	"strings"
 
 	"github.com/jroimartin/gocui"
 	"github.com/lunixbochs/vtclean"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
-	"github.com/wagoodman/dive/image"
 	"github.com/wagoodman/dive/utils"
 	"github.com/wagoodman/keybinding"
 )
@@ -282,7 +282,6 @@ func (controller *LayerController) Render() error {
 		controller.header.Clear()
 		width, _ := g.Size()
 		headerStr := fmt.Sprintf("[%s]%s\n", title, strings.Repeat("─", width*2))
-		// headerStr += fmt.Sprintf("Cmp "+image.LayerFormat, "Layer Digest", "Size", "Command")
 		headerStr += fmt.Sprintf("Cmp"+image.LayerFormat, "Size", "Command")
 		_, _ = fmt.Fprintln(controller.header, Formatting.Header(vtclean.Clean(headerStr, false)))
 

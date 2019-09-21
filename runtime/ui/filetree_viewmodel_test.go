@@ -2,6 +2,7 @@ package ui
 
 import (
 	"bytes"
+	"github.com/wagoodman/dive/dive/image/docker"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -10,8 +11,7 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/sergi/go-diff/diffmatchpatch"
-	"github.com/wagoodman/dive/filetree"
-	"github.com/wagoodman/dive/image"
+	"github.com/wagoodman/dive/dive/filetree"
 )
 
 const allowTestDataCapture = false
@@ -73,7 +73,7 @@ func assertTestData(t *testing.T, actualBytes []byte) {
 }
 
 func initializeTestViewModel(t *testing.T) *FileTreeViewModel {
-	result, err := image.TestLoadDockerImageTar("../.data/test-docker-image.tar")
+	result, err := docker.TestLoadDockerImageTar("../../.data/test-docker-image.tar")
 	if err != nil {
 		t.Fatalf("%s: unable to fetch analysis: %v", t.Name(), err)
 	}

@@ -11,7 +11,7 @@ import (
 	"github.com/wagoodman/dive/utils"
 
 	"github.com/lunixbochs/vtclean"
-	"github.com/wagoodman/dive/filetree"
+	"github.com/wagoodman/dive/dive/filetree"
 )
 
 // FileTreeViewModel holds the UI objects and data models for populating the right pane. Specifically the pane that
