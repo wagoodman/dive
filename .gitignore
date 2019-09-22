@@ -1,4 +1,5 @@
 /.idea
+/bin 
 
 # Binaries for programs and plugins
 *.exe
@@ -21,6 +22,3 @@
 /dist
 .cover
 coverage.txt
-
-# ignore the binary
-dive

@@ -1,7 +1,7 @@
 version: 2
 
 jobs:
-  golang-1.11-pipeline:
+  golang-1.11:
     working_directory: /home/circleci/app
     docker:
       - image: circleci/golang:1.11
@@ -21,7 +21,7 @@ jobs:
           name: run static analysis & tests
           command: make ci
 
-  golang-1.12-pipeline:
+  golang-1.12:
     working_directory: /home/circleci/app
     docker:
       - image: circleci/golang:1.12
@@ -41,7 +41,7 @@ jobs:
           name: run static analysis & tests
           command: make ci
 
-  golang-1.13-pipeline:
+  golang-1.13:
     working_directory: /home/circleci/app
     docker:
       - image: circleci/golang:1.13
@@ -65,6 +65,6 @@ workflows:
   version: 2
   commit:
     jobs:
-      - golang-1.11-pipeline
-      - golang-1.12-pipeline
-      - golang-1.13-pipeline
+      - golang-1.11
+      - golang-1.12
+      - golang-1.13
