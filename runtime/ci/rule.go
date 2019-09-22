@@ -1,14 +1,14 @@
-package runtime
+package ci
 
 import (
 	"fmt"
+	"github.com/wagoodman/dive/dive/image"
 	"strconv"
 
 	"github.com/spf13/viper"
 
 	"github.com/dustin/go-humanize"
 	"github.com/logrusorgru/aurora"
-	"github.com/wagoodman/dive/image"
 )
 
 const (
@@ -25,7 +25,7 @@ type CiRule interface {
 	Key() string
 	Configuration() string
 	Validate() error
-	Evaluate(*image.AnalysisResult) (RuleStatus, string)
+	Evaluate(result *image.AnalysisResult) (RuleStatus, string)
 }
 
 type GenericCiRule struct {

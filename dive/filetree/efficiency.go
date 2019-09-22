@@ -7,6 +7,17 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+// EfficiencyData represents the storage and reference statistics for a given file tree path.
+type EfficiencyData struct {
+	Path              string
+	Nodes             []*FileNode
+	CumulativeSize    int64
+	minDiscoveredSize int64
+}
+
+// EfficiencySlice represents an ordered set of EfficiencyData data structures.
+type EfficiencySlice []*EfficiencyData
+
 // Len is required for sorting.
 func (efs EfficiencySlice) Len() int {
 	return len(efs)

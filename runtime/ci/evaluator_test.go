@@ -1,16 +1,16 @@
-package runtime
+package ci
 
 import (
+	"github.com/wagoodman/dive/dive/image/docker"
 	"strings"
 	"testing"
 
 	"github.com/spf13/viper"
-	"github.com/wagoodman/dive/image"
 )
 
 func Test_Evaluator(t *testing.T) {
 
-	result, err := image.TestLoadDockerImageTar("../.data/test-docker-image.tar")
+	result, err := docker.TestLoadDockerImageTar("../../.data/test-docker-image.tar")
 	if err != nil {
 		t.Fatalf("Test_Export: unable to fetch analysis: %v", err)
 	}

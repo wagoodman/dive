@@ -11,7 +11,7 @@ import (
 	"github.com/wagoodman/keybinding"
 
 	"github.com/jroimartin/gocui"
-	"github.com/wagoodman/dive/filetree"
+	"github.com/wagoodman/dive/dive/filetree"
 )
 
 const (

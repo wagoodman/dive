@@ -1,10 +1,9 @@
-package runtime
+package export
 
 import (
 	"encoding/json"
+	"github.com/wagoodman/dive/dive/image"
 	"io/ioutil"
-
-	"github.com/wagoodman/dive/image"
 )
 
 type export struct {
@@ -20,16 +19,22 @@ type exportLayer struct {
 }
 
 type exportImage struct {
-	SizeBytes        uint64          `json:"sizeBytes"`
-	InefficientBytes uint64          `json:"inefficientBytes"`
-	EfficiencyScore  float64         `json:"efficiencyScore"`
-	InefficientFiles []ReferenceFile `json:"ReferenceFile"`
+	SizeBytes        uint64                `json:"sizeBytes"`
+	InefficientBytes uint64                `json:"inefficientBytes"`
+	EfficiencyScore  float64               `json:"efficiencyScore"`
+	InefficientFiles []exportReferenceFile `json:"exportReferenceFile"`
 }
 
-func newExport(analysis *image.AnalysisResult) *export {
+type exportReferenceFile struct {
+	References int    `json:"count"`
+	SizeBytes  uint64 `json:"sizeBytes"`
+	Path       string `json:"file"`
+}
+
+func NewExport(analysis *image.AnalysisResult) *export {
 	data := export{}
 	data.Layer = make([]exportLayer, len(analysis.Layers))
-	data.Image.InefficientFiles = make([]ReferenceFile, len(analysis.Inefficiencies))
+	data.Image.InefficientFiles = make([]exportReferenceFile, len(analysis.Inefficiencies))
 
 	// export layers in order
 	for revIdx := len(analysis.Layers) - 1; revIdx >= 0; revIdx-- {
@@ -51,7 +56,7 @@ func newExport(analysis *image.AnalysisResult) *export {
 	for idx := 0; idx < len(analysis.Inefficiencies); idx++ {
 		fileData := analysis.Inefficiencies[len(analysis.Inefficiencies)-1-idx]
 
-		data.Image.InefficientFiles[idx] = ReferenceFile{
+		data.Image.InefficientFiles[idx] = exportReferenceFile{
 			References: len(fileData.Nodes),
 			SizeBytes:  uint64(fileData.CumulativeSize),
 			Path:       fileData.Path,
@@ -65,7 +70,7 @@ func (exp *export) marshal() ([]byte, error) {
 	return json.MarshalIndent(&exp, "", "  ")
 }
 
-func (exp *export) toFile(exportFilePath string) error {
+func (exp *export) ToFile(exportFilePath string) error {
 	payload, err := exp.marshal()
 	if err != nil {
 		return err

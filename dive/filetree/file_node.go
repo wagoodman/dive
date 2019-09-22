@@ -24,6 +24,16 @@ var diffTypeColor = map[DiffType]*color.Color{
 	Unmodified: color.New(color.Reset),
 }
 
+// FileNode represents a single file, its relation to files beneath it, the tree it exists in, and the metadata of the given file.
+type FileNode struct {
+	Tree     *FileTree
+	Parent   *FileNode
+	Name     string
+	Data     NodeData
+	Children map[string]*FileNode
+	path     string
+}
+
 // NewNode creates a new FileNode relative to the given parent node with a payload.
 func NewNode(parent *FileNode, name string, data FileInfo) (node *FileNode) {
 	node = new(FileNode)

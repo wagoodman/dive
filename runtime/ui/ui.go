@@ -2,13 +2,13 @@ package ui
 
 import (
 	"errors"
+	"github.com/wagoodman/dive/dive/image"
 
 	"github.com/fatih/color"
 	"github.com/jroimartin/gocui"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
-	"github.com/wagoodman/dive/filetree"
-	"github.com/wagoodman/dive/image"
+	"github.com/wagoodman/dive/dive/filetree"
 	"github.com/wagoodman/dive/utils"
 	"github.com/wagoodman/keybinding"
 )

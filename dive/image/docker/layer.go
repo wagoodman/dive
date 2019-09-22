@@ -1,17 +1,30 @@
-package image
+package docker
 
 import (
 	"fmt"
+	"github.com/wagoodman/dive/dive/image"
 	"strings"
 
 	"github.com/dustin/go-humanize"
-	"github.com/wagoodman/dive/filetree"
+	"github.com/wagoodman/dive/dive/filetree"
 )
 
-const (
-	// LayerFormat = "%-15s %7s  %s"
-	LayerFormat = "%7s  %s"
-)
+// Layer represents a Docker image layer and metadata
+type dockerLayer struct {
+	tarPath string
+	history imageHistoryEntry
+	index   int
+	tree    *filetree.FileTree
+}
+
+type imageHistoryEntry struct {
+	ID         string
+	Size       uint64
+	Created    string `json:"created"`
+	Author     string `json:"author"`
+	CreatedBy  string `json:"created_by"`
+	EmptyLayer bool   `json:"empty_layer"`
+}
 
 // ShortId returns the truncated id of the current layer.
 func (layer *dockerLayer) TarId() string {
@@ -60,17 +73,21 @@ func (layer *dockerLayer) ShortId() string {
 	return id
 }
 
+func (layer *dockerLayer) StringFormat() string {
+	return image.LayerFormat
+}
+
 // String represents a layer in a columnar format.
 func (layer *dockerLayer) String() string {
 
 	if layer.index == 0 {
-		return fmt.Sprintf(LayerFormat,
+		return fmt.Sprintf(image.LayerFormat,
 			// layer.ShortId(),
 			// fmt.Sprintf("%d",layer.Index()),
 			humanize.Bytes(layer.Size()),
 			"FROM "+layer.ShortId())
 	}
-	return fmt.Sprintf(LayerFormat,
+	return fmt.Sprintf(image.LayerFormat,
 		// layer.ShortId(),
 		// fmt.Sprintf("%d",layer.Index()),
 		humanize.Bytes(layer.Size()),

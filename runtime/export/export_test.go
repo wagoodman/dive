@@ -1,18 +1,17 @@
-package runtime
+package export
 
 import (
+	"github.com/wagoodman/dive/dive/image/docker"
 	"testing"
-
-	"github.com/wagoodman/dive/image"
 )
 
 func Test_Export(t *testing.T) {
 
-	result, err := image.TestLoadDockerImageTar("../.data/test-docker-image.tar")
+	result, err := docker.TestLoadDockerImageTar("../../.data/test-docker-image.tar")
 	if err != nil {
 		t.Fatalf("Test_Export: unable to fetch analysis: %v", err)
 	}
-	export := newExport(result)
+	export := NewExport(result)
 	payload, err := export.marshal()
 	if err != nil {
 		t.Errorf("Test_Export: unable to export analysis: %v", err)
@@ -109,7 +108,7 @@ func Test_Export(t *testing.T) {
     "sizeBytes": 1220598,
     "inefficientBytes": 32025,
     "efficiencyScore": 0.9844212134184309,
-    "ReferenceFile": [
+    "exportReferenceFile": [
       {
         "count": 2,
         "sizeBytes": 12810,

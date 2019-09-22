@@ -1,9 +1,9 @@
-package image
+package docker
 
 import (
 	"archive/tar"
-	"encoding/json"
 	"fmt"
+	"github.com/wagoodman/dive/dive/image"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -12,16 +12,24 @@ import (
 
 	"github.com/docker/cli/cli/connhelper"
 	"github.com/docker/docker/client"
-	"github.com/sirupsen/logrus"
-	"github.com/wagoodman/dive/filetree"
+	"github.com/wagoodman/dive/dive/filetree"
 	"github.com/wagoodman/dive/utils"
 	"golang.org/x/net/context"
 )
 
 var dockerVersion string
 
-func newDockerImageAnalyzer(imageId string) Analyzer {
-	return &dockerImageAnalyzer{
+type imageAnalyzer struct {
+	id        string
+	client    *client.Client
+	jsonFiles map[string][]byte
+	trees     []*filetree.FileTree
+	layerMap  map[string]*filetree.FileTree
+	layers    []*dockerLayer
+}
+
+func NewImageAnalyzer(imageId string) *imageAnalyzer {
+	return &imageAnalyzer{
 		// store discovered json files in a map so we can read the image in one pass
 		jsonFiles: make(map[string][]byte),
 		layerMap:  make(map[string]*filetree.FileTree),
@@ -29,39 +37,10 @@ func newDockerImageAnalyzer(imageId string) Analyzer {
 	}
 }
 
-func newDockerImageManifest(manifestBytes []byte) dockerImageManifest {
-	var manifest []dockerImageManifest
-	err := json.Unmarshal(manifestBytes, &manifest)
-	if err != nil {
-		logrus.Panic(err)
-	}
-	return manifest[0]
-}
-
-func newDockerImageConfig(configBytes []byte) dockerImageConfig {
-	var imageConfig dockerImageConfig
-	err := json.Unmarshal(configBytes, &imageConfig)
-	if err != nil {
-		logrus.Panic(err)
-	}
-
-	layerIdx := 0
-	for idx := range imageConfig.History {
-		if imageConfig.History[idx].EmptyLayer {
-			imageConfig.History[idx].ID = "<missing>"
-		} else {
-			imageConfig.History[idx].ID = imageConfig.RootFs.DiffIds[layerIdx]
-			layerIdx++
-		}
-	}
-
-	return imageConfig
-}
-
-func (image *dockerImageAnalyzer) Fetch() (io.ReadCloser, error) {
+func (img *imageAnalyzer) Fetch() (io.ReadCloser, error) {
 	var err error
 
-	// pull the image if it does not exist
+	// pull the img if it does not exist
 	ctx := context.Background()
 
 	host := os.Getenv("DOCKER_HOST")
@@ -94,11 +73,11 @@ func (image *dockerImageAnalyzer) Fetch() (io.ReadCloser, error) {
 	}
 
 	clientOpts = append(clientOpts, client.WithVersion(dockerVersion))
-	image.client, err = client.NewClientWithOpts(clientOpts...)
+	img.client, err = client.NewClientWithOpts(clientOpts...)
 	if err != nil {
 		return nil, err
 	}
-	_, _, err = image.client.ImageInspectWithRaw(ctx, image.id)
+	_, _, err = img.client.ImageInspectWithRaw(ctx, img.id)
 	if err != nil {
 
 		if !utils.IsDockerClientAvailable() {
@@ -106,14 +85,14 @@ func (image *dockerImageAnalyzer) Fetch() (io.ReadCloser, error) {
 		}
 
 		// don't use the API, the CLI has more informative output
-		fmt.Println("Image not available locally. Trying to pull '" + image.id + "'...")
-		err = utils.RunDockerCmd("pull", image.id)
+		fmt.Println("Image not available locally. Trying to pull '" + img.id + "'...")
+		err = utils.RunDockerCmd("pull", img.id)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	readCloser, err := image.client.ImageSave(ctx, []string{image.id})
+	readCloser, err := img.client.ImageSave(ctx, []string{img.id})
 	if err != nil {
 		return nil, err
 	}
@@ -121,7 +100,7 @@ func (image *dockerImageAnalyzer) Fetch() (io.ReadCloser, error) {
 	return readCloser, nil
 }
 
-func (image *dockerImageAnalyzer) Parse(tarFile io.ReadCloser) error {
+func (img *imageAnalyzer) Parse(tarFile io.ReadCloser) error {
 	tarReader := tar.NewReader(tarFile)
 
 	var currentLayer uint
@@ -148,7 +127,7 @@ func (image *dockerImageAnalyzer) Parse(tarFile io.ReadCloser) error {
 					return err
 				}
 				layerReader := tar.NewReader(tarReader)
-				err := image.processLayerTar(name, currentLayer, layerReader)
+				err := img.processLayerTar(name, currentLayer, layerReader)
 				if err != nil {
 					return err
 				}
@@ -157,7 +136,7 @@ func (image *dockerImageAnalyzer) Parse(tarFile io.ReadCloser) error {
 				if err != nil {
 					return err
 				}
-				image.jsonFiles[name] = fileBuffer
+				img.jsonFiles[name] = fileBuffer
 			}
 		}
 	}
@@ -165,31 +144,31 @@ func (image *dockerImageAnalyzer) Parse(tarFile io.ReadCloser) error {
 	return nil
 }
 
-func (image *dockerImageAnalyzer) Analyze() (*AnalysisResult, error) {
-	image.trees = make([]*filetree.FileTree, 0)
+func (img *imageAnalyzer) Analyze() (*image.AnalysisResult, error) {
+	img.trees = make([]*filetree.FileTree, 0)
 
-	manifest := newDockerImageManifest(image.jsonFiles["manifest.json"])
-	config := newDockerImageConfig(image.jsonFiles[manifest.ConfigPath])
+	manifest := newDockerImageManifest(img.jsonFiles["manifest.json"])
+	config := newDockerImageConfig(img.jsonFiles[manifest.ConfigPath])
 
 	// build the content tree
 	for _, treeName := range manifest.LayerTarPaths {
-		image.trees = append(image.trees, image.layerMap[treeName])
+		img.trees = append(img.trees, img.layerMap[treeName])
 	}
 
 	// build the layers array
-	image.layers = make([]*dockerLayer, len(image.trees))
+	img.layers = make([]*dockerLayer, len(img.trees))
 
-	// note that the image config stores images in reverse chronological order, so iterate backwards through layers
+	// note that the img config stores images in reverse chronological order, so iterate backwards through layers
 	// as you iterate chronologically through history (ignoring history items that have no layer contents)
-	// Note: history is not required metadata in a docker image!
+	// Note: history is not required metadata in a docker img!
 	tarPathIdx := 0
 	histIdx := 0
-	for layerIdx := len(image.trees) - 1; layerIdx >= 0; layerIdx-- {
+	for layerIdx := len(img.trees) - 1; layerIdx >= 0; layerIdx-- {
 
-		tree := image.trees[(len(image.trees)-1)-layerIdx]
+		tree := img.trees[(len(img.trees)-1)-layerIdx]
 
 		// ignore empty layers, we are only observing layers with content
-		historyObj := dockerImageHistoryEntry{
+		historyObj := imageHistoryEntry{
 			CreatedBy: "(missing)",
 		}
 		for nextHistIdx := histIdx; nextHistIdx < len(config.History); nextHistIdx++ {
@@ -203,22 +182,22 @@ func (image *dockerImageAnalyzer) Analyze() (*AnalysisResult, error) {
 			histIdx++
 		}
 
-		image.layers[layerIdx] = &dockerLayer{
+		img.layers[layerIdx] = &dockerLayer{
 			history: historyObj,
 			index:   tarPathIdx,
-			tree:    image.trees[layerIdx],
+			tree:    img.trees[layerIdx],
 			tarPath: manifest.LayerTarPaths[tarPathIdx],
 		}
-		image.layers[layerIdx].history.Size = tree.FileSize
+		img.layers[layerIdx].history.Size = tree.FileSize
 
 		tarPathIdx++
 	}
 
-	efficiency, inefficiencies := filetree.Efficiency(image.trees)
+	efficiency, inefficiencies := filetree.Efficiency(img.trees)
 
 	var sizeBytes, userSizeBytes uint64
-	layers := make([]Layer, len(image.layers))
-	for i, v := range image.layers {
+	layers := make([]image.Layer, len(img.layers))
+	for i, v := range img.layers {
 		layers[i] = v
 		sizeBytes += v.Size()
 		if i != 0 {
@@ -232,9 +211,9 @@ func (image *dockerImageAnalyzer) Analyze() (*AnalysisResult, error) {
 		wastedBytes += uint64(fileData.CumulativeSize)
 	}
 
-	return &AnalysisResult{
+	return &image.AnalysisResult{
 		Layers:            layers,
-		RefTrees:          image.trees,
+		RefTrees:          img.trees,
 		Efficiency:        efficiency,
 		UserSizeByes:      userSizeBytes,
 		SizeBytes:         sizeBytes,
@@ -244,11 +223,11 @@ func (image *dockerImageAnalyzer) Analyze() (*AnalysisResult, error) {
 	}, nil
 }
 
-func (image *dockerImageAnalyzer) processLayerTar(name string, layerIdx uint, reader *tar.Reader) error {
+func (img *imageAnalyzer) processLayerTar(name string, layerIdx uint, reader *tar.Reader) error {
 	tree := filetree.NewFileTree()
 	tree.Name = name
 
-	fileInfos, err := image.getFileList(reader)
+	fileInfos, err := img.getFileList(reader)
 	if err != nil {
 		return err
 	}
@@ -262,11 +241,11 @@ func (image *dockerImageAnalyzer) processLayerTar(name string, layerIdx uint, re
 		}
 	}
 
-	image.layerMap[tree.Name] = tree
+	img.layerMap[tree.Name] = tree
 	return nil
 }
 
-func (image *dockerImageAnalyzer) getFileList(tarReader *tar.Reader) ([]filetree.FileInfo, error) {
+func (img *imageAnalyzer) getFileList(tarReader *tar.Reader) ([]filetree.FileInfo, error) {
 	var files []filetree.FileInfo
 
 	for {

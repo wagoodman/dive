@@ -21,6 +21,15 @@ const (
 	collapsedItem        = "⊕ "
 )
 
+// FileTree represents a set of files, directories, and their relations.
+type FileTree struct {
+	Root     *FileNode
+	Size     int
+	FileSize uint64
+	Name     string
+	Id       uuid.UUID
+}
+
 // NewFileTree creates an empty FileTree
 func NewFileTree() (tree *FileTree) {
 	tree = new(FileTree)

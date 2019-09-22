@@ -2,28 +2,26 @@ package runtime
 
 import (
 	"fmt"
+	"github.com/wagoodman/dive/dive"
+	"github.com/wagoodman/dive/runtime/ci"
+	"github.com/wagoodman/dive/runtime/export"
 	"io/ioutil"
 	"log"
 	"os"
 
 	"github.com/dustin/go-humanize"
-	"github.com/logrusorgru/aurora"
-	"github.com/wagoodman/dive/filetree"
-	"github.com/wagoodman/dive/image"
-	"github.com/wagoodman/dive/ui"
+	"github.com/wagoodman/dive/dive/filetree"
+	"github.com/wagoodman/dive/dive/image"
+	"github.com/wagoodman/dive/runtime/ui"
 	"github.com/wagoodman/dive/utils"
 )
-
-func title(s string) string {
-	return aurora.Bold(s).String()
-}
 
 func runCi(analysis *image.AnalysisResult, options Options) {
 	fmt.Printf("  efficiency: %2.4f %%\n", analysis.Efficiency*100)
 	fmt.Printf("  wastedBytes: %d bytes (%s)\n", analysis.WastedBytes, humanize.Bytes(analysis.WastedBytes))
 	fmt.Printf("  userWastedPercent: %2.4f %%\n", analysis.WastedUserPercent*100)
 
-	evaluator := NewCiEvaluator(options.CiConfig)
+	evaluator := ci.NewCiEvaluator(options.CiConfig)
 
 	pass := evaluator.Evaluate(analysis)
 	evaluator.Report()
@@ -63,13 +61,13 @@ func Run(options Options) {
 	doBuild := len(options.BuildArgs) > 0
 
 	if doBuild {
-		fmt.Println(title("Building image..."))
+		fmt.Println(utils.TitleFormat("Building image..."))
 		options.ImageId = runBuild(options.BuildArgs)
 	}
 
-	analyzer := image.GetAnalyzer(options.ImageId)
+	analyzer := dive.GetAnalyzer(options.ImageId)
 
-	fmt.Println(title("Fetching image...") + " (this can take a while with large images)")
+	fmt.Println(utils.TitleFormat("Fetching image...") + " (this can take a while with large images)")
 	reader, err := analyzer.Fetch()
 	if err != nil {
 		fmt.Printf("cannot fetch image: %v\n", err)
@@ -77,7 +75,7 @@ func Run(options Options) {
 	}
 	defer reader.Close()
 
-	fmt.Println(title("Parsing image..."))
+	fmt.Println(utils.TitleFormat("Parsing image..."))
 	err = analyzer.Parse(reader)
 	if err != nil {
 		fmt.Printf("cannot parse image: %v\n", err)
@@ -85,9 +83,9 @@ func Run(options Options) {
 	}
 
 	if doExport {
-		fmt.Println(title(fmt.Sprintf("Analyzing image... (export to '%s')", options.ExportFile)))
+		fmt.Println(utils.TitleFormat(fmt.Sprintf("Analyzing image... (export to '%s')", options.ExportFile)))
 	} else {
-		fmt.Println(title("Analyzing image..."))
+		fmt.Println(utils.TitleFormat("Analyzing image..."))
 	}
 
 	result, err := analyzer.Analyze()
@@ -97,7 +95,7 @@ func Run(options Options) {
 	}
 
 	if doExport {
-		err = newExport(result).toFile(options.ExportFile)
+		err = export.NewExport(result).ToFile(options.ExportFile)
 		if err != nil {
 			fmt.Printf("cannot write export file: %v\n", err)
 			utils.Exit(1)
@@ -111,7 +109,7 @@ func Run(options Options) {
 			utils.Exit(0)
 		}
 
-		fmt.Println(title("Building cache..."))
+		fmt.Println(utils.TitleFormat("Building cache..."))
 		cache := filetree.NewFileTreeCache(result.RefTrees)
 		cache.Build()
 
