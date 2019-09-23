@@ -2,6 +2,7 @@
 /.data
 /.cover
 /dist
+!/dist/dive_linux_amd64
 /ui
 /utils
 /image

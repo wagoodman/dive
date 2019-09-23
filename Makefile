@@ -1,18 +1,20 @@
 BIN = dive
+BUILD_DIR = ./dist/dive_linux_amd64/
+BUILD_PATH = $(BUILD_DIR)/$(BIN)
 
 all: clean build
 
 run: build
-	./build/$(BIN) build -t dive-example:latest -f .data/Dockerfile.example .
+	$(BUILD_PATH) build -t dive-example:latest -f .data/Dockerfile.example .
 
 run-ci: build
-	CI=true ./build/$(BIN) dive-example:latest --ci-config .data/.dive-ci
+	CI=true $(BUILD_PATH) dive-example:latest --ci-config .data/.dive-ci
 
 run-large: build
-	./build/$(BIN) amir20/clashleaders:latest
+	$(BUILD_PATH) amir20/clashleaders:latest
 
 build:
-	CGO_ENABLED=0 go build -o build/$(BIN)
+	CGO_ENABLED=0 go build -o $(BUILD_PATH)
 
 release: test-coverage validate
 	./.scripts/tag.sh
@@ -46,7 +48,7 @@ setup:
 	curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b /go/bin v1.18.0
 
 clean:
-	rm -rf build
+	rm -rf dist
 	go clean
 
 .PHONY: build install test lint clean release validate generate-test-data test-coverage ci

@@ -5,6 +5,6 @@ RUN apk --update add curl \
 
 FROM scratch
 COPY --from=build /tmp/docker /
-COPY dive /
+COPY dist/dive_linux_amd64/dive /
 ENV PATH /
 ENTRYPOINT ["/dive"]
