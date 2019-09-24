@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"time"
 
 	"github.com/dustin/go-humanize"
 	"github.com/wagoodman/dive/dive/filetree"
@@ -112,6 +113,13 @@ func Run(options Options) {
 		fmt.Println(utils.TitleFormat("Building cache..."))
 		cache := filetree.NewFileTreeCache(result.RefTrees)
 		cache.Build()
+
+		// it appears there is a race condition where termbox.Init() will
+		// block nearly indefinitely when running as the first process in
+		// a Docker container when started within ~25ms of container startup.
+		// I can't seem to determine the exact root cause, however, a large
+		// enough sleep will prevent this behavior (todo: remove this hack)
+		time.Sleep(100 * time.Millisecond)
 
 		ui.Run(result, cache)
 	}
