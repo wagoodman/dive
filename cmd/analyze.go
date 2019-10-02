@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/wagoodman/dive/dive"
 
 	"github.com/spf13/cobra"
 	"github.com/wagoodman/dive/runtime"
@@ -39,8 +40,15 @@ func doAnalyzeCmd(cmd *cobra.Command, args []string) {
 		utils.Exit(1)
 	}
 
+	engine, err := cmd.PersistentFlags().GetString("engine")
+	if err != nil {
+		fmt.Printf("unable to determine eingine: %v\n", err)
+		utils.Exit(1)
+	}
+
 	runtime.Run(runtime.Options{
 		Ci:         isCi,
+		Engine:     dive.GetEngine(engine),
 		ImageId:    userImage,
 		ExportFile: exportFile,
 		CiConfig:   ciConfig,

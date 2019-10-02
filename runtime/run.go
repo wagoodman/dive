@@ -5,9 +5,6 @@ import (
 	"github.com/wagoodman/dive/dive"
 	"github.com/wagoodman/dive/runtime/ci"
 	"github.com/wagoodman/dive/runtime/export"
-	"io/ioutil"
-	"log"
-	"os"
 	"time"
 
 	"github.com/dustin/go-humanize"
@@ -33,55 +30,39 @@ func runCi(analysis *image.AnalysisResult, options Options) {
 	utils.Exit(1)
 }
 
-func runBuild(buildArgs []string) string {
-	iidfile, err := ioutil.TempFile("/tmp", "dive.*.iid")
-	if err != nil {
-		utils.Cleanup()
-		log.Fatal(err)
-	}
-	defer os.Remove(iidfile.Name())
-
-	allArgs := append([]string{"--iidfile", iidfile.Name()}, buildArgs...)
-	err = utils.RunDockerCmd("build", allArgs...)
-	if err != nil {
-		utils.Cleanup()
-		log.Fatal(err)
-	}
-
-	imageId, err := ioutil.ReadFile(iidfile.Name())
-	if err != nil {
-		utils.Cleanup()
-		log.Fatal(err)
-	}
-
-	return string(imageId)
-}
-
 func Run(options Options) {
+	var err error
 	doExport := options.ExportFile != ""
 	doBuild := len(options.BuildArgs) > 0
 
-	if doBuild {
-		fmt.Println(utils.TitleFormat("Building image..."))
-		options.ImageId = runBuild(options.BuildArgs)
+	// if an image option was provided, parse it and determine the container image...
+	// otherwise, use the configs default value.
+
+	// if build is given, get the handler based off of either the explicit runtime
+
+	img, err := dive.GetImageHandler(options.Engine)
+	if err != nil {
+		fmt.Printf("cannot determine image provider: %v\n", err)
+		utils.Exit(1)
 	}
 
-	analyzer := dive.GetAnalyzer(options.ImageId)
+	if doBuild {
+		fmt.Println(utils.TitleFormat("Building image..."))
+		options.ImageId, err = img.Build(options.BuildArgs)
+		if err != nil {
+			fmt.Printf("cannot build image: %v\n", err)
+			utils.Exit(1)
+		}
+	}
 
-	fmt.Println(utils.TitleFormat("Fetching image...") + " (this can take a while with large images)")
-	reader, err := analyzer.Fetch()
+	err = img.Get(options.ImageId)
 	if err != nil {
 		fmt.Printf("cannot fetch image: %v\n", err)
 		utils.Exit(1)
 	}
-	defer reader.Close()
 
-	fmt.Println(utils.TitleFormat("Parsing image..."))
-	err = analyzer.Parse(reader)
-	if err != nil {
-		fmt.Printf("cannot parse image: %v\n", err)
-		utils.Exit(1)
-	}
+	// todo, cleanup on error
+	// todo: image get shold return error for cleanup?
 
 	if doExport {
 		fmt.Println(utils.TitleFormat(fmt.Sprintf("Analyzing image... (export to '%s')", options.ExportFile)))
@@ -89,7 +70,7 @@ func Run(options Options) {
 		fmt.Println(utils.TitleFormat("Analyzing image..."))
 	}
 
-	result, err := analyzer.Analyze()
+	result, err := img.Analyze()
 	if err != nil {
 		fmt.Printf("cannot analyze image: %v\n", err)
 		utils.Exit(1)

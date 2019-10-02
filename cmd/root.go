@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/wagoodman/dive/dive"
 	"github.com/wagoodman/dive/dive/filetree"
 	"io/ioutil"
 	"os"
@@ -58,8 +59,14 @@ func initCli() {
 
 	for _, key := range []string{"lowestEfficiency", "highestWastedBytes", "highestUserWastedPercent"} {
 		if err := ciConfig.BindPFlag(fmt.Sprintf("rules.%s", key), rootCmd.Flags().Lookup(key)); err != nil {
-			log.Fatal("Unable to bind flag:", err)
+			log.Fatal("Unable to bind '%s' flag:", key, err)
 		}
+	}
+
+	rootCmd.PersistentFlags().String("engine", "docker", "The container engine to fetch the image from. Allowed values: "+strings.Join(dive.AllowedEngines, ", "))
+
+	if err := ciConfig.BindPFlag("container-engine.default", rootCmd.PersistentFlags().Lookup("engine")); err != nil {
+		log.Fatal("Unable to bind 'engine' flag:", err)
 	}
 }
 
@@ -96,6 +103,8 @@ func initConfig() {
 	viper.SetDefault("filetree.collapse-dir", false)
 	viper.SetDefault("filetree.pane-width", 0.5)
 	viper.SetDefault("filetree.show-attributes", true)
+
+	viper.SetDefault("container-engine.default", "docker")
 
 	viper.AutomaticEnv() // read in environment variables that match
 

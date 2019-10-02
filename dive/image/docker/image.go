@@ -28,23 +28,40 @@ type dockerImage struct {
 	layers    []*dockerLayer
 }
 
-func NewDockerImage(imageId string) *dockerImage {
+func NewDockerImage() *dockerImage {
 	return &dockerImage{
 		// store discovered json files in a map so we can read the image in one pass
 		jsonFiles: make(map[string][]byte),
 		layerMap:  make(map[string]*filetree.FileTree),
-		id:        imageId,
 	}
 }
 
-func (img *dockerImage) Fetch() (io.ReadCloser, error) {
+func (img *dockerImage) Get(id string) error {
+	img.id = id
+
+	reader, err := img.fetch()
+	if err != nil {
+		return err
+	}
+	defer reader.Close()
+
+	return img.parse(reader)
+}
+
+func (img *dockerImage) Build(args []string) (string, error) {
+	var err error
+	img.id, err = buildImageFromCli(args)
+	return img.id, err
+}
+
+func (img *dockerImage) fetch() (io.ReadCloser, error) {
 	var err error
 
 	// pull the img if it does not exist
 	ctx := context.Background()
 
 	host := os.Getenv("DOCKER_HOST")
-	var clientOpts []func(*client.Client) error
+	var clientOpts []client.Opt
 
 	switch strings.Split(host, ":")[0] {
 	case "ssh":
@@ -95,7 +112,7 @@ func (img *dockerImage) Fetch() (io.ReadCloser, error) {
 	return readCloser, nil
 }
 
-func (img *dockerImage) Parse(tarFile io.ReadCloser) error {
+func (img *dockerImage) parse(tarFile io.ReadCloser) error {
 	tarReader := tar.NewReader(tarFile)
 
 	var currentLayer uint
