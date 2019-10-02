@@ -19,7 +19,7 @@ import (
 
 var dockerVersion string
 
-type imageAnalyzer struct {
+type dockerImage struct {
 	id        string
 	client    *client.Client
 	jsonFiles map[string][]byte
@@ -28,8 +28,8 @@ type imageAnalyzer struct {
 	layers    []*dockerLayer
 }
 
-func NewImageAnalyzer(imageId string) *imageAnalyzer {
-	return &imageAnalyzer{
+func NewDockerImage(imageId string) *dockerImage {
+	return &dockerImage{
 		// store discovered json files in a map so we can read the image in one pass
 		jsonFiles: make(map[string][]byte),
 		layerMap:  make(map[string]*filetree.FileTree),
@@ -37,7 +37,7 @@ func NewImageAnalyzer(imageId string) *imageAnalyzer {
 	}
 }
 
-func (img *imageAnalyzer) Fetch() (io.ReadCloser, error) {
+func (img *dockerImage) Fetch() (io.ReadCloser, error) {
 	var err error
 
 	// pull the img if it does not exist
@@ -79,14 +79,9 @@ func (img *imageAnalyzer) Fetch() (io.ReadCloser, error) {
 	}
 	_, _, err = img.client.ImageInspectWithRaw(ctx, img.id)
 	if err != nil {
-
-		if !utils.IsDockerClientAvailable() {
-			return nil, fmt.Errorf("cannot find docker client executable")
-		}
-
 		// don't use the API, the CLI has more informative output
 		fmt.Println("Image not available locally. Trying to pull '" + img.id + "'...")
-		err = utils.RunDockerCmd("pull", img.id)
+		err = runDockerCmd("pull", img.id)
 		if err != nil {
 			return nil, err
 		}
@@ -100,7 +95,7 @@ func (img *imageAnalyzer) Fetch() (io.ReadCloser, error) {
 	return readCloser, nil
 }
 
-func (img *imageAnalyzer) Parse(tarFile io.ReadCloser) error {
+func (img *dockerImage) Parse(tarFile io.ReadCloser) error {
 	tarReader := tar.NewReader(tarFile)
 
 	var currentLayer uint
@@ -144,7 +139,7 @@ func (img *imageAnalyzer) Parse(tarFile io.ReadCloser) error {
 	return nil
 }
 
-func (img *imageAnalyzer) Analyze() (*image.AnalysisResult, error) {
+func (img *dockerImage) Analyze() (*image.AnalysisResult, error) {
 	img.trees = make([]*filetree.FileTree, 0)
 
 	manifest := newDockerImageManifest(img.jsonFiles["manifest.json"])
@@ -223,7 +218,7 @@ func (img *imageAnalyzer) Analyze() (*image.AnalysisResult, error) {
 	}, nil
 }
 
-func (img *imageAnalyzer) processLayerTar(name string, layerIdx uint, reader *tar.Reader) error {
+func (img *dockerImage) processLayerTar(name string, layerIdx uint, reader *tar.Reader) error {
 	tree := filetree.NewFileTree()
 	tree.Name = name
 
@@ -245,7 +240,7 @@ func (img *imageAnalyzer) processLayerTar(name string, layerIdx uint, reader *ta
 	return nil
 }
 
-func (img *imageAnalyzer) getFileList(tarReader *tar.Reader) ([]filetree.FileInfo, error) {
+func (img *dockerImage) getFileList(tarReader *tar.Reader) ([]filetree.FileInfo, error) {
 	var files []filetree.FileInfo
 
 	for {
