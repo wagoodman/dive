@@ -32,12 +32,12 @@ func GetEngine(engine string) Engine {
 	}
 }
 
-func GetImageHandler(engine Engine) (image.Handler, error) {
+func GetImageHandler(engine Engine) (image.Resolver, error) {
 	switch engine {
 	case EngineDocker:
-		return docker.NewHandler(), nil
+		return docker.NewResolver(), nil
 	case EnginePodman:
-		return podman.NewHandler(), nil
+		return podman.NewResolver(), nil
 	}
 
 	return nil, fmt.Errorf("unable to determine image provider")

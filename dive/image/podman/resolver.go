@@ -11,45 +11,43 @@ import (
 	"os"
 )
 
-type handler struct {
+type resolver struct {
 	id        string
 	// note: podman supports saving docker formatted archives, we're leveraging this here
 	// todo: add oci parser and image/layer objects
 	image     docker.Image
 }
 
-func NewHandler() *handler {
-	return &handler{}
+func NewResolver() *resolver {
+	return &resolver{}
 }
 
-func (handler *handler) Get(id string) error {
+func (handler *resolver) Resolve(id string) (image.Analyzer, error) {
 	handler.id = id
 
 	path, err := handler.fetchArchive()
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer os.Remove(path)
 
 	file, err := os.Open(path)
 
-	// we use podman to extract a docker-formatted image
 	img, err := docker.NewImageFromArchive(ioutil.NopCloser(bufio.NewReader(file)))
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	handler.image = img
-	return nil
+	return img, nil
 }
 
-func (handler *handler) Build(args []string) (string, error) {
+func (handler *resolver) Build(args []string) (string, error) {
 	var err error
 	handler.id, err = buildImageFromCli(args)
 	return handler.id, err
 }
 
-func (handler *handler) fetchArchive() (string, error) {
+func (handler *resolver) fetchArchive() (string, error) {
 	var err error
 	var ctx = context.Background()
 
@@ -66,7 +64,7 @@ func (handler *handler) fetchArchive() (string, error) {
 	for _, item:= range images {
 		for _, name := range item.Names() {
 			if name == handler.id {
-				file, err := ioutil.TempFile(os.TempDir(), "dive-handler-tar")
+				file, err := ioutil.TempFile(os.TempDir(), "dive-resolver-tar")
 				if err != nil {
 					return "", err
 				}
@@ -76,14 +74,12 @@ func (handler *handler) fetchArchive() (string, error) {
 					return "", err
 				}
 
+				fmt.Println(file.Name())
+
 				return file.Name(), nil
 			}
 		}
 	}
 
 	return "", fmt.Errorf("image could not be found")
-}
-
-func (handler *handler) Analyze() (*image.AnalysisResult, error) {
-	return handler.image.Analyze()
 }

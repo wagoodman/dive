@@ -40,7 +40,7 @@ func Run(options Options) {
 
 	// if build is given, get the handler based off of either the explicit runtime
 
-	img, err := dive.GetImageHandler(options.Engine)
+	imageHandler, err := dive.GetImageHandler(options.Engine)
 	if err != nil {
 		fmt.Printf("cannot determine image provider: %v\n", err)
 		utils.Exit(1)
@@ -48,14 +48,14 @@ func Run(options Options) {
 
 	if doBuild {
 		fmt.Println(utils.TitleFormat("Building image..."))
-		options.ImageId, err = img.Build(options.BuildArgs)
+		options.ImageId, err = imageHandler.Build(options.BuildArgs)
 		if err != nil {
 			fmt.Printf("cannot build image: %v\n", err)
 			utils.Exit(1)
 		}
 	}
 
-	err = img.Get(options.ImageId)
+	imgAnalyzer, err := imageHandler.Resolve(options.ImageId)
 	if err != nil {
 		fmt.Printf("cannot fetch image: %v\n", err)
 		utils.Exit(1)
@@ -70,7 +70,7 @@ func Run(options Options) {
 		fmt.Println(utils.TitleFormat("Analyzing image..."))
 	}
 
-	result, err := img.Analyze()
+	result, err := imgAnalyzer.Analyze()
 	if err != nil {
 		fmt.Printf("cannot analyze image: %v\n", err)
 		utils.Exit(1)

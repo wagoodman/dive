@@ -1,6 +1,6 @@
 package image
 
 type Resolver interface {
-	Get(id string) error
+	Resolve(id string) (Analyzer, error)
 	Build(options []string) (string, error)
 }

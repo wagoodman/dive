@@ -12,20 +12,22 @@ import (
 )
 
 type Image struct {
-	jsonFiles map[string][]byte
+	manifest  manifest
+	config    config
 	trees     []*filetree.FileTree
 	layerMap  map[string]*filetree.FileTree
 	layers    []*dockerLayer
 }
 
-func NewImageFromArchive(tarFile io.ReadCloser) (Image, error) {
-	img := Image{
-		// store discovered json files in a map so we can read the image in one pass
-		jsonFiles: make(map[string][]byte),
+func NewImageFromArchive(tarFile io.ReadCloser) (*Image, error) {
+	img := &Image{
 		layerMap:  make(map[string]*filetree.FileTree),
 	}
 
 	tarReader := tar.NewReader(tarFile)
+
+	// store discovered json files in a map so we can read the image in one pass
+	jsonFiles := make(map[string][]byte)
 
 	var currentLayer uint
 	for {
@@ -45,7 +47,7 @@ func NewImageFromArchive(tarFile io.ReadCloser) (Image, error) {
 		// some layer tars can be relative layer symlinks to other layer tars
 		if header.Typeflag == tar.TypeSymlink || header.Typeflag == tar.TypeReg {
 
-			if strings.HasSuffix(name, "layer.tar") {
+			if strings.HasSuffix(name, ".tar") {
 				currentLayer++
 				if err != nil {
 					return img, err
@@ -65,17 +67,31 @@ func NewImageFromArchive(tarFile io.ReadCloser) (Image, error) {
 				if err != nil {
 					return img, err
 				}
-				img.jsonFiles[name] = fileBuffer
+				jsonFiles[name] = fileBuffer
 			}
 		}
 	}
+
+	manifestContent, exists := jsonFiles["manifest.json"]
+	if !exists {
+		return img, fmt.Errorf("could not find image manifest")
+	}
+
+	img.manifest = newManifest(manifestContent)
+
+	configContent, exists := jsonFiles[img.manifest.ConfigPath]
+	if !exists {
+		return img, fmt.Errorf("could not find image config")
+	}
+
+	img.config = newConfig(configContent)
 
 	return img, nil
 }
 
 func processLayerTar(name string, reader *tar.Reader) (*filetree.FileTree, error) {
 	tree := filetree.NewFileTree()
-	tree.Name = pathToLayerId(name)
+	tree.Name = name
 
 	fileInfos, err := getFileList(reader)
 	if err != nil {
@@ -91,13 +107,9 @@ func processLayerTar(name string, reader *tar.Reader) (*filetree.FileTree, error
 		}
 	}
 
-
 	return tree, nil
 }
 
-func pathToLayerId(name string) string {
-	return strings.TrimSuffix(strings.TrimSuffix(name, ".tar"), "/layer")
-}
 
 func getFileList(tarReader *tar.Reader) ([]filetree.FileInfo, error) {
 	var files []filetree.FileInfo
@@ -129,13 +141,9 @@ func (img *Image) Analyze() (*image.AnalysisResult, error) {
 
 	img.trees = make([]*filetree.FileTree, 0)
 
-	manifest := newManifest(img.jsonFiles["manifest.json"])
-	config := newConfig(img.jsonFiles[manifest.ConfigPath])
-
 	// build the content tree
-	for _, treeName := range manifest.LayerTarPaths {
-		key := pathToLayerId(treeName)
-		tr, exists := img.layerMap[key]
+	for _, treeName := range img.manifest.LayerTarPaths {
+		tr, exists := img.layerMap[treeName]
 		if exists {
 			img.trees = append(img.trees, tr)
 			continue
@@ -146,7 +154,7 @@ func (img *Image) Analyze() (*image.AnalysisResult, error) {
 	// build the layers array
 	img.layers = make([]*dockerLayer, len(img.trees))
 
-	// note that the handler config stores images in reverse chronological order, so iterate backwards through layers
+	// note that the resolver config stores images in reverse chronological order, so iterate backwards through layers
 	// as you iterate chronologically through history (ignoring history items that have no layer contents)
 	// Note: history is not required metadata in a docker image!
 	tarPathIdx := 0
@@ -159,14 +167,14 @@ func (img *Image) Analyze() (*image.AnalysisResult, error) {
 		historyObj := imageHistoryEntry{
 			CreatedBy: "(missing)",
 		}
-		for nextHistIdx := histIdx; nextHistIdx < len(config.History); nextHistIdx++ {
-			if !config.History[nextHistIdx].EmptyLayer {
+		for nextHistIdx := histIdx; nextHistIdx < len(img.config.History); nextHistIdx++ {
+			if !img.config.History[nextHistIdx].EmptyLayer {
 				histIdx = nextHistIdx
 				break
 			}
 		}
-		if histIdx < len(config.History) && !config.History[histIdx].EmptyLayer {
-			historyObj = config.History[histIdx]
+		if histIdx < len(img.config.History) && !img.config.History[histIdx].EmptyLayer {
+			historyObj = img.config.History[histIdx]
 			histIdx++
 		}
 
@@ -174,7 +182,7 @@ func (img *Image) Analyze() (*image.AnalysisResult, error) {
 			history: historyObj,
 			index:   tarPathIdx,
 			tree:    img.trees[layerIdx],
-			tarPath: manifest.LayerTarPaths[tarPathIdx],
+			tarPath: img.manifest.LayerTarPaths[tarPathIdx],
 		}
 		img.layers[layerIdx].history.Size = tree.FileSize
 

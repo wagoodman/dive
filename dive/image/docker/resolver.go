@@ -15,44 +15,41 @@ import (
 
 var dockerVersion string
 
-type handler struct {
+type resolver struct {
 	id     string
 	client *client.Client
-	image  Image
 }
 
-func NewHandler() *handler {
-	return &handler{}
+func NewResolver() *resolver {
+	return &resolver{}
 }
 
-func (handler *handler) Get(id string) error {
-	handler.id = id
+func (r *resolver) Resolve(id string) (image.Analyzer, error) {
+	r.id = id
 
-	reader, err := handler.fetchArchive()
+	reader, err := r.fetchArchive()
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer reader.Close()
 
 	img, err := NewImageFromArchive(reader)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	handler.image = img
-
-	return nil
+	return img, nil
 }
 
-func (handler *handler) Build(args []string) (string, error) {
+func (r *resolver) Build(args []string) (string, error) {
 	var err error
-	handler.id, err = buildImageFromCli(args)
-	return handler.id, err
+	r.id, err = buildImageFromCli(args)
+	return r.id, err
 }
 
-func (handler *handler) fetchArchive() (io.ReadCloser, error) {
+func (r *resolver) fetchArchive() (io.ReadCloser, error) {
 	var err error
 
-	// pull the handler if it does not exist
+	// pull the resolver if it does not exist
 	ctx := context.Background()
 
 	host := os.Getenv("DOCKER_HOST")
@@ -85,21 +82,21 @@ func (handler *handler) fetchArchive() (io.ReadCloser, error) {
 	}
 
 	clientOpts = append(clientOpts, client.WithVersion(dockerVersion))
-	handler.client, err = client.NewClientWithOpts(clientOpts...)
+	r.client, err = client.NewClientWithOpts(clientOpts...)
 	if err != nil {
 		return nil, err
 	}
-	_, _, err = handler.client.ImageInspectWithRaw(ctx, handler.id)
+	_, _, err = r.client.ImageInspectWithRaw(ctx, r.id)
 	if err != nil {
 		// don't use the API, the CLI has more informative output
-		fmt.Println("Handler not available locally. Trying to pull '" + handler.id + "'...")
-		err = runDockerCmd("pull", handler.id)
+		fmt.Println("Handler not available locally. Trying to pull '" + r.id + "'...")
+		err = runDockerCmd("pull", r.id)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	readCloser, err := handler.client.ImageSave(ctx, []string{handler.id})
+	readCloser, err := r.client.ImageSave(ctx, []string{r.id})
 	if err != nil {
 		return nil, err
 	}
@@ -107,7 +104,3 @@ func (handler *handler) fetchArchive() (io.ReadCloser, error) {
 	return readCloser, nil
 }
 
-
-func (handler *handler) Analyze() (*image.AnalysisResult, error) {
-	return handler.image.Analyze()
-}
