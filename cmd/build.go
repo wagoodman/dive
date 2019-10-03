@@ -1,8 +1,8 @@
 package cmd
 
 import (
-	"fmt"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 	"github.com/wagoodman/dive/dive"
 	"github.com/wagoodman/dive/runtime"
 	"github.com/wagoodman/dive/utils"
@@ -26,11 +26,9 @@ func doBuildCmd(cmd *cobra.Command, args []string) {
 
 	initLogging()
 
-	engine, err := cmd.PersistentFlags().GetString("engine")
-	if err != nil {
-		fmt.Printf("unable to determine eingine: %v\n", err)
-		utils.Exit(1)
-	}
+	// there is no cli options allowed, only config can be supplied
+	// todo: allow for an engine flag to be passed to dive but not the container engine
+	engine := viper.GetString("container-engine")
 
 	runtime.Run(runtime.Options{
 		Ci:         isCi,

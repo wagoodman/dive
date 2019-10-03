@@ -65,7 +65,7 @@ func initCli() {
 
 	rootCmd.PersistentFlags().String("engine", "docker", "The container engine to fetch the image from. Allowed values: "+strings.Join(dive.AllowedEngines, ", "))
 
-	if err := ciConfig.BindPFlag("container-engine.default", rootCmd.PersistentFlags().Lookup("engine")); err != nil {
+	if err := viper.BindPFlag("container-engine", rootCmd.PersistentFlags().Lookup("engine")); err != nil {
 		log.Fatal("Unable to bind 'engine' flag:", err)
 	}
 }
@@ -104,9 +104,12 @@ func initConfig() {
 	viper.SetDefault("filetree.pane-width", 0.5)
 	viper.SetDefault("filetree.show-attributes", true)
 
-	viper.SetDefault("container-engine.default", "docker")
+	viper.SetDefault("container-engine", "docker")
 
-	viper.AutomaticEnv() // read in environment variables that match
+	viper.SetEnvPrefix("DIVE")
+	// replace all - with _ when looking for matching environment variables
+	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
+	viper.AutomaticEnv()
 
 	// If a config file is found, read it in.
 	if err := viper.ReadInConfig(); err == nil {

@@ -11,43 +11,96 @@ import (
 	"os"
 )
 
-type resolver struct {
-	id        string
-	// note: podman supports saving docker formatted archives, we're leveraging this here
-	// todo: add oci parser and image/layer objects
-	image     docker.Image
-}
+type resolver struct {}
 
 func NewResolver() *resolver {
 	return &resolver{}
 }
 
-func (handler *resolver) Resolve(id string) (image.Analyzer, error) {
-	handler.id = id
+func (r *resolver) Build(args []string) (*image.Image, error) {
+	id, err := buildImageFromCli(args)
+	if err != nil {
+		return nil, err
+	}
+	return r.Fetch(id)
+}
 
-	path, err := handler.fetchArchive()
+
+func (r *resolver) Fetch(id string) (*image.Image, error) {
+	img, err := r.resolveFromDisk(id)
+	if err == nil {
+		return img, err
+	}
+	img, err = r.resolveFromArchive(id)
+	if err == nil {
+		return img, err
+	}
+
+	return nil, fmt.Errorf("unable to resolve image '%s'", id)
+}
+
+func (r *resolver) resolveFromDisk(id string) (*image.Image, error) {
+	// var err error
+	return nil, fmt.Errorf("not implemented")
+	//
+	// runtime, err := libpod.NewRuntime(context.TODO())
+	// if err != nil {
+	// 	return nil, err
+	// }
+	//
+	// images, err := runtime.ImageRuntime().GetImages()
+	// if err != nil {
+	// 	return nil, err
+	// }
+	//
+	// // cfg, _ := runtime.GetConfig()
+	// // cfg.StorageConfig.GraphRoot
+	//
+	// for _, item:= range images {
+	// 	for _, name := range item.Names() {
+	// 		if name == id {
+	// 			fmt.Println("Found it!")
+	//
+	// 			curImg := item
+	// 			for {
+	// 				h, _ := curImg.History(context.TODO())
+	// 				fmt.Printf("%+v %+v %+v\n", curImg.ID(), h[0].Size, h[0].CreatedBy)
+	// 				x, _ := curImg.DriverData()
+	// 				fmt.Printf("   %+v\n", x.Data["UpperDir"])
+	//
+	//
+	// 				curImg, err = curImg.GetParent(context.TODO())
+	// 				if err != nil || curImg == nil {
+	// 					break
+	// 				}
+	// 			}
+	//
+	// 		}
+	// 	}
+	// }
+	//
+	// // os.Exit(0)
+	// return nil, nil
+}
+
+func (r *resolver) resolveFromArchive(id string) (*image.Image, error) {
+	path, err := r.fetchArchive(id)
 	if err != nil {
 		return nil, err
 	}
 	defer os.Remove(path)
 
 	file, err := os.Open(path)
+	defer file.Close()
 
 	img, err := docker.NewImageFromArchive(ioutil.NopCloser(bufio.NewReader(file)))
 	if err != nil {
 		return nil, err
 	}
-
-	return img, nil
+	return img.ToImage()
 }
 
-func (handler *resolver) Build(args []string) (string, error) {
-	var err error
-	handler.id, err = buildImageFromCli(args)
-	return handler.id, err
-}
-
-func (handler *resolver) fetchArchive() (string, error) {
+func (r *resolver) fetchArchive(id string) (string, error) {
 	var err error
 	var ctx = context.Background()
 
@@ -63,7 +116,7 @@ func (handler *resolver) fetchArchive() (string, error) {
 
 	for _, item:= range images {
 		for _, name := range item.Names() {
-			if name == handler.id {
+			if name == id {
 				file, err := ioutil.TempFile(os.TempDir(), "dive-resolver-tar")
 				if err != nil {
 					return "", err
@@ -73,8 +126,6 @@ func (handler *resolver) fetchArchive() (string, error) {
 				if err != nil {
 					return "", err
 				}
-
-				fmt.Println(file.Name())
 
 				return file.Name(), nil
 			}

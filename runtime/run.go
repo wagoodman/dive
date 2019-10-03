@@ -40,29 +40,31 @@ func Run(options Options) {
 
 	// if build is given, get the handler based off of either the explicit runtime
 
-	imageHandler, err := dive.GetImageHandler(options.Engine)
+	imageResolver, err := dive.GetImageHandler(options.Engine)
 	if err != nil {
 		fmt.Printf("cannot determine image provider: %v\n", err)
 		utils.Exit(1)
 	}
 
+	var img *image.Image
+
 	if doBuild {
 		fmt.Println(utils.TitleFormat("Building image..."))
-		options.ImageId, err = imageHandler.Build(options.BuildArgs)
+		img, err = imageResolver.Build(options.BuildArgs)
 		if err != nil {
 			fmt.Printf("cannot build image: %v\n", err)
 			utils.Exit(1)
 		}
-	}
-
-	imgAnalyzer, err := imageHandler.Resolve(options.ImageId)
-	if err != nil {
-		fmt.Printf("cannot fetch image: %v\n", err)
-		utils.Exit(1)
+	} else {
+		img, err = imageResolver.Fetch(options.ImageId)
+		if err != nil {
+			fmt.Printf("cannot fetch image: %v\n", err)
+			utils.Exit(1)
+		}
 	}
 
 	// todo, cleanup on error
-	// todo: image get shold return error for cleanup?
+	// todo: image get should return error for cleanup?
 
 	if doExport {
 		fmt.Println(utils.TitleFormat(fmt.Sprintf("Analyzing image... (export to '%s')", options.ExportFile)))
@@ -70,7 +72,7 @@ func Run(options Options) {
 		fmt.Println(utils.TitleFormat("Analyzing image..."))
 	}
 
-	result, err := imgAnalyzer.Analyze()
+	result, err := img.Analyze()
 	if err != nil {
 		fmt.Printf("cannot analyze image: %v\n", err)
 		utils.Exit(1)

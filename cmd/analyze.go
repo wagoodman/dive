@@ -42,7 +42,7 @@ func doAnalyzeCmd(cmd *cobra.Command, args []string) {
 
 	engine, err := cmd.PersistentFlags().GetString("engine")
 	if err != nil {
-		fmt.Printf("unable to determine eingine: %v\n", err)
+		fmt.Printf("unable to determine engine: %v\n", err)
 		utils.Exit(1)
 	}
 

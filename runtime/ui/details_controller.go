@@ -126,8 +126,6 @@ func (controller *DetailsController) Render() error {
 		// update contents
 		controller.view.Clear()
 		_, _ = fmt.Fprintln(controller.view, Formatting.Header("Digest: ")+currentLayer.Id())
-		// TODO: add back in with controller model
-		// fmt.Fprintln(view.view, Formatting.Header("Tar ID: ")+currentLayer.TarId())
 		_, _ = fmt.Fprintln(controller.view, Formatting.Header("Command:"))
 		_, _ = fmt.Fprintln(controller.view, currentLayer.Command())
 

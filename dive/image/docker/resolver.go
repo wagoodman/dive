@@ -13,8 +13,6 @@ import (
 	"golang.org/x/net/context"
 )
 
-var dockerVersion string
-
 type resolver struct {
 	id     string
 	client *client.Client
@@ -24,10 +22,9 @@ func NewResolver() *resolver {
 	return &resolver{}
 }
 
-func (r *resolver) Resolve(id string) (image.Analyzer, error) {
-	r.id = id
+func (r *resolver) Fetch(id string) (*image.Image, error) {
 
-	reader, err := r.fetchArchive()
+	reader, err := r.fetchArchive(id)
 	if err != nil {
 		return nil, err
 	}
@@ -37,16 +34,18 @@ func (r *resolver) Resolve(id string) (image.Analyzer, error) {
 	if err != nil {
 		return nil, err
 	}
-	return img, nil
+	return img.ToImage()
 }
 
-func (r *resolver) Build(args []string) (string, error) {
-	var err error
-	r.id, err = buildImageFromCli(args)
-	return r.id, err
+func (r *resolver) Build(args []string) (*image.Image, error) {
+	id, err := buildImageFromCli(args)
+	if err != nil {
+		return nil, err
+	}
+	return r.Fetch(id)
 }
 
-func (r *resolver) fetchArchive() (io.ReadCloser, error) {
+func (r *resolver) fetchArchive(id string) (io.ReadCloser, error) {
 	var err error
 
 	// pull the resolver if it does not exist
@@ -81,22 +80,22 @@ func (r *resolver) fetchArchive() (io.ReadCloser, error) {
 		clientOpts = append(clientOpts, client.FromEnv)
 	}
 
-	clientOpts = append(clientOpts, client.WithVersion(dockerVersion))
+	clientOpts = append(clientOpts, client.WithAPIVersionNegotiation())
 	r.client, err = client.NewClientWithOpts(clientOpts...)
 	if err != nil {
 		return nil, err
 	}
-	_, _, err = r.client.ImageInspectWithRaw(ctx, r.id)
+	_, _, err = r.client.ImageInspectWithRaw(ctx, id)
 	if err != nil {
 		// don't use the API, the CLI has more informative output
-		fmt.Println("Handler not available locally. Trying to pull '" + r.id + "'...")
-		err = runDockerCmd("pull", r.id)
+		fmt.Println("Handler not available locally. Trying to pull '" + id + "'...")
+		err = runDockerCmd("pull", id)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	readCloser, err := r.client.ImageSave(ctx, []string{r.id})
+	readCloser, err := r.client.ImageSave(ctx, []string{id})
 	if err != nil {
 		return nil, err
 	}

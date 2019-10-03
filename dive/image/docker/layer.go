@@ -10,56 +10,41 @@ import (
 )
 
 // Layer represents a Docker image layer and metadata
-type dockerLayer struct {
-	tarPath string
-	history imageHistoryEntry
+type layer struct {
+	history historyEntry
 	index   int
 	tree    *filetree.FileTree
 }
 
-type imageHistoryEntry struct {
-	ID         string
-	Size       uint64
-	Created    string `json:"created"`
-	Author     string `json:"author"`
-	CreatedBy  string `json:"created_by"`
-	EmptyLayer bool   `json:"empty_layer"`
-}
-
 // ShortId returns the truncated id of the current layer.
-func (layer *dockerLayer) TarId() string {
-	return strings.TrimSuffix(layer.tarPath, "/layer.tar")
-}
-
-// ShortId returns the truncated id of the current layer.
-func (layer *dockerLayer) Id() string {
-	return layer.history.ID
+func (l *layer) Id() string {
+	return l.history.ID
 }
 
 // index returns the relative position of the layer within the image.
-func (layer *dockerLayer) Index() int {
-	return layer.index
+func (l *layer) Index() int {
+	return l.index
 }
 
 // Size returns the number of bytes that this image is.
-func (layer *dockerLayer) Size() uint64 {
-	return layer.history.Size
+func (l *layer) Size() uint64 {
+	return l.history.Size
 }
 
 // Tree returns the file tree representing the current layer.
-func (layer *dockerLayer) Tree() *filetree.FileTree {
-	return layer.tree
+func (l *layer) Tree() *filetree.FileTree {
+	return l.tree
 }
 
 // ShortId returns the truncated id of the current layer.
-func (layer *dockerLayer) Command() string {
-	return strings.TrimPrefix(layer.history.CreatedBy, "/bin/sh -c ")
+func (l *layer) Command() string {
+	return strings.TrimPrefix(l.history.CreatedBy, "/bin/sh -c ")
 }
 
 // ShortId returns the truncated id of the current layer.
-func (layer *dockerLayer) ShortId() string {
+func (l *layer) ShortId() string {
 	rangeBound := 15
-	id := layer.Id()
+	id := l.Id()
 	if length := len(id); length < 15 {
 		rangeBound = length
 	}
@@ -69,14 +54,14 @@ func (layer *dockerLayer) ShortId() string {
 }
 
 // String represents a layer in a columnar format.
-func (layer *dockerLayer) String() string {
+func (l *layer) String() string {
 
-	if layer.index == 0 {
+	if l.index == 0 {
 		return fmt.Sprintf(image.LayerFormat,
-			humanize.Bytes(layer.Size()),
-			"FROM "+layer.ShortId())
+			humanize.Bytes(l.Size()),
+			"FROM "+l.ShortId())
 	}
 	return fmt.Sprintf(image.LayerFormat,
-		humanize.Bytes(layer.Size()),
-		layer.Command())
+		humanize.Bytes(l.Size()),
+		l.Command())
 }

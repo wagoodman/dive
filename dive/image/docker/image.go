@@ -11,16 +11,14 @@ import (
 	"strings"
 )
 
-type Image struct {
+type ImageArchive struct {
 	manifest  manifest
 	config    config
-	trees     []*filetree.FileTree
 	layerMap  map[string]*filetree.FileTree
-	layers    []*dockerLayer
 }
 
-func NewImageFromArchive(tarFile io.ReadCloser) (*Image, error) {
-	img := &Image{
+func NewImageFromArchive(tarFile io.ReadCloser) (*ImageArchive, error) {
+	img := &ImageArchive{
 		layerMap:  make(map[string]*filetree.FileTree),
 	}
 
@@ -110,7 +108,6 @@ func processLayerTar(name string, reader *tar.Reader) (*filetree.FileTree, error
 	return tree, nil
 }
 
-
 func getFileList(tarReader *tar.Reader) ([]filetree.FileInfo, error) {
 	var files []filetree.FileInfo
 
@@ -137,34 +134,32 @@ func getFileList(tarReader *tar.Reader) ([]filetree.FileInfo, error) {
 	return files, nil
 }
 
-func (img *Image) Analyze() (*image.AnalysisResult, error) {
-
-	img.trees = make([]*filetree.FileTree, 0)
+func (img *ImageArchive) ToImage() (*image.Image, error) {
+	trees := make([]*filetree.FileTree, 0)
 
 	// build the content tree
 	for _, treeName := range img.manifest.LayerTarPaths {
 		tr, exists := img.layerMap[treeName]
 		if exists {
-			img.trees = append(img.trees, tr)
+			trees = append(trees, tr)
 			continue
 		}
 		return nil, fmt.Errorf("could not find '%s' in parsed layers", treeName)
 	}
 
 	// build the layers array
-	img.layers = make([]*dockerLayer, len(img.trees))
+	layers := make([]image.Layer, len(trees))
 
 	// note that the resolver config stores images in reverse chronological order, so iterate backwards through layers
 	// as you iterate chronologically through history (ignoring history items that have no layer contents)
 	// Note: history is not required metadata in a docker image!
 	tarPathIdx := 0
 	histIdx := 0
-	for layerIdx := len(img.trees) - 1; layerIdx >= 0; layerIdx-- {
-
-		tree := img.trees[(len(img.trees)-1)-layerIdx]
+	for layerIdx := len(trees) - 1; layerIdx >= 0; layerIdx-- {
+		tree := trees[(len(trees)-1)-layerIdx]
 
 		// ignore empty layers, we are only observing layers with content
-		historyObj := imageHistoryEntry{
+		historyObj := historyEntry{
 			CreatedBy: "(missing)",
 		}
 		for nextHistIdx := histIdx; nextHistIdx < len(img.config.History); nextHistIdx++ {
@@ -178,43 +173,20 @@ func (img *Image) Analyze() (*image.AnalysisResult, error) {
 			histIdx++
 		}
 
-		img.layers[layerIdx] = &dockerLayer{
+		historyObj.Size = tree.FileSize
+
+		layers[layerIdx] = &layer{
 			history: historyObj,
 			index:   tarPathIdx,
-			tree:    img.trees[layerIdx],
-			tarPath: img.manifest.LayerTarPaths[tarPathIdx],
+			tree:    trees[layerIdx],
 		}
-		img.layers[layerIdx].history.Size = tree.FileSize
 
 		tarPathIdx++
 	}
 
-	efficiency, inefficiencies := filetree.Efficiency(img.trees)
-
-	var sizeBytes, userSizeBytes uint64
-	layers := make([]image.Layer, len(img.layers))
-	for i, v := range img.layers {
-		layers[i] = v
-		sizeBytes += v.Size()
-		if i != 0 {
-			userSizeBytes += v.Size()
-		}
-	}
-
-	var wastedBytes uint64
-	for idx := 0; idx < len(inefficiencies); idx++ {
-		fileData := inefficiencies[len(inefficiencies)-1-idx]
-		wastedBytes += uint64(fileData.CumulativeSize)
-	}
-
-	return &image.AnalysisResult{
-		Layers:            layers,
-		RefTrees:          img.trees,
-		Efficiency:        efficiency,
-		UserSizeByes:      userSizeBytes,
-		SizeBytes:         sizeBytes,
-		WastedBytes:       wastedBytes,
-		WastedUserPercent: float64(wastedBytes) / float64(userSizeBytes),
-		Inefficiencies:    inefficiencies,
+	return &image.Image{
+		Trees: trees,
+		Layers: layers,
 	}, nil
+
 }
