@@ -65,16 +65,7 @@ func (layer *dockerLayer) ShortId() string {
 	}
 	id = id[0:rangeBound]
 
-	// show the tagged image as the last layer
-	// if len(layer.History.Tags) > 0 {
-	// 	id = "[" + strings.Join(layer.History.Tags, ",") + "]"
-	// }
-
 	return id
-}
-
-func (layer *dockerLayer) StringFormat() string {
-	return image.LayerFormat
 }
 
 // String represents a layer in a columnar format.
@@ -82,14 +73,10 @@ func (layer *dockerLayer) String() string {
 
 	if layer.index == 0 {
 		return fmt.Sprintf(image.LayerFormat,
-			// layer.ShortId(),
-			// fmt.Sprintf("%d",layer.Index()),
 			humanize.Bytes(layer.Size()),
 			"FROM "+layer.ShortId())
 	}
 	return fmt.Sprintf(image.LayerFormat,
-		// layer.ShortId(),
-		// fmt.Sprintf("%d",layer.Index()),
 		humanize.Bytes(layer.Size()),
 		layer.Command())
 }

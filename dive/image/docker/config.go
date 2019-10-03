@@ -5,7 +5,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-type imageConfig struct {
+type config struct {
 	History []imageHistoryEntry `json:"history"`
 	RootFs  rootFs              `json:"rootfs"`
 }
@@ -15,8 +15,8 @@ type rootFs struct {
 	DiffIds []string `json:"diff_ids"`
 }
 
-func newDockerImageConfig(configBytes []byte) imageConfig {
-	var imageConfig imageConfig
+func newConfig(configBytes []byte) config {
+	var imageConfig config
 	err := json.Unmarshal(configBytes, &imageConfig)
 	if err != nil {
 		logrus.Panic(err)

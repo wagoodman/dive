@@ -12,15 +12,11 @@ func TestLoadDockerImageTar(tarPath string) (*image.AnalysisResult, error) {
 	}
 	defer f.Close()
 
-	img := NewDockerImage()
-	err = img.Get("dive-test:latest")
+	handler := NewHandler()
+	err = handler.Get("dive-test:latest")
 	if err != nil {
 		return nil, err
 	}
 
-	err = img.parse(f)
-	if err != nil {
-		return nil, err
-	}
-	return img.Analyze()
+	return handler.Analyze()
 }

@@ -1,6 +1,6 @@
 package image
 
-type Image interface {
+type Handler interface {
 	Resolver
 	Analyzer
 }
