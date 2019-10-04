@@ -21,23 +21,12 @@ type FileInfo struct {
 	IsDir    bool
 }
 
-// NewFileInfo extracts the metadata from a tar header and file contents and generates a new FileInfo object.
-func NewFileInfo(reader *tar.Reader, header *tar.Header, path string) FileInfo {
-	if header.Typeflag == tar.TypeDir {
-		return FileInfo{
-			Path:     path,
-			TypeFlag: header.Typeflag,
-			Linkname: header.Linkname,
-			hash:     0,
-			Size:     header.FileInfo().Size(),
-			Mode:     header.FileInfo().Mode(),
-			Uid:      header.Uid,
-			Gid:      header.Gid,
-			IsDir:    header.FileInfo().IsDir(),
-		}
+// NewFileInfoFromTarHeader extracts the metadata from a tar header and file contents and generates a new FileInfo object.
+func NewFileInfoFromTarHeader(reader *tar.Reader, header *tar.Header, path string) FileInfo {
+	var hash uint64
+	if header.Typeflag != tar.TypeDir {
+		hash = getHashFromReader(reader)
 	}
-
-	hash := getHashFromReader(reader)
 
 	return FileInfo{
 		Path:     path,
@@ -49,6 +38,51 @@ func NewFileInfo(reader *tar.Reader, header *tar.Header, path string) FileInfo {
 		Uid:      header.Uid,
 		Gid:      header.Gid,
 		IsDir:    header.FileInfo().IsDir(),
+	}
+}
+
+func NewFileInfo(realPath, path string, info os.FileInfo) FileInfo {
+	var err error
+
+	// todo: don't use tar types here, create our own...
+	var fileType byte
+	if info.Mode() & os.ModeSymlink != 0 {
+		fileType = tar.TypeSymlink
+	} else if info.IsDir() {
+		fileType = tar.TypeDir
+	} else {
+		fileType = tar.TypeReg
+	}
+
+	var hash uint64
+	if fileType != tar.TypeDir {
+		file, err := os.Open(realPath)
+		if err != nil {
+			logrus.Panic("unable to read file:", realPath)
+		}
+		defer file.Close()
+		hash = getHashFromReader(file)
+	}
+
+	var linkName string
+	if fileType == tar.TypeSymlink {
+		linkName, err = os.Readlink(realPath)
+		if err != nil {
+			logrus.Panic("unable to read link:", realPath, err)
+		}
+	}
+
+	return FileInfo{
+		Path:     path,
+		TypeFlag: fileType,
+		Linkname: linkName,
+		hash:     hash,
+		Size:     info.Size(),
+		Mode:     info.Mode(),
+		// todo: support UID/GID
+		Uid:      -1,
+		Gid:      -1,
+		IsDir:    info.IsDir(),
 	}
 }
 

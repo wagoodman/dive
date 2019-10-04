@@ -31,7 +31,11 @@ func (r *resolver) Fetch(id string) (*image.Image, error) {
 	if err == nil {
 		return img, err
 	}
-	img, err = r.resolveFromArchive(id)
+
+	// todo: remove print of error
+	fmt.Println(err)
+
+	img, err = r.resolveFromDockerArchive(id)
 	if err == nil {
 		return img, err
 	}
@@ -40,51 +44,41 @@ func (r *resolver) Fetch(id string) (*image.Image, error) {
 }
 
 func (r *resolver) resolveFromDisk(id string) (*image.Image, error) {
-	// var err error
-	return nil, fmt.Errorf("not implemented")
-	//
-	// runtime, err := libpod.NewRuntime(context.TODO())
-	// if err != nil {
-	// 	return nil, err
-	// }
-	//
-	// images, err := runtime.ImageRuntime().GetImages()
-	// if err != nil {
-	// 	return nil, err
-	// }
-	//
-	// // cfg, _ := runtime.GetConfig()
-	// // cfg.StorageConfig.GraphRoot
-	//
-	// for _, item:= range images {
-	// 	for _, name := range item.Names() {
-	// 		if name == id {
-	// 			fmt.Println("Found it!")
-	//
-	// 			curImg := item
-	// 			for {
-	// 				h, _ := curImg.History(context.TODO())
-	// 				fmt.Printf("%+v %+v %+v\n", curImg.ID(), h[0].Size, h[0].CreatedBy)
-	// 				x, _ := curImg.DriverData()
-	// 				fmt.Printf("   %+v\n", x.Data["UpperDir"])
-	//
-	//
-	// 				curImg, err = curImg.GetParent(context.TODO())
-	// 				if err != nil || curImg == nil {
-	// 					break
-	// 				}
-	// 			}
-	//
-	// 		}
-	// 	}
-	// }
-	//
-	// // os.Exit(0)
-	// return nil, nil
+	var img *ImageDirectoryRef
+	var err error
+
+	runtime, err := libpod.NewRuntime(context.TODO())
+	if err != nil {
+		return nil, err
+	}
+
+	images, err := runtime.ImageRuntime().GetImages()
+	if err != nil {
+		return nil, err
+	}
+
+	ImageLoop:
+		for _, candidateImage := range images {
+			for _, name := range candidateImage.Names() {
+				if name == id {
+					img, err = NewImageDirectoryRef(candidateImage)
+					if err != nil {
+						return nil, err
+					}
+					break ImageLoop
+				}
+			}
+		}
+
+	if img == nil {
+		return nil, fmt.Errorf("could not find image by name: '%s'", id)
+	}
+
+	return img.ToImage()
 }
 
-func (r *resolver) resolveFromArchive(id string) (*image.Image, error) {
-	path, err := r.fetchArchive(id)
+func (r *resolver) resolveFromDockerArchive(id string) (*image.Image, error) {
+	path, err := r.fetchDockerArchive(id)
 	if err != nil {
 		return nil, err
 	}
@@ -93,14 +87,14 @@ func (r *resolver) resolveFromArchive(id string) (*image.Image, error) {
 	file, err := os.Open(path)
 	defer file.Close()
 
-	img, err := docker.NewImageFromArchive(ioutil.NopCloser(bufio.NewReader(file)))
+	img, err := docker.NewImageArchive(ioutil.NopCloser(bufio.NewReader(file)))
 	if err != nil {
 		return nil, err
 	}
 	return img.ToImage()
 }
 
-func (r *resolver) fetchArchive(id string) (string, error) {
+func (r *resolver) fetchDockerArchive(id string) (string, error) {
 	var err error
 	var ctx = context.Background()
 

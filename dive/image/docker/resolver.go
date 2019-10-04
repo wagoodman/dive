@@ -13,10 +13,7 @@ import (
 	"golang.org/x/net/context"
 )
 
-type resolver struct {
-	id     string
-	client *client.Client
-}
+type resolver struct {}
 
 func NewResolver() *resolver {
 	return &resolver{}
@@ -30,7 +27,7 @@ func (r *resolver) Fetch(id string) (*image.Image, error) {
 	}
 	defer reader.Close()
 
-	img, err := NewImageFromArchive(reader)
+	img, err := NewImageArchive(reader)
 	if err != nil {
 		return nil, err
 	}
@@ -47,6 +44,7 @@ func (r *resolver) Build(args []string) (*image.Image, error) {
 
 func (r *resolver) fetchArchive(id string) (io.ReadCloser, error) {
 	var err error
+	var dockerClient *client.Client
 
 	// pull the resolver if it does not exist
 	ctx := context.Background()
@@ -81,11 +79,11 @@ func (r *resolver) fetchArchive(id string) (io.ReadCloser, error) {
 	}
 
 	clientOpts = append(clientOpts, client.WithAPIVersionNegotiation())
-	r.client, err = client.NewClientWithOpts(clientOpts...)
+	dockerClient, err = client.NewClientWithOpts(clientOpts...)
 	if err != nil {
 		return nil, err
 	}
-	_, _, err = r.client.ImageInspectWithRaw(ctx, id)
+	_, _, err = dockerClient.ImageInspectWithRaw(ctx, id)
 	if err != nil {
 		// don't use the API, the CLI has more informative output
 		fmt.Println("Handler not available locally. Trying to pull '" + id + "'...")
@@ -95,7 +93,7 @@ func (r *resolver) fetchArchive(id string) (io.ReadCloser, error) {
 		}
 	}
 
-	readCloser, err := r.client.ImageSave(ctx, []string{id})
+	readCloser, err := dockerClient.ImageSave(ctx, []string{id})
 	if err != nil {
 		return nil, err
 	}

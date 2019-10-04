@@ -17,7 +17,7 @@ type ImageArchive struct {
 	layerMap  map[string]*filetree.FileTree
 }
 
-func NewImageFromArchive(tarFile io.ReadCloser) (*ImageArchive, error) {
+func NewImageArchive(tarFile io.ReadCloser) (*ImageArchive, error) {
 	img := &ImageArchive{
 		layerMap:  make(map[string]*filetree.FileTree),
 	}
@@ -128,7 +128,7 @@ func getFileList(tarReader *tar.Reader) ([]filetree.FileInfo, error) {
 		case tar.TypeXHeader:
 			return nil, fmt.Errorf("unexptected tar file (XHeader): type=%v name=%s", header.Typeflag, name)
 		default:
-			files = append(files, filetree.NewFileInfo(tarReader, header, name))
+			files = append(files, filetree.NewFileInfoFromTarHeader(tarReader, header, name))
 		}
 	}
 	return files, nil
