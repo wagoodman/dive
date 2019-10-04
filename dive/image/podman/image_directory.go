@@ -115,12 +115,10 @@ func (img *ImageDirectoryRef) ToImage() (*image.Image, error) {
 	// note that the resolver config stores images in reverse chronological order, so iterate backwards through layers
 	// as you iterate chronologically through history (ignoring history items that have no layer contents)
 	// Note: history is not required metadata in a docker image!
-	tarPathIdx := 0
-	for layerIdx := len(trees) - 1; layerIdx >= 0; layerIdx-- {
-		id := img.layerOrder[layerIdx]
+	for layerIdx, id := range img.layerOrder {
 		layers[layerIdx] = &layer{
 			obj:     img.layerMap[id],
-			index:   tarPathIdx,
+			index:   layerIdx,
 			tree:    trees[layerIdx],
 		}
 	}
@@ -129,4 +127,5 @@ func (img *ImageDirectoryRef) ToImage() (*image.Image, error) {
 		Trees: trees,
 		Layers: layers,
 	}, nil
+
 }
