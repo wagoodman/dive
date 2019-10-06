@@ -102,7 +102,11 @@ func (vm *FileTreeViewModel) setTreeByLayer(bottomTreeStart, bottomTreeStop, top
 	if topTreeStop > len(vm.RefTrees)-1 {
 		return fmt.Errorf("invalid layer index given: %d of %d", topTreeStop, len(vm.RefTrees)-1)
 	}
-	newTree := vm.cache.Get(bottomTreeStart, bottomTreeStop, topTreeStart, topTreeStop)
+	newTree, err := vm.cache.Get(bottomTreeStart, bottomTreeStop, topTreeStart, topTreeStop)
+	if err != nil {
+		logrus.Errorf("unable to fetch layer tree from cache: %+v", err)
+		return err
+	}
 
 	// preserve vm state on copy
 	visitor := func(node *filetree.FileNode) error {
@@ -112,7 +116,7 @@ func (vm *FileTreeViewModel) setTreeByLayer(bottomTreeStart, bottomTreeStop, top
 		}
 		return nil
 	}
-	err := vm.ModelTree.VisitDepthChildFirst(visitor, nil)
+	err = vm.ModelTree.VisitDepthChildFirst(visitor, nil)
 	if err != nil {
 		logrus.Errorf("unable to propagate layer tree: %+v", err)
 		return err

@@ -367,14 +367,15 @@ func (tree *FileTree) markRemoved(path string) error {
 }
 
 // StackTreeRange combines an array of trees into a single tree
-func StackTreeRange(trees []*FileTree, start, stop int) *FileTree {
+func StackTreeRange(trees []*FileTree, start, stop int) (*FileTree, error) {
 
 	tree := trees[0].Copy()
 	for idx := start; idx <= stop; idx++ {
 		err := tree.Stack(trees[idx])
 		if err != nil {
 			logrus.Errorf("could not stack tree range: %v", err)
+			return nil, err
 		}
 	}
-	return tree
+	return tree, nil
 }

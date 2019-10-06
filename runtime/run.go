@@ -2,6 +2,7 @@ package runtime
 
 import (
 	"fmt"
+	"github.com/sirupsen/logrus"
 	"github.com/wagoodman/dive/dive"
 	"github.com/wagoodman/dive/runtime/ci"
 	"github.com/wagoodman/dive/runtime/export"
@@ -95,7 +96,11 @@ func Run(options Options) {
 
 		fmt.Println(utils.TitleFormat("Building cache..."))
 		cache := filetree.NewFileTreeCache(result.RefTrees)
-		cache.Build()
+		err := cache.Build()
+		if err != nil {
+			logrus.Error(err)
+			utils.Exit(1)
+		}
 
 		// it appears there is a race condition where termbox.Init() will
 		// block nearly indefinitely when running as the first process in
@@ -104,6 +109,12 @@ func Run(options Options) {
 		// enough sleep will prevent this behavior (todo: remove this hack)
 		time.Sleep(100 * time.Millisecond)
 
-		ui.Run(result, cache)
+		err = ui.Run(result, cache)
+
+		if err != nil {
+			logrus.Error(err)
+			utils.Exit(1)
+		}
+		utils.Exit(0)
 	}
 }

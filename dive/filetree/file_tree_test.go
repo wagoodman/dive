@@ -745,7 +745,10 @@ func TestStackRange(t *testing.T) {
 		}
 	}
 	trees := []*FileTree{lowerTree, upperTree, tree}
-	StackTreeRange(trees, 0, 2)
+	_, err = StackTreeRange(trees, 0, 2)
+	if err != nil {
+		t.Fatal(err)
+	}
 }
 
 func TestRemoveOnIterate(t *testing.T) {
