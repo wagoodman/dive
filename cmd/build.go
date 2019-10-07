@@ -5,7 +5,6 @@ import (
 	"github.com/spf13/viper"
 	"github.com/wagoodman/dive/dive"
 	"github.com/wagoodman/dive/runtime"
-	"github.com/wagoodman/dive/utils"
 )
 
 // buildCmd represents the build command
@@ -22,8 +21,6 @@ func init() {
 
 // doBuildCmd implements the steps taken for the build command
 func doBuildCmd(cmd *cobra.Command, args []string) {
-	defer utils.Cleanup()
-
 	initLogging()
 
 	// there is no cli options allowed, only config can be supplied

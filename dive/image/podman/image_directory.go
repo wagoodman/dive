@@ -58,7 +58,7 @@ func NewImageDirectoryRef(img *podmanImage.Image) (*ImageDirectoryRef, error) {
 		// record the tree and layer info
 		imgDirRef.treeMap[curImg.ID()] = tree
 		imgDirRef.layerMap[curImg.ID()] = curImg
-		imgDirRef.layerOrder = append(imgDirRef.layerOrder, curImg.ID())
+		imgDirRef.layerOrder = append([]string{curImg.ID()}, imgDirRef.layerOrder...)
 
 		// continue to the next image
 		curImg, err = curImg.GetParent(ctx)

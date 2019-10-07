@@ -6,6 +6,7 @@ import (
 	"github.com/wagoodman/dive/dive"
 	"github.com/wagoodman/dive/runtime/ci"
 	"github.com/wagoodman/dive/runtime/export"
+	"os"
 	"time"
 
 	"github.com/dustin/go-humanize"
@@ -26,9 +27,9 @@ func runCi(analysis *image.AnalysisResult, options Options) {
 	evaluator.Report()
 
 	if pass {
-		utils.Exit(0)
+		os.Exit(0)
 	}
-	utils.Exit(1)
+	os.Exit(1)
 }
 
 func Run(options Options) {
@@ -44,7 +45,7 @@ func Run(options Options) {
 	imageResolver, err := dive.GetImageHandler(options.Engine)
 	if err != nil {
 		fmt.Printf("cannot determine image provider: %v\n", err)
-		utils.Exit(1)
+		os.Exit(1)
 	}
 
 	var img *image.Image
@@ -54,13 +55,13 @@ func Run(options Options) {
 		img, err = imageResolver.Build(options.BuildArgs)
 		if err != nil {
 			fmt.Printf("cannot build image: %v\n", err)
-			utils.Exit(1)
+			os.Exit(1)
 		}
 	} else {
 		img, err = imageResolver.Fetch(options.ImageId)
 		if err != nil {
 			fmt.Printf("cannot fetch image: %v\n", err)
-			utils.Exit(1)
+			os.Exit(1)
 		}
 	}
 
@@ -76,14 +77,14 @@ func Run(options Options) {
 	result, err := img.Analyze()
 	if err != nil {
 		fmt.Printf("cannot analyze image: %v\n", err)
-		utils.Exit(1)
+		os.Exit(1)
 	}
 
 	if doExport {
 		err = export.NewExport(result).ToFile(options.ExportFile)
 		if err != nil {
 			fmt.Printf("cannot write export file: %v\n", err)
-			utils.Exit(1)
+			os.Exit(1)
 		}
 	}
 
@@ -91,7 +92,7 @@ func Run(options Options) {
 		runCi(result, options)
 	} else {
 		if doExport {
-			utils.Exit(0)
+			os.Exit(0)
 		}
 
 		fmt.Println(utils.TitleFormat("Building cache..."))
@@ -99,7 +100,7 @@ func Run(options Options) {
 		err := cache.Build()
 		if err != nil {
 			logrus.Error(err)
-			utils.Exit(1)
+			os.Exit(1)
 		}
 
 		// it appears there is a race condition where termbox.Init() will
@@ -110,11 +111,10 @@ func Run(options Options) {
 		time.Sleep(100 * time.Millisecond)
 
 		err = ui.Run(result, cache)
-
 		if err != nil {
 			logrus.Error(err)
-			utils.Exit(1)
+			os.Exit(1)
 		}
-		utils.Exit(0)
+		os.Exit(0)
 	}
 }

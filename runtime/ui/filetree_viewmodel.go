@@ -6,11 +6,9 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/lunixbochs/vtclean"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
-	"github.com/wagoodman/dive/utils"
-
-	"github.com/lunixbochs/vtclean"
 	"github.com/wagoodman/dive/dive/filetree"
 )
 
@@ -36,7 +34,7 @@ type FileTreeViewModel struct {
 }
 
 // NewFileTreeController creates a new view object attached the the global [gocui] screen object.
-func NewFileTreeViewModel(tree *filetree.FileTree, refTrees []*filetree.FileTree, cache filetree.TreeCache) (treeViewModel *FileTreeViewModel) {
+func NewFileTreeViewModel(tree *filetree.FileTree, refTrees []*filetree.FileTree, cache filetree.TreeCache) (treeViewModel *FileTreeViewModel, err error) {
 	treeViewModel = new(FileTreeViewModel)
 
 	// populate main fields
@@ -59,11 +57,11 @@ func NewFileTreeViewModel(tree *filetree.FileTree, refTrees []*filetree.FileTree
 		case "unmodified":
 			treeViewModel.HiddenDiffTypes[filetree.Unmodified] = true
 		default:
-			utils.PrintAndExit(fmt.Sprintf("unknown diff.hide value: %s", t))
+			return nil, fmt.Errorf("unknown diff.hide value: %s", t)
 		}
 	}
 
-	return treeViewModel
+	return treeViewModel, nil
 }
 
 // Setup initializes the UI concerns within the context of a global [gocui] view object.
@@ -420,9 +418,17 @@ func (vm *FileTreeViewModel) Render() error {
 	vm.mainBuf.Reset()
 	for idx, line := range lines {
 		if idx == vm.bufferIndex {
-			fmt.Fprintln(&vm.mainBuf, Formatting.Selected(vtclean.Clean(line, false)))
+			_, err := fmt.Fprintln(&vm.mainBuf, Formatting.Selected(vtclean.Clean(line, false)))
+			if err != nil {
+				logrus.Debug("unable to write to buffer: ", err)
+				return err
+			}
 		} else {
-			fmt.Fprintln(&vm.mainBuf, line)
+			_, err := fmt.Fprintln(&vm.mainBuf, line)
+			if err != nil {
+				logrus.Debug("unable to write to buffer: ", err)
+				return err
+			}
 		}
 	}
 	return nil

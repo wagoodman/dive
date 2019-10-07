@@ -13,7 +13,6 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"github.com/wagoodman/dive/utils"
 )
 
 var cfgFile string
@@ -36,9 +35,8 @@ the amount of wasted space and identifies the offending files from the image.`,
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err)
-		utils.Exit(1)
+		os.Exit(1)
 	}
-	utils.Cleanup()
 }
 
 func init() {
@@ -160,7 +158,7 @@ func getCfgFile(fromFlag string) string {
 	home, err := homedir.Dir()
 	if err != nil {
 		fmt.Println(err)
-		utils.Exit(0)
+		os.Exit(0)
 	}
 
 	xdgHome := os.Getenv("XDG_CONFIG_HOME")

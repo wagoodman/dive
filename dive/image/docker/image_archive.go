@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"github.com/wagoodman/dive/dive/filetree"
 	"github.com/wagoodman/dive/dive/image"
-	"github.com/wagoodman/dive/utils"
 	"io"
 	"io/ioutil"
+	"os"
 	"strings"
 )
 
@@ -37,7 +37,7 @@ func NewImageArchive(tarFile io.ReadCloser) (*ImageArchive, error) {
 
 		if err != nil {
 			fmt.Println(err)
-			utils.Exit(1)
+			os.Exit(1)
 		}
 
 		name := header.Name
@@ -116,8 +116,7 @@ func getFileList(tarReader *tar.Reader) ([]filetree.FileInfo, error) {
 		if err == io.EOF {
 			break
 		} else if err != nil {
-			fmt.Println(err)
-			utils.Exit(1)
+			return nil, err
 		}
 
 		name := header.Name

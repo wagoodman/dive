@@ -42,15 +42,17 @@ type FileTreeController struct {
 }
 
 // NewFileTreeController creates a new view object attached the the global [gocui] screen object.
-func NewFileTreeController(name string, gui *gocui.Gui, tree *filetree.FileTree, refTrees []*filetree.FileTree, cache filetree.TreeCache) (controller *FileTreeController) {
+func NewFileTreeController(name string, gui *gocui.Gui, tree *filetree.FileTree, refTrees []*filetree.FileTree, cache filetree.TreeCache) (controller *FileTreeController, err error) {
 	controller = new(FileTreeController)
 
 	// populate main fields
 	controller.Name = name
 	controller.gui = gui
-	controller.vm = NewFileTreeViewModel(tree, refTrees, cache)
+	controller.vm, err = NewFileTreeViewModel(tree, refTrees, cache)
+	if err != nil {
+		return nil, err
+	}
 
-	var err error
 	controller.keybindingToggleCollapse, err = keybinding.ParseAll(viper.GetString("keybinding.toggle-collapse-dir"))
 	if err != nil {
 		logrus.Error(err)
@@ -100,7 +102,7 @@ func NewFileTreeController(name string, gui *gocui.Gui, tree *filetree.FileTree,
 		logrus.Error(err)
 	}
 
-	return controller
+	return controller, err
 }
 
 // Setup initializes the UI concerns within the context of a global [gocui] view object.
@@ -302,19 +304,15 @@ func (controller *FileTreeController) toggleAttributes() error {
 	if err != nil {
 		return err
 	}
-	// we need to render the changes to the status pane as well
-	Update()
-	Render()
-	return nil
+	// we need to render the changes to the status pane as well (not just this contoller/view)
+	return UpdateAndRender()
 }
 
 // toggleShowDiffType will show/hide the selected DiffType in the filetree pane.
 func (controller *FileTreeController) toggleShowDiffType(diffType filetree.DiffType) error {
 	controller.vm.toggleShowDiffType(diffType)
-	// we need to render the changes to the status pane as well
-	Update()
-	Render()
-	return nil
+	// we need to render the changes to the status pane as well (not just this contoller/view)
+	return UpdateAndRender()
 }
 
 // filterRegex will return a regular expression object to match the user's filter input.
@@ -383,10 +381,13 @@ func (controller *FileTreeController) Render() error {
 
 		// update the contents
 		controller.view.Clear()
-		_ = controller.vm.Render()
-		_, _ = fmt.Fprint(controller.view, controller.vm.mainBuf.String())
+		err := controller.vm.Render()
+		if err != nil {
+			return err
+		}
+		_, err = fmt.Fprint(controller.view, controller.vm.mainBuf.String())
 
-		return nil
+		return err
 	})
 	return nil
 }

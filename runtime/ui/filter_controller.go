@@ -3,6 +3,7 @@ package ui
 import (
 	"fmt"
 	"github.com/jroimartin/gocui"
+	"github.com/sirupsen/logrus"
 )
 
 // FilterController holds the UI objects and data models for populating the bottom row. Specifically the pane that
@@ -99,9 +100,10 @@ func (controller *FilterController) Update() error {
 // Render flushes the state objects to the screen. Currently this is the users path filter input.
 func (controller *FilterController) Render() error {
 	controller.gui.Update(func(g *gocui.Gui) error {
-		// render the header
 		_, err := fmt.Fprintln(controller.header, Formatting.Header(controller.headerStr))
-
+		if err != nil {
+			logrus.Error("unable to write to buffer: ", err)
+		}
 		return err
 	})
 	return nil

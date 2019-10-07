@@ -9,7 +9,6 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"github.com/wagoodman/dive/dive/filetree"
-	"github.com/wagoodman/dive/utils"
 	"github.com/wagoodman/keybinding"
 )
 
@@ -72,6 +71,22 @@ type View interface {
 	IsVisible() bool
 }
 
+func UpdateAndRender() error {
+	err := Update()
+	if err != nil {
+		logrus.Debug("failed update: ", err)
+		return err
+	}
+
+	err = Render()
+	if err != nil {
+		logrus.Debug("failed render: ", err)
+		return err
+	}
+
+	return nil
+}
+
 // toggleView switches between the file view and the layer view and re-renders the screen.
 func toggleView(g *gocui.Gui, v *gocui.View) (err error) {
 	if v == nil || v.Name() == Controllers.Layer.Name {
@@ -79,9 +94,13 @@ func toggleView(g *gocui.Gui, v *gocui.View) (err error) {
 	} else {
 		_, err = g.SetCurrentView(Controllers.Layer.Name)
 	}
-	Update()
-	Render()
-	return err
+
+	if err != nil {
+		logrus.Error("unable to toggle view: ", err)
+		return err
+	}
+
+	return UpdateAndRender()
 }
 
 // toggleFilterView shows/hides the file tree filter pane.
@@ -95,21 +114,23 @@ func toggleFilterView(g *gocui.Gui, v *gocui.View) error {
 	if !Controllers.Filter.hidden {
 		_, err := g.SetCurrentView(Controllers.Filter.Name)
 		if err != nil {
+			logrus.Error("unable to toggle filter view: ", err)
 			return err
 		}
-		Update()
-		Render()
-	} else {
-		err := toggleView(g, v)
-		if err != nil {
-			return err
-		}
-
-		err = Controllers.Filter.view.SetCursor(0, 0)
-		if err != nil {
-			return err
-		}
+		return UpdateAndRender()
 	}
+
+	err := toggleView(g, v)
+	if err != nil {
+		logrus.Error("unable to toggle filter view (back): ", err)
+		return err
+	}
+
+	err = Controllers.Filter.view.SetCursor(0, 0)
+	if err != nil {
+		return err
+	}
+
 
 	return nil
 }
@@ -325,9 +346,10 @@ func layout(g *gocui.Gui) error {
 
 // Update refreshes the state objects for future rendering.
 func Update() error {
-	for _, view := range Controllers.lookup {
-		err := view.Update()
+	for _, controller := range Controllers.lookup {
+		err := controller.Update()
 		if err != nil {
+			logrus.Debug("unable to update controller: ")
 			return err
 		}
 	}
@@ -336,9 +358,9 @@ func Update() error {
 
 // Render flushes the state objects to the screen.
 func Render() error {
-	for _, view := range Controllers.lookup {
-		if view.IsVisible() {
-			err := view.Render()
+	for _, controller := range Controllers.lookup {
+		if controller.IsVisible() {
+			err := controller.Render()
 			if err != nil {
 				return err
 			}
@@ -386,19 +408,24 @@ func Run(analysis *image.AnalysisResult, cache filetree.TreeCache) error {
 	if err != nil {
 		return err
 	}
-	utils.SetUi(g)
 	defer g.Close()
 
 	Controllers.lookup = make(map[string]View)
 
-	Controllers.Layer = NewLayerController("side", g, analysis.Layers)
+	Controllers.Layer, err = NewLayerController("side", g, analysis.Layers)
+	if err != nil {
+		return err
+	}
 	Controllers.lookup[Controllers.Layer.Name] = Controllers.Layer
 
 	treeStack, err := filetree.StackTreeRange(analysis.RefTrees, 0, 0)
 	if err != nil {
 		return err
 	}
-	Controllers.Tree = NewFileTreeController("main", g, treeStack, analysis.RefTrees, cache)
+	Controllers.Tree, err = NewFileTreeController("main", g, treeStack, analysis.RefTrees, cache)
+	if err != nil {
+		return err
+	}
 	Controllers.lookup[Controllers.Tree.Name] = Controllers.Tree
 
 	Controllers.Status = NewStatusController("status", g)
@@ -421,12 +448,7 @@ func Run(analysis *image.AnalysisResult, cache filetree.TreeCache) error {
 	// }
 
 	// perform the first update and render now that all resources have been loaded
-	err = Update()
-	if err != nil {
-		return err
-	}
-
-	err = Render()
+	err = UpdateAndRender()
 	if err != nil {
 		return err
 	}

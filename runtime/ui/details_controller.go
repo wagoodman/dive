@@ -2,6 +2,7 @@ package ui
 
 import (
 	"fmt"
+	"github.com/sirupsen/logrus"
 	"github.com/wagoodman/dive/dive/filetree"
 	"strconv"
 	"strings"
@@ -121,22 +122,29 @@ func (controller *DetailsController) Render() error {
 		layerHeaderStr := fmt.Sprintf("[Layer Details]%s", strings.Repeat("─", width-15))
 		imageHeaderStr := fmt.Sprintf("[Image Details]%s", strings.Repeat("─", width-15))
 
-		_, _ = fmt.Fprintln(controller.header, Formatting.Header(vtclean.Clean(layerHeaderStr, false)))
+		_, err := fmt.Fprintln(controller.header, Formatting.Header(vtclean.Clean(layerHeaderStr, false)))
+		if err != nil {
+			return err
+		}
 
 		// update contents
 		controller.view.Clear()
-		_, _ = fmt.Fprintln(controller.view, Formatting.Header("Digest: ")+currentLayer.Id())
-		_, _ = fmt.Fprintln(controller.view, Formatting.Header("Command:"))
-		_, _ = fmt.Fprintln(controller.view, currentLayer.Command())
 
-		_, _ = fmt.Fprintln(controller.view, "\n"+Formatting.Header(vtclean.Clean(imageHeaderStr, false)))
+		var lines = make([]string, 0)
+		lines = append(lines, Formatting.Header("Digest: ")+currentLayer.Id())
+		lines = append(lines, Formatting.Header("Command:"))
+		lines = append(lines, currentLayer.Command())
+		lines = append(lines, "\n"+Formatting.Header(vtclean.Clean(imageHeaderStr, false)))
+		lines = append(lines, imageSizeStr)
+		lines = append(lines, wastedSpaceStr)
+		lines = append(lines, effStr+"\n")
+		lines = append(lines, inefficiencyReport)
 
-		_, _ = fmt.Fprintln(controller.view, imageSizeStr)
-		_, _ = fmt.Fprintln(controller.view, wastedSpaceStr)
-		_, _ = fmt.Fprintln(controller.view, effStr+"\n")
-
-		_, _ = fmt.Fprintln(controller.view, inefficiencyReport)
-		return nil
+		_, err = fmt.Fprintln(controller.view, strings.Join(lines, "\n"))
+		if err != nil {
+			logrus.Debug("unable to write to buffer: ", err)
+		}
+		return err
 	})
 	return nil
 }
