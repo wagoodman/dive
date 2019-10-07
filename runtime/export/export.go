@@ -12,27 +12,28 @@ type export struct {
 }
 
 func NewExport(analysis *diveImage.AnalysisResult) *export {
-	data := export{}
-	data.Layer = make([]layer, len(analysis.Layers))
-	data.Image.InefficientFiles = make([]fileReference, len(analysis.Inefficiencies))
+	data := export{
+		Layer: make([]layer, len(analysis.Layers)),
+		Image: image {
+			InefficientFiles: make([]fileReference, len(analysis.Inefficiencies)),
+			SizeBytes: analysis.SizeBytes,
+			EfficiencyScore: analysis.Efficiency,
+			InefficientBytes: analysis.WastedBytes,
+		},
+	}
 
 	// export layers in order
-	for revIdx := len(analysis.Layers) - 1; revIdx >= 0; revIdx-- {
-		curLayer := analysis.Layers[revIdx]
-		idx := (len(analysis.Layers) - 1) - revIdx
-
+	for idx, curLayer := range analysis.Layers {
 		data.Layer[idx] = layer{
 			Index:     curLayer.Index,
-			DigestID:  curLayer.Id,
+			ID:        curLayer.Id,
+			DigestID:  curLayer.Digest,
 			SizeBytes: curLayer.Size,
 			Command:   curLayer.Command,
 		}
 	}
 
-	data.Image.SizeBytes = analysis.SizeBytes
-	data.Image.EfficiencyScore = analysis.Efficiency
-	data.Image.InefficientBytes = analysis.WastedBytes
-
+	// add file references
 	for idx := 0; idx < len(analysis.Inefficiencies); idx++ {
 		fileData := analysis.Inefficiencies[len(analysis.Inefficiencies)-1-idx]
 

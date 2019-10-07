@@ -12,8 +12,12 @@ func TestLoadDockerImageTar(tarPath string) (*image.AnalysisResult, error) {
 	}
 	defer f.Close()
 
-	resolver := NewResolver()
-	img, err := resolver.Fetch("dive-test:latest")
+	archive, err := NewImageArchive(f)
+	if err != nil {
+		return nil, err
+	}
+
+	img, err := archive.ToImage()
 	if err != nil {
 		return nil, err
 	}

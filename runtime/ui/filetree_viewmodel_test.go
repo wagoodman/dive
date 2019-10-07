@@ -87,9 +87,13 @@ func initializeTestViewModel(t *testing.T) *FileTreeViewModel {
 
 	treeStack, err := filetree.StackTreeRange(result.RefTrees, 0, 0)
 	if err != nil {
-		t.Fatalf("%s: unable to create tree ViewModel: %v", t.Name(), err)
+		t.Fatalf("%s: unable to stack trees: %v", t.Name(), err)
 	}
-	return NewFileTreeViewModel(treeStack, result.RefTrees, cache)
+	vm, err := NewFileTreeViewModel(treeStack, result.RefTrees, cache)
+	if err != nil {
+		t.Fatalf("%s: unable to create tree ViewModel: %+v", t.Name(), err)
+	}
+	return vm
 }
 
 func runTestCase(t *testing.T, vm *FileTreeViewModel, width, height int, filterRegex *regexp.Regexp) {

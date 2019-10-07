@@ -22,9 +22,8 @@ func (img *Image) Analyze() (*AnalysisResult, error) {
 	}
 
 	var wastedBytes uint64
-	for idx := 0; idx < len(inefficiencies); idx++ {
-		fileData := inefficiencies[len(inefficiencies)-1-idx]
-		wastedBytes += uint64(fileData.CumulativeSize)
+	for _, file := range inefficiencies {
+		wastedBytes += uint64(file.CumulativeSize)
 	}
 
 	return &AnalysisResult{
