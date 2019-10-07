@@ -11,13 +11,13 @@ const (
 )
 
 type Layer struct {
-	Id string
-	Index int
+	Id      string
+	Index   int
 	Command string
-	Size uint64
-	Tree *filetree.FileTree
-	Names []string
-	Digest string
+	Size    uint64
+	Tree    *filetree.FileTree
+	Names   []string
+	Digest  string
 }
 
 func (l *Layer) ShortId() string {

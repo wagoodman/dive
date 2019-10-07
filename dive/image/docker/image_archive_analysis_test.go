@@ -26,12 +26,12 @@ func analysisFromImageTar(t *testing.T, path string) *image.AnalysisResult {
 func Test_Analysis(t *testing.T) {
 
 	table := map[string]struct {
-		efficiency     float64
-		sizeBytes      uint64
-		userSizeBytes  uint64
-		wastedBytes    uint64
-		wastedPercent  float64
-		path           string
+		efficiency    float64
+		sizeBytes     uint64
+		userSizeBytes uint64
+		wastedBytes   uint64
+		wastedPercent float64
+		path          string
 	}{
 		"docker-image": {0.9844212134184309, 1220598, 66237, 32025, 0.4834911001404049, "../../../.data/test-docker-image.tar"},
 	}

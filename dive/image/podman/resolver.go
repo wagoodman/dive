@@ -11,7 +11,7 @@ import (
 	"os"
 )
 
-type resolver struct {}
+type resolver struct{}
 
 func NewResolver() *resolver {
 	return &resolver{}
@@ -24,7 +24,6 @@ func (r *resolver) Build(args []string) (*image.Image, error) {
 	}
 	return r.Fetch(id)
 }
-
 
 func (r *resolver) Fetch(id string) (*image.Image, error) {
 	img, err := r.resolveFromDisk(id)
@@ -57,18 +56,18 @@ func (r *resolver) resolveFromDisk(id string) (*image.Image, error) {
 		return nil, err
 	}
 
-	ImageLoop:
-		for _, candidateImage := range images {
-			for _, name := range candidateImage.Names() {
-				if name == id {
-					img, err = NewImageDirectoryRef(candidateImage)
-					if err != nil {
-						return nil, err
-					}
-					break ImageLoop
+ImageLoop:
+	for _, candidateImage := range images {
+		for _, name := range candidateImage.Names() {
+			if name == id {
+				img, err = NewImageDirectoryRef(candidateImage)
+				if err != nil {
+					return nil, err
 				}
+				break ImageLoop
 			}
 		}
+	}
 
 	if img == nil {
 		return nil, fmt.Errorf("could not find image by name: '%s'", id)
@@ -108,7 +107,7 @@ func (r *resolver) fetchDockerArchive(id string) (string, error) {
 		return "", err
 	}
 
-	for _, item:= range images {
+	for _, item := range images {
 		for _, name := range item.Names() {
 			if name == id {
 				file, err := ioutil.TempFile(os.TempDir(), "dive-resolver-tar")

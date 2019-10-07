@@ -72,8 +72,6 @@ func assertTestData(t *testing.T, actualBytes []byte) {
 	helperCheckDiff(t, expectedBytes, actualBytes)
 }
 
-
-
 func initializeTestViewModel(t *testing.T) *FileTreeViewModel {
 	result := docker.TestAnalysisFromArchive(t, "../../.data/test-docker-image.tar")
 

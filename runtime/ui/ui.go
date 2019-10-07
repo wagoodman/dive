@@ -131,7 +131,6 @@ func toggleFilterView(g *gocui.Gui, v *gocui.View) error {
 		return err
 	}
 
-
 	return nil
 }
 

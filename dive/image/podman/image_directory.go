@@ -20,8 +20,8 @@ type ImageDirectoryRef struct {
 func NewImageDirectoryRef(img *podmanImage.Image) (*ImageDirectoryRef, error) {
 	imgDirRef := &ImageDirectoryRef{
 		layerOrder: make([]string, 0),
-		treeMap:  make(map[string]*filetree.FileTree),
-		layerMap: make(map[string]*podmanImage.Image),
+		treeMap:    make(map[string]*filetree.FileTree),
+		layerMap:   make(map[string]*podmanImage.Image),
 	}
 
 	ctx := context.TODO()
@@ -41,7 +41,7 @@ func NewImageDirectoryRef(img *podmanImage.Image) (*ImageDirectoryRef, error) {
 		if !exists {
 			return nil, fmt.Errorf("graph has no upper dir")
 		}
-		
+
 		if _, err := os.Stat(rootDir); os.IsNotExist(err) {
 			return nil, fmt.Errorf("graph root dir does not exist: %s", rootDir)
 		}
@@ -67,7 +67,7 @@ func NewImageDirectoryRef(img *podmanImage.Image) (*ImageDirectoryRef, error) {
 	return imgDirRef, nil
 }
 
-func processLayer(name, rootDir string) (*filetree.FileTree, error)  {
+func processLayer(name, rootDir string) (*filetree.FileTree, error) {
 	tree := filetree.NewFileTree()
 	tree.Name = name
 
@@ -76,7 +76,7 @@ func processLayer(name, rootDir string) (*filetree.FileTree, error)  {
 			return err
 		}
 		// add this file to the tree...
-		relativeImagePath := "/"+strings.TrimPrefix(strings.TrimPrefix(path, rootDir), "/")
+		relativeImagePath := "/" + strings.TrimPrefix(strings.TrimPrefix(path, rootDir), "/")
 		fileInfo := filetree.NewFileInfo(path, relativeImagePath, info)
 
 		tree.FileSize += uint64(fileInfo.Size)
@@ -111,15 +111,15 @@ func (img *ImageDirectoryRef) ToImage() (*image.Image, error) {
 		// as you iterate chronologically through history (ignoring history items that have no layer contents)
 		// Note: history is not required metadata in an OCI image!
 		podmanLayer := layer{
-			obj:     img.layerMap[id],
-			index:   layerIdx,
-			tree:    trees[layerIdx],
+			obj:   img.layerMap[id],
+			index: layerIdx,
+			tree:  trees[layerIdx],
 		}
 		layers = append(layers, podmanLayer.ToLayer())
 	}
 
 	return &image.Image{
-		Trees: trees,
+		Trees:  trees,
 		Layers: layers,
 	}, nil
 

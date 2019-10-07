@@ -12,14 +12,14 @@ import (
 )
 
 type ImageArchive struct {
-	manifest  manifest
-	config    config
-	layerMap  map[string]*filetree.FileTree
+	manifest manifest
+	config   config
+	layerMap map[string]*filetree.FileTree
 }
 
 func NewImageArchive(tarFile io.ReadCloser) (*ImageArchive, error) {
 	img := &ImageArchive{
-		layerMap:  make(map[string]*filetree.FileTree),
+		layerMap: make(map[string]*filetree.FileTree),
 	}
 
 	tarReader := tar.NewReader(tarFile)
@@ -179,9 +179,8 @@ func (img *ImageArchive) ToImage() (*image.Image, error) {
 		layers = append(layers, dockerLayer.ToLayer())
 	}
 
-
 	return &image.Image{
-		Trees: trees,
+		Trees:  trees,
 		Layers: layers,
 	}, nil
 

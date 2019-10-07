@@ -134,7 +134,7 @@ func (controller *DetailsController) Render() error {
 		if currentLayer.Names != nil && len(currentLayer.Names) > 0 {
 			lines = append(lines, Formatting.Header("Tags:   ")+strings.Join(currentLayer.Names, ", "))
 		} else {
-			lines = append(lines, Formatting.Header("Tags:   ")+ "(none)")
+			lines = append(lines, Formatting.Header("Tags:   ")+"(none)")
 		}
 		lines = append(lines, Formatting.Header("Id:     ")+currentLayer.Id)
 		lines = append(lines, Formatting.Header("Digest: ")+currentLayer.Digest)

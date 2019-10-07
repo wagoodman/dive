@@ -14,7 +14,6 @@ type layer struct {
 	tree    *filetree.FileTree
 }
 
-
 // String represents a layer in a columnar format.
 func (l *layer) ToLayer() *image.Layer {
 	id := strings.Split(l.tree.Name, "/")[0]
@@ -25,7 +24,7 @@ func (l *layer) ToLayer() *image.Layer {
 		Size:    l.history.Size,
 		Tree:    l.tree,
 		// todo: query docker api for tags
-		Names:   []string{"(unavailable)"},
-		Digest:  l.history.ID,
+		Names:  []string{"(unavailable)"},
+		Digest: l.history.ID,
 	}
 }

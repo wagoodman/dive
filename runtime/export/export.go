@@ -14,10 +14,10 @@ type export struct {
 func NewExport(analysis *diveImage.AnalysisResult) *export {
 	data := export{
 		Layer: make([]layer, len(analysis.Layers)),
-		Image: image {
+		Image: image{
 			InefficientFiles: make([]fileReference, len(analysis.Inefficiencies)),
-			SizeBytes: analysis.SizeBytes,
-			EfficiencyScore: analysis.Efficiency,
+			SizeBytes:        analysis.SizeBytes,
+			EfficiencyScore:  analysis.Efficiency,
 			InefficientBytes: analysis.WastedBytes,
 		},
 	}

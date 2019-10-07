@@ -49,7 +49,7 @@ func NewFileInfo(realPath, path string, info os.FileInfo) FileInfo {
 	var linkName string
 	var size int64
 
-	if info.Mode() & os.ModeSymlink != 0 {
+	if info.Mode()&os.ModeSymlink != 0 {
 		fileType = tar.TypeSymlink
 
 		linkName, err = os.Readlink(realPath)
@@ -83,9 +83,9 @@ func NewFileInfo(realPath, path string, info os.FileInfo) FileInfo {
 		Size:     size,
 		Mode:     info.Mode(),
 		// todo: support UID/GID
-		Uid:      -1,
-		Gid:      -1,
-		IsDir:    info.IsDir(),
+		Uid:   -1,
+		Gid:   -1,
+		IsDir: info.IsDir(),
 	}
 }
 

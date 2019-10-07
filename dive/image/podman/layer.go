@@ -11,10 +11,10 @@ import (
 
 // Layer represents a Docker image layer and metadata
 type layer struct {
-	obj       *podmanImage.Image
-	history   *podmanImage.History
-	index     int
-	tree      *filetree.FileTree
+	obj     *podmanImage.Image
+	history *podmanImage.History
+	index   int
+	tree    *filetree.FileTree
 }
 
 func (l *layer) getHistory() (*podmanImage.History, error) {

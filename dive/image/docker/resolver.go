@@ -13,7 +13,7 @@ import (
 	"golang.org/x/net/context"
 )
 
-type resolver struct {}
+type resolver struct{}
 
 func NewResolver() *resolver {
 	return &resolver{}
@@ -100,4 +100,3 @@ func (r *resolver) fetchArchive(id string) (io.ReadCloser, error) {
 
 	return readCloser, nil
 }
-
