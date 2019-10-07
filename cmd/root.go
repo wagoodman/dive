@@ -57,7 +57,7 @@ func initCli() {
 
 	for _, key := range []string{"lowestEfficiency", "highestWastedBytes", "highestUserWastedPercent"} {
 		if err := ciConfig.BindPFlag(fmt.Sprintf("rules.%s", key), rootCmd.Flags().Lookup(key)); err != nil {
-			log.Fatal("Unable to bind '%s' flag:", key, err)
+			log.Fatalf("Unable to bind '%s' flag: %v", key, err)
 		}
 	}
 

@@ -84,6 +84,9 @@ func (r *resolver) resolveFromDockerArchive(id string) (*image.Image, error) {
 	defer os.Remove(path)
 
 	file, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
 	defer file.Close()
 
 	img, err := docker.NewImageArchive(ioutil.NopCloser(bufio.NewReader(file)))
