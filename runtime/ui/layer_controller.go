@@ -20,7 +20,7 @@ type LayerController struct {
 	view              *gocui.View
 	header            *gocui.View
 	LayerIndex        int
-	Layers            []image.Layer
+	Layers            []*image.Layer
 	CompareMode       CompareType
 	CompareStartIndex int
 	ImageSize         uint64
@@ -32,7 +32,7 @@ type LayerController struct {
 }
 
 // NewLayerController creates a new view object attached the the global [gocui] screen object.
-func NewLayerController(name string, gui *gocui.Gui, layers []image.Layer) (controller *LayerController, err error) {
+func NewLayerController(name string, gui *gocui.Gui, layers []*image.Layer) (controller *LayerController, err error) {
 	controller = new(LayerController)
 
 	// populate main fields
@@ -209,7 +209,7 @@ func (controller *LayerController) SetCursor(layer int) error {
 }
 
 // currentLayer returns the Layer object currently selected.
-func (controller *LayerController) currentLayer() image.Layer {
+func (controller *LayerController) currentLayer() *image.Layer {
 	return controller.Layers[(len(controller.Layers)-1)-controller.LayerIndex]
 }
 
@@ -262,7 +262,7 @@ func (controller *LayerController) renderCompareBar(layerIdx int) string {
 func (controller *LayerController) Update() error {
 	controller.ImageSize = 0
 	for idx := 0; idx < len(controller.Layers); idx++ {
-		controller.ImageSize += controller.Layers[idx].Size()
+		controller.ImageSize += controller.Layers[idx].Size
 	}
 	return nil
 }

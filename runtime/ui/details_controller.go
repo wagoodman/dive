@@ -131,9 +131,9 @@ func (controller *DetailsController) Render() error {
 		controller.view.Clear()
 
 		var lines = make([]string, 0)
-		lines = append(lines, Formatting.Header("Digest: ")+currentLayer.Id())
+		lines = append(lines, Formatting.Header("Digest: ")+currentLayer.Id)
 		lines = append(lines, Formatting.Header("Command:"))
-		lines = append(lines, currentLayer.Command())
+		lines = append(lines, currentLayer.Command)
 		lines = append(lines, "\n"+Formatting.Header(vtclean.Clean(imageHeaderStr, false)))
 		lines = append(lines, imageSizeStr)
 		lines = append(lines, wastedSpaceStr)

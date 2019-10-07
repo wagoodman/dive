@@ -147,7 +147,7 @@ func (img *ImageArchive) ToImage() (*image.Image, error) {
 	}
 
 	// build the layers array
-	layers := make([]image.Layer, len(trees))
+	layers := make([]*image.Layer, len(trees))
 
 	// note that the resolver config stores images in reverse chronological order, so iterate backwards through layers
 	// as you iterate chronologically through history (ignoring history items that have no layer contents)
@@ -174,11 +174,12 @@ func (img *ImageArchive) ToImage() (*image.Image, error) {
 
 		historyObj.Size = tree.FileSize
 
-		layers[layerIdx] = &layer{
+		dockerLayer := layer{
 			history: historyObj,
 			index:   tarPathIdx,
 			tree:    trees[layerIdx],
 		}
+		layers[layerIdx] = dockerLayer.ToLayer()
 
 		tarPathIdx++
 	}

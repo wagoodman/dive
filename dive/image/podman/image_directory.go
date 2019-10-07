@@ -110,17 +110,18 @@ func (img *ImageDirectoryRef) ToImage() (*image.Image, error) {
 		return nil, fmt.Errorf("could not find '%s' in parsed trees", id)
 	}
 
-	layers := make([]image.Layer, len(trees))
+	layers := make([]*image.Layer, len(trees))
 
 	// note that the resolver config stores images in reverse chronological order, so iterate backwards through layers
 	// as you iterate chronologically through history (ignoring history items that have no layer contents)
-	// Note: history is not required metadata in a docker image!
+	// Note: history is not required metadata in an OCI image!
 	for layerIdx, id := range img.layerOrder {
-		layers[layerIdx] = &layer{
+		podmanLayer := layer{
 			obj:     img.layerMap[id],
 			index:   layerIdx,
 			tree:    trees[layerIdx],
 		}
+		layers[layerIdx] = podmanLayer.ToLayer()
 	}
 
 	return &image.Image{

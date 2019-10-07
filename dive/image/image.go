@@ -6,7 +6,7 @@ import (
 
 type Image struct {
 	Trees  []*filetree.FileTree
-	Layers []Layer
+	Layers []*Layer
 }
 
 func (img *Image) Analyze() (*AnalysisResult, error) {
@@ -15,9 +15,9 @@ func (img *Image) Analyze() (*AnalysisResult, error) {
 	var sizeBytes, userSizeBytes uint64
 
 	for i, v := range img.Layers {
-		sizeBytes += v.Size()
+		sizeBytes += v.Size
 		if i != 0 {
-			userSizeBytes += v.Size()
+			userSizeBytes += v.Size
 		}
 	}
 

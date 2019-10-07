@@ -9,7 +9,7 @@ type Analyzer interface {
 }
 
 type AnalysisResult struct {
-	Layers            []Layer
+	Layers            []*Layer
 	RefTrees          []*filetree.FileTree
 	Efficiency        float64
 	SizeBytes         uint64
