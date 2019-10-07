@@ -72,13 +72,13 @@ func assertTestData(t *testing.T, actualBytes []byte) {
 	helperCheckDiff(t, expectedBytes, actualBytes)
 }
 
+
+
 func initializeTestViewModel(t *testing.T) *FileTreeViewModel {
-	result, err := docker.TestLoadDockerImageTar("../../.data/test-docker-image.tar")
-	if err != nil {
-		t.Fatalf("%s: unable to fetch analysis: %v", t.Name(), err)
-	}
+	result := docker.TestAnalysisFromArchive(t, "../../.data/test-docker-image.tar")
+
 	cache := filetree.NewFileTreeCache(result.RefTrees)
-	err = cache.Build()
+	err := cache.Build()
 	if err != nil {
 		t.Fatalf("%s: unable to build cache: %+v", t.Name(), err)
 	}

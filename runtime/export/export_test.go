@@ -7,11 +7,8 @@ import (
 )
 
 func Test_Export(t *testing.T) {
+	result := docker.TestAnalysisFromArchive(t, "../../.data/test-docker-image.tar")
 
-	result, err := docker.TestLoadDockerImageTar("../../.data/test-docker-image.tar")
-	if err != nil {
-		t.Fatalf("Test_Export: unable to fetch analysis: %v", err)
-	}
 	export := NewExport(result)
 	payload, err := export.marshal()
 	if err != nil {
