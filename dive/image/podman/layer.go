@@ -1,6 +1,7 @@
 package podman
 
 import (
+	"context"
 	podmanImage "github.com/containers/libpod/libpod/image"
 	"github.com/wagoodman/dive/dive/filetree"
 	"github.com/wagoodman/dive/dive/image"
@@ -16,9 +17,12 @@ type layer struct {
 
 // ShortId returns the truncated id of the current layer.
 func (l *layer) Command() string {
-	if len(l.obj.ImageData.History) > 0 {
-		hist := l.obj.ImageData.History
-		return strings.TrimPrefix(hist[len(hist)-1].CreatedBy, "/bin/sh -c ")
+	history, err := l.obj.History(context.TODO())
+	if err != nil {
+		return "error: " + err.Error()
+	}
+	if len(history) > 0 {
+		return strings.TrimPrefix(history[0].CreatedBy, "/bin/sh -c ")
 	}
 	return "unknown"
 }

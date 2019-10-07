@@ -147,16 +147,13 @@ func (img *ImageArchive) ToImage() (*image.Image, error) {
 	}
 
 	// build the layers array
-	layers := make([]*image.Layer, len(trees))
+	layers := make([]*image.Layer, 0)
 
 	// note that the resolver config stores images in reverse chronological order, so iterate backwards through layers
 	// as you iterate chronologically through history (ignoring history items that have no layer contents)
 	// Note: history is not required metadata in a docker image!
-	tarPathIdx := 0
 	histIdx := 0
-	for layerIdx := len(trees) - 1; layerIdx >= 0; layerIdx-- {
-		tree := trees[(len(trees)-1)-layerIdx]
-
+	for idx, tree := range trees {
 		// ignore empty layers, we are only observing layers with content
 		historyObj := historyEntry{
 			CreatedBy: "(missing)",
@@ -176,13 +173,12 @@ func (img *ImageArchive) ToImage() (*image.Image, error) {
 
 		dockerLayer := layer{
 			history: historyObj,
-			index:   tarPathIdx,
-			tree:    trees[layerIdx],
+			index:   idx,
+			tree:    tree,
 		}
-		layers[layerIdx] = dockerLayer.ToLayer()
-
-		tarPathIdx++
+		layers = append(layers, dockerLayer.ToLayer())
 	}
+
 
 	return &image.Image{
 		Trees: trees,

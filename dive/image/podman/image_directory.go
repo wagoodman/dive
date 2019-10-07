@@ -99,29 +99,25 @@ func processLayer(name, rootDir string) (*filetree.FileTree, error)  {
 
 func (img *ImageDirectoryRef) ToImage() (*image.Image, error) {
 	trees := make([]*filetree.FileTree, 0)
+	layers := make([]*image.Layer, 0)
+
 	// build the content tree
-	// todo: this isn't needed!
-	for _, id := range img.layerOrder {
-		tr, exists := img.treeMap[id]
-		if exists {
-			trees = append(trees, tr)
-			continue
-		}
-		return nil, fmt.Errorf("could not find '%s' in parsed trees", id)
-	}
-
-	layers := make([]*image.Layer, len(trees))
-
-	// note that the resolver config stores images in reverse chronological order, so iterate backwards through layers
-	// as you iterate chronologically through history (ignoring history items that have no layer contents)
-	// Note: history is not required metadata in an OCI image!
 	for layerIdx, id := range img.layerOrder {
+		tr, exists := img.treeMap[id]
+		if !exists {
+			return nil, fmt.Errorf("could not find '%s' in parsed trees", id)
+		}
+		trees = append(trees, tr)
+
+		// note that the resolver config stores images in reverse chronological order, so iterate backwards through layers
+		// as you iterate chronologically through history (ignoring history items that have no layer contents)
+		// Note: history is not required metadata in an OCI image!
 		podmanLayer := layer{
 			obj:     img.layerMap[id],
 			index:   layerIdx,
 			tree:    trees[layerIdx],
 		}
-		layers[layerIdx] = podmanLayer.ToLayer()
+		layers = append(layers, podmanLayer.ToLayer())
 	}
 
 	return &image.Image{

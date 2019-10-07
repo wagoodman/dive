@@ -291,9 +291,7 @@ func (controller *LayerController) Render() error {
 
 		// update contents
 		controller.view.Clear()
-		for revIdx := len(controller.Layers) - 1; revIdx >= 0; revIdx-- {
-			layer := controller.Layers[revIdx]
-			idx := (len(controller.Layers) - 1) - revIdx
+		for idx, layer := range controller.Layers {
 
 			layerStr := layer.String()
 			compareBar := controller.renderCompareBar(idx)
