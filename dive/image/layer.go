@@ -16,6 +16,8 @@ type Layer struct {
 	Command string
 	Size uint64
 	Tree *filetree.FileTree
+	Names []string
+	Digest string
 }
 
 func (l *Layer) ShortId() string {

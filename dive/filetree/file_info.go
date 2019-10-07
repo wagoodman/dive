@@ -46,12 +46,23 @@ func NewFileInfo(realPath, path string, info os.FileInfo) FileInfo {
 
 	// todo: don't use tar types here, create our own...
 	var fileType byte
+	var linkName string
+	var size int64
+
 	if info.Mode() & os.ModeSymlink != 0 {
 		fileType = tar.TypeSymlink
+
+		linkName, err = os.Readlink(realPath)
+		if err != nil {
+			logrus.Panic("unable to read link:", realPath, err)
+		}
+
 	} else if info.IsDir() {
 		fileType = tar.TypeDir
 	} else {
 		fileType = tar.TypeReg
+
+		size = info.Size()
 	}
 
 	var hash uint64
@@ -64,20 +75,12 @@ func NewFileInfo(realPath, path string, info os.FileInfo) FileInfo {
 		hash = getHashFromReader(file)
 	}
 
-	var linkName string
-	if fileType == tar.TypeSymlink {
-		linkName, err = os.Readlink(realPath)
-		if err != nil {
-			logrus.Panic("unable to read link:", realPath, err)
-		}
-	}
-
 	return FileInfo{
 		Path:     path,
 		TypeFlag: fileType,
 		Linkname: linkName,
 		hash:     hash,
-		Size:     info.Size(),
+		Size:     size,
 		Mode:     info.Mode(),
 		// todo: support UID/GID
 		Uid:      -1,

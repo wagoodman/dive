@@ -17,11 +17,15 @@ type layer struct {
 
 // String represents a layer in a columnar format.
 func (l *layer) ToLayer() *image.Layer {
+	id := strings.Split(l.tree.Name, "/")[0]
 	return &image.Layer{
-		Id:      l.history.ID,
+		Id:      id,
 		Index:   l.index,
 		Command: strings.TrimPrefix(l.history.CreatedBy, "/bin/sh -c "),
 		Size:    l.history.Size,
 		Tree:    l.tree,
+		// todo: query docker api for tags
+		Names:   []string{"(unavailable)"},
+		Digest:  l.history.ID,
 	}
 }

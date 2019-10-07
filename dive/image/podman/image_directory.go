@@ -28,9 +28,6 @@ func NewImageDirectoryRef(img *podmanImage.Image) (*ImageDirectoryRef, error) {
 
 	curImg := img
 	for {
-		// h, _ := img.History(ctx)
-		// fmt.Printf("%+v %+v %+v\n", img.ID(), h[0].Size, h[0].CreatedBy)
-
 		driver, err := curImg.DriverData()
 		if err != nil {
 			return nil, fmt.Errorf("graph driver error: %+v", err)
@@ -79,7 +76,8 @@ func processLayer(name, rootDir string) (*filetree.FileTree, error)  {
 			return err
 		}
 		// add this file to the tree...
-		fileInfo := filetree.NewFileInfo(path, "/"+strings.TrimPrefix(path, rootDir), info)
+		relativeImagePath := "/"+strings.TrimPrefix(strings.TrimPrefix(path, rootDir), "/")
+		fileInfo := filetree.NewFileInfo(path, relativeImagePath, info)
 
 		tree.FileSize += uint64(fileInfo.Size)
 

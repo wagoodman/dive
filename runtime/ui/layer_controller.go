@@ -210,7 +210,7 @@ func (controller *LayerController) SetCursor(layer int) error {
 
 // currentLayer returns the Layer object currently selected.
 func (controller *LayerController) currentLayer() *image.Layer {
-	return controller.Layers[(len(controller.Layers)-1)-controller.LayerIndex]
+	return controller.Layers[controller.LayerIndex]
 }
 
 // setCompareMode switches the layer comparison between a single-layer comparison to an aggregated comparison.
