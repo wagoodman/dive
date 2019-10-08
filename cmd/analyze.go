@@ -39,7 +39,7 @@ func doAnalyzeCmd(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
-	engine, err := cmd.PersistentFlags().GetString("engine")
+	engine, err := cmd.PersistentFlags().GetString("source")
 	if err != nil {
 		fmt.Printf("unable to determine engine: %v\n", err)
 		os.Exit(1)
@@ -47,8 +47,8 @@ func doAnalyzeCmd(cmd *cobra.Command, args []string) {
 
 	runtime.Run(runtime.Options{
 		Ci:         isCi,
-		Engine:     dive.GetEngine(engine),
-		ImageId:    userImage,
+		Source:     dive.ParseImageSource(engine),
+		Image:      userImage,
 		ExportFile: exportFile,
 		CiConfig:   ciConfig,
 	})

@@ -13,13 +13,13 @@ import (
 	"golang.org/x/net/context"
 )
 
-type resolver struct{}
+type engineResolver struct{}
 
-func NewResolver() *resolver {
-	return &resolver{}
+func NewResolverFromEngine() *engineResolver {
+	return &engineResolver{}
 }
 
-func (r *resolver) Fetch(id string) (*image.Image, error) {
+func (r *engineResolver) Fetch(id string) (*image.Image, error) {
 
 	reader, err := r.fetchArchive(id)
 	if err != nil {
@@ -34,7 +34,7 @@ func (r *resolver) Fetch(id string) (*image.Image, error) {
 	return img.ToImage()
 }
 
-func (r *resolver) Build(args []string) (*image.Image, error) {
+func (r *engineResolver) Build(args []string) (*image.Image, error) {
 	id, err := buildImageFromCli(args)
 	if err != nil {
 		return nil, err
@@ -42,11 +42,11 @@ func (r *resolver) Build(args []string) (*image.Image, error) {
 	return r.Fetch(id)
 }
 
-func (r *resolver) fetchArchive(id string) (io.ReadCloser, error) {
+func (r *engineResolver) fetchArchive(id string) (io.ReadCloser, error) {
 	var err error
 	var dockerClient *client.Client
 
-	// pull the resolver if it does not exist
+	// pull the engineResolver if it does not exist
 	ctx := context.Background()
 
 	host := os.Getenv("DOCKER_HOST")

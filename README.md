@@ -61,13 +61,16 @@ command.
 **CI Integration**
 Analyze and image and get a pass/fail result based on the image efficiency and wasted space. Simply set `CI=true` in the environment when invoking any valid dive command.
 
-**Supported Container Engines**
-- Docker (default)
-- Podman (linux only)
-
+**With Multiple Image Sources and Container Engines Supported**
+With the `--source` option, you can select where to fetch the container image from:
 ```bash
-dive <your-image-tag> --engine podman
+dive <your-image-tag> --source podman
 ```
+
+With valid `source` options as such:
+- `docker`: Docker engine (the default option)
+- `docker-archive`: A Docker Tar Archive from disk
+- `podman`: Podman engine (linux only)
 
 ## Installation
 

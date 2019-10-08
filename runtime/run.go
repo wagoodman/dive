@@ -25,6 +25,8 @@ func runCi(analysis *image.AnalysisResult, options Options) {
 	evaluator := ci.NewCiEvaluator(options.CiConfig)
 
 	pass := evaluator.Evaluate(analysis)
+
+	// todo: report should return a string?
 	evaluator.Report()
 
 	if pass {
@@ -33,6 +35,9 @@ func runCi(analysis *image.AnalysisResult, options Options) {
 	os.Exit(1)
 }
 
+// todo: give channel of strings which the caller uses for fmt.print? or a more complex type?
+// todo: return err? or treat like a go routine?
+// todo: should there be a run() so that Run() can do the above and run() be the go routine? Then we test the behavior of run() (not Run())
 func Run(options Options) {
 	var err error
 	doExport := options.ExportFile != ""
@@ -43,7 +48,7 @@ func Run(options Options) {
 
 	// if build is given, get the handler based off of either the explicit runtime
 
-	imageResolver, err := dive.GetImageHandler(options.Engine)
+	imageResolver, err := dive.GetImageResolver(options.Source)
 	if err != nil {
 		fmt.Printf("cannot determine image provider: %v\n", err)
 		os.Exit(1)
@@ -60,7 +65,7 @@ func Run(options Options) {
 		}
 	} else {
 		fmt.Println(utils.TitleFormat("Fetching image...") + " (this can take a while for large images)")
-		img, err = imageResolver.Fetch(options.ImageId)
+		img, err = imageResolver.Fetch(options.Image)
 		if err != nil {
 			fmt.Printf("cannot fetch image: %v\n", err)
 			os.Exit(1)

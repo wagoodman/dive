@@ -7,8 +7,8 @@ import (
 
 type Options struct {
 	Ci         bool
-	ImageId    string
-	Engine     dive.Engine
+	Image      string
+	Source     dive.ImageSource
 	ExportFile string
 	CiConfig   *viper.Viper
 	BuildArgs  []string

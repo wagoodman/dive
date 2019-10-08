@@ -29,7 +29,7 @@ func doBuildCmd(cmd *cobra.Command, args []string) {
 
 	runtime.Run(runtime.Options{
 		Ci:         isCi,
-		Engine:     dive.GetEngine(engine),
+		Source:     dive.ParseImageSource(engine),
 		BuildArgs:  args,
 		ExportFile: exportFile,
 		CiConfig:   ciConfig,

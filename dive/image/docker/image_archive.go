@@ -149,7 +149,7 @@ func (img *ImageArchive) ToImage() (*image.Image, error) {
 	// build the layers array
 	layers := make([]*image.Layer, 0)
 
-	// note that the resolver config stores images in reverse chronological order, so iterate backwards through layers
+	// note that the engineResolver config stores images in reverse chronological order, so iterate backwards through layers
 	// as you iterate chronologically through history (ignoring history items that have no layer contents)
 	// Note: history is not required metadata in a docker image!
 	histIdx := 0
