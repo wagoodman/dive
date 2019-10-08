@@ -17,6 +17,7 @@ import (
 )
 
 func runCi(analysis *image.AnalysisResult, options Options) {
+
 	fmt.Printf("  efficiency: %2.4f %%\n", analysis.Efficiency*100)
 	fmt.Printf("  wastedBytes: %d bytes (%s)\n", analysis.WastedBytes, humanize.Bytes(analysis.WastedBytes))
 	fmt.Printf("  userWastedPercent: %2.4f %%\n", analysis.WastedUserPercent*100)
