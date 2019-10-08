@@ -1,27 +1,8 @@
 package docker
 
 import (
-	"github.com/wagoodman/dive/dive/image"
 	"testing"
 )
-
-func analysisFromImageTar(t *testing.T, path string) *image.AnalysisResult {
-	archive, err := TestLoadArchive(path)
-	if err != nil {
-		t.Fatalf("unable to fetch archive: %v", err)
-	}
-
-	img, err := archive.ToImage()
-	if err != nil {
-		t.Fatalf("unable to convert to image: %v", err)
-	}
-
-	result, err := img.Analyze()
-	if err != nil {
-		t.Fatalf("unable to analyze: %v", err)
-	}
-	return result
-}
 
 func Test_Analysis(t *testing.T) {
 
@@ -37,7 +18,7 @@ func Test_Analysis(t *testing.T) {
 	}
 
 	for name, test := range table {
-		result := analysisFromImageTar(t, test.path)
+		result := TestAnalysisFromArchive(t, test.path)
 
 		if result.SizeBytes != test.sizeBytes {
 			t.Errorf("%s.%s: expected sizeBytes=%v, got %v", t.Name(), name, test.sizeBytes, result.SizeBytes)
@@ -59,5 +40,4 @@ func Test_Analysis(t *testing.T) {
 			t.Errorf("%s.%s: expected efficiency=%v, got %v", t.Name(), name, test.efficiency, result.Efficiency)
 		}
 	}
-
 }
