@@ -2,7 +2,7 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/wagoodman/dive)](https://goreportcard.com/report/github.com/wagoodman/dive)
 [![Pipeline Status](https://circleci.com/gh/wagoodman/dive.svg?style=svg)](https://circleci.com/gh/wagoodman/dive)
 
-**A tool for exploring a docker image, layer contents, and discovering ways to shrink your Docker image size.**
+**A tool for exploring a docker image, layer contents, and discovering ways to shrink the size of your Docker/OCI image.**
 
 ![Image](.data/demo.gif)
 
@@ -16,7 +16,7 @@ or if you want to build your image then jump straight into analyzing it:
 dive build -t <some-tag> .
 ```
 
-Building on Macbook
+Building on Macbook (supporting only the Docker container engine)
 
 ```bash
 docker run --rm -it \
@@ -61,6 +61,13 @@ command.
 **CI Integration**
 Analyze and image and get a pass/fail result based on the image efficiency and wasted space. Simply set `CI=true` in the environment when invoking any valid dive command.
 
+**Supported Container Engines**
+- Docker (default)
+- Podman (linux only)
+
+```bash
+dive <your-image-tag> --engine podman
+```
 
 ## Installation
 
@@ -188,6 +195,9 @@ Key Binding                                | Description
 
 No configuration is necessary, however, you can create a config file and override values:
 ```yaml
+# supported options are "docker" and "podman"
+container-engine: docker
+
 log:
   enabled: true
   path: ./dive.log
