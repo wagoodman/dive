@@ -26,15 +26,13 @@ func (r *resolver) Build(args []string) (*image.Image, error) {
 }
 
 func (r *resolver) Fetch(id string) (*image.Image, error) {
-	img, err := r.resolveFromDisk(id)
-	if err == nil {
-		return img, err
-	}
+	// todo: there are still a number of bugs remaining with this approach --stick with the docker archive for now
+	// img, err := r.resolveFromDisk(id)
+	// if err == nil {
+	// 	return img, err
+	// }
 
-	// todo: remove print of error
-	fmt.Println(err)
-
-	img, err = r.resolveFromDockerArchive(id)
+	img, err := r.resolveFromDockerArchive(id)
 	if err == nil {
 		return img, err
 	}

@@ -59,6 +59,7 @@ func Run(options Options) {
 			os.Exit(1)
 		}
 	} else {
+		fmt.Println(utils.TitleFormat("Fetching image...") + " (this can take a while for large images)")
 		img, err = imageResolver.Fetch(options.ImageId)
 		if err != nil {
 			fmt.Printf("cannot fetch image: %v\n", err)
