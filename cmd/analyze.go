@@ -39,16 +39,26 @@ func doAnalyzeCmd(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
-	engine, err := cmd.PersistentFlags().GetString("source")
-	if err != nil {
-		fmt.Printf("unable to determine engine: %v\n", err)
-		os.Exit(1)
+	var sourceType dive.ImageSource
+	var imageStr string
+
+	sourceType, imageStr = dive.DeriveImageSource(userImage)
+
+	if sourceType == dive.SourceUnknown {
+		sourceStr, err := cmd.PersistentFlags().GetString("source")
+		if err != nil {
+			fmt.Printf("unable to determine image source: %v\n", err)
+			os.Exit(1)
+		}
+
+		sourceType = dive.ParseImageSource(sourceStr)
+		imageStr = userImage
 	}
 
 	runtime.Run(runtime.Options{
 		Ci:         isCi,
-		Source:     dive.ParseImageSource(engine),
-		Image:      userImage,
+		Source:     sourceType,
+		Image:      imageStr,
 		ExportFile: exportFile,
 		CiConfig:   ciConfig,
 	})
