@@ -4,6 +4,7 @@ package podman
 
 import (
 	"fmt"
+	"github.com/wagoodman/dive/dive/image"
 )
 
 type resolver struct{}
