@@ -12,7 +12,7 @@ jobs:
       - restore_cache:
           keys:
             - golang-1.11-{{ checksum "go.sum" }}
-      - run: make setup
+      - run: make setup-ci
       - save_cache:
           key: golang-1.11-{{ checksum "go.sum" }}
           paths:
@@ -32,7 +32,7 @@ jobs:
       - restore_cache:
           keys:
             - golang-1.12-{{ checksum "go.sum" }}
-      - run: make setup
+      - run: make setup-ci
       - save_cache:
           key: golang-1.12-{{ checksum "go.sum" }}
           paths:
@@ -52,7 +52,7 @@ jobs:
       - restore_cache:
           keys:
             - golang-1.13-{{ checksum "go.sum" }}
-      - run: make setup
+      - run: make setup-ci
       - save_cache:
           key: golang-1.13-{{ checksum "go.sum" }}
           paths:
