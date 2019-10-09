@@ -3,7 +3,6 @@ package export
 import (
 	"encoding/json"
 	diveImage "github.com/wagoodman/dive/dive/image"
-	"io/ioutil"
 )
 
 type export struct {
@@ -47,14 +46,6 @@ func NewExport(analysis *diveImage.AnalysisResult) *export {
 	return &data
 }
 
-func (exp *export) marshal() ([]byte, error) {
+func (exp *export) Marshal() ([]byte, error) {
 	return json.MarshalIndent(&exp, "", "  ")
-}
-
-func (exp *export) ToFile(exportFilePath string) error {
-	payload, err := exp.marshal()
-	if err != nil {
-		return err
-	}
-	return ioutil.WriteFile(exportFilePath, payload, 0644)
 }

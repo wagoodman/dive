@@ -10,7 +10,7 @@ func Test_Export(t *testing.T) {
 	result := docker.TestAnalysisFromArchive(t, "../../.data/test-docker-image.tar")
 
 	export := NewExport(result)
-	payload, err := export.marshal()
+	payload, err := export.Marshal()
 	if err != nil {
 		t.Errorf("Test_Export: unable to export analysis: %v", err)
 	}

@@ -26,6 +26,7 @@ require (
 	github.com/phayes/permbits v0.0.0-20190612203442-39d7c581d2ee
 	github.com/sergi/go-diff v1.0.0
 	github.com/sirupsen/logrus v1.4.2
+	github.com/spf13/afero v1.2.2
 	github.com/spf13/cobra v0.0.5
 	github.com/spf13/viper v1.4.0
 	github.com/wagoodman/keybinding v0.0.0-20181213133715-6a824da6df05

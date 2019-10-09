@@ -133,21 +133,22 @@ func (ci *CiEvaluator) Evaluate(analysis *image.AnalysisResult) bool {
 	return ci.Pass
 }
 
-func (ci *CiEvaluator) Report() {
-	fmt.Println(utils.TitleFormat("Inefficient Files:"))
+func (ci *CiEvaluator) Report() string {
+	var sb strings.Builder
+	fmt.Fprintln(&sb, utils.TitleFormat("Inefficient Files:"))
 
 	template := "%5s  %12s  %-s\n"
-	fmt.Printf(template, "Count", "Wasted Space", "File Path")
+	fmt.Fprintf(&sb, template, "Count", "Wasted Space", "File Path")
 
 	if len(ci.InefficientFiles) == 0 {
-		fmt.Println("None")
+		fmt.Fprintln(&sb, "None")
 	} else {
 		for _, file := range ci.InefficientFiles {
-			fmt.Printf(template, strconv.Itoa(file.References), humanize.Bytes(file.SizeBytes), file.Path)
+			fmt.Fprintf(&sb, template, strconv.Itoa(file.References), humanize.Bytes(file.SizeBytes), file.Path)
 		}
 	}
 
-	fmt.Println(utils.TitleFormat("Results:"))
+	fmt.Fprintln(&sb, utils.TitleFormat("Results:"))
 
 	status := "PASS"
 
@@ -165,23 +166,24 @@ func (ci *CiEvaluator) Report() {
 		result := ci.Results[rule]
 		name := strings.TrimPrefix(rule, "rules.")
 		if result.message != "" {
-			fmt.Printf("  %s: %s: %s\n", result.status.String(), name, result.message)
+			fmt.Fprintf(&sb, "  %s: %s: %s\n", result.status.String(), name, result.message)
 		} else {
-			fmt.Printf("  %s: %s\n", result.status.String(), name)
+			fmt.Fprintf(&sb, "  %s: %s\n", result.status.String(), name)
 		}
 	}
 
 	if ci.Misconfigured {
-		fmt.Println(aurora.Red("CI Misconfigured"))
-		return
-	}
+		fmt.Fprintln(&sb, aurora.Red("CI Misconfigured"))
 
-	summary := fmt.Sprintf("Result:%s [Total:%d] [Passed:%d] [Failed:%d] [Warn:%d] [Skipped:%d]", status, ci.Tally.Total, ci.Tally.Pass, ci.Tally.Fail, ci.Tally.Warn, ci.Tally.Skip)
-	if ci.Pass {
-		fmt.Println(aurora.Green(summary))
-	} else if ci.Pass && ci.Tally.Warn > 0 {
-		fmt.Println(aurora.Blue(summary))
 	} else {
-		fmt.Println(aurora.Red(summary))
+		summary := fmt.Sprintf("Result:%s [Total:%d] [Passed:%d] [Failed:%d] [Warn:%d] [Skipped:%d]", status, ci.Tally.Total, ci.Tally.Pass, ci.Tally.Fail, ci.Tally.Warn, ci.Tally.Skip)
+		if ci.Pass {
+			fmt.Fprintln(&sb, aurora.Green(summary))
+		} else if ci.Pass && ci.Tally.Warn > 0 {
+			fmt.Fprintln(&sb, aurora.Blue(summary))
+		} else {
+			fmt.Fprintln(&sb, aurora.Red(summary))
+		}
 	}
+	return sb.String()
 }
