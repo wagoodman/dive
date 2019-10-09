@@ -5,6 +5,8 @@ import (
 	"github.com/wagoodman/dive/dive/image"
 	"github.com/wagoodman/dive/dive/image/docker"
 	"github.com/wagoodman/dive/dive/image/podman"
+	"net/url"
+	"strings"
 )
 
 const (
@@ -24,17 +26,39 @@ func (r ImageSource) String() string {
 
 func ParseImageSource(r string) ImageSource {
 	switch r {
-	case "docker":
+	case SourceDockerEngine.String():
 		return SourceDockerEngine
-	case "podman":
+	case SourcePodmanEngine.String():
 		return SourcePodmanEngine
-	case "docker-archive":
+	case SourceDockerArchive.String():
 		return SourceDockerArchive
 	case "docker-tar":
 		return SourceDockerArchive
 	default:
 		return SourceUnknown
 	}
+}
+
+func DeriveImageSource(image string) (ImageSource, string) {
+	u, err := url.Parse(image)
+	if err != nil {
+		return SourceUnknown, ""
+	}
+
+	imageSource := strings.TrimPrefix(image, u.Scheme+"://")
+
+	switch u.Scheme {
+	case SourceDockerEngine.String():
+		return SourceDockerEngine, imageSource
+	case SourcePodmanEngine.String():
+		return SourcePodmanEngine, imageSource
+	case SourceDockerArchive.String():
+		return SourceDockerArchive, imageSource
+	case "docker-tar":
+		return SourceDockerArchive, imageSource
+
+	}
+	return SourceUnknown, ""
 }
 
 func GetImageResolver(r ImageSource) (image.Resolver, error) {

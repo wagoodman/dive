@@ -64,7 +64,11 @@ Analyze and image and get a pass/fail result based on the image efficiency and w
 **With Multiple Image Sources and Container Engines Supported**
 With the `--source` option, you can select where to fetch the container image from:
 ```bash
-dive <your-image-tag> --source podman
+dive <your-image> --source <source>
+```
+or
+```bash
+dive <source>://<your-image>
 ```
 
 With valid `source` options as such:
