@@ -2,6 +2,7 @@ package ui
 
 import (
 	"fmt"
+	"github.com/sirupsen/logrus"
 
 	"strings"
 
@@ -61,11 +62,13 @@ func (controller *StatusController) Update() error {
 func (controller *StatusController) Render() error {
 	controller.gui.Update(func(g *gocui.Gui) error {
 		controller.view.Clear()
-		_, _ = fmt.Fprintln(controller.view, controller.KeyHelp()+Controllers.lookup[controller.gui.CurrentView().Name()].KeyHelp()+Formatting.StatusNormal("▏"+strings.Repeat(" ", 1000)))
+		_, err := fmt.Fprintln(controller.view, controller.KeyHelp()+Controllers.lookup[controller.gui.CurrentView().Name()].KeyHelp()+Formatting.StatusNormal("▏"+strings.Repeat(" ", 1000)))
+		if err != nil {
+			logrus.Debug("unable to write to buffer: ", err)
+		}
 
-		return nil
+		return err
 	})
-	// todo: blerg
 	return nil
 }
 

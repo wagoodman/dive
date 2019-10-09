@@ -2,11 +2,10 @@ package runtime
 
 import (
 	"fmt"
+	"github.com/sirupsen/logrus"
 	"github.com/wagoodman/dive/dive"
 	"github.com/wagoodman/dive/runtime/ci"
 	"github.com/wagoodman/dive/runtime/export"
-	"io/ioutil"
-	"log"
 	"os"
 	"time"
 
@@ -18,6 +17,7 @@ import (
 )
 
 func runCi(analysis *image.AnalysisResult, options Options) {
+
 	fmt.Printf("  efficiency: %2.4f %%\n", analysis.Efficiency*100)
 	fmt.Printf("  wastedBytes: %d bytes (%s)\n", analysis.WastedBytes, humanize.Bytes(analysis.WastedBytes))
 	fmt.Printf("  userWastedPercent: %2.4f %%\n", analysis.WastedUserPercent*100)
@@ -28,60 +28,47 @@ func runCi(analysis *image.AnalysisResult, options Options) {
 	evaluator.Report()
 
 	if pass {
-		utils.Exit(0)
+		os.Exit(0)
 	}
-	utils.Exit(1)
-}
-
-func runBuild(buildArgs []string) string {
-	iidfile, err := ioutil.TempFile("/tmp", "dive.*.iid")
-	if err != nil {
-		utils.Cleanup()
-		log.Fatal(err)
-	}
-	defer os.Remove(iidfile.Name())
-
-	allArgs := append([]string{"--iidfile", iidfile.Name()}, buildArgs...)
-	err = utils.RunDockerCmd("build", allArgs...)
-	if err != nil {
-		utils.Cleanup()
-		log.Fatal(err)
-	}
-
-	imageId, err := ioutil.ReadFile(iidfile.Name())
-	if err != nil {
-		utils.Cleanup()
-		log.Fatal(err)
-	}
-
-	return string(imageId)
+	os.Exit(1)
 }
 
 func Run(options Options) {
+	var err error
 	doExport := options.ExportFile != ""
 	doBuild := len(options.BuildArgs) > 0
 
+	// if an image option was provided, parse it and determine the container image...
+	// otherwise, use the configs default value.
+
+	// if build is given, get the handler based off of either the explicit runtime
+
+	imageResolver, err := dive.GetImageHandler(options.Engine)
+	if err != nil {
+		fmt.Printf("cannot determine image provider: %v\n", err)
+		os.Exit(1)
+	}
+
+	var img *image.Image
+
 	if doBuild {
 		fmt.Println(utils.TitleFormat("Building image..."))
-		options.ImageId = runBuild(options.BuildArgs)
+		img, err = imageResolver.Build(options.BuildArgs)
+		if err != nil {
+			fmt.Printf("cannot build image: %v\n", err)
+			os.Exit(1)
+		}
+	} else {
+		fmt.Println(utils.TitleFormat("Fetching image...") + " (this can take a while for large images)")
+		img, err = imageResolver.Fetch(options.ImageId)
+		if err != nil {
+			fmt.Printf("cannot fetch image: %v\n", err)
+			os.Exit(1)
+		}
 	}
 
-	analyzer := dive.GetAnalyzer(options.ImageId)
-
-	fmt.Println(utils.TitleFormat("Fetching image...") + " (this can take a while with large images)")
-	reader, err := analyzer.Fetch()
-	if err != nil {
-		fmt.Printf("cannot fetch image: %v\n", err)
-		utils.Exit(1)
-	}
-	defer reader.Close()
-
-	fmt.Println(utils.TitleFormat("Parsing image..."))
-	err = analyzer.Parse(reader)
-	if err != nil {
-		fmt.Printf("cannot parse image: %v\n", err)
-		utils.Exit(1)
-	}
+	// todo, cleanup on error
+	// todo: image get should return error for cleanup?
 
 	if doExport {
 		fmt.Println(utils.TitleFormat(fmt.Sprintf("Analyzing image... (export to '%s')", options.ExportFile)))
@@ -89,17 +76,17 @@ func Run(options Options) {
 		fmt.Println(utils.TitleFormat("Analyzing image..."))
 	}
 
-	result, err := analyzer.Analyze()
+	result, err := img.Analyze()
 	if err != nil {
 		fmt.Printf("cannot analyze image: %v\n", err)
-		utils.Exit(1)
+		os.Exit(1)
 	}
 
 	if doExport {
 		err = export.NewExport(result).ToFile(options.ExportFile)
 		if err != nil {
 			fmt.Printf("cannot write export file: %v\n", err)
-			utils.Exit(1)
+			os.Exit(1)
 		}
 	}
 
@@ -107,12 +94,16 @@ func Run(options Options) {
 		runCi(result, options)
 	} else {
 		if doExport {
-			utils.Exit(0)
+			os.Exit(0)
 		}
 
 		fmt.Println(utils.TitleFormat("Building cache..."))
 		cache := filetree.NewFileTreeCache(result.RefTrees)
-		cache.Build()
+		err := cache.Build()
+		if err != nil {
+			logrus.Error(err)
+			os.Exit(1)
+		}
 
 		// it appears there is a race condition where termbox.Init() will
 		// block nearly indefinitely when running as the first process in
@@ -121,6 +112,11 @@ func Run(options Options) {
 		// enough sleep will prevent this behavior (todo: remove this hack)
 		time.Sleep(100 * time.Millisecond)
 
-		ui.Run(result, cache)
+		err = ui.Run(result, cache)
+		if err != nil {
+			logrus.Error(err)
+			os.Exit(1)
+		}
+		os.Exit(0)
 	}
 }

@@ -10,10 +10,7 @@ import (
 
 func Test_Evaluator(t *testing.T) {
 
-	result, err := docker.TestLoadDockerImageTar("../../.data/test-docker-image.tar")
-	if err != nil {
-		t.Fatalf("Test_Export: unable to fetch analysis: %v", err)
-	}
+	result := docker.TestAnalysisFromArchive(t, "../../.data/test-docker-image.tar")
 
 	table := map[string]struct {
 		efficiency     string
@@ -23,7 +20,7 @@ func Test_Evaluator(t *testing.T) {
 		expectedResult map[string]RuleStatus
 	}{
 		"allFail":           {"0.99", "1B", "0.01", false, map[string]RuleStatus{"lowestEfficiency": RuleFailed, "highestWastedBytes": RuleFailed, "highestUserWastedPercent": RuleFailed}},
-		"allPass":           {"0.9", "50kB", "0.1", true, map[string]RuleStatus{"lowestEfficiency": RulePassed, "highestWastedBytes": RulePassed, "highestUserWastedPercent": RulePassed}},
+		"allPass":           {"0.9", "50kB", "0.5", true, map[string]RuleStatus{"lowestEfficiency": RulePassed, "highestWastedBytes": RulePassed, "highestUserWastedPercent": RulePassed}},
 		"allDisabled":       {"disabled", "disabled", "disabled", true, map[string]RuleStatus{"lowestEfficiency": RuleDisabled, "highestWastedBytes": RuleDisabled, "highestUserWastedPercent": RuleDisabled}},
 		"misconfiguredHigh": {"1.1", "1BB", "10", false, map[string]RuleStatus{"lowestEfficiency": RuleMisconfigured, "highestWastedBytes": RuleMisconfigured, "highestUserWastedPercent": RuleMisconfigured}},
 		"misconfiguredLow":  {"-9", "-1BB", "-0.1", false, map[string]RuleStatus{"lowestEfficiency": RuleMisconfigured, "highestWastedBytes": RuleMisconfigured, "highestUserWastedPercent": RuleMisconfigured}},

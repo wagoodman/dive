@@ -1,7 +1,6 @@
 package filetree
 
 import (
-	"fmt"
 	"sort"
 
 	"github.com/sirupsen/logrus"
@@ -63,14 +62,22 @@ func Efficiency(trees []*FileTree) (float64, EfficiencySlice) {
 				sizeBytes += curNode.Data.FileInfo.Size
 				return nil
 			}
-			stackedTree := StackTreeRange(trees, 0, currentTree-1)
+			stackedTree, err := StackTreeRange(trees, 0, currentTree-1)
+			if err != nil {
+				logrus.Errorf("unable to stack tree range: %+v", err)
+				return err
+			}
+
 			previousTreeNode, err := stackedTree.GetNode(node.Path())
 			if err != nil {
-				logrus.Debug(fmt.Sprintf("CurrentTree: %d : %s", currentTree, err))
-			} else if previousTreeNode.Data.FileInfo.IsDir {
+				return err
+			}
+
+			if previousTreeNode.Data.FileInfo.IsDir {
 				err = previousTreeNode.VisitDepthChildFirst(sizer, nil)
 				if err != nil {
 					logrus.Errorf("unable to propagate whiteout dir: %+v", err)
+					return err
 				}
 			}
 

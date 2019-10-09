@@ -3,18 +3,33 @@ package docker
 import (
 	"github.com/wagoodman/dive/dive/image"
 	"os"
+	"testing"
 )
 
-func TestLoadDockerImageTar(tarPath string) (*image.AnalysisResult, error) {
+func TestLoadArchive(tarPath string) (*ImageArchive, error) {
 	f, err := os.Open(tarPath)
 	if err != nil {
 		return nil, err
 	}
 	defer f.Close()
-	analyzer := NewImageAnalyzer("dive-test:latest")
-	err = analyzer.Parse(f)
+
+	return NewImageArchive(f)
+}
+
+func TestAnalysisFromArchive(t *testing.T, path string) *image.AnalysisResult {
+	archive, err := TestLoadArchive(path)
 	if err != nil {
-		return nil, err
+		t.Fatalf("unable to fetch archive: %v", err)
 	}
-	return analyzer.Analyze()
+
+	img, err := archive.ToImage()
+	if err != nil {
+		t.Fatalf("unable to convert to image: %v", err)
+	}
+
+	result, err := img.Analyze()
+	if err != nil {
+		t.Fatalf("unable to analyze: %v", err)
+	}
+	return result
 }

@@ -2,17 +2,14 @@ package image
 
 import (
 	"github.com/wagoodman/dive/dive/filetree"
-	"io"
 )
 
 type Analyzer interface {
-	Fetch() (io.ReadCloser, error)
-	Parse(io.ReadCloser) error
 	Analyze() (*AnalysisResult, error)
 }
 
 type AnalysisResult struct {
-	Layers            []Layer
+	Layers            []*Layer
 	RefTrees          []*filetree.FileTree
 	Efficiency        float64
 	SizeBytes         uint64

@@ -3,8 +3,6 @@ release:
 
 builds:
   - binary: dive
-    env:
-      - CGO_ENABLED=0
     goos:
       - windows
       - darwin
@@ -14,19 +12,6 @@ builds:
     ldflags: -s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.buildTime={{.Date}}`.
 
 dockers:
-  -
-    binaries:
-      - dive
-    dockerfile: Dockerfile.slim
-    image_templates:
-      - "wagoodman/dive:{{ .Tag }}-slim"
-      - "wagoodman/dive:v{{ .Major }}-slim"
-      - "wagoodman/dive:v{{ .Major }}.{{ .Minor }}-slim"
-      - "wagoodman/dive:slim"
-      - "quay.io/wagoodman/dive:{{ .Tag }}-slim"
-      - "quay.io/wagoodman/dive:v{{ .Major }}-slim"
-      - "quay.io/wagoodman/dive:v{{ .Major }}.{{ .Minor }}-slim"
-      - "quay.io/wagoodman/dive:slim"
   -
     binaries:
       - dive

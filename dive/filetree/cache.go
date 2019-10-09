@@ -13,29 +13,36 @@ type TreeCache struct {
 	cache    map[TreeCacheKey]*FileTree
 }
 
-func (cache *TreeCache) Get(bottomTreeStart, bottomTreeStop, topTreeStart, topTreeStop int) *FileTree {
+func (cache *TreeCache) Get(bottomTreeStart, bottomTreeStop, topTreeStart, topTreeStop int) (*FileTree, error) {
 	key := TreeCacheKey{bottomTreeStart, bottomTreeStop, topTreeStart, topTreeStop}
 	if value, exists := cache.cache[key]; exists {
-		return value
+		return value, nil
 	}
 
-	value := cache.buildTree(key)
+	value, err := cache.buildTree(key)
+	if err != nil {
+		return nil, err
+	}
 	cache.cache[key] = value
-	return value
+	return value, nil
 }
 
-func (cache *TreeCache) buildTree(key TreeCacheKey) *FileTree {
-	newTree := StackTreeRange(cache.refTrees, key.bottomTreeStart, key.bottomTreeStop)
+func (cache *TreeCache) buildTree(key TreeCacheKey) (*FileTree, error) {
+	newTree, err := StackTreeRange(cache.refTrees, key.bottomTreeStart, key.bottomTreeStop)
+	if err != nil {
+		return nil, err
+	}
 	for idx := key.topTreeStart; idx <= key.topTreeStop; idx++ {
 		err := newTree.CompareAndMark(cache.refTrees[idx])
 		if err != nil {
 			logrus.Errorf("unable to build tree: %+v", err)
+			return nil, err
 		}
 	}
-	return newTree
+	return newTree, nil
 }
 
-func (cache *TreeCache) Build() {
+func (cache *TreeCache) Build() error {
 	var bottomTreeStart, bottomTreeStop, topTreeStart, topTreeStop int
 
 	// case 1: layer compare (top tree SIZE is fixed (BUT floats forward), Bottom tree SIZE changes)
@@ -51,7 +58,10 @@ func (cache *TreeCache) Build() {
 			topTreeStart = selectIdx
 		}
 
-		cache.Get(bottomTreeStart, bottomTreeStop, topTreeStart, topTreeStop)
+		_, err := cache.Get(bottomTreeStart, bottomTreeStop, topTreeStart, topTreeStop)
+		if err != nil {
+			return err
+		}
 	}
 
 	// case 2: aggregated compare (bottom tree is ENTIRELY fixed, top tree SIZE changes)
@@ -66,8 +76,12 @@ func (cache *TreeCache) Build() {
 			topTreeStart = 1
 		}
 
-		cache.Get(bottomTreeStart, bottomTreeStop, topTreeStart, topTreeStop)
+		_, err := cache.Get(bottomTreeStart, bottomTreeStop, topTreeStart, topTreeStop)
+		if err != nil {
+			return err
+		}
 	}
+	return nil
 }
 
 func NewFileTreeCache(refTrees []*FileTree) TreeCache {

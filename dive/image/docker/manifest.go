@@ -5,14 +5,14 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-type imageManifest struct {
+type manifest struct {
 	ConfigPath    string   `json:"Config"`
 	RepoTags      []string `json:"RepoTags"`
 	LayerTarPaths []string `json:"Layers"`
 }
 
-func newDockerImageManifest(manifestBytes []byte) imageManifest {
-	var manifest []imageManifest
+func newManifest(manifestBytes []byte) manifest {
+	var manifest []manifest
 	err := json.Unmarshal(manifestBytes, &manifest)
 	if err != nil {
 		logrus.Panic(err)

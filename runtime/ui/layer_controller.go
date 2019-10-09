@@ -9,7 +9,6 @@ import (
 	"github.com/lunixbochs/vtclean"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
-	"github.com/wagoodman/dive/utils"
 	"github.com/wagoodman/keybinding"
 )
 
@@ -21,7 +20,7 @@ type LayerController struct {
 	view              *gocui.View
 	header            *gocui.View
 	LayerIndex        int
-	Layers            []image.Layer
+	Layers            []*image.Layer
 	CompareMode       CompareType
 	CompareStartIndex int
 	ImageSize         uint64
@@ -33,7 +32,7 @@ type LayerController struct {
 }
 
 // NewLayerController creates a new view object attached the the global [gocui] screen object.
-func NewLayerController(name string, gui *gocui.Gui, layers []image.Layer) (controller *LayerController) {
+func NewLayerController(name string, gui *gocui.Gui, layers []*image.Layer) (controller *LayerController, err error) {
 	controller = new(LayerController)
 
 	// populate main fields
@@ -47,10 +46,9 @@ func NewLayerController(name string, gui *gocui.Gui, layers []image.Layer) (cont
 	case false:
 		controller.CompareMode = CompareLayer
 	default:
-		utils.PrintAndExit(fmt.Sprintf("unknown layer.show-aggregated-changes value: %v", mode))
+		return nil, fmt.Errorf("unknown layer.show-aggregated-changes value: %v", mode)
 	}
 
-	var err error
 	controller.keybindingCompareAll, err = keybinding.ParseAll(viper.GetString("keybinding.compare-all"))
 	if err != nil {
 		logrus.Error(err)
@@ -71,7 +69,7 @@ func NewLayerController(name string, gui *gocui.Gui, layers []image.Layer) (cont
 		logrus.Error(err)
 	}
 
-	return controller
+	return controller, err
 }
 
 // Setup initializes the UI concerns within the context of a global [gocui] view object.
@@ -211,15 +209,18 @@ func (controller *LayerController) SetCursor(layer int) error {
 }
 
 // currentLayer returns the Layer object currently selected.
-func (controller *LayerController) currentLayer() image.Layer {
-	return controller.Layers[(len(controller.Layers)-1)-controller.LayerIndex]
+func (controller *LayerController) currentLayer() *image.Layer {
+	return controller.Layers[controller.LayerIndex]
 }
 
 // setCompareMode switches the layer comparison between a single-layer comparison to an aggregated comparison.
 func (controller *LayerController) setCompareMode(compareMode CompareType) error {
 	controller.CompareMode = compareMode
-	Update()
-	Render()
+	err := UpdateAndRender()
+	if err != nil {
+		logrus.Errorf("unable to set compare mode: %+v", err)
+		return err
+	}
 	return Controllers.Tree.setTreeByLayer(controller.getCompareIndexes())
 }
 
@@ -261,7 +262,7 @@ func (controller *LayerController) renderCompareBar(layerIdx int) string {
 func (controller *LayerController) Update() error {
 	controller.ImageSize = 0
 	for idx := 0; idx < len(controller.Layers); idx++ {
-		controller.ImageSize += controller.Layers[idx].Size()
+		controller.ImageSize += controller.Layers[idx].Size
 	}
 	return nil
 }
@@ -283,21 +284,27 @@ func (controller *LayerController) Render() error {
 		width, _ := g.Size()
 		headerStr := fmt.Sprintf("[%s]%s\n", title, strings.Repeat("─", width*2))
 		headerStr += fmt.Sprintf("Cmp"+image.LayerFormat, "Size", "Command")
-		_, _ = fmt.Fprintln(controller.header, Formatting.Header(vtclean.Clean(headerStr, false)))
+		_, err := fmt.Fprintln(controller.header, Formatting.Header(vtclean.Clean(headerStr, false)))
+		if err != nil {
+			return err
+		}
 
 		// update contents
 		controller.view.Clear()
-		for revIdx := len(controller.Layers) - 1; revIdx >= 0; revIdx-- {
-			layer := controller.Layers[revIdx]
-			idx := (len(controller.Layers) - 1) - revIdx
+		for idx, layer := range controller.Layers {
 
 			layerStr := layer.String()
 			compareBar := controller.renderCompareBar(idx)
 
 			if idx == controller.LayerIndex {
-				_, _ = fmt.Fprintln(controller.view, compareBar+" "+Formatting.Selected(layerStr))
+				_, err = fmt.Fprintln(controller.view, compareBar+" "+Formatting.Selected(layerStr))
 			} else {
-				_, _ = fmt.Fprintln(controller.view, compareBar+" "+layerStr)
+				_, err = fmt.Fprintln(controller.view, compareBar+" "+layerStr)
+			}
+
+			if err != nil {
+				logrus.Debug("unable to write to buffer: ", err)
+				return err
 			}
 
 		}

@@ -2,7 +2,7 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/wagoodman/dive)](https://goreportcard.com/report/github.com/wagoodman/dive)
 [![Pipeline Status](https://circleci.com/gh/wagoodman/dive.svg?style=svg)](https://circleci.com/gh/wagoodman/dive)
 
-**A tool for exploring a docker image, layer contents, and discovering ways to shrink your Docker image size.**
+**A tool for exploring a docker image, layer contents, and discovering ways to shrink the size of your Docker/OCI image.**
 
 ![Image](.data/demo.gif)
 
@@ -16,7 +16,7 @@ or if you want to build your image then jump straight into analyzing it:
 dive build -t <some-tag> .
 ```
 
-Building on Macbook
+Building on Macbook (supporting only the Docker container engine)
 
 ```bash
 docker run --rm -it \
@@ -40,22 +40,15 @@ CI=true dive <your-image>
 
 **Show Docker image contents broken down by layer**
 
-As you select a layer on the left, you are shown the contents of that layer
-combined with all previous layers on the right. Also, you can fully explore the
-file tree with the arrow keys.
+As you select a layer on the left, you are shown the contents of that layer combined with all previous layers on the right. Also, you can fully explore the file tree with the arrow keys.
 
 **Indicate what's changed in each layer**
 
-Files that have changed, been modified, added, or removed are indicated in the
-file tree. This can be adjusted to show changes for a specific layer, or
-aggregated changes up to this layer.
+Files that have changed, been modified, added, or removed are indicated in the file tree. This can be adjusted to show changes for a specific layer, or aggregated changes up to this layer.
 
 **Estimate "image efficiency"**
 
-The lower left pane shows basic layer info and an experimental metric that will
-guess how much wasted space your image contains. This might be from duplicating
-files across layers, moving files across layers, or not fully removing files.
-Both a percentage "score" and total wasted file space is provided.
+The lower left pane shows basic layer info and an experimental metric that will guess how much wasted space your image contains. This might be from duplicating files across layers, moving files across layers, or not fully removing files. Both a percentage "score" and total wasted file space is provided.
 
 **Quick build/analysis cycles**
 
@@ -68,6 +61,13 @@ command.
 **CI Integration**
 Analyze and image and get a pass/fail result based on the image efficiency and wasted space. Simply set `CI=true` in the environment when invoking any valid dive command.
 
+**Supported Container Engines**
+- Docker (default)
+- Podman (linux only)
+
+```bash
+dive <your-image-tag> --engine podman
+```
 
 ## Installation
 
@@ -195,6 +195,9 @@ Key Binding                                | Description
 
 No configuration is necessary, however, you can create a config file and override values:
 ```yaml
+# supported options are "docker" and "podman"
+container-engine: docker
+
 log:
   enabled: true
   path: ./dive.log

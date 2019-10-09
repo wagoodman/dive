@@ -73,16 +73,25 @@ func assertTestData(t *testing.T, actualBytes []byte) {
 }
 
 func initializeTestViewModel(t *testing.T) *FileTreeViewModel {
-	result, err := docker.TestLoadDockerImageTar("../../.data/test-docker-image.tar")
-	if err != nil {
-		t.Fatalf("%s: unable to fetch analysis: %v", t.Name(), err)
-	}
+	result := docker.TestAnalysisFromArchive(t, "../../.data/test-docker-image.tar")
+
 	cache := filetree.NewFileTreeCache(result.RefTrees)
-	cache.Build()
+	err := cache.Build()
+	if err != nil {
+		t.Fatalf("%s: unable to build cache: %+v", t.Name(), err)
+	}
 
 	Formatting.Selected = color.New(color.ReverseVideo, color.Bold).SprintFunc()
 
-	return NewFileTreeViewModel(filetree.StackTreeRange(result.RefTrees, 0, 0), result.RefTrees, cache)
+	treeStack, err := filetree.StackTreeRange(result.RefTrees, 0, 0)
+	if err != nil {
+		t.Fatalf("%s: unable to stack trees: %v", t.Name(), err)
+	}
+	vm, err := NewFileTreeViewModel(treeStack, result.RefTrees, cache)
+	if err != nil {
+		t.Fatalf("%s: unable to create tree ViewModel: %+v", t.Name(), err)
+	}
+	return vm
 }
 
 func runTestCase(t *testing.T, vm *FileTreeViewModel, width, height int, filterRegex *regexp.Regexp) {

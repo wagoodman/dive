@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/wagoodman/dive/dive"
 	"github.com/wagoodman/dive/dive/filetree"
 	"io/ioutil"
 	"os"
@@ -12,7 +13,6 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"github.com/wagoodman/dive/utils"
 )
 
 var cfgFile string
@@ -35,9 +35,8 @@ the amount of wasted space and identifies the offending files from the image.`,
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err)
-		utils.Exit(1)
+		os.Exit(1)
 	}
-	utils.Cleanup()
 }
 
 func init() {
@@ -58,8 +57,14 @@ func initCli() {
 
 	for _, key := range []string{"lowestEfficiency", "highestWastedBytes", "highestUserWastedPercent"} {
 		if err := ciConfig.BindPFlag(fmt.Sprintf("rules.%s", key), rootCmd.Flags().Lookup(key)); err != nil {
-			log.Fatal("Unable to bind flag:", err)
+			log.Fatalf("Unable to bind '%s' flag: %v", key, err)
 		}
+	}
+
+	rootCmd.PersistentFlags().String("engine", "docker", "The container engine to fetch the image from. Allowed values: "+strings.Join(dive.AllowedEngines, ", "))
+
+	if err := viper.BindPFlag("container-engine", rootCmd.PersistentFlags().Lookup("engine")); err != nil {
+		log.Fatal("Unable to bind 'engine' flag:", err)
 	}
 }
 
@@ -97,7 +102,12 @@ func initConfig() {
 	viper.SetDefault("filetree.pane-width", 0.5)
 	viper.SetDefault("filetree.show-attributes", true)
 
-	viper.AutomaticEnv() // read in environment variables that match
+	viper.SetDefault("container-engine", "docker")
+
+	viper.SetEnvPrefix("DIVE")
+	// replace all - with _ when looking for matching environment variables
+	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
+	viper.AutomaticEnv()
 
 	// If a config file is found, read it in.
 	if err := viper.ReadInConfig(); err == nil {
@@ -148,7 +158,7 @@ func getCfgFile(fromFlag string) string {
 	home, err := homedir.Dir()
 	if err != nil {
 		fmt.Println(err)
-		utils.Exit(0)
+		os.Exit(0)
 	}
 
 	xdgHome := os.Getenv("XDG_CONFIG_HOME")

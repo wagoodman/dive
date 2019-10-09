@@ -9,7 +9,6 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"github.com/wagoodman/dive/dive/filetree"
-	"github.com/wagoodman/dive/utils"
 	"github.com/wagoodman/keybinding"
 )
 
@@ -72,6 +71,22 @@ type View interface {
 	IsVisible() bool
 }
 
+func UpdateAndRender() error {
+	err := Update()
+	if err != nil {
+		logrus.Debug("failed update: ", err)
+		return err
+	}
+
+	err = Render()
+	if err != nil {
+		logrus.Debug("failed render: ", err)
+		return err
+	}
+
+	return nil
+}
+
 // toggleView switches between the file view and the layer view and re-renders the screen.
 func toggleView(g *gocui.Gui, v *gocui.View) (err error) {
 	if v == nil || v.Name() == Controllers.Layer.Name {
@@ -79,9 +94,13 @@ func toggleView(g *gocui.Gui, v *gocui.View) (err error) {
 	} else {
 		_, err = g.SetCurrentView(Controllers.Layer.Name)
 	}
-	Update()
-	Render()
-	return err
+
+	if err != nil {
+		logrus.Error("unable to toggle view: ", err)
+		return err
+	}
+
+	return UpdateAndRender()
 }
 
 // toggleFilterView shows/hides the file tree filter pane.
@@ -95,20 +114,21 @@ func toggleFilterView(g *gocui.Gui, v *gocui.View) error {
 	if !Controllers.Filter.hidden {
 		_, err := g.SetCurrentView(Controllers.Filter.Name)
 		if err != nil {
+			logrus.Error("unable to toggle filter view: ", err)
 			return err
 		}
-		Update()
-		Render()
-	} else {
-		err := toggleView(g, v)
-		if err != nil {
-			return err
-		}
+		return UpdateAndRender()
+	}
 
-		err = Controllers.Filter.view.SetCursor(0, 0)
-		if err != nil {
-			return err
-		}
+	err := toggleView(g, v)
+	if err != nil {
+		logrus.Error("unable to toggle filter view (back): ", err)
+		return err
+	}
+
+	err = Controllers.Filter.view.SetCursor(0, 0)
+	if err != nil {
+		return err
 	}
 
 	return nil
@@ -251,20 +271,32 @@ func layout(g *gocui.Gui) error {
 	view, viewErr = g.SetView(Controllers.Layer.Name, -1, -1+headerRows, splitCols, layersHeight)
 	header, headerErr = g.SetView(Controllers.Layer.Name+"header", -1, -1, splitCols, headerRows)
 	if isNewView(viewErr, headerErr) {
-		_ = Controllers.Layer.Setup(view, header)
+		err = Controllers.Layer.Setup(view, header)
+		if err != nil {
+			logrus.Error("unable to setup layer controller", err)
+			return err
+		}
 
 		if _, err = g.SetCurrentView(Controllers.Layer.Name); err != nil {
+			logrus.Error("unable to set view to layer", err)
 			return err
 		}
 		// since we are selecting the view, we should rerender to indicate it is selected
-		_ = Controllers.Layer.Render()
+		err = Controllers.Layer.Render()
+		if err != nil {
+			logrus.Error("unable to render layer view", err)
+			return err
+		}
 	}
 
 	// Details
 	view, viewErr = g.SetView(Controllers.Details.Name, -1, -1+layersHeight+headerRows, splitCols, maxY-bottomRows)
 	header, headerErr = g.SetView(Controllers.Details.Name+"header", -1, -1+layersHeight, splitCols, layersHeight+headerRows)
 	if isNewView(viewErr, headerErr) {
-		_ = Controllers.Details.Setup(view, header)
+		err = Controllers.Details.Setup(view, header)
+		if err != nil {
+			return err
+		}
 	}
 
 	// Filetree
@@ -275,40 +307,65 @@ func layout(g *gocui.Gui) error {
 	view, viewErr = g.SetView(Controllers.Tree.Name, splitCols, -1+headerRows-offset, debugCols, maxY-bottomRows)
 	header, headerErr = g.SetView(Controllers.Tree.Name+"header", splitCols, -1, debugCols, headerRows-offset)
 	if isNewView(viewErr, headerErr) {
-		_ = Controllers.Tree.Setup(view, header)
+		err = Controllers.Tree.Setup(view, header)
+		if err != nil {
+			logrus.Error("unable to setup tree controller", err)
+			return err
+		}
 	}
-	_ = Controllers.Tree.onLayoutChange(resized)
+	err = Controllers.Tree.onLayoutChange(resized)
+	if err != nil {
+		logrus.Error("unable to setup layer controller onLayoutChange", err)
+		return err
+	}
 
 	// Status Bar
 	view, viewErr = g.SetView(Controllers.Status.Name, -1, maxY-statusBarHeight-statusBarIndex, maxX, maxY-(statusBarIndex-1))
 	if isNewView(viewErr, headerErr) {
-		_ = Controllers.Status.Setup(view, nil)
+		err = Controllers.Status.Setup(view, nil)
+		if err != nil {
+			logrus.Error("unable to setup status controller", err)
+			return err
+		}
 	}
 
 	// Filter Bar
 	view, viewErr = g.SetView(Controllers.Filter.Name, len(Controllers.Filter.headerStr)-1, maxY-filterBarHeight-filterBarIndex, maxX, maxY-(filterBarIndex-1))
 	header, headerErr = g.SetView(Controllers.Filter.Name+"header", -1, maxY-filterBarHeight-filterBarIndex, len(Controllers.Filter.headerStr), maxY-(filterBarIndex-1))
 	if isNewView(viewErr, headerErr) {
-		_ = Controllers.Filter.Setup(view, header)
+		err = Controllers.Filter.Setup(view, header)
+		if err != nil {
+			logrus.Error("unable to setup filter controller", err)
+			return err
+		}
 	}
 
 	return nil
 }
 
 // Update refreshes the state objects for future rendering.
-func Update() {
-	for _, view := range Controllers.lookup {
-		_ = view.Update()
+func Update() error {
+	for _, controller := range Controllers.lookup {
+		err := controller.Update()
+		if err != nil {
+			logrus.Debug("unable to update controller: ")
+			return err
+		}
 	}
+	return nil
 }
 
 // Render flushes the state objects to the screen.
-func Render() {
-	for _, view := range Controllers.lookup {
-		if view.IsVisible() {
-			_ = view.Render()
+func Render() error {
+	for _, controller := range Controllers.lookup {
+		if controller.IsVisible() {
+			err := controller.Render()
+			if err != nil {
+				return err
+			}
 		}
 	}
+	return nil
 }
 
 // renderStatusOption formats key help bindings-to-title pairs.
@@ -321,7 +378,7 @@ func renderStatusOption(control, title string, selected bool) string {
 }
 
 // Run is the UI entrypoint.
-func Run(analysis *image.AnalysisResult, cache filetree.TreeCache) {
+func Run(analysis *image.AnalysisResult, cache filetree.TreeCache) error {
 
 	Formatting.Selected = color.New(color.ReverseVideo, color.Bold).SprintFunc()
 	Formatting.Header = color.New(color.Bold).SprintFunc()
@@ -335,30 +392,39 @@ func Run(analysis *image.AnalysisResult, cache filetree.TreeCache) {
 	var err error
 	GlobalKeybindings.quit, err = keybinding.ParseAll(viper.GetString("keybinding.quit"))
 	if err != nil {
-		logrus.Error(err)
+		return err
 	}
 	GlobalKeybindings.toggleView, err = keybinding.ParseAll(viper.GetString("keybinding.toggle-view"))
 	if err != nil {
-		logrus.Error(err)
+		return err
 	}
 	GlobalKeybindings.filterView, err = keybinding.ParseAll(viper.GetString("keybinding.filter-files"))
 	if err != nil {
-		logrus.Error(err)
+		return err
 	}
 
 	g, err := gocui.NewGui(gocui.OutputNormal)
 	if err != nil {
-		logrus.Error(err)
+		return err
 	}
-	utils.SetUi(g)
 	defer g.Close()
 
 	Controllers.lookup = make(map[string]View)
 
-	Controllers.Layer = NewLayerController("side", g, analysis.Layers)
+	Controllers.Layer, err = NewLayerController("side", g, analysis.Layers)
+	if err != nil {
+		return err
+	}
 	Controllers.lookup[Controllers.Layer.Name] = Controllers.Layer
 
-	Controllers.Tree = NewFileTreeController("main", g, filetree.StackTreeRange(analysis.RefTrees, 0, 0), analysis.RefTrees, cache)
+	treeStack, err := filetree.StackTreeRange(analysis.RefTrees, 0, 0)
+	if err != nil {
+		return err
+	}
+	Controllers.Tree, err = NewFileTreeController("main", g, treeStack, analysis.RefTrees, cache)
+	if err != nil {
+		return err
+	}
 	Controllers.lookup[Controllers.Tree.Name] = Controllers.Tree
 
 	Controllers.Status = NewStatusController("status", g)
@@ -381,15 +447,18 @@ func Run(analysis *image.AnalysisResult, cache filetree.TreeCache) {
 	// }
 
 	// perform the first update and render now that all resources have been loaded
-	Update()
-	Render()
+	err = UpdateAndRender()
+	if err != nil {
+		return err
+	}
 
 	if err := keyBindings(g); err != nil {
-		logrus.Error("keybinding error: ", err)
+		return err
 	}
 
 	if err := g.MainLoop(); err != nil && err != gocui.ErrQuit {
 		logrus.Error("main loop error: ", err)
+		return err
 	}
-	utils.Exit(0)
+	return nil
 }
