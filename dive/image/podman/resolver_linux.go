@@ -13,7 +13,7 @@ import (
 
 type resolver struct{}
 
-func NewResolver() *resolver {
+func NewResolverFromEngine() *resolver {
 	return &resolver{}
 }
 

@@ -46,6 +46,7 @@ func init() {
 
 func initCli() {
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.dive.yaml, ~/.config/dive/*.yaml, or $XDG_CONFIG_HOME/dive.yaml)")
+	rootCmd.PersistentFlags().String("source", "docker", "The container engine to fetch the image from. Allowed values: "+strings.Join(dive.ImageSources, ", "))
 	rootCmd.PersistentFlags().BoolP("version", "v", false, "display version number")
 	rootCmd.Flags().BoolVar(&isCi, "ci", false, "Skip the interactive TUI and validate against CI rules (same as env var CI=true)")
 	rootCmd.Flags().StringVarP(&exportFile, "json", "j", "", "Skip the interactive TUI and write the layer analysis statistics to a given file.")
@@ -61,11 +62,6 @@ func initCli() {
 		}
 	}
 
-	rootCmd.PersistentFlags().String("engine", "docker", "The container engine to fetch the image from. Allowed values: "+strings.Join(dive.AllowedEngines, ", "))
-
-	if err := viper.BindPFlag("container-engine", rootCmd.PersistentFlags().Lookup("engine")); err != nil {
-		log.Fatal("Unable to bind 'engine' flag:", err)
-	}
 }
 
 // initConfig reads in config file and ENV variables if set.
