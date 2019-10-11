@@ -3,6 +3,7 @@ package ui
 import (
 	"bytes"
 	"github.com/wagoodman/dive/dive/image/docker"
+	"github.com/wagoodman/dive/runtime/ui/format"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -72,7 +73,7 @@ func assertTestData(t *testing.T, actualBytes []byte) {
 	helperCheckDiff(t, expectedBytes, actualBytes)
 }
 
-func initializeTestViewModel(t *testing.T) *FileTreeViewModel {
+func initializeTestViewModel(t *testing.T) *fileTreeViewModel {
 	result := docker.TestAnalysisFromArchive(t, "../../.data/test-docker-image.tar")
 
 	cache := filetree.NewFileTreeCache(result.RefTrees)
@@ -81,20 +82,20 @@ func initializeTestViewModel(t *testing.T) *FileTreeViewModel {
 		t.Fatalf("%s: unable to build cache: %+v", t.Name(), err)
 	}
 
-	Formatting.Selected = color.New(color.ReverseVideo, color.Bold).SprintFunc()
+	format.Selected = color.New(color.ReverseVideo, color.Bold).SprintFunc()
 
 	treeStack, err := filetree.StackTreeRange(result.RefTrees, 0, 0)
 	if err != nil {
 		t.Fatalf("%s: unable to stack trees: %v", t.Name(), err)
 	}
-	vm, err := NewFileTreeViewModel(treeStack, result.RefTrees, cache)
+	vm, err := newFileTreeViewModel(treeStack, result.RefTrees, cache)
 	if err != nil {
 		t.Fatalf("%s: unable to create tree ViewModel: %+v", t.Name(), err)
 	}
 	return vm
 }
 
-func runTestCase(t *testing.T, vm *FileTreeViewModel, width, height int, filterRegex *regexp.Regexp) {
+func runTestCase(t *testing.T, vm *fileTreeViewModel, width, height int, filterRegex *regexp.Regexp) {
 	err := vm.Update(filterRegex, width, height)
 	if err != nil {
 		t.Errorf("failed to update viewmodel: %v", err)

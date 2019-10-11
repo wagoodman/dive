@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"github.com/sirupsen/logrus"
 	"github.com/wagoodman/dive/dive/filetree"
+	"github.com/wagoodman/dive/runtime/ui/format"
+	"github.com/wagoodman/dive/runtime/ui/key"
 	"strconv"
 	"strings"
 
@@ -12,10 +14,10 @@ import (
 	"github.com/lunixbochs/vtclean"
 )
 
-// DetailsController holds the UI objects and data models for populating the lower-left pane. Specifically the pane that
+// detailsController holds the UI objects and data models for populating the lower-left pane. Specifically the pane that
 // shows the layer details and image statistics.
-type DetailsController struct {
-	Name           string
+type detailsController struct {
+	name           string
 	gui            *gocui.Gui
 	view           *gocui.View
 	header         *gocui.View
@@ -23,12 +25,12 @@ type DetailsController struct {
 	inefficiencies filetree.EfficiencySlice
 }
 
-// NewDetailsController creates a new view object attached the the global [gocui] screen object.
-func NewDetailsController(name string, gui *gocui.Gui, efficiency float64, inefficiencies filetree.EfficiencySlice) (controller *DetailsController) {
-	controller = new(DetailsController)
+// newDetailsController creates a new view object attached the the global [gocui] screen object.
+func newDetailsController(name string, gui *gocui.Gui, efficiency float64, inefficiencies filetree.EfficiencySlice) (controller *detailsController) {
+	controller = new(detailsController)
 
 	// populate main fields
-	controller.Name = name
+	controller.name = name
 	controller.gui = gui
 	controller.efficiency = efficiency
 	controller.inefficiencies = inefficiencies
@@ -37,7 +39,7 @@ func NewDetailsController(name string, gui *gocui.Gui, efficiency float64, ineff
 }
 
 // Setup initializes the UI concerns within the context of a global [gocui] view object.
-func (controller *DetailsController) Setup(v *gocui.View, header *gocui.View) error {
+func (controller *detailsController) Setup(v *gocui.View, header *gocui.View) error {
 
 	// set controller options
 	controller.view = v
@@ -51,11 +53,21 @@ func (controller *DetailsController) Setup(v *gocui.View, header *gocui.View) er
 	controller.header.Wrap = false
 	controller.header.Frame = false
 
-	// set keybindings
-	if err := controller.gui.SetKeybinding(controller.Name, gocui.KeyArrowDown, gocui.ModNone, func(*gocui.Gui, *gocui.View) error { return controller.CursorDown() }); err != nil {
-		return err
+	var infos = []key.BindingInfo{
+		{
+			Key:      gocui.KeyArrowDown,
+			Modifier: gocui.ModNone,
+			OnAction: controller.CursorDown,
+		},
+		{
+			Key:      gocui.KeyArrowUp,
+			Modifier: gocui.ModNone,
+			OnAction: controller.CursorUp,
+		},
 	}
-	if err := controller.gui.SetKeybinding(controller.Name, gocui.KeyArrowUp, gocui.ModNone, func(*gocui.Gui, *gocui.View) error { return controller.CursorUp() }); err != nil {
+
+	_, err := key.GenerateBindings(controller.gui, controller.name, infos)
+	if err != nil {
 		return err
 	}
 
@@ -63,22 +75,22 @@ func (controller *DetailsController) Setup(v *gocui.View, header *gocui.View) er
 }
 
 // IsVisible indicates if the details view pane is currently initialized.
-func (controller *DetailsController) IsVisible() bool {
+func (controller *detailsController) IsVisible() bool {
 	return controller != nil
 }
 
 // CursorDown moves the cursor down in the details pane (currently indicates nothing).
-func (controller *DetailsController) CursorDown() error {
+func (controller *detailsController) CursorDown() error {
 	return CursorDown(controller.gui, controller.view)
 }
 
 // CursorUp moves the cursor up in the details pane (currently indicates nothing).
-func (controller *DetailsController) CursorUp() error {
+func (controller *detailsController) CursorUp() error {
 	return CursorUp(controller.gui, controller.view)
 }
 
 // Update refreshes the state objects for future rendering.
-func (controller *DetailsController) Update() error {
+func (controller *detailsController) Update() error {
 	return nil
 }
 
@@ -87,13 +99,13 @@ func (controller *DetailsController) Update() error {
 // 2. the image efficiency score
 // 3. the estimated wasted image space
 // 4. a list of inefficient file allocations
-func (controller *DetailsController) Render() error {
-	currentLayer := Controllers.Layer.currentLayer()
+func (controller *detailsController) Render() error {
+	currentLayer := controllers.Layer.currentLayer()
 
 	var wastedSpace int64
 
 	template := "%5s  %12s  %-s\n"
-	inefficiencyReport := fmt.Sprintf(Formatting.Header(template), "Count", "Total Space", "Path")
+	inefficiencyReport := fmt.Sprintf(format.Header(template), "Count", "Total Space", "Path")
 
 	height := 100
 	if controller.view != nil {
@@ -110,9 +122,9 @@ func (controller *DetailsController) Render() error {
 		}
 	}
 
-	imageSizeStr := fmt.Sprintf("%s %s", Formatting.Header("Total Image size:"), humanize.Bytes(Controllers.Layer.ImageSize))
-	effStr := fmt.Sprintf("%s %d %%", Formatting.Header("Image efficiency score:"), int(100.0*controller.efficiency))
-	wastedSpaceStr := fmt.Sprintf("%s %s", Formatting.Header("Potential wasted space:"), humanize.Bytes(uint64(wastedSpace)))
+	imageSizeStr := fmt.Sprintf("%s %s", format.Header("Total Image size:"), humanize.Bytes(controllers.Layer.ImageSize))
+	effStr := fmt.Sprintf("%s %d %%", format.Header("Image efficiency score:"), int(100.0*controller.efficiency))
+	wastedSpaceStr := fmt.Sprintf("%s %s", format.Header("Potential wasted space:"), humanize.Bytes(uint64(wastedSpace)))
 
 	controller.gui.Update(func(g *gocui.Gui) error {
 		// update header
@@ -122,7 +134,7 @@ func (controller *DetailsController) Render() error {
 		layerHeaderStr := fmt.Sprintf("[Layer Details]%s", strings.Repeat("─", width-15))
 		imageHeaderStr := fmt.Sprintf("[Image Details]%s", strings.Repeat("─", width-15))
 
-		_, err := fmt.Fprintln(controller.header, Formatting.Header(vtclean.Clean(layerHeaderStr, false)))
+		_, err := fmt.Fprintln(controller.header, format.Header(vtclean.Clean(layerHeaderStr, false)))
 		if err != nil {
 			return err
 		}
@@ -132,15 +144,15 @@ func (controller *DetailsController) Render() error {
 
 		var lines = make([]string, 0)
 		if currentLayer.Names != nil && len(currentLayer.Names) > 0 {
-			lines = append(lines, Formatting.Header("Tags:   ")+strings.Join(currentLayer.Names, ", "))
+			lines = append(lines, format.Header("Tags:   ")+strings.Join(currentLayer.Names, ", "))
 		} else {
-			lines = append(lines, Formatting.Header("Tags:   ")+"(none)")
+			lines = append(lines, format.Header("Tags:   ")+"(none)")
 		}
-		lines = append(lines, Formatting.Header("Id:     ")+currentLayer.Id)
-		lines = append(lines, Formatting.Header("Digest: ")+currentLayer.Digest)
-		lines = append(lines, Formatting.Header("Command:"))
+		lines = append(lines, format.Header("Id:     ")+currentLayer.Id)
+		lines = append(lines, format.Header("Digest: ")+currentLayer.Digest)
+		lines = append(lines, format.Header("Command:"))
 		lines = append(lines, currentLayer.Command)
-		lines = append(lines, "\n"+Formatting.Header(vtclean.Clean(imageHeaderStr, false)))
+		lines = append(lines, "\n"+format.Header(vtclean.Clean(imageHeaderStr, false)))
 		lines = append(lines, imageSizeStr)
 		lines = append(lines, wastedSpaceStr)
 		lines = append(lines, effStr+"\n")
@@ -156,6 +168,6 @@ func (controller *DetailsController) Render() error {
 }
 
 // KeyHelp indicates all the possible actions a user can take while the current pane is selected (currently does nothing).
-func (controller *DetailsController) KeyHelp() string {
+func (controller *detailsController) KeyHelp() string {
 	return "TBD"
 }

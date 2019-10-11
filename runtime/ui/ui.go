@@ -3,24 +3,82 @@ package ui
 import (
 	"errors"
 	"github.com/wagoodman/dive/dive/image"
+	"github.com/wagoodman/dive/runtime/ui/format"
+	"github.com/wagoodman/dive/runtime/ui/key"
+	"sync"
 
-	"github.com/fatih/color"
 	"github.com/jroimartin/gocui"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"github.com/wagoodman/dive/dive/filetree"
-	"github.com/wagoodman/keybinding"
 )
 
 const debug = false
+
+// type global
+type Ui struct {
+	controllers *controllerCollection
+}
+
+var (
+	once        sync.Once
+	uiSingleton *Ui
+)
+
+func NewUi(g *gocui.Gui, analysis *image.AnalysisResult, cache filetree.TreeCache) (*Ui, error) {
+	var err error
+	once.Do(func() {
+		var theControls *controllerCollection
+		var globalHelpKeys []*key.Binding
+
+		theControls, err = newControllerCollection(g, analysis, cache)
+		if err != nil {
+			return
+		}
+
+		var infos = []key.BindingInfo{
+			{
+				ConfigKeys: []string{"keybinding.quit"},
+				OnAction:   quit,
+				Display:    "Removed",
+			},
+			{
+				ConfigKeys: []string{"keybinding.toggle-view"},
+				OnAction:   quit,
+				// OnAction:   toggleView,
+				Display:    "Modified",
+			},
+			{
+				ConfigKeys: []string{"keybinding.filter-files"},
+				OnAction:   quit,
+				// OnAction:   toggleFilterView,
+				IsSelected: controllers.Filter.IsVisible,
+				Display:    "Unmodified",
+			},
+		}
+
+		globalHelpKeys, err = key.GenerateBindings(g, "", infos)
+		if err != nil {
+			return
+		}
+
+		theControls.Status.AddHelpKeys(globalHelpKeys...)
+
+		uiSingleton = &Ui{
+			controllers: theControls,
+		}
+	})
+
+	return uiSingleton, err
+}
 
 // var profileObj = profile.Start(profile.MemProfile, profile.ProfilePath("."), profile.NoShutdownHook)
 // var onExit func()
 
 // debugPrint writes the given string to the debug pane (if the debug pane is enabled)
 // func debugPrint(s string) {
-// 	if Controllers.Tree != nil && Controllers.Tree.gui != nil {
-// 		v, _ := Controllers.Tree.gui.View("debug")
+// 	if controllers.Tree != nil && controllers.Tree.gui != nil {
+// 		v, _ := controllers.Tree.gui.View("debug")
 // 		if v != nil {
 // 			if len(v.BufferLines()) > 20 {
 // 				v.Clear()
@@ -30,46 +88,7 @@ const debug = false
 // 	}
 // }
 
-// Formatting defines standard functions for formatting UI sections.
-var Formatting struct {
-	Header                func(...interface{}) string
-	Selected              func(...interface{}) string
-	StatusSelected        func(...interface{}) string
-	StatusNormal          func(...interface{}) string
-	StatusControlSelected func(...interface{}) string
-	StatusControlNormal   func(...interface{}) string
-	CompareTop            func(...interface{}) string
-	CompareBottom         func(...interface{}) string
-}
-
-// Controllers contains all rendered UI panes.
-var Controllers struct {
-	Tree    *FileTreeController
-	Layer   *LayerController
-	Status  *StatusController
-	Filter  *FilterController
-	Details *DetailsController
-	lookup  map[string]View
-}
-
-var GlobalKeybindings struct {
-	quit       []keybinding.Key
-	toggleView []keybinding.Key
-	filterView []keybinding.Key
-}
-
 var lastX, lastY int
-
-// View defines the a renderable terminal screen pane.
-type View interface {
-	Setup(*gocui.View, *gocui.View) error
-	CursorDown() error
-	CursorUp() error
-	Render() error
-	Update() error
-	KeyHelp() string
-	IsVisible() bool
-}
 
 func UpdateAndRender() error {
 	err := Update()
@@ -88,11 +107,12 @@ func UpdateAndRender() error {
 }
 
 // toggleView switches between the file view and the layer view and re-renders the screen.
-func toggleView(g *gocui.Gui, v *gocui.View) (err error) {
-	if v == nil || v.Name() == Controllers.Layer.Name {
-		_, err = g.SetCurrentView(Controllers.Tree.Name)
+func toggleView(g *gocui.Gui) (err error) {
+	v := g.CurrentView()
+	if v == nil || v.Name() == controllers.Layer.name {
+		_, err = g.SetCurrentView(controllers.Tree.name)
 	} else {
-		_, err = g.SetCurrentView(Controllers.Layer.Name)
+		_, err = g.SetCurrentView(controllers.Layer.name)
 	}
 
 	if err != nil {
@@ -104,15 +124,15 @@ func toggleView(g *gocui.Gui, v *gocui.View) (err error) {
 }
 
 // toggleFilterView shows/hides the file tree filter pane.
-func toggleFilterView(g *gocui.Gui, v *gocui.View) error {
+func toggleFilterView(g *gocui.Gui) error {
 	// delete all user input from the tree view
-	Controllers.Filter.view.Clear()
+	controllers.Filter.view.Clear()
 
 	// toggle hiding
-	Controllers.Filter.hidden = !Controllers.Filter.hidden
+	controllers.Filter.hidden = !controllers.Filter.hidden
 
-	if !Controllers.Filter.hidden {
-		_, err := g.SetCurrentView(Controllers.Filter.Name)
+	if !controllers.Filter.hidden {
+		_, err := g.SetCurrentView(controllers.Filter.name)
 		if err != nil {
 			logrus.Error("unable to toggle filter view: ", err)
 			return err
@@ -120,13 +140,13 @@ func toggleFilterView(g *gocui.Gui, v *gocui.View) error {
 		return UpdateAndRender()
 	}
 
-	err := toggleView(g, v)
+	err := toggleView(g)
 	if err != nil {
 		logrus.Error("unable to toggle filter view (back): ", err)
 		return err
 	}
 
-	err = Controllers.Filter.view.SetCursor(0, 0)
+	err = controllers.Filter.view.SetCursor(0, 0)
 	if err != nil {
 		return err
 	}
@@ -166,35 +186,12 @@ func CursorStep(g *gocui.Gui, v *gocui.View, step int) error {
 }
 
 // quit is the gocui callback invoked when the user hits Ctrl+C
-func quit(g *gocui.Gui, v *gocui.View) error {
+func quit() error {
 
 	// profileObj.Stop()
 	// onExit()
 
 	return gocui.ErrQuit
-}
-
-// keyBindings registers global key press actions, valid when in any pane.
-func keyBindings(g *gocui.Gui) error {
-	for _, key := range GlobalKeybindings.quit {
-		if err := g.SetKeybinding("", key.Value, key.Modifier, quit); err != nil {
-			return err
-		}
-	}
-
-	for _, key := range GlobalKeybindings.toggleView {
-		if err := g.SetKeybinding("", key.Value, key.Modifier, toggleView); err != nil {
-			return err
-		}
-	}
-
-	for _, key := range GlobalKeybindings.filterView {
-		if err := g.SetKeybinding("", key.Value, key.Modifier, toggleFilterView); err != nil {
-			return err
-		}
-	}
-
-	return nil
 }
 
 // isNewView determines if a view has already been created based on the set of errors given (a bit hokie)
@@ -244,7 +241,7 @@ func layout(g *gocui.Gui) error {
 	statusBarIndex := 1
 	filterBarIndex := 2
 
-	layersHeight := len(Controllers.Layer.Layers) + headerRows + 1 // layers + header + base image layer row
+	layersHeight := len(controllers.Layer.Layers) + headerRows + 1 // layers + header + base image layer row
 	maxLayerHeight := int(0.75 * float64(maxY))
 	if layersHeight > maxLayerHeight {
 		layersHeight = maxLayerHeight
@@ -253,7 +250,7 @@ func layout(g *gocui.Gui) error {
 	var view, header *gocui.View
 	var viewErr, headerErr, err error
 
-	if Controllers.Filter.hidden {
+	if controllers.Filter.hidden {
 		bottomRows--
 		filterBarHeight = 0
 	}
@@ -268,21 +265,21 @@ func layout(g *gocui.Gui) error {
 	}
 
 	// Layers
-	view, viewErr = g.SetView(Controllers.Layer.Name, -1, -1+headerRows, splitCols, layersHeight)
-	header, headerErr = g.SetView(Controllers.Layer.Name+"header", -1, -1, splitCols, headerRows)
+	view, viewErr = g.SetView(controllers.Layer.name, -1, -1+headerRows, splitCols, layersHeight)
+	header, headerErr = g.SetView(controllers.Layer.name+"header", -1, -1, splitCols, headerRows)
 	if isNewView(viewErr, headerErr) {
-		err = Controllers.Layer.Setup(view, header)
+		err = controllers.Layer.Setup(view, header)
 		if err != nil {
 			logrus.Error("unable to setup layer controller", err)
 			return err
 		}
 
-		if _, err = g.SetCurrentView(Controllers.Layer.Name); err != nil {
+		if _, err = g.SetCurrentView(controllers.Layer.name); err != nil {
 			logrus.Error("unable to set view to layer", err)
 			return err
 		}
 		// since we are selecting the view, we should rerender to indicate it is selected
-		err = Controllers.Layer.Render()
+		err = controllers.Layer.Render()
 		if err != nil {
 			logrus.Error("unable to render layer view", err)
 			return err
@@ -290,10 +287,10 @@ func layout(g *gocui.Gui) error {
 	}
 
 	// Details
-	view, viewErr = g.SetView(Controllers.Details.Name, -1, -1+layersHeight+headerRows, splitCols, maxY-bottomRows)
-	header, headerErr = g.SetView(Controllers.Details.Name+"header", -1, -1+layersHeight, splitCols, layersHeight+headerRows)
+	view, viewErr = g.SetView(controllers.Details.name, -1, -1+layersHeight+headerRows, splitCols, maxY-bottomRows)
+	header, headerErr = g.SetView(controllers.Details.name+"header", -1, -1+layersHeight, splitCols, layersHeight+headerRows)
 	if isNewView(viewErr, headerErr) {
-		err = Controllers.Details.Setup(view, header)
+		err = controllers.Details.Setup(view, header)
 		if err != nil {
 			return err
 		}
@@ -301,28 +298,28 @@ func layout(g *gocui.Gui) error {
 
 	// Filetree
 	offset := 0
-	if !Controllers.Tree.vm.ShowAttributes {
+	if !controllers.Tree.vm.ShowAttributes {
 		offset = 1
 	}
-	view, viewErr = g.SetView(Controllers.Tree.Name, splitCols, -1+headerRows-offset, debugCols, maxY-bottomRows)
-	header, headerErr = g.SetView(Controllers.Tree.Name+"header", splitCols, -1, debugCols, headerRows-offset)
+	view, viewErr = g.SetView(controllers.Tree.name, splitCols, -1+headerRows-offset, debugCols, maxY-bottomRows)
+	header, headerErr = g.SetView(controllers.Tree.name+"header", splitCols, -1, debugCols, headerRows-offset)
 	if isNewView(viewErr, headerErr) {
-		err = Controllers.Tree.Setup(view, header)
+		err = controllers.Tree.Setup(view, header)
 		if err != nil {
 			logrus.Error("unable to setup tree controller", err)
 			return err
 		}
 	}
-	err = Controllers.Tree.onLayoutChange(resized)
+	err = controllers.Tree.onLayoutChange(resized)
 	if err != nil {
 		logrus.Error("unable to setup layer controller onLayoutChange", err)
 		return err
 	}
 
 	// Status Bar
-	view, viewErr = g.SetView(Controllers.Status.Name, -1, maxY-statusBarHeight-statusBarIndex, maxX, maxY-(statusBarIndex-1))
+	view, viewErr = g.SetView(controllers.Status.name, -1, maxY-statusBarHeight-statusBarIndex, maxX, maxY-(statusBarIndex-1))
 	if isNewView(viewErr, headerErr) {
-		err = Controllers.Status.Setup(view, nil)
+		err = controllers.Status.Setup(view, nil)
 		if err != nil {
 			logrus.Error("unable to setup status controller", err)
 			return err
@@ -330,10 +327,10 @@ func layout(g *gocui.Gui) error {
 	}
 
 	// Filter Bar
-	view, viewErr = g.SetView(Controllers.Filter.Name, len(Controllers.Filter.headerStr)-1, maxY-filterBarHeight-filterBarIndex, maxX, maxY-(filterBarIndex-1))
-	header, headerErr = g.SetView(Controllers.Filter.Name+"header", -1, maxY-filterBarHeight-filterBarIndex, len(Controllers.Filter.headerStr), maxY-(filterBarIndex-1))
+	view, viewErr = g.SetView(controllers.Filter.name, len(controllers.Filter.headerStr)-1, maxY-filterBarHeight-filterBarIndex, maxX, maxY-(filterBarIndex-1))
+	header, headerErr = g.SetView(controllers.Filter.name+"header", -1, maxY-filterBarHeight-filterBarIndex, len(controllers.Filter.headerStr), maxY-(filterBarIndex-1))
 	if isNewView(viewErr, headerErr) {
-		err = Controllers.Filter.Setup(view, header)
+		err = controllers.Filter.Setup(view, header)
 		if err != nil {
 			logrus.Error("unable to setup filter controller", err)
 			return err
@@ -345,7 +342,7 @@ func layout(g *gocui.Gui) error {
 
 // Update refreshes the state objects for future rendering.
 func Update() error {
-	for _, controller := range Controllers.lookup {
+	for _, controller := range controllers.lookup {
 		err := controller.Update()
 		if err != nil {
 			logrus.Debug("unable to update controller: ")
@@ -357,7 +354,7 @@ func Update() error {
 
 // Render flushes the state objects to the screen.
 func Render() error {
-	for _, controller := range Controllers.lookup {
+	for _, controller := range controllers.lookup {
 		if controller.IsVisible() {
 			err := controller.Render()
 			if err != nil {
@@ -371,37 +368,15 @@ func Render() error {
 // renderStatusOption formats key help bindings-to-title pairs.
 func renderStatusOption(control, title string, selected bool) string {
 	if selected {
-		return Formatting.StatusSelected("▏") + Formatting.StatusControlSelected(control) + Formatting.StatusSelected(" "+title+" ")
+		return format.StatusSelected("▏") + format.StatusControlSelected(control) + format.StatusSelected(" "+title+" ")
 	} else {
-		return Formatting.StatusNormal("▏") + Formatting.StatusControlNormal(control) + Formatting.StatusNormal(" "+title+" ")
+		return format.StatusNormal("▏") + format.StatusControlNormal(control) + format.StatusNormal(" "+title+" ")
 	}
 }
 
 // Run is the UI entrypoint.
 func Run(analysis *image.AnalysisResult, cache filetree.TreeCache) error {
-
-	Formatting.Selected = color.New(color.ReverseVideo, color.Bold).SprintFunc()
-	Formatting.Header = color.New(color.Bold).SprintFunc()
-	Formatting.StatusSelected = color.New(color.BgMagenta, color.FgWhite).SprintFunc()
-	Formatting.StatusNormal = color.New(color.ReverseVideo).SprintFunc()
-	Formatting.StatusControlSelected = color.New(color.BgMagenta, color.FgWhite, color.Bold).SprintFunc()
-	Formatting.StatusControlNormal = color.New(color.ReverseVideo, color.Bold).SprintFunc()
-	Formatting.CompareTop = color.New(color.BgMagenta).SprintFunc()
-	Formatting.CompareBottom = color.New(color.BgGreen).SprintFunc()
-
 	var err error
-	GlobalKeybindings.quit, err = keybinding.ParseAll(viper.GetString("keybinding.quit"))
-	if err != nil {
-		return err
-	}
-	GlobalKeybindings.toggleView, err = keybinding.ParseAll(viper.GetString("keybinding.toggle-view"))
-	if err != nil {
-		return err
-	}
-	GlobalKeybindings.filterView, err = keybinding.ParseAll(viper.GetString("keybinding.filter-files"))
-	if err != nil {
-		return err
-	}
 
 	g, err := gocui.NewGui(gocui.OutputNormal)
 	if err != nil {
@@ -409,32 +384,10 @@ func Run(analysis *image.AnalysisResult, cache filetree.TreeCache) error {
 	}
 	defer g.Close()
 
-	Controllers.lookup = make(map[string]View)
-
-	Controllers.Layer, err = NewLayerController("side", g, analysis.Layers)
+	_, err = newControllerCollection(g, analysis, cache)
 	if err != nil {
 		return err
 	}
-	Controllers.lookup[Controllers.Layer.Name] = Controllers.Layer
-
-	treeStack, err := filetree.StackTreeRange(analysis.RefTrees, 0, 0)
-	if err != nil {
-		return err
-	}
-	Controllers.Tree, err = NewFileTreeController("main", g, treeStack, analysis.RefTrees, cache)
-	if err != nil {
-		return err
-	}
-	Controllers.lookup[Controllers.Tree.Name] = Controllers.Tree
-
-	Controllers.Status = NewStatusController("status", g)
-	Controllers.lookup[Controllers.Status.Name] = Controllers.Status
-
-	Controllers.Filter = NewFilterController("command", g)
-	Controllers.lookup[Controllers.Filter.Name] = Controllers.Filter
-
-	Controllers.Details = NewDetailsController("details", g, analysis.Efficiency, analysis.Inefficiencies)
-	Controllers.lookup[Controllers.Details.Name] = Controllers.Details
 
 	g.Cursor = false
 	//g.Mouse = true
@@ -446,13 +399,37 @@ func Run(analysis *image.AnalysisResult, cache filetree.TreeCache) error {
 	// 	profileObj.Stop()
 	// }
 
-	// perform the first update and render now that all resources have been loaded
-	err = UpdateAndRender()
+
+	var infos = []key.BindingInfo{
+		{
+			ConfigKeys: []string{"keybinding.quit"},
+			OnAction:   quit,
+			Display:    "Removed",
+		},
+		{
+			ConfigKeys: []string{"keybinding.toggle-view"},
+			OnAction:   quit,
+			// OnAction:   toggleView,
+			Display:    "Modified",
+		},
+		{
+			ConfigKeys: []string{"keybinding.filter-files"},
+			OnAction:   quit,
+			// OnAction:   toggleFilterView,
+			// IsSelected: controllers.Filter.IsVisible,
+			Display:    "Unmodified",
+		},
+	}
+
+	globalHelpKeys, err := key.GenerateBindings(g, "", infos)
 	if err != nil {
 		return err
 	}
+	controllers.Status.AddHelpKeys(globalHelpKeys...)
 
-	if err := keyBindings(g); err != nil {
+	// perform the first update and render now that all resources have been loaded
+	err = UpdateAndRender()
+	if err != nil {
 		return err
 	}
 

@@ -4,12 +4,13 @@ import (
 	"fmt"
 	"github.com/jroimartin/gocui"
 	"github.com/sirupsen/logrus"
+	"github.com/wagoodman/dive/runtime/ui/format"
 )
 
-// FilterController holds the UI objects and data models for populating the bottom row. Specifically the pane that
+// filterController holds the UI objects and data models for populating the bottom row. Specifically the pane that
 // allows the user to filter the file tree by path.
-type FilterController struct {
-	Name      string
+type filterController struct {
+	name      string
 	gui       *gocui.Gui
 	view      *gocui.View
 	header    *gocui.View
@@ -18,12 +19,12 @@ type FilterController struct {
 	hidden    bool
 }
 
-// NewFilterController creates a new view object attached the the global [gocui] screen object.
-func NewFilterController(name string, gui *gocui.Gui) (controller *FilterController) {
-	controller = new(FilterController)
+// newFilterController creates a new view object attached the the global [gocui] screen object.
+func newFilterController(name string, gui *gocui.Gui) (controller *filterController) {
+	controller = new(filterController)
 
 	// populate main fields
-	controller.Name = name
+	controller.name = name
 	controller.gui = gui
 	controller.headerStr = "Path Filter: "
 	controller.hidden = true
@@ -32,7 +33,7 @@ func NewFilterController(name string, gui *gocui.Gui) (controller *FilterControl
 }
 
 // Setup initializes the UI concerns within the context of a global [gocui] view object.
-func (controller *FilterController) Setup(v *gocui.View, header *gocui.View) error {
+func (controller *filterController) Setup(v *gocui.View, header *gocui.View) error {
 
 	// set controller options
 	controller.view = v
@@ -52,7 +53,7 @@ func (controller *FilterController) Setup(v *gocui.View, header *gocui.View) err
 }
 
 // IsVisible indicates if the filter view pane is currently initialized
-func (controller *FilterController) IsVisible() bool {
+func (controller *filterController) IsVisible() bool {
 	if controller == nil {
 		return false
 	}
@@ -60,17 +61,17 @@ func (controller *FilterController) IsVisible() bool {
 }
 
 // CursorDown moves the cursor down in the filter pane (currently indicates nothing).
-func (controller *FilterController) CursorDown() error {
+func (controller *filterController) CursorDown() error {
 	return nil
 }
 
 // CursorUp moves the cursor up in the filter pane (currently indicates nothing).
-func (controller *FilterController) CursorUp() error {
+func (controller *filterController) CursorUp() error {
 	return nil
 }
 
 // Edit intercepts the key press events in the filer view to update the file view in real time.
-func (controller *FilterController) Edit(v *gocui.View, key gocui.Key, ch rune, mod gocui.Modifier) {
+func (controller *filterController) Edit(v *gocui.View, key gocui.Key, ch rune, mod gocui.Modifier) {
 	if !controller.IsVisible() {
 		return
 	}
@@ -86,21 +87,21 @@ func (controller *FilterController) Edit(v *gocui.View, key gocui.Key, ch rune, 
 	case key == gocui.KeyBackspace || key == gocui.KeyBackspace2:
 		v.EditDelete(true)
 	}
-	if Controllers.Tree != nil {
-		_ = Controllers.Tree.Update()
-		_ = Controllers.Tree.Render()
+	if controllers.Tree != nil {
+		_ = controllers.Tree.Update()
+		_ = controllers.Tree.Render()
 	}
 }
 
 // Update refreshes the state objects for future rendering (currently does nothing).
-func (controller *FilterController) Update() error {
+func (controller *filterController) Update() error {
 	return nil
 }
 
 // Render flushes the state objects to the screen. Currently this is the users path filter input.
-func (controller *FilterController) Render() error {
+func (controller *filterController) Render() error {
 	controller.gui.Update(func(g *gocui.Gui) error {
-		_, err := fmt.Fprintln(controller.header, Formatting.Header(controller.headerStr))
+		_, err := fmt.Fprintln(controller.header, format.Header(controller.headerStr))
 		if err != nil {
 			logrus.Error("unable to write to buffer: ", err)
 		}
@@ -110,6 +111,6 @@ func (controller *FilterController) Render() error {
 }
 
 // KeyHelp indicates all the possible actions a user can take while the current pane is selected.
-func (controller *FilterController) KeyHelp() string {
-	return Formatting.StatusControlNormal("▏Type to filter the file tree ")
+func (controller *filterController) KeyHelp() string {
+	return format.StatusControlNormal("▏Type to filter the file tree ")
 }
