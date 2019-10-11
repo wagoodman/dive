@@ -84,9 +84,6 @@ func (controller *statusController) Render() error {
 
 // KeyHelp indicates all the possible global actions a user can take when any pane is selected.
 func (controller *statusController) KeyHelp() string {
-	// return renderStatusOption(globalKeybinding.quit[0].String(), "Quit", false) +
-	// 	renderStatusOption(globalKeybinding.toggleView[0].String(), "Switch view", false) +
-	// 	renderStatusOption(globalKeybinding.filterView[0].String(), "Filter", controllers.Filter.IsVisible())
 	var help string
 	for _, binding := range controller.helpKeys {
 		help += binding.RenderKeyHelp()

@@ -3,7 +3,6 @@ package ui
 import (
 	"errors"
 	"github.com/wagoodman/dive/dive/image"
-	"github.com/wagoodman/dive/runtime/ui/format"
 	"github.com/wagoodman/dive/runtime/ui/key"
 	"sync"
 
@@ -16,60 +15,80 @@ import (
 const debug = false
 
 // type global
-type Ui struct {
+type app struct {
+	gui *gocui.Gui
 	controllers *controllerCollection
 }
 
 var (
-	once        sync.Once
-	uiSingleton *Ui
+	once         sync.Once
+	appSingleton *app
 )
 
-func NewUi(g *gocui.Gui, analysis *image.AnalysisResult, cache filetree.TreeCache) (*Ui, error) {
+func newApp(gui *gocui.Gui, analysis *image.AnalysisResult, cache filetree.TreeCache) (*app, error) {
 	var err error
 	once.Do(func() {
 		var theControls *controllerCollection
 		var globalHelpKeys []*key.Binding
 
-		theControls, err = newControllerCollection(g, analysis, cache)
+		theControls, err = newControllerCollection(gui, analysis, cache)
 		if err != nil {
 			return
+		}
+
+		gui.Cursor = false
+		//g.Mouse = true
+		gui.SetManagerFunc(layout)
+
+		// var profileObj = profile.Start(profile.CPUProfile, profile.ProfilePath("."), profile.NoShutdownHook)
+		//
+		// onExit = func() {
+		// 	profileObj.Stop()
+		// }
+
+
+		appSingleton = &app{
+			gui:         gui,
+			controllers: theControls,
 		}
 
 		var infos = []key.BindingInfo{
 			{
 				ConfigKeys: []string{"keybinding.quit"},
 				OnAction:   quit,
-				Display:    "Removed",
+				Display:    "Quit",
 			},
 			{
 				ConfigKeys: []string{"keybinding.toggle-view"},
-				OnAction:   quit,
-				// OnAction:   toggleView,
-				Display:    "Modified",
+				OnAction:   appSingleton.toggleView,
+				Display:    "Switch view",
 			},
 			{
 				ConfigKeys: []string{"keybinding.filter-files"},
-				OnAction:   quit,
-				// OnAction:   toggleFilterView,
+				OnAction:   appSingleton.toggleFilterView,
 				IsSelected: controllers.Filter.IsVisible,
-				Display:    "Unmodified",
+				Display:    "Filter",
 			},
 		}
 
-		globalHelpKeys, err = key.GenerateBindings(g, "", infos)
+		globalHelpKeys, err = key.GenerateBindings(gui, "", infos)
 		if err != nil {
 			return
 		}
 
 		theControls.Status.AddHelpKeys(globalHelpKeys...)
 
-		uiSingleton = &Ui{
-			controllers: theControls,
+
+		// perform the first update and render now that all resources have been loaded
+		err = UpdateAndRender()
+		if err != nil {
+			return
 		}
+
+
 	})
 
-	return uiSingleton, err
+	return appSingleton, err
 }
 
 // var profileObj = profile.Start(profile.MemProfile, profile.ProfilePath("."), profile.NoShutdownHook)
@@ -107,12 +126,12 @@ func UpdateAndRender() error {
 }
 
 // toggleView switches between the file view and the layer view and re-renders the screen.
-func toggleView(g *gocui.Gui) (err error) {
-	v := g.CurrentView()
+func (ui *app) toggleView() (err error) {
+	v := ui.gui.CurrentView()
 	if v == nil || v.Name() == controllers.Layer.name {
-		_, err = g.SetCurrentView(controllers.Tree.name)
+		_, err = ui.gui.SetCurrentView(controllers.Tree.name)
 	} else {
-		_, err = g.SetCurrentView(controllers.Layer.name)
+		_, err = ui.gui.SetCurrentView(controllers.Layer.name)
 	}
 
 	if err != nil {
@@ -124,7 +143,7 @@ func toggleView(g *gocui.Gui) (err error) {
 }
 
 // toggleFilterView shows/hides the file tree filter pane.
-func toggleFilterView(g *gocui.Gui) error {
+func (ui *app) toggleFilterView() error {
 	// delete all user input from the tree view
 	controllers.Filter.view.Clear()
 
@@ -132,7 +151,7 @@ func toggleFilterView(g *gocui.Gui) error {
 	controllers.Filter.hidden = !controllers.Filter.hidden
 
 	if !controllers.Filter.hidden {
-		_, err := g.SetCurrentView(controllers.Filter.name)
+		_, err := ui.gui.SetCurrentView(controllers.Filter.name)
 		if err != nil {
 			logrus.Error("unable to toggle filter view: ", err)
 			return err
@@ -140,7 +159,7 @@ func toggleFilterView(g *gocui.Gui) error {
 		return UpdateAndRender()
 	}
 
-	err := toggleView(g)
+	err := ui.toggleView()
 	if err != nil {
 		logrus.Error("unable to toggle filter view (back): ", err)
 		return err
@@ -365,15 +384,6 @@ func Render() error {
 	return nil
 }
 
-// renderStatusOption formats key help bindings-to-title pairs.
-func renderStatusOption(control, title string, selected bool) string {
-	if selected {
-		return format.StatusSelected("▏") + format.StatusControlSelected(control) + format.StatusSelected(" "+title+" ")
-	} else {
-		return format.StatusNormal("▏") + format.StatusControlNormal(control) + format.StatusNormal(" "+title+" ")
-	}
-}
-
 // Run is the UI entrypoint.
 func Run(analysis *image.AnalysisResult, cache filetree.TreeCache) error {
 	var err error
@@ -384,51 +394,7 @@ func Run(analysis *image.AnalysisResult, cache filetree.TreeCache) error {
 	}
 	defer g.Close()
 
-	_, err = newControllerCollection(g, analysis, cache)
-	if err != nil {
-		return err
-	}
-
-	g.Cursor = false
-	//g.Mouse = true
-	g.SetManagerFunc(layout)
-
-	// var profileObj = profile.Start(profile.CPUProfile, profile.ProfilePath("."), profile.NoShutdownHook)
-	//
-	// onExit = func() {
-	// 	profileObj.Stop()
-	// }
-
-
-	var infos = []key.BindingInfo{
-		{
-			ConfigKeys: []string{"keybinding.quit"},
-			OnAction:   quit,
-			Display:    "Removed",
-		},
-		{
-			ConfigKeys: []string{"keybinding.toggle-view"},
-			OnAction:   quit,
-			// OnAction:   toggleView,
-			Display:    "Modified",
-		},
-		{
-			ConfigKeys: []string{"keybinding.filter-files"},
-			OnAction:   quit,
-			// OnAction:   toggleFilterView,
-			// IsSelected: controllers.Filter.IsVisible,
-			Display:    "Unmodified",
-		},
-	}
-
-	globalHelpKeys, err := key.GenerateBindings(g, "", infos)
-	if err != nil {
-		return err
-	}
-	controllers.Status.AddHelpKeys(globalHelpKeys...)
-
-	// perform the first update and render now that all resources have been loaded
-	err = UpdateAndRender()
+	_, err = newApp(g, analysis, cache)
 	if err != nil {
 		return err
 	}
