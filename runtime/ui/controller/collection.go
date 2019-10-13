@@ -9,22 +9,22 @@ import (
 )
 
 // var ccOnce sync.Once
-var controllers *ControllerCollection
+var controllers *Collection
 
-type ControllerCollection struct {
+type Collection struct {
 	gui     *gocui.Gui
-	Tree    *FileTreeController
-	Layer   *LayerController
-	Status  *StatusController
-	Filter  *FilterController
-	Details *DetailsController
+	Tree    *FileTree
+	Layer   *Layer
+	Status  *Status
+	Filter  *Filter
+	Details *Details
 	lookup  map[string]Controller
 }
 
-func NewControllerCollection(g *gocui.Gui, analysis *image.AnalysisResult, cache filetree.TreeCache) (*ControllerCollection, error) {
+func NewCollection(g *gocui.Gui, analysis *image.AnalysisResult, cache filetree.TreeCache) (*Collection, error) {
 	var err error
 
-	controllers = &ControllerCollection{
+	controllers = &Collection{
 		gui: g,
 	}
 	controllers.lookup = make(map[string]Controller)
@@ -56,7 +56,7 @@ func NewControllerCollection(g *gocui.Gui, analysis *image.AnalysisResult, cache
 	return controllers, nil
 }
 
-func (c *ControllerCollection) UpdateAndRender() error {
+func (c *Collection) UpdateAndRender() error {
 	err := c.Update()
 	if err != nil {
 		logrus.Debug("failed update: ", err)
@@ -73,7 +73,7 @@ func (c *ControllerCollection) UpdateAndRender() error {
 }
 
 // Update refreshes the state objects for future rendering.
-func (c *ControllerCollection) Update() error {
+func (c *Collection) Update() error {
 	for _, controller := range c.lookup {
 		err := controller.Update()
 		if err != nil {
@@ -85,7 +85,7 @@ func (c *ControllerCollection) Update() error {
 }
 
 // Render flushes the state objects to the screen.
-func (c *ControllerCollection) Render() error {
+func (c *Collection) Render() error {
 	for _, controller := range c.lookup {
 		if controller.IsVisible() {
 			err := controller.Render()
@@ -98,7 +98,7 @@ func (c *ControllerCollection) Render() error {
 }
 
 // ToggleView switches between the file view and the layer view and re-renders the screen.
-func (c *ControllerCollection) ToggleView() (err error) {
+func (c *Collection) ToggleView() (err error) {
 	v := c.gui.CurrentView()
 	if v == nil || v.Name() == c.Layer.Name() {
 		_, err = c.gui.SetCurrentView(c.Tree.Name())
@@ -114,7 +114,7 @@ func (c *ControllerCollection) ToggleView() (err error) {
 	return c.UpdateAndRender()
 }
 
-func (c *ControllerCollection) ToggleFilterView() error {
+func (c *Collection) ToggleFilterView() error {
 	// delete all user input from the tree view
 	err := c.Filter.ToggleVisible()
 	if err != nil {
@@ -135,17 +135,17 @@ func (c *ControllerCollection) ToggleFilterView() error {
 }
 
 // CursorDown moves the cursor down in the currently selected gocui pane, scrolling the screen as needed.
-func (c *ControllerCollection) CursorDown(g *gocui.Gui, v *gocui.View) error {
+func (c *Collection) CursorDown(g *gocui.Gui, v *gocui.View) error {
 	return c.CursorStep(g, v, 1)
 }
 
 // CursorUp moves the cursor up in the currently selected gocui pane, scrolling the screen as needed.
-func (c *ControllerCollection) CursorUp(g *gocui.Gui, v *gocui.View) error {
+func (c *Collection) CursorUp(g *gocui.Gui, v *gocui.View) error {
 	return c.CursorStep(g, v, -1)
 }
 
 // Moves the cursor the given step distance, setting the origin to the new cursor line
-func (c *ControllerCollection) CursorStep(g *gocui.Gui, v *gocui.View, step int) error {
+func (c *Collection) CursorStep(g *gocui.Gui, v *gocui.View, step int) error {
 	cx, cy := v.Cursor()
 
 	// if there isn't a next line

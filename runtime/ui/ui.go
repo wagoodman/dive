@@ -16,7 +16,7 @@ const debug = false
 // type global
 type app struct {
 	gui         *gocui.Gui
-	controllers *controller.ControllerCollection
+	controllers *controller.Collection
 	layout      *layoutManager
 }
 
@@ -28,10 +28,10 @@ var (
 func newApp(gui *gocui.Gui, analysis *image.AnalysisResult, cache filetree.TreeCache) (*app, error) {
 	var err error
 	once.Do(func() {
-		var theControls *controller.ControllerCollection
+		var theControls *controller.Collection
 		var globalHelpKeys []*key.Binding
 
-		theControls, err = controller.NewControllerCollection(gui, analysis, cache)
+		theControls, err = controller.NewCollection(gui, analysis, cache)
 		if err != nil {
 			return
 		}

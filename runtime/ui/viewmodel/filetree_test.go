@@ -73,7 +73,7 @@ func assertTestData(t *testing.T, actualBytes []byte) {
 	helperCheckDiff(t, expectedBytes, actualBytes)
 }
 
-func initializeTestViewModel(t *testing.T) *FileTreeViewModel {
+func initializeTestViewModel(t *testing.T) *FileTree {
 	result := docker.TestAnalysisFromArchive(t, "../../../.data/test-docker-image.tar")
 
 	cache := filetree.NewFileTreeCache(result.RefTrees)
@@ -95,7 +95,7 @@ func initializeTestViewModel(t *testing.T) *FileTreeViewModel {
 	return vm
 }
 
-func runTestCase(t *testing.T, vm *FileTreeViewModel, width, height int, filterRegex *regexp.Regexp) {
+func runTestCase(t *testing.T, vm *FileTree, width, height int, filterRegex *regexp.Regexp) {
 	err := vm.Update(filterRegex, width, height)
 	if err != nil {
 		t.Errorf("failed to update viewmodel: %v", err)

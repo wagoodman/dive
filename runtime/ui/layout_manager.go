@@ -9,10 +9,10 @@ import (
 
 type layoutManager struct {
 	fileTreeSplitRatio float64
-	controllers        *controller.ControllerCollection
+	controllers        *controller.Collection
 }
 
-func newLayoutManager(c *controller.ControllerCollection) *layoutManager {
+func newLayoutManager(c *controller.Collection) *layoutManager {
 
 	fileTreeSplitRatio := viper.GetFloat64("filetree.pane-width")
 	if fileTreeSplitRatio >= 1 || fileTreeSplitRatio <= 0 {

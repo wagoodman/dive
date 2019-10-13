@@ -14,9 +14,9 @@ import (
 	"github.com/lunixbochs/vtclean"
 )
 
-// DetailsController holds the UI objects and data models for populating the lower-left pane. Specifically the pane that
+// Details holds the UI objects and data models for populating the lower-left pane. Specifically the pane that
 // shows the layer details and image statistics.
-type DetailsController struct {
+type Details struct {
 	name           string
 	gui            *gocui.Gui
 	view           *gocui.View
@@ -26,8 +26,8 @@ type DetailsController struct {
 }
 
 // NewDetailsController creates a new view object attached the the global [gocui] screen object.
-func NewDetailsController(name string, gui *gocui.Gui, efficiency float64, inefficiencies filetree.EfficiencySlice) (controller *DetailsController) {
-	controller = new(DetailsController)
+func NewDetailsController(name string, gui *gocui.Gui, efficiency float64, inefficiencies filetree.EfficiencySlice) (controller *Details) {
+	controller = new(Details)
 
 	// populate main fields
 	controller.name = name
@@ -38,63 +38,63 @@ func NewDetailsController(name string, gui *gocui.Gui, efficiency float64, ineff
 	return controller
 }
 
-func (controller *DetailsController) Name() string {
-	return controller.name
+func (c *Details) Name() string {
+	return c.name
 }
 
 // Setup initializes the UI concerns within the context of a global [gocui] view object.
-func (controller *DetailsController) Setup(v *gocui.View, header *gocui.View) error {
+func (c *Details) Setup(v *gocui.View, header *gocui.View) error {
 
 	// set controller options
-	controller.view = v
-	controller.view.Editable = false
-	controller.view.Wrap = true
-	controller.view.Highlight = false
-	controller.view.Frame = false
+	c.view = v
+	c.view.Editable = false
+	c.view.Wrap = true
+	c.view.Highlight = false
+	c.view.Frame = false
 
-	controller.header = header
-	controller.header.Editable = false
-	controller.header.Wrap = false
-	controller.header.Frame = false
+	c.header = header
+	c.header.Editable = false
+	c.header.Wrap = false
+	c.header.Frame = false
 
 	var infos = []key.BindingInfo{
 		{
 			Key:      gocui.KeyArrowDown,
 			Modifier: gocui.ModNone,
-			OnAction: controller.CursorDown,
+			OnAction: c.CursorDown,
 		},
 		{
 			Key:      gocui.KeyArrowUp,
 			Modifier: gocui.ModNone,
-			OnAction: controller.CursorUp,
+			OnAction: c.CursorUp,
 		},
 	}
 
-	_, err := key.GenerateBindings(controller.gui, controller.name, infos)
+	_, err := key.GenerateBindings(c.gui, c.name, infos)
 	if err != nil {
 		return err
 	}
 
-	return controller.Render()
+	return c.Render()
 }
 
 // IsVisible indicates if the details view pane is currently initialized.
-func (controller *DetailsController) IsVisible() bool {
-	return controller != nil
+func (c *Details) IsVisible() bool {
+	return c != nil
 }
 
 // CursorDown moves the cursor down in the details pane (currently indicates nothing).
-func (controller *DetailsController) CursorDown() error {
-	return controllers.CursorDown(controller.gui, controller.view)
+func (c *Details) CursorDown() error {
+	return controllers.CursorDown(c.gui, c.view)
 }
 
 // CursorUp moves the cursor up in the details pane (currently indicates nothing).
-func (controller *DetailsController) CursorUp() error {
-	return controllers.CursorUp(controller.gui, controller.view)
+func (c *Details) CursorUp() error {
+	return controllers.CursorUp(c.gui, c.view)
 }
 
 // Update refreshes the state objects for future rendering.
-func (controller *DetailsController) Update() error {
+func (c *Details) Update() error {
 	return nil
 }
 
@@ -103,7 +103,7 @@ func (controller *DetailsController) Update() error {
 // 2. the image efficiency score
 // 3. the estimated wasted image space
 // 4. a list of inefficient file allocations
-func (controller *DetailsController) Render() error {
+func (c *Details) Render() error {
 	currentLayer := controllers.Layer.currentLayer()
 
 	var wastedSpace int64
@@ -112,12 +112,12 @@ func (controller *DetailsController) Render() error {
 	inefficiencyReport := fmt.Sprintf(format.Header(template), "Count", "Total Space", "Path")
 
 	height := 100
-	if controller.view != nil {
-		_, height = controller.view.Size()
+	if c.view != nil {
+		_, height = c.view.Size()
 	}
 
-	for idx := 0; idx < len(controller.inefficiencies); idx++ {
-		data := controller.inefficiencies[len(controller.inefficiencies)-1-idx]
+	for idx := 0; idx < len(c.inefficiencies); idx++ {
+		data := c.inefficiencies[len(c.inefficiencies)-1-idx]
 		wastedSpace += data.CumulativeSize
 
 		// todo: make this report scrollable
@@ -127,24 +127,24 @@ func (controller *DetailsController) Render() error {
 	}
 
 	imageSizeStr := fmt.Sprintf("%s %s", format.Header("Total Image size:"), humanize.Bytes(controllers.Layer.ImageSize))
-	effStr := fmt.Sprintf("%s %d %%", format.Header("Image efficiency score:"), int(100.0*controller.efficiency))
+	effStr := fmt.Sprintf("%s %d %%", format.Header("Image efficiency score:"), int(100.0*c.efficiency))
 	wastedSpaceStr := fmt.Sprintf("%s %s", format.Header("Potential wasted space:"), humanize.Bytes(uint64(wastedSpace)))
 
-	controller.gui.Update(func(g *gocui.Gui) error {
+	c.gui.Update(func(g *gocui.Gui) error {
 		// update header
-		controller.header.Clear()
-		width, _ := controller.view.Size()
+		c.header.Clear()
+		width, _ := c.view.Size()
 
 		layerHeaderStr := fmt.Sprintf("[Layer Details]%s", strings.Repeat("─", width-15))
 		imageHeaderStr := fmt.Sprintf("[Image Details]%s", strings.Repeat("─", width-15))
 
-		_, err := fmt.Fprintln(controller.header, format.Header(vtclean.Clean(layerHeaderStr, false)))
+		_, err := fmt.Fprintln(c.header, format.Header(vtclean.Clean(layerHeaderStr, false)))
 		if err != nil {
 			return err
 		}
 
 		// update contents
-		controller.view.Clear()
+		c.view.Clear()
 
 		var lines = make([]string, 0)
 		if currentLayer.Names != nil && len(currentLayer.Names) > 0 {
@@ -162,7 +162,7 @@ func (controller *DetailsController) Render() error {
 		lines = append(lines, effStr+"\n")
 		lines = append(lines, inefficiencyReport)
 
-		_, err = fmt.Fprintln(controller.view, strings.Join(lines, "\n"))
+		_, err = fmt.Fprintln(c.view, strings.Join(lines, "\n"))
 		if err != nil {
 			logrus.Debug("unable to write to buffer: ", err)
 		}
@@ -172,6 +172,6 @@ func (controller *DetailsController) Render() error {
 }
 
 // KeyHelp indicates all the possible actions a user can take while the current pane is selected (currently does nothing).
-func (controller *DetailsController) KeyHelp() string {
+func (c *Details) KeyHelp() string {
 	return "TBD"
 }
