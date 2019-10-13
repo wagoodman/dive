@@ -1,9 +1,10 @@
-package ui
+package controller
 
 import (
 	"fmt"
 	"github.com/wagoodman/dive/runtime/ui/format"
 	"github.com/wagoodman/dive/runtime/ui/key"
+	"github.com/wagoodman/dive/runtime/ui/viewmodel"
 	"regexp"
 	"strings"
 
@@ -19,36 +20,43 @@ const (
 
 type CompareType int
 
-// fileTreeController holds the UI objects and data models for populating the right pane. Specifically the pane that
+// FileTreeController holds the UI objects and data models for populating the right pane. Specifically the pane that
 // shows selected layer or aggregate file ASCII tree.
-type fileTreeController struct {
+type FileTreeController struct {
 	name   string
 	gui    *gocui.Gui
 	view   *gocui.View
 	header *gocui.View
-	vm     *fileTreeViewModel
+	vm     *viewmodel.FileTreeViewModel
 
 	helpKeys []*key.Binding
 }
 
-// newFileTreeController creates a new view object attached the the global [gocui] screen object.
-func newFileTreeController(name string, gui *gocui.Gui, tree *filetree.FileTree, refTrees []*filetree.FileTree, cache filetree.TreeCache) (controller *fileTreeController, err error) {
-	controller = new(fileTreeController)
+// NewFileTreeController creates a new view object attached the the global [gocui] screen object.
+func NewFileTreeController(name string, gui *gocui.Gui, tree *filetree.FileTree, refTrees []*filetree.FileTree, cache filetree.TreeCache) (controller *FileTreeController, err error) {
+	controller = new(FileTreeController)
 
 	// populate main fields
 	controller.name = name
 	controller.gui = gui
-	controller.vm, err = newFileTreeViewModel(tree, refTrees, cache)
+	controller.vm, err = viewmodel.NewFileTreeViewModel(tree, refTrees, cache)
 	if err != nil {
 		return nil, err
 	}
 
-
 	return controller, err
 }
 
+func (controller *FileTreeController) Name() string {
+	return controller.name
+}
+
+func (controller *FileTreeController) AreAttributesVisible() bool {
+	return controller.vm.ShowAttributes
+}
+
 // Setup initializes the UI concerns within the context of a global [gocui] view object.
-func (controller *fileTreeController) Setup(v *gocui.View, header *gocui.View) error {
+func (controller *FileTreeController) Setup(v *gocui.View, header *gocui.View) error {
 
 	// set controller options
 	controller.view = v
@@ -147,23 +155,23 @@ func (controller *fileTreeController) Setup(v *gocui.View, header *gocui.View) e
 }
 
 // IsVisible indicates if the file tree view pane is currently initialized
-func (controller *fileTreeController) IsVisible() bool {
+func (controller *FileTreeController) IsVisible() bool {
 	return controller != nil
 }
 
-// resetCursor moves the cursor back to the top of the buffer and translates to the top of the buffer.
-func (controller *fileTreeController) resetCursor() {
+// ResetCursor moves the cursor back to the top of the buffer and translates to the top of the buffer.
+func (controller *FileTreeController) resetCursor() {
 	_ = controller.view.SetCursor(0, 0)
-	controller.vm.resetCursor()
+	controller.vm.ResetCursor()
 }
 
-// setTreeByLayer populates the view model by stacking the indicated image layer file trees.
-func (controller *fileTreeController) setTreeByLayer(bottomTreeStart, bottomTreeStop, topTreeStart, topTreeStop int) error {
-	err := controller.vm.setTreeByLayer(bottomTreeStart, bottomTreeStop, topTreeStart, topTreeStop)
+// SetTreeByLayer populates the view model by stacking the indicated image layer file trees.
+func (controller *FileTreeController) setTreeByLayer(bottomTreeStart, bottomTreeStop, topTreeStart, topTreeStop int) error {
+	err := controller.vm.SetTreeByLayer(bottomTreeStart, bottomTreeStop, topTreeStart, topTreeStop)
 	if err != nil {
 		return err
 	}
-	// controller.resetCursor()
+	// controller.ResetCursor()
 
 	_ = controller.Update()
 	return controller.Render()
@@ -173,7 +181,7 @@ func (controller *fileTreeController) setTreeByLayer(bottomTreeStart, bottomTree
 // Note: we cannot use the gocui buffer since any state change requires writing the entire tree to the buffer.
 // Instead we are keeping an upper and lower bounds of the tree string to render and only flushing
 // this range into the view buffer. This is much faster when tree sizes are large.
-func (controller *fileTreeController) CursorDown() error {
+func (controller *FileTreeController) CursorDown() error {
 	if controller.vm.CursorDown() {
 		return controller.Render()
 	}
@@ -184,7 +192,7 @@ func (controller *fileTreeController) CursorDown() error {
 // Note: we cannot use the gocui buffer since any state change requires writing the entire tree to the buffer.
 // Instead we are keeping an upper and lower bounds of the tree string to render and only flushing
 // this range into the view buffer. This is much faster when tree sizes are large.
-func (controller *fileTreeController) CursorUp() error {
+func (controller *FileTreeController) CursorUp() error {
 	if controller.vm.CursorUp() {
 		return controller.Render()
 	}
@@ -192,7 +200,7 @@ func (controller *fileTreeController) CursorUp() error {
 }
 
 // CursorLeft moves the cursor up until we reach the Parent Node or top of the tree
-func (controller *fileTreeController) CursorLeft() error {
+func (controller *FileTreeController) CursorLeft() error {
 	err := controller.vm.CursorLeft(filterRegex())
 	if err != nil {
 		return err
@@ -202,7 +210,7 @@ func (controller *fileTreeController) CursorLeft() error {
 }
 
 // CursorRight descends into directory expanding it if needed
-func (controller *fileTreeController) CursorRight() error {
+func (controller *FileTreeController) CursorRight() error {
 	err := controller.vm.CursorRight(filterRegex())
 	if err != nil {
 		return err
@@ -212,7 +220,7 @@ func (controller *fileTreeController) CursorRight() error {
 }
 
 // PageDown moves to next page putting the cursor on top
-func (controller *fileTreeController) PageDown() error {
+func (controller *FileTreeController) PageDown() error {
 	err := controller.vm.PageDown()
 	if err != nil {
 		return err
@@ -221,7 +229,7 @@ func (controller *fileTreeController) PageDown() error {
 }
 
 // PageUp moves to previous page putting the cursor on top
-func (controller *fileTreeController) PageUp() error {
+func (controller *FileTreeController) PageUp() error {
 	err := controller.vm.PageUp()
 	if err != nil {
 		return err
@@ -230,13 +238,13 @@ func (controller *fileTreeController) PageUp() error {
 }
 
 // getAbsPositionNode determines the selected screen cursor's location in the file tree, returning the selected FileNode.
-// func (controller *fileTreeController) getAbsPositionNode() (node *filetree.FileNode) {
+// func (controller *FileTreeController) getAbsPositionNode() (node *filetree.FileNode) {
 // 	return controller.vm.getAbsPositionNode(filterRegex())
 // }
 
-// toggleCollapse will collapse/expand the selected FileNode.
-func (controller *fileTreeController) toggleCollapse() error {
-	err := controller.vm.toggleCollapse(filterRegex())
+// ToggleCollapse will collapse/expand the selected FileNode.
+func (controller *FileTreeController) toggleCollapse() error {
+	err := controller.vm.ToggleCollapse(filterRegex())
 	if err != nil {
 		return err
 	}
@@ -244,9 +252,9 @@ func (controller *fileTreeController) toggleCollapse() error {
 	return controller.Render()
 }
 
-// toggleCollapseAll will collapse/expand the all directories.
-func (controller *fileTreeController) toggleCollapseAll() error {
-	err := controller.vm.toggleCollapseAll()
+// ToggleCollapseAll will collapse/expand the all directories.
+func (controller *FileTreeController) toggleCollapseAll() error {
+	err := controller.vm.ToggleCollapseAll()
 	if err != nil {
 		return err
 	}
@@ -257,21 +265,21 @@ func (controller *fileTreeController) toggleCollapseAll() error {
 	return controller.Render()
 }
 
-// toggleAttributes will show/hide file attributes
-func (controller *fileTreeController) toggleAttributes() error {
-	err := controller.vm.toggleAttributes()
+// ToggleAttributes will show/hide file attributes
+func (controller *FileTreeController) toggleAttributes() error {
+	err := controller.vm.ToggleAttributes()
 	if err != nil {
 		return err
 	}
 	// we need to render the changes to the status pane as well (not just this contoller/view)
-	return UpdateAndRender()
+	return controllers.UpdateAndRender()
 }
 
-// toggleShowDiffType will show/hide the selected DiffType in the filetree pane.
-func (controller *fileTreeController) toggleShowDiffType(diffType filetree.DiffType) error {
-	controller.vm.toggleShowDiffType(diffType)
+// ToggleShowDiffType will show/hide the selected DiffType in the filetree pane.
+func (controller *FileTreeController) toggleShowDiffType(diffType filetree.DiffType) error {
+	controller.vm.ToggleShowDiffType(diffType)
 	// we need to render the changes to the status pane as well (not just this contoller/view)
-	return UpdateAndRender()
+	return controllers.UpdateAndRender()
 }
 
 // filterRegex will return a regular expression object to match the user's filter input.
@@ -292,8 +300,8 @@ func filterRegex() *regexp.Regexp {
 	return regex
 }
 
-// onLayoutChange is called by the UI framework to inform the view-model of the new screen dimensions
-func (controller *fileTreeController) onLayoutChange(resized bool) error {
+// OnLayoutChange is called by the UI framework to inform the view-model of the new screen dimensions
+func (controller *FileTreeController) OnLayoutChange(resized bool) error {
 	_ = controller.Update()
 	if resized {
 		return controller.Render()
@@ -302,7 +310,7 @@ func (controller *fileTreeController) onLayoutChange(resized bool) error {
 }
 
 // Update refreshes the state objects for future rendering.
-func (controller *fileTreeController) Update() error {
+func (controller *FileTreeController) Update() error {
 	var width, height int
 
 	if controller.view != nil {
@@ -316,7 +324,7 @@ func (controller *fileTreeController) Update() error {
 }
 
 // Render flushes the state objects (file tree) to the pane.
-func (controller *fileTreeController) Render() error {
+func (controller *FileTreeController) Render() error {
 	title := "Current Layer Contents"
 	if controllers.Layer.CompareMode == CompareAll {
 		title = "Aggregated Layer Contents"
@@ -344,7 +352,7 @@ func (controller *fileTreeController) Render() error {
 		if err != nil {
 			return err
 		}
-		_, err = fmt.Fprint(controller.view, controller.vm.mainBuf.String())
+		_, err = fmt.Fprint(controller.view, controller.vm.Buffer.String())
 
 		return err
 	})
@@ -352,7 +360,7 @@ func (controller *fileTreeController) Render() error {
 }
 
 // KeyHelp indicates all the possible actions a user can take while the current pane is selected.
-func (controller *fileTreeController) KeyHelp() string {
+func (controller *FileTreeController) KeyHelp() string {
 	var help string
 	for _, binding := range controller.helpKeys {
 		help += binding.RenderKeyHelp()

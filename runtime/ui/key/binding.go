@@ -97,7 +97,6 @@ func (binding *Binding) RegisterSelectionFn(selectedFn func() bool) {
 }
 
 func (binding *Binding) onAction(*gocui.Gui, *gocui.View) error {
-	logrus.Debugf("keybinding invoked: %+v", binding)
 	if binding.actionFn == nil {
 		return fmt.Errorf("no action configured for '%+v'", binding)
 	}

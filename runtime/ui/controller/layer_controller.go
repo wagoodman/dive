@@ -1,4 +1,4 @@
-package ui
+package controller
 
 import (
 	"fmt"
@@ -13,9 +13,9 @@ import (
 	"github.com/spf13/viper"
 )
 
-// layerController holds the UI objects and data models for populating the lower-left pane. Specifically the pane that
+// LayerController holds the UI objects and data models for populating the lower-left pane. Specifically the pane that
 // shows the image layers and layer selector.
-type layerController struct {
+type LayerController struct {
 	name              string
 	gui               *gocui.Gui
 	view              *gocui.View
@@ -29,9 +29,9 @@ type layerController struct {
 	helpKeys []*key.Binding
 }
 
-// newLayerController creates a new view object attached the the global [gocui] screen object.
-func newLayerController(name string, gui *gocui.Gui, layers []*image.Layer) (controller *layerController, err error) {
-	controller = new(layerController)
+// NewLayerController creates a new view object attached the the global [gocui] screen object.
+func NewLayerController(name string, gui *gocui.Gui, layers []*image.Layer) (controller *LayerController, err error) {
+	controller = new(LayerController)
 
 	// populate main fields
 	controller.name = name
@@ -50,8 +50,12 @@ func newLayerController(name string, gui *gocui.Gui, layers []*image.Layer) (con
 	return controller, err
 }
 
+func (controller *LayerController) Name() string {
+	return controller.name
+}
+
 // Setup initializes the UI concerns within the context of a global [gocui] view object.
-func (controller *layerController) Setup(v *gocui.View, header *gocui.View) error {
+func (controller *LayerController) Setup(v *gocui.View, header *gocui.View) error {
 
 	// set controller options
 	controller.view = v
@@ -64,17 +68,16 @@ func (controller *layerController) Setup(v *gocui.View, header *gocui.View) erro
 	controller.header.Wrap = false
 	controller.header.Frame = false
 
-
 	var infos = []key.BindingInfo{
 		{
 			ConfigKeys: []string{"keybinding.compare-layer"},
-			OnAction:   func() error { return  controller.setCompareMode(CompareLayer) },
+			OnAction:   func() error { return controller.setCompareMode(CompareLayer) },
 			IsSelected: func() bool { return controller.CompareMode == CompareLayer },
 			Display:    "Show layer changes",
 		},
 		{
 			ConfigKeys: []string{"keybinding.compare-all"},
-			OnAction:   func() error { return  controller.setCompareMode(CompareAll) },
+			OnAction:   func() error { return controller.setCompareMode(CompareAll) },
 			IsSelected: func() bool { return controller.CompareMode == CompareAll },
 			Display:    "Show aggregated changes",
 		},
@@ -114,23 +117,22 @@ func (controller *layerController) Setup(v *gocui.View, header *gocui.View) erro
 	}
 	controller.helpKeys = helpKeys
 
-
 	return controller.Render()
 }
 
 // height obtains the height of the current pane (taking into account the lost space due to the header).
-func (controller *layerController) height() uint {
+func (controller *LayerController) height() uint {
 	_, height := controller.view.Size()
 	return uint(height - 1)
 }
 
 // IsVisible indicates if the layer view pane is currently initialized.
-func (controller *layerController) IsVisible() bool {
+func (controller *LayerController) IsVisible() bool {
 	return controller != nil
 }
 
 // PageDown moves to next page putting the cursor on top
-func (controller *layerController) PageDown() error {
+func (controller *LayerController) PageDown() error {
 	step := int(controller.height()) + 1
 	targetLayerIndex := controller.LayerIndex + step
 
@@ -139,7 +141,7 @@ func (controller *layerController) PageDown() error {
 	}
 
 	if step > 0 {
-		err := CursorStep(controller.gui, controller.view, step)
+		err := controllers.CursorStep(controller.gui, controller.view, step)
 		if err == nil {
 			return controller.SetCursor(controller.LayerIndex + step)
 		}
@@ -148,7 +150,7 @@ func (controller *layerController) PageDown() error {
 }
 
 // PageUp moves to previous page putting the cursor on top
-func (controller *layerController) PageUp() error {
+func (controller *LayerController) PageUp() error {
 	step := int(controller.height()) + 1
 	targetLayerIndex := controller.LayerIndex - step
 
@@ -157,7 +159,7 @@ func (controller *layerController) PageUp() error {
 	}
 
 	if step > 0 {
-		err := CursorStep(controller.gui, controller.view, -step)
+		err := controllers.CursorStep(controller.gui, controller.view, -step)
 		if err == nil {
 			return controller.SetCursor(controller.LayerIndex - step)
 		}
@@ -166,9 +168,9 @@ func (controller *layerController) PageUp() error {
 }
 
 // CursorDown moves the cursor down in the layer pane (selecting a higher layer).
-func (controller *layerController) CursorDown() error {
+func (controller *LayerController) CursorDown() error {
 	if controller.LayerIndex < len(controller.Layers) {
-		err := CursorDown(controller.gui, controller.view)
+		err := controllers.CursorDown(controller.gui, controller.view)
 		if err == nil {
 			return controller.SetCursor(controller.LayerIndex + 1)
 		}
@@ -177,9 +179,9 @@ func (controller *layerController) CursorDown() error {
 }
 
 // CursorUp moves the cursor up in the layer pane (selecting a lower layer).
-func (controller *layerController) CursorUp() error {
+func (controller *LayerController) CursorUp() error {
 	if controller.LayerIndex > 0 {
-		err := CursorUp(controller.gui, controller.view)
+		err := controllers.CursorUp(controller.gui, controller.view)
 		if err == nil {
 			return controller.SetCursor(controller.LayerIndex - 1)
 		}
@@ -188,7 +190,7 @@ func (controller *layerController) CursorUp() error {
 }
 
 // SetCursor resets the cursor and orients the file tree view based on the given layer index.
-func (controller *layerController) SetCursor(layer int) error {
+func (controller *LayerController) SetCursor(layer int) error {
 	controller.LayerIndex = layer
 	err := controllers.Tree.setTreeByLayer(controller.getCompareIndexes())
 	if err != nil {
@@ -201,14 +203,14 @@ func (controller *layerController) SetCursor(layer int) error {
 }
 
 // currentLayer returns the Layer object currently selected.
-func (controller *layerController) currentLayer() *image.Layer {
+func (controller *LayerController) currentLayer() *image.Layer {
 	return controller.Layers[controller.LayerIndex]
 }
 
 // setCompareMode switches the layer comparison between a single-layer comparison to an aggregated comparison.
-func (controller *layerController) setCompareMode(compareMode CompareType) error {
+func (controller *LayerController) setCompareMode(compareMode CompareType) error {
 	controller.CompareMode = compareMode
-	err := UpdateAndRender()
+	err := controllers.UpdateAndRender()
 	if err != nil {
 		logrus.Errorf("unable to set compare mode: %+v", err)
 		return err
@@ -217,7 +219,7 @@ func (controller *layerController) setCompareMode(compareMode CompareType) error
 }
 
 // getCompareIndexes determines the layer boundaries to use for comparison (based on the current compare mode)
-func (controller *layerController) getCompareIndexes() (bottomTreeStart, bottomTreeStop, topTreeStart, topTreeStop int) {
+func (controller *LayerController) getCompareIndexes() (bottomTreeStart, bottomTreeStop, topTreeStart, topTreeStop int) {
 	bottomTreeStart = controller.CompareStartIndex
 	topTreeStop = controller.LayerIndex
 
@@ -236,7 +238,7 @@ func (controller *layerController) getCompareIndexes() (bottomTreeStart, bottomT
 }
 
 // renderCompareBar returns the formatted string for the given layer.
-func (controller *layerController) renderCompareBar(layerIdx int) string {
+func (controller *LayerController) renderCompareBar(layerIdx int) string {
 	bottomTreeStart, bottomTreeStop, topTreeStart, topTreeStop := controller.getCompareIndexes()
 	result := "  "
 
@@ -251,7 +253,7 @@ func (controller *layerController) renderCompareBar(layerIdx int) string {
 }
 
 // Update refreshes the state objects for future rendering (currently does nothing).
-func (controller *layerController) Update() error {
+func (controller *LayerController) Update() error {
 	controller.ImageSize = 0
 	for idx := 0; idx < len(controller.Layers); idx++ {
 		controller.ImageSize += controller.Layers[idx].Size
@@ -262,7 +264,7 @@ func (controller *layerController) Update() error {
 // Render flushes the state objects to the screen. The layers pane reports:
 // 1. the layers of the image + metadata
 // 2. the current selected image
-func (controller *layerController) Render() error {
+func (controller *LayerController) Render() error {
 
 	// indicate when selected
 	title := "Layers"
@@ -306,7 +308,7 @@ func (controller *layerController) Render() error {
 }
 
 // KeyHelp indicates all the possible actions a user can take while the current pane is selected.
-func (controller *layerController) KeyHelp() string {
+func (controller *LayerController) KeyHelp() string {
 	var help string
 	for _, binding := range controller.helpKeys {
 		help += binding.RenderKeyHelp()

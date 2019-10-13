@@ -1,4 +1,4 @@
-package ui
+package controller
 
 import (
 	"fmt"
@@ -14,9 +14,9 @@ import (
 	"github.com/lunixbochs/vtclean"
 )
 
-// detailsController holds the UI objects and data models for populating the lower-left pane. Specifically the pane that
+// DetailsController holds the UI objects and data models for populating the lower-left pane. Specifically the pane that
 // shows the layer details and image statistics.
-type detailsController struct {
+type DetailsController struct {
 	name           string
 	gui            *gocui.Gui
 	view           *gocui.View
@@ -25,9 +25,9 @@ type detailsController struct {
 	inefficiencies filetree.EfficiencySlice
 }
 
-// newDetailsController creates a new view object attached the the global [gocui] screen object.
-func newDetailsController(name string, gui *gocui.Gui, efficiency float64, inefficiencies filetree.EfficiencySlice) (controller *detailsController) {
-	controller = new(detailsController)
+// NewDetailsController creates a new view object attached the the global [gocui] screen object.
+func NewDetailsController(name string, gui *gocui.Gui, efficiency float64, inefficiencies filetree.EfficiencySlice) (controller *DetailsController) {
+	controller = new(DetailsController)
 
 	// populate main fields
 	controller.name = name
@@ -38,8 +38,12 @@ func newDetailsController(name string, gui *gocui.Gui, efficiency float64, ineff
 	return controller
 }
 
+func (controller *DetailsController) Name() string {
+	return controller.name
+}
+
 // Setup initializes the UI concerns within the context of a global [gocui] view object.
-func (controller *detailsController) Setup(v *gocui.View, header *gocui.View) error {
+func (controller *DetailsController) Setup(v *gocui.View, header *gocui.View) error {
 
 	// set controller options
 	controller.view = v
@@ -75,22 +79,22 @@ func (controller *detailsController) Setup(v *gocui.View, header *gocui.View) er
 }
 
 // IsVisible indicates if the details view pane is currently initialized.
-func (controller *detailsController) IsVisible() bool {
+func (controller *DetailsController) IsVisible() bool {
 	return controller != nil
 }
 
 // CursorDown moves the cursor down in the details pane (currently indicates nothing).
-func (controller *detailsController) CursorDown() error {
-	return CursorDown(controller.gui, controller.view)
+func (controller *DetailsController) CursorDown() error {
+	return controllers.CursorDown(controller.gui, controller.view)
 }
 
 // CursorUp moves the cursor up in the details pane (currently indicates nothing).
-func (controller *detailsController) CursorUp() error {
-	return CursorUp(controller.gui, controller.view)
+func (controller *DetailsController) CursorUp() error {
+	return controllers.CursorUp(controller.gui, controller.view)
 }
 
 // Update refreshes the state objects for future rendering.
-func (controller *detailsController) Update() error {
+func (controller *DetailsController) Update() error {
 	return nil
 }
 
@@ -99,7 +103,7 @@ func (controller *detailsController) Update() error {
 // 2. the image efficiency score
 // 3. the estimated wasted image space
 // 4. a list of inefficient file allocations
-func (controller *detailsController) Render() error {
+func (controller *DetailsController) Render() error {
 	currentLayer := controllers.Layer.currentLayer()
 
 	var wastedSpace int64
@@ -168,6 +172,6 @@ func (controller *detailsController) Render() error {
 }
 
 // KeyHelp indicates all the possible actions a user can take while the current pane is selected (currently does nothing).
-func (controller *detailsController) KeyHelp() string {
+func (controller *DetailsController) KeyHelp() string {
 	return "TBD"
 }
