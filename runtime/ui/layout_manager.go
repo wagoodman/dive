@@ -4,15 +4,15 @@ import (
 	"github.com/jroimartin/gocui"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
-	"github.com/wagoodman/dive/runtime/ui/controller"
 )
 
 type layoutManager struct {
 	fileTreeSplitRatio float64
-	controllers        *controller.Collection
+	controllers        *Controller
 }
 
-func newLayoutManager(c *controller.Collection) *layoutManager {
+// todo: this needs a major refactor (derive layout from view obj info, which should not live here)
+func newLayoutManager(c *Controller) *layoutManager {
 
 	fileTreeSplitRatio := viper.GetFloat64("filetree.pane-width")
 	if fileTreeSplitRatio >= 1 || fileTreeSplitRatio <= 0 {

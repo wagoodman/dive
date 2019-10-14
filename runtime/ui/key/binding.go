@@ -83,7 +83,6 @@ func newBinding(gui *gocui.Gui, influence string, keys []keybinding.Key, display
 	}
 
 	for _, key := range keys {
-		logrus.Debugf("registering %d %d (%+v)", key.Value, key.Modifier, key.Tokens)
 		if err := gui.SetKeybinding(influence, key.Value, key.Modifier, binding.onAction); err != nil {
 			return nil, err
 		}

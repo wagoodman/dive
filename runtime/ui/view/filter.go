@@ -1,11 +1,14 @@
-package controller
+package view
 
 import (
 	"fmt"
 	"github.com/jroimartin/gocui"
 	"github.com/sirupsen/logrus"
 	"github.com/wagoodman/dive/runtime/ui/format"
+	"strings"
 )
+
+type FilterEditListener func(string) error
 
 // Filter holds the UI objects and data models for populating the bottom row. Specifically the pane that
 // allows the user to filter the file tree by path.
@@ -17,11 +20,15 @@ type Filter struct {
 	headerStr string
 	maxLength int
 	hidden    bool
+
+	filterEditListeners []FilterEditListener
 }
 
-// NewFilterController creates a new view object attached the the global [gocui] screen object.
-func NewFilterController(name string, gui *gocui.Gui) (controller *Filter) {
+// NewFilterView creates a new view object attached the the global [gocui] screen object.
+func NewFilterView(name string, gui *gocui.Gui) (controller *Filter) {
 	controller = new(Filter)
+
+	controller.filterEditListeners = make([]FilterEditListener, 0)
 
 	// populate main fields
 	controller.name = name
@@ -30,6 +37,10 @@ func NewFilterController(name string, gui *gocui.Gui) (controller *Filter) {
 	controller.hidden = true
 
 	return controller
+}
+
+func (c *Filter) AddFilterEditListener(listener ...FilterEditListener) {
+	c.filterEditListeners = append(c.filterEditListeners, listener...)
 }
 
 func (c *Filter) Name() string {
@@ -70,7 +81,7 @@ func (c *Filter) ToggleVisible() error {
 			logrus.Error("unable to toggle filter view: ", err)
 			return err
 		}
-		return controllers.UpdateAndRender()
+		return nil
 	}
 
 	// reset the cursor for the next time it is visible
@@ -119,9 +130,19 @@ func (c *Filter) Edit(v *gocui.View, key gocui.Key, ch rune, mod gocui.Modifier)
 	case key == gocui.KeyBackspace || key == gocui.KeyBackspace2:
 		v.EditDelete(true)
 	}
-	if controllers.Tree != nil {
-		_ = controllers.Tree.Update()
-		_ = controllers.Tree.Render()
+
+	// notify listeners
+	c.notifyFilterEditListeners()
+}
+
+func (c *Filter) notifyFilterEditListeners() {
+	currentValue := strings.TrimSpace(c.view.Buffer())
+	for _, listener := range c.filterEditListeners {
+		err := listener(currentValue)
+		if err != nil {
+			// note: cannot propagate error from here since this is from the main gogui thread
+			logrus.Errorf("notifyFilterEditListeners: %+v", err)
+		}
 	}
 }
 

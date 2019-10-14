@@ -1,7 +1,8 @@
-package controller
+package view
 
 import (
 	"fmt"
+	"github.com/sirupsen/logrus"
 	"github.com/wagoodman/dive/runtime/ui/format"
 	"github.com/wagoodman/dive/runtime/ui/key"
 	"github.com/wagoodman/dive/runtime/ui/viewmodel"
@@ -20,6 +21,8 @@ const (
 
 type CompareType int
 
+type ViewOptionChangeListener func() error
+
 // FileTree holds the UI objects and data models for populating the right pane. Specifically the pane that
 // shows selected layer or aggregate file ASCII tree.
 type FileTree struct {
@@ -28,13 +31,19 @@ type FileTree struct {
 	view   *gocui.View
 	header *gocui.View
 	vm     *viewmodel.FileTree
+	title  string
+
+	filterRegex *regexp.Regexp
+
+	listeners []ViewOptionChangeListener
 
 	helpKeys []*key.Binding
 }
 
-// NewFileTreeController creates a new view object attached the the global [gocui] screen object.
-func NewFileTreeController(name string, gui *gocui.Gui, tree *filetree.FileTree, refTrees []*filetree.FileTree, cache filetree.TreeCache) (controller *FileTree, err error) {
+// NewFileTreeView creates a new view object attached the the global [gocui] screen object.
+func NewFileTreeView(name string, gui *gocui.Gui, tree *filetree.FileTree, refTrees []*filetree.FileTree, cache filetree.TreeCache) (controller *FileTree, err error) {
 	controller = new(FileTree)
+	controller.listeners = make([]ViewOptionChangeListener, 0)
 
 	// populate main fields
 	controller.name = name
@@ -45,6 +54,18 @@ func NewFileTreeController(name string, gui *gocui.Gui, tree *filetree.FileTree,
 	}
 
 	return controller, err
+}
+
+func (c *FileTree) AddViewOptionChangeListener(listener ...ViewOptionChangeListener) {
+	c.listeners = append(c.listeners, listener...)
+}
+
+func (c *FileTree) SetTitle(title string) {
+	c.title = title
+}
+
+func (c *FileTree) SetFilterRegex(filterRegex *regexp.Regexp) {
+	c.filterRegex = filterRegex
 }
 
 func (c *FileTree) Name() string {
@@ -166,12 +187,11 @@ func (c *FileTree) resetCursor() {
 }
 
 // SetTreeByLayer populates the view model by stacking the indicated image layer file trees.
-func (c *FileTree) setTreeByLayer(bottomTreeStart, bottomTreeStop, topTreeStart, topTreeStop int) error {
+func (c *FileTree) SetTree(bottomTreeStart, bottomTreeStop, topTreeStart, topTreeStop int) error {
 	err := c.vm.SetTreeByLayer(bottomTreeStart, bottomTreeStop, topTreeStart, topTreeStop)
 	if err != nil {
 		return err
 	}
-	// controller.ResetCursor()
 
 	_ = c.Update()
 	return c.Render()
@@ -201,7 +221,7 @@ func (c *FileTree) CursorUp() error {
 
 // CursorLeft moves the cursor up until we reach the Parent Node or top of the tree
 func (c *FileTree) CursorLeft() error {
-	err := c.vm.CursorLeft(filterRegex())
+	err := c.vm.CursorLeft(c.filterRegex)
 	if err != nil {
 		return err
 	}
@@ -211,7 +231,7 @@ func (c *FileTree) CursorLeft() error {
 
 // CursorRight descends into directory expanding it if needed
 func (c *FileTree) CursorRight() error {
-	err := c.vm.CursorRight(filterRegex())
+	err := c.vm.CursorRight(c.filterRegex)
 	if err != nil {
 		return err
 	}
@@ -244,7 +264,7 @@ func (c *FileTree) PageUp() error {
 
 // ToggleCollapse will collapse/expand the selected FileNode.
 func (c *FileTree) toggleCollapse() error {
-	err := c.vm.ToggleCollapse(filterRegex())
+	err := c.vm.ToggleCollapse(c.filterRegex)
 	if err != nil {
 		return err
 	}
@@ -265,44 +285,61 @@ func (c *FileTree) toggleCollapseAll() error {
 	return c.Render()
 }
 
+func (c *FileTree) notifyOnViewOptionChangeListeners() error {
+	for _, listener := range c.listeners {
+		err := listener()
+		if err != nil {
+			logrus.Errorf("notifyOnViewOptionChangeListeners error: %+v", err)
+			return err
+		}
+	}
+	return nil
+}
+
 // ToggleAttributes will show/hide file attributes
 func (c *FileTree) toggleAttributes() error {
 	err := c.vm.ToggleAttributes()
 	if err != nil {
 		return err
 	}
+
+	err = c.Update()
+	if err != nil {
+		return err
+	}
+	err = c.Render()
+	if err != nil {
+		return err
+	}
+
 	// we need to render the changes to the status pane as well (not just this contoller/view)
-	return controllers.UpdateAndRender()
+	return c.notifyOnViewOptionChangeListeners()
 }
 
 // ToggleShowDiffType will show/hide the selected DiffType in the filetree pane.
 func (c *FileTree) toggleShowDiffType(diffType filetree.DiffType) error {
 	c.vm.ToggleShowDiffType(diffType)
-	// we need to render the changes to the status pane as well (not just this contoller/view)
-	return controllers.UpdateAndRender()
-}
 
-// filterRegex will return a regular expression object to match the user's filter input.
-func filterRegex() *regexp.Regexp {
-	if controllers.Filter == nil || controllers.Filter.view == nil {
-		return nil
-	}
-	filterString := strings.TrimSpace(controllers.Filter.view.Buffer())
-	if len(filterString) == 0 {
-		return nil
-	}
-
-	regex, err := regexp.Compile(filterString)
+	err := c.Update()
 	if err != nil {
-		return nil
+		return err
+	}
+	err = c.Render()
+	if err != nil {
+		return err
 	}
 
-	return regex
+	// we need to render the changes to the status pane as well (not just this contoller/view)
+	return c.notifyOnViewOptionChangeListeners()
 }
 
 // OnLayoutChange is called by the UI framework to inform the view-model of the new screen dimensions
 func (c *FileTree) OnLayoutChange(resized bool) error {
-	_ = c.Update()
+	err := c.Update()
+	if err != nil {
+		return err
+	}
+
 	if resized {
 		return c.Render()
 	}
@@ -320,19 +357,15 @@ func (c *FileTree) Update() error {
 		width, height = c.gui.Size()
 	}
 	// height should account for the header
-	return c.vm.Update(filterRegex(), width, height-1)
+	return c.vm.Update(c.filterRegex, width, height-1)
 }
 
 // Render flushes the state objects (file tree) to the pane.
 func (c *FileTree) Render() error {
-	title := "Current Layer Contents"
-	if controllers.Layer.CompareMode == CompareAll {
-		title = "Aggregated Layer Contents"
-	}
-
+	title := c.title
 	// indicate when selected
 	if c.gui.CurrentView() == c.view {
-		title = "● " + title
+		title = "● " + c.title
 	}
 
 	c.gui.Update(func(g *gocui.Gui) error {

@@ -1,9 +1,10 @@
-package controller
+package view
 
 import (
 	"fmt"
 	"github.com/sirupsen/logrus"
 	"github.com/wagoodman/dive/dive/filetree"
+	"github.com/wagoodman/dive/dive/image"
 	"github.com/wagoodman/dive/runtime/ui/format"
 	"github.com/wagoodman/dive/runtime/ui/key"
 	"strconv"
@@ -23,10 +24,13 @@ type Details struct {
 	header         *gocui.View
 	efficiency     float64
 	inefficiencies filetree.EfficiencySlice
+	imageSize      uint64
+
+	currentLayer *image.Layer
 }
 
-// NewDetailsController creates a new view object attached the the global [gocui] screen object.
-func NewDetailsController(name string, gui *gocui.Gui, efficiency float64, inefficiencies filetree.EfficiencySlice) (controller *Details) {
+// NewDetailsView creates a new view object attached the the global [gocui] screen object.
+func NewDetailsView(name string, gui *gocui.Gui, efficiency float64, inefficiencies filetree.EfficiencySlice, imageSize uint64) (controller *Details) {
 	controller = new(Details)
 
 	// populate main fields
@@ -34,6 +38,7 @@ func NewDetailsController(name string, gui *gocui.Gui, efficiency float64, ineff
 	controller.gui = gui
 	controller.efficiency = efficiency
 	controller.inefficiencies = inefficiencies
+	controller.imageSize = imageSize
 
 	return controller
 }
@@ -85,17 +90,21 @@ func (c *Details) IsVisible() bool {
 
 // CursorDown moves the cursor down in the details pane (currently indicates nothing).
 func (c *Details) CursorDown() error {
-	return controllers.CursorDown(c.gui, c.view)
+	return CursorDown(c.gui, c.view)
 }
 
 // CursorUp moves the cursor up in the details pane (currently indicates nothing).
 func (c *Details) CursorUp() error {
-	return controllers.CursorUp(c.gui, c.view)
+	return CursorUp(c.gui, c.view)
 }
 
 // Update refreshes the state objects for future rendering.
 func (c *Details) Update() error {
 	return nil
+}
+
+func (c *Details) SetCurrentLayer(layer *image.Layer) {
+	c.currentLayer = layer
 }
 
 // Render flushes the state objects to the screen. The details pane reports:
@@ -104,7 +113,9 @@ func (c *Details) Update() error {
 // 3. the estimated wasted image space
 // 4. a list of inefficient file allocations
 func (c *Details) Render() error {
-	currentLayer := controllers.Layer.currentLayer()
+	if c.currentLayer == nil {
+		return fmt.Errorf("no layer selected")
+	}
 
 	var wastedSpace int64
 
@@ -126,7 +137,7 @@ func (c *Details) Render() error {
 		}
 	}
 
-	imageSizeStr := fmt.Sprintf("%s %s", format.Header("Total Image size:"), humanize.Bytes(controllers.Layer.ImageSize))
+	imageSizeStr := fmt.Sprintf("%s %s", format.Header("Total Image size:"), humanize.Bytes(c.imageSize))
 	effStr := fmt.Sprintf("%s %d %%", format.Header("Image efficiency score:"), int(100.0*c.efficiency))
 	wastedSpaceStr := fmt.Sprintf("%s %s", format.Header("Potential wasted space:"), humanize.Bytes(uint64(wastedSpace)))
 
@@ -147,15 +158,15 @@ func (c *Details) Render() error {
 		c.view.Clear()
 
 		var lines = make([]string, 0)
-		if currentLayer.Names != nil && len(currentLayer.Names) > 0 {
-			lines = append(lines, format.Header("Tags:   ")+strings.Join(currentLayer.Names, ", "))
+		if c.currentLayer.Names != nil && len(c.currentLayer.Names) > 0 {
+			lines = append(lines, format.Header("Tags:   ")+strings.Join(c.currentLayer.Names, ", "))
 		} else {
 			lines = append(lines, format.Header("Tags:   ")+"(none)")
 		}
-		lines = append(lines, format.Header("Id:     ")+currentLayer.Id)
-		lines = append(lines, format.Header("Digest: ")+currentLayer.Digest)
+		lines = append(lines, format.Header("Id:     ")+c.currentLayer.Id)
+		lines = append(lines, format.Header("Digest: ")+c.currentLayer.Digest)
 		lines = append(lines, format.Header("Command:"))
-		lines = append(lines, currentLayer.Command)
+		lines = append(lines, c.currentLayer.Command)
 		lines = append(lines, "\n"+format.Header(vtclean.Clean(imageHeaderStr, false)))
 		lines = append(lines, imageSizeStr)
 		lines = append(lines, wastedSpaceStr)

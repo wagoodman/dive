@@ -1,4 +1,4 @@
-package controller
+package view
 
 import (
 	"fmt"
@@ -17,11 +17,13 @@ type Status struct {
 	gui  *gocui.Gui
 	view *gocui.View
 
+	selectedView Renderer
+
 	helpKeys []*key.Binding
 }
 
-// NewStatusController creates a new view object attached the the global [gocui] screen object.
-func NewStatusController(name string, gui *gocui.Gui) (controller *Status) {
+// NewStatusView creates a new view object attached the the global [gocui] screen object.
+func NewStatusView(name string, gui *gocui.Gui) (controller *Status) {
 	controller = new(Status)
 
 	// populate main fields
@@ -30,6 +32,10 @@ func NewStatusController(name string, gui *gocui.Gui) (controller *Status) {
 	controller.helpKeys = make([]*key.Binding, 0)
 
 	return controller
+}
+
+func (c *Status) SetCurrentView(r Renderer) {
+	c.selectedView = r
 }
 
 func (c *Status) Name() string {
@@ -74,7 +80,13 @@ func (c *Status) Update() error {
 func (c *Status) Render() error {
 	c.gui.Update(func(g *gocui.Gui) error {
 		c.view.Clear()
-		_, err := fmt.Fprintln(c.view, c.KeyHelp()+format.StatusNormal("▏"+strings.Repeat(" ", 1000)))
+
+		var selectedHelp string
+		if c.selectedView != nil {
+			selectedHelp = c.selectedView.KeyHelp()
+		}
+
+		_, err := fmt.Fprintln(c.view, c.KeyHelp()+selectedHelp+format.StatusNormal("▏"+strings.Repeat(" ", 1000)))
 		if err != nil {
 			logrus.Debug("unable to write to buffer: ", err)
 		}

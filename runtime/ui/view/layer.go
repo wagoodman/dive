@@ -1,10 +1,11 @@
-package controller
+package view
 
 import (
 	"fmt"
 	"github.com/wagoodman/dive/dive/image"
 	"github.com/wagoodman/dive/runtime/ui/format"
 	"github.com/wagoodman/dive/runtime/ui/key"
+	"github.com/wagoodman/dive/runtime/ui/viewmodel"
 	"strings"
 
 	"github.com/jroimartin/gocui"
@@ -12,6 +13,8 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
+
+type LayerChangeListener func(viewmodel.LayerSelection) error
 
 // Layer holds the UI objects and data models for populating the lower-left pane. Specifically the pane that
 // shows the image layers and layer selector.
@@ -24,14 +27,17 @@ type Layer struct {
 	Layers            []*image.Layer
 	CompareMode       CompareType
 	CompareStartIndex int
-	ImageSize         uint64
+
+	listeners []LayerChangeListener
 
 	helpKeys []*key.Binding
 }
 
-// NewLayerController creates a new view object attached the the global [gocui] screen object.
-func NewLayerController(name string, gui *gocui.Gui, layers []*image.Layer) (controller *Layer, err error) {
+// NewLayerView creates a new view object attached the the global [gocui] screen object.
+func NewLayerView(name string, gui *gocui.Gui, layers []*image.Layer) (controller *Layer, err error) {
 	controller = new(Layer)
+
+	controller.listeners = make([]LayerChangeListener, 0)
 
 	// populate main fields
 	controller.name = name
@@ -48,6 +54,29 @@ func NewLayerController(name string, gui *gocui.Gui, layers []*image.Layer) (con
 	}
 
 	return controller, err
+}
+
+func (c *Layer) AddLayerChangeListener(listener ...LayerChangeListener) {
+	c.listeners = append(c.listeners, listener...)
+}
+
+func (c *Layer) notifyLayerChangeListeners() error {
+	bottomTreeStart, bottomTreeStop, topTreeStart, topTreeStop := c.getCompareIndexes()
+	selection := viewmodel.LayerSelection{
+		Layer:           c.CurrentLayer(),
+		BottomTreeStart: bottomTreeStart,
+		BottomTreeStop:  bottomTreeStop,
+		TopTreeStart:    topTreeStart,
+		TopTreeStop:     topTreeStop,
+	}
+	for _, listener := range c.listeners {
+		err := listener(selection)
+		if err != nil {
+			logrus.Errorf("notifyLayerChangeListeners error: %+v", err)
+			return err
+		}
+	}
+	return nil
 }
 
 func (c *Layer) Name() string {
@@ -141,7 +170,7 @@ func (c *Layer) PageDown() error {
 	}
 
 	if step > 0 {
-		err := controllers.CursorStep(c.gui, c.view, step)
+		err := CursorStep(c.gui, c.view, step)
 		if err == nil {
 			return c.SetCursor(c.LayerIndex + step)
 		}
@@ -159,7 +188,7 @@ func (c *Layer) PageUp() error {
 	}
 
 	if step > 0 {
-		err := controllers.CursorStep(c.gui, c.view, -step)
+		err := CursorStep(c.gui, c.view, -step)
 		if err == nil {
 			return c.SetCursor(c.LayerIndex - step)
 		}
@@ -170,7 +199,7 @@ func (c *Layer) PageUp() error {
 // CursorDown moves the cursor down in the layer pane (selecting a higher layer).
 func (c *Layer) CursorDown() error {
 	if c.LayerIndex < len(c.Layers) {
-		err := controllers.CursorDown(c.gui, c.view)
+		err := CursorDown(c.gui, c.view)
 		if err == nil {
 			return c.SetCursor(c.LayerIndex + 1)
 		}
@@ -181,7 +210,7 @@ func (c *Layer) CursorDown() error {
 // CursorUp moves the cursor up in the layer pane (selecting a lower layer).
 func (c *Layer) CursorUp() error {
 	if c.LayerIndex > 0 {
-		err := controllers.CursorUp(c.gui, c.view)
+		err := CursorUp(c.gui, c.view)
 		if err == nil {
 			return c.SetCursor(c.LayerIndex - 1)
 		}
@@ -192,30 +221,23 @@ func (c *Layer) CursorUp() error {
 // SetCursor resets the cursor and orients the file tree view based on the given layer index.
 func (c *Layer) SetCursor(layer int) error {
 	c.LayerIndex = layer
-	err := controllers.Tree.setTreeByLayer(c.getCompareIndexes())
+	err := c.notifyLayerChangeListeners()
 	if err != nil {
 		return err
 	}
 
-	_ = controllers.Details.Render()
-
 	return c.Render()
 }
 
-// currentLayer returns the Layer object currently selected.
-func (c *Layer) currentLayer() *image.Layer {
+// CurrentLayer returns the Layer object currently selected.
+func (c *Layer) CurrentLayer() *image.Layer {
 	return c.Layers[c.LayerIndex]
 }
 
 // setCompareMode switches the layer comparison between a single-layer comparison to an aggregated comparison.
 func (c *Layer) setCompareMode(compareMode CompareType) error {
 	c.CompareMode = compareMode
-	err := controllers.UpdateAndRender()
-	if err != nil {
-		logrus.Errorf("unable to set compare mode: %+v", err)
-		return err
-	}
-	return controllers.Tree.setTreeByLayer(c.getCompareIndexes())
+	return c.notifyLayerChangeListeners()
 }
 
 // getCompareIndexes determines the layer boundaries to use for comparison (based on the current compare mode)
@@ -254,10 +276,6 @@ func (c *Layer) renderCompareBar(layerIdx int) string {
 
 // Update refreshes the state objects for future rendering (currently does nothing).
 func (c *Layer) Update() error {
-	c.ImageSize = 0
-	for idx := 0; idx < len(c.Layers); idx++ {
-		c.ImageSize += c.Layers[idx].Size
-	}
 	return nil
 }
 

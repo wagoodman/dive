@@ -2,7 +2,6 @@ package ui
 
 import (
 	"github.com/wagoodman/dive/dive/image"
-	"github.com/wagoodman/dive/runtime/ui/controller"
 	"github.com/wagoodman/dive/runtime/ui/key"
 	"sync"
 
@@ -16,7 +15,7 @@ const debug = false
 // type global
 type app struct {
 	gui         *gocui.Gui
-	controllers *controller.Collection
+	controllers *Controller
 	layout      *layoutManager
 }
 
@@ -28,10 +27,10 @@ var (
 func newApp(gui *gocui.Gui, analysis *image.AnalysisResult, cache filetree.TreeCache) (*app, error) {
 	var err error
 	once.Do(func() {
-		var theControls *controller.Collection
+		var theControls *Controller
 		var globalHelpKeys []*key.Binding
 
-		theControls, err = controller.NewCollection(gui, analysis, cache)
+		theControls, err = NewCollection(gui, analysis, cache)
 		if err != nil {
 			return
 		}
@@ -110,7 +109,7 @@ func newApp(gui *gocui.Gui, analysis *image.AnalysisResult, cache filetree.TreeC
 var lastX, lastY int
 
 // quit is the gocui callback invoked when the user hits Ctrl+C
-func (ui *app) quit() error {
+func (a *app) quit() error {
 
 	// profileObj.Stop()
 	// onExit()
