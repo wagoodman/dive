@@ -43,6 +43,14 @@ func NewDetailsView(name string, gui *gocui.Gui, efficiency float64, inefficienc
 	return controller
 }
 
+func (c *Details) Height() int {
+	return HeightFull
+}
+
+func (c *Details) Width() int {
+	return WidthFull
+}
+
 func (c *Details) Name() string {
 	return c.name
 }

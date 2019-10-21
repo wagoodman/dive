@@ -16,7 +16,7 @@ const debug = false
 type app struct {
 	gui         *gocui.Gui
 	controllers *Controller
-	layout      *layoutManager
+	layout      *LayoutManager
 }
 
 var (
@@ -35,11 +35,11 @@ func newApp(gui *gocui.Gui, analysis *image.AnalysisResult, cache filetree.TreeC
 			return
 		}
 
-		lm := newLayoutManager(theControls)
+		lm := NewLayoutManager(theControls)
 
 		gui.Cursor = false
 		//g.Mouse = true
-		gui.SetManagerFunc(lm.layout)
+		gui.SetManagerFunc(lm.Layout)
 
 		// var profileObj = profile.Start(profile.CPUProfile, profile.ProfilePath("."), profile.NoShutdownHook)
 		//
@@ -77,7 +77,7 @@ func newApp(gui *gocui.Gui, analysis *image.AnalysisResult, cache filetree.TreeC
 			return
 		}
 
-		theControls.Status.AddHelpKeys(globalHelpKeys...)
+		theControls.Help.AddHelpKeys(globalHelpKeys...)
 
 		// perform the first update and render now that all resources have been loaded
 		err = theControls.UpdateAndRender()
@@ -106,7 +106,6 @@ func newApp(gui *gocui.Gui, analysis *image.AnalysisResult, cache filetree.TreeC
 // 	}
 // }
 
-var lastX, lastY int
 
 // quit is the gocui callback invoked when the user hits Ctrl+C
 func (a *app) quit() error {

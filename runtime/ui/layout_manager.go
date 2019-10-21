@@ -6,13 +6,15 @@ import (
 	"github.com/spf13/viper"
 )
 
-type layoutManager struct {
+var lastY, lastX int
+
+type LayoutManager struct {
 	fileTreeSplitRatio float64
-	controllers        *Controller
+	controller         *Controller
 }
 
 // todo: this needs a major refactor (derive layout from view obj info, which should not live here)
-func newLayoutManager(c *Controller) *layoutManager {
+func NewLayoutManager(c *Controller) *LayoutManager {
 
 	fileTreeSplitRatio := viper.GetFloat64("filetree.pane-width")
 	if fileTreeSplitRatio >= 1 || fileTreeSplitRatio <= 0 {
@@ -20,14 +22,14 @@ func newLayoutManager(c *Controller) *layoutManager {
 		fileTreeSplitRatio = 0.5
 	}
 
-	return &layoutManager{
+	return &LayoutManager{
 		fileTreeSplitRatio: fileTreeSplitRatio,
-		controllers:        c,
+		controller:         c,
 	}
 }
 
-// IsNewView determines if a view has already been created based on the set of errors given (a bit hokie)
-func IsNewView(errs ...error) bool {
+// isNewView determines if a view has already been created based on the set of errors given (a bit hokie)
+func isNewView(errs ...error) bool {
 	for _, err := range errs {
 		if err == nil {
 			return false
@@ -41,7 +43,7 @@ func IsNewView(errs ...error) bool {
 
 // layout defines the definition of the window pane size and placement relations to one another. This
 // is invoked at application start and whenever the screen dimensions change.
-func (lm *layoutManager) layout(g *gocui.Gui) error {
+func (lm *LayoutManager) Layout(g *gocui.Gui) error {
 	// TODO: this logic should be refactored into an abstraction that takes care of the math for us
 
 	maxX, maxY := g.Size()
@@ -64,12 +66,12 @@ func (lm *layoutManager) layout(g *gocui.Gui) error {
 	headerRows := 2
 
 	filterBarHeight := 1
-	statusBarHeight := 1
+	helpBarHeight := 1
 
-	statusBarIndex := 1
+	helpBarIndex := 1
 	filterBarIndex := 2
 
-	layersHeight := len(lm.controllers.Layer.Layers) + headerRows + 1 // layers + header + base image layer row
+	layersHeight := len(lm.controller.Layer.Layers) + headerRows + 1 // layers + header + base image layer row
 	maxLayerHeight := int(0.75 * float64(maxY))
 	if layersHeight > maxLayerHeight {
 		layersHeight = maxLayerHeight
@@ -78,7 +80,7 @@ func (lm *layoutManager) layout(g *gocui.Gui) error {
 	var view, header *gocui.View
 	var viewErr, headerErr, err error
 
-	if !lm.controllers.Filter.IsVisible() {
+	if !lm.controller.Filter.IsVisible() {
 		bottomRows--
 		filterBarHeight = 0
 	}
@@ -93,21 +95,21 @@ func (lm *layoutManager) layout(g *gocui.Gui) error {
 	}
 
 	// Layers
-	view, viewErr = g.SetView(lm.controllers.Layer.Name(), -1, -1+headerRows, splitCols, layersHeight)
-	header, headerErr = g.SetView(lm.controllers.Layer.Name()+"header", -1, -1, splitCols, headerRows)
-	if IsNewView(viewErr, headerErr) {
-		err = lm.controllers.Layer.Setup(view, header)
+	view, viewErr = g.SetView(lm.controller.Layer.Name(), -1, -1+headerRows, splitCols, layersHeight)
+	header, headerErr = g.SetView(lm.controller.Layer.Name()+"header", -1, -1, splitCols, headerRows)
+	if isNewView(viewErr, headerErr) {
+		err = lm.controller.Layer.Setup(view, header)
 		if err != nil {
 			logrus.Error("unable to setup layer controller", err)
 			return err
 		}
 
-		if _, err = g.SetCurrentView(lm.controllers.Layer.Name()); err != nil {
+		if _, err = g.SetCurrentView(lm.controller.Layer.Name()); err != nil {
 			logrus.Error("unable to set view to layer", err)
 			return err
 		}
 		// since we are selecting the view, we should rerender to indicate it is selected
-		err = lm.controllers.Layer.Render()
+		err = lm.controller.Layer.Render()
 		if err != nil {
 			logrus.Error("unable to render layer view", err)
 			return err
@@ -115,10 +117,10 @@ func (lm *layoutManager) layout(g *gocui.Gui) error {
 	}
 
 	// Details
-	view, viewErr = g.SetView(lm.controllers.Details.Name(), -1, -1+layersHeight+headerRows, splitCols, maxY-bottomRows)
-	header, headerErr = g.SetView(lm.controllers.Details.Name()+"header", -1, -1+layersHeight, splitCols, layersHeight+headerRows)
-	if IsNewView(viewErr, headerErr) {
-		err = lm.controllers.Details.Setup(view, header)
+	view, viewErr = g.SetView(lm.controller.Details.Name(), -1, -1+layersHeight+headerRows, splitCols, maxY-bottomRows)
+	header, headerErr = g.SetView(lm.controller.Details.Name()+"header", -1, -1+layersHeight, splitCols, layersHeight+headerRows)
+	if isNewView(viewErr, headerErr) {
+		err = lm.controller.Details.Setup(view, header)
 		if err != nil {
 			return err
 		}
@@ -126,39 +128,39 @@ func (lm *layoutManager) layout(g *gocui.Gui) error {
 
 	// Filetree
 	offset := 0
-	if !lm.controllers.Tree.AreAttributesVisible() {
+	if !lm.controller.Tree.AreAttributesVisible() {
 		offset = 1
 	}
-	view, viewErr = g.SetView(lm.controllers.Tree.Name(), splitCols, -1+headerRows-offset, debugCols, maxY-bottomRows)
-	header, headerErr = g.SetView(lm.controllers.Tree.Name()+"header", splitCols, -1, debugCols, headerRows-offset)
-	if IsNewView(viewErr, headerErr) {
-		err = lm.controllers.Tree.Setup(view, header)
+	view, viewErr = g.SetView(lm.controller.Tree.Name(), splitCols, -1+headerRows-offset, debugCols, maxY-bottomRows)
+	header, headerErr = g.SetView(lm.controller.Tree.Name()+"header", splitCols, -1, debugCols, headerRows-offset)
+	if isNewView(viewErr, headerErr) {
+		err = lm.controller.Tree.Setup(view, header)
 		if err != nil {
 			logrus.Error("unable to setup tree controller", err)
 			return err
 		}
 	}
-	err = lm.controllers.Tree.OnLayoutChange(resized)
+	err = lm.controller.Tree.OnLayoutChange(resized)
 	if err != nil {
 		logrus.Error("unable to setup layer controller onLayoutChange", err)
 		return err
 	}
 
-	// Status Bar
-	view, viewErr = g.SetView(lm.controllers.Status.Name(), -1, maxY-statusBarHeight-statusBarIndex, maxX, maxY-(statusBarIndex-1))
-	if IsNewView(viewErr, headerErr) {
-		err = lm.controllers.Status.Setup(view, nil)
+	// Help Bar
+	view, viewErr = g.SetView(lm.controller.Help.Name(), -1, maxY-helpBarHeight-helpBarIndex, maxX, maxY-(helpBarIndex-1))
+	if isNewView(viewErr, headerErr) {
+		err = lm.controller.Help.Setup(view, nil)
 		if err != nil {
-			logrus.Error("unable to setup status controller", err)
+			logrus.Error("unable to setup help controller", err)
 			return err
 		}
 	}
 
 	// Filter Bar
-	view, viewErr = g.SetView(lm.controllers.Filter.Name(), len(lm.controllers.Filter.HeaderStr())-1, maxY-filterBarHeight-filterBarIndex, maxX, maxY-(filterBarIndex-1))
-	header, headerErr = g.SetView(lm.controllers.Filter.Name()+"header", -1, maxY-filterBarHeight-filterBarIndex, len(lm.controllers.Filter.HeaderStr()), maxY-(filterBarIndex-1))
-	if IsNewView(viewErr, headerErr) {
-		err = lm.controllers.Filter.Setup(view, header)
+	view, viewErr = g.SetView(lm.controller.Filter.Name(), len(lm.controller.Filter.HeaderStr())-1, maxY-filterBarHeight-filterBarIndex, maxX, maxY-(filterBarIndex-1))
+	header, headerErr = g.SetView(lm.controller.Filter.Name()+"header", -1, maxY-filterBarHeight-filterBarIndex, len(lm.controller.Filter.HeaderStr()), maxY-(filterBarIndex-1))
+	if isNewView(viewErr, headerErr) {
+		err = lm.controller.Filter.Setup(view, header)
 		if err != nil {
 			logrus.Error("unable to setup filter controller", err)
 			return err

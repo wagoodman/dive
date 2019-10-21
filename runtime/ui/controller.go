@@ -14,10 +14,11 @@ type Controller struct {
 	gui     *gocui.Gui
 	Tree    *view.FileTree
 	Layer   *view.Layer
-	Status  *view.Status
+	Help    *view.Help
 	Filter  *view.Filter
 	Details *view.Details
-	lookup  map[string]view.Renderer
+
+	lookup  map[string]view.View
 }
 
 func NewCollection(g *gocui.Gui, analysis *image.AnalysisResult, cache filetree.TreeCache) (*Controller, error) {
@@ -26,7 +27,7 @@ func NewCollection(g *gocui.Gui, analysis *image.AnalysisResult, cache filetree.
 	controller := &Controller{
 		gui: g,
 	}
-	controller.lookup = make(map[string]view.Renderer)
+	controller.lookup = make(map[string]view.View)
 
 	controller.Layer, err = view.NewLayerView("layers", g, analysis.Layers)
 	if err != nil {
@@ -47,10 +48,10 @@ func NewCollection(g *gocui.Gui, analysis *image.AnalysisResult, cache filetree.
 	// layer view cursor down event should trigger an update in the file tree
 	controller.Layer.AddLayerChangeListener(controller.onLayerChange)
 
-	controller.Status = view.NewStatusView("status", g)
-	controller.lookup[controller.Status.Name()] = controller.Status
+	controller.Help = view.NewHelpView("status", g)
+	controller.lookup[controller.Help.Name()] = controller.Help
 	// set the layer view as the first selected view
-	controller.Status.SetCurrentView(controller.Layer)
+	controller.Help.SetCurrentView(controller.Layer)
 
 	// update the status pane when a filetree option is changed by the user
 	controller.Tree.AddViewOptionChangeListener(controller.onFileTreeViewOptionChange)
@@ -79,11 +80,11 @@ func NewCollection(g *gocui.Gui, analysis *image.AnalysisResult, cache filetree.
 }
 
 func (c *Controller) onFileTreeViewOptionChange() error {
-	err := c.Status.Update()
+	err := c.Help.Update()
 	if err != nil {
 		return err
 	}
-	return c.Status.Render()
+	return c.Help.Render()
 }
 
 func (c *Controller) onFilterEdit(filter string) error {
@@ -173,10 +174,10 @@ func (c *Controller) ToggleView() (err error) {
 	v := c.gui.CurrentView()
 	if v == nil || v.Name() == c.Layer.Name() {
 		_, err = c.gui.SetCurrentView(c.Tree.Name())
-		c.Status.SetCurrentView(c.Tree)
+		c.Help.SetCurrentView(c.Tree)
 	} else {
 		_, err = c.gui.SetCurrentView(c.Layer.Name())
-		c.Status.SetCurrentView(c.Layer)
+		c.Help.SetCurrentView(c.Layer)
 	}
 
 	if err != nil {

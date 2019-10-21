@@ -43,6 +43,15 @@ func (c *Filter) AddFilterEditListener(listener ...FilterEditListener) {
 	c.filterEditListeners = append(c.filterEditListeners, listener...)
 }
 
+func (c *Filter) Height() int {
+	return 1
+}
+
+func (c *Filter) Width() int {
+	return WidthFull
+}
+
+
 func (c *Filter) Name() string {
 	return c.name
 }

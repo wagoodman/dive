@@ -79,6 +79,15 @@ func (c *Layer) notifyLayerChangeListeners() error {
 	return nil
 }
 
+func (c *Layer) Height() int {
+	return HeightFull
+}
+
+func (c *Layer) Width() int {
+	return WidthFull
+}
+
+
 func (c *Layer) Name() string {
 	return c.name
 }

@@ -175,6 +175,14 @@ func (c *FileTree) Setup(v *gocui.View, header *gocui.View) error {
 	return nil
 }
 
+func (c *FileTree) Height() int {
+	return HeightFull
+}
+
+func (c *FileTree) Width() int {
+	return WidthFull
+}
+
 // IsVisible indicates if the file tree view pane is currently initialized
 func (c *FileTree) IsVisible() bool {
 	return c != nil
