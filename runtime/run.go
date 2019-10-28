@@ -103,7 +103,7 @@ func run(enableUi bool, options Options, imageResolver image.Resolver, events ev
 
 			err = ui.Run(analysis, cache)
 			if err != nil {
-				events.exitWithErrorMessage("runtime error", err)
+				events.exitWithError(err)
 				return
 			}
 		}
@@ -131,7 +131,6 @@ func Run(options Options) {
 		}
 
 		if event.stderr != "" {
-			logrus.Error(event.stderr)
 			_, err := fmt.Fprintln(os.Stderr, event.stderr)
 			if err != nil {
 				fmt.Println("error: could not write to buffer:", err)
@@ -140,6 +139,10 @@ func Run(options Options) {
 
 		if event.err != nil {
 			logrus.Error(event.err)
+			_, err := fmt.Fprintln(os.Stderr, event.err.Error())
+			if err != nil {
+				fmt.Println("error: could not write to buffer:", err)
+			}
 		}
 
 		if event.errorOnExit {

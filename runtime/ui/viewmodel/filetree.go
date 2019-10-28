@@ -1,8 +1,9 @@
-package ui
+package viewmodel
 
 import (
 	"bytes"
 	"fmt"
+	"github.com/wagoodman/dive/runtime/ui/format"
 	"regexp"
 	"strings"
 
@@ -14,7 +15,7 @@ import (
 
 // FileTreeViewModel holds the UI objects and data models for populating the right pane. Specifically the pane that
 // shows selected layer or aggregate file ASCII tree.
-type FileTreeViewModel struct {
+type FileTree struct {
 	ModelTree *filetree.FileTree
 	ViewTree  *filetree.FileTree
 	RefTrees  []*filetree.FileTree
@@ -30,12 +31,12 @@ type FileTreeViewModel struct {
 	refHeight int
 	refWidth  int
 
-	mainBuf bytes.Buffer
+	Buffer bytes.Buffer
 }
 
-// NewFileTreeController creates a new view object attached the the global [gocui] screen object.
-func NewFileTreeViewModel(tree *filetree.FileTree, refTrees []*filetree.FileTree, cache filetree.TreeCache) (treeViewModel *FileTreeViewModel, err error) {
-	treeViewModel = new(FileTreeViewModel)
+// NewFileTreeViewModel creates a new view object attached the the global [gocui] screen object.
+func NewFileTreeViewModel(tree *filetree.FileTree, refTrees []*filetree.FileTree, cache filetree.TreeCache) (treeViewModel *FileTree, err error) {
+	treeViewModel = new(FileTree)
 
 	// populate main fields
 	treeViewModel.ShowAttributes = viper.GetBool("filetree.show-attributes")
@@ -65,13 +66,13 @@ func NewFileTreeViewModel(tree *filetree.FileTree, refTrees []*filetree.FileTree
 }
 
 // Setup initializes the UI concerns within the context of a global [gocui] view object.
-func (vm *FileTreeViewModel) Setup(lowerBound, height int) {
+func (vm *FileTree) Setup(lowerBound, height int) {
 	vm.bufferIndexLowerBound = lowerBound
 	vm.refHeight = height
 }
 
 // height returns the current height and considers the header
-func (vm *FileTreeViewModel) height() int {
+func (vm *FileTree) height() int {
 	if vm.ShowAttributes {
 		return vm.refHeight - 1
 	}
@@ -79,24 +80,24 @@ func (vm *FileTreeViewModel) height() int {
 }
 
 // bufferIndexUpperBound returns the current upper bounds for the view
-func (vm *FileTreeViewModel) bufferIndexUpperBound() int {
+func (vm *FileTree) bufferIndexUpperBound() int {
 	return vm.bufferIndexLowerBound + vm.height()
 }
 
 // IsVisible indicates if the file tree view pane is currently initialized
-func (vm *FileTreeViewModel) IsVisible() bool {
+func (vm *FileTree) IsVisible() bool {
 	return vm != nil
 }
 
-// resetCursor moves the cursor back to the top of the buffer and translates to the top of the buffer.
-func (vm *FileTreeViewModel) resetCursor() {
+// ResetCursor moves the cursor back to the top of the buffer and translates to the top of the buffer.
+func (vm *FileTree) ResetCursor() {
 	vm.TreeIndex = 0
 	vm.bufferIndex = 0
 	vm.bufferIndexLowerBound = 0
 }
 
-// setTreeByLayer populates the view model by stacking the indicated image layer file trees.
-func (vm *FileTreeViewModel) setTreeByLayer(bottomTreeStart, bottomTreeStop, topTreeStart, topTreeStop int) error {
+// SetTreeByLayer populates the view model by stacking the indicated image layer file trees.
+func (vm *FileTree) SetTreeByLayer(bottomTreeStart, bottomTreeStop, topTreeStart, topTreeStop int) error {
 	if topTreeStop > len(vm.RefTrees)-1 {
 		return fmt.Errorf("invalid layer index given: %d of %d", topTreeStop, len(vm.RefTrees)-1)
 	}
@@ -125,7 +126,7 @@ func (vm *FileTreeViewModel) setTreeByLayer(bottomTreeStart, bottomTreeStop, top
 }
 
 // doCursorUp performs the internal view's buffer adjustments on cursor up. Note: this is independent of the gocui buffer.
-func (vm *FileTreeViewModel) CursorUp() bool {
+func (vm *FileTree) CursorUp() bool {
 	if vm.TreeIndex <= 0 {
 		return false
 	}
@@ -140,7 +141,7 @@ func (vm *FileTreeViewModel) CursorUp() bool {
 }
 
 // doCursorDown performs the internal view's buffer adjustments on cursor down. Note: this is independent of the gocui buffer.
-func (vm *FileTreeViewModel) CursorDown() bool {
+func (vm *FileTree) CursorDown() bool {
 	if vm.TreeIndex >= vm.ModelTree.VisibleSize() {
 		return false
 	}
@@ -156,7 +157,7 @@ func (vm *FileTreeViewModel) CursorDown() bool {
 }
 
 // CursorLeft moves the cursor up until we reach the Parent Node or top of the tree
-func (vm *FileTreeViewModel) CursorLeft(filterRegex *regexp.Regexp) error {
+func (vm *FileTree) CursorLeft(filterRegex *regexp.Regexp) error {
 	var visitor func(*filetree.FileNode) error
 	var evaluator func(*filetree.FileNode) bool
 	var dfsCounter, newIndex int
@@ -207,7 +208,7 @@ func (vm *FileTreeViewModel) CursorLeft(filterRegex *regexp.Regexp) error {
 }
 
 // CursorRight descends into directory expanding it if needed
-func (vm *FileTreeViewModel) CursorRight(filterRegex *regexp.Regexp) error {
+func (vm *FileTree) CursorRight(filterRegex *regexp.Regexp) error {
 	node := vm.getAbsPositionNode(filterRegex)
 	if node == nil {
 		return nil
@@ -239,7 +240,7 @@ func (vm *FileTreeViewModel) CursorRight(filterRegex *regexp.Regexp) error {
 }
 
 // PageDown moves to next page putting the cursor on top
-func (vm *FileTreeViewModel) PageDown() error {
+func (vm *FileTree) PageDown() error {
 	nextBufferIndexLowerBound := vm.bufferIndexLowerBound + vm.height()
 	nextBufferIndexUpperBound := nextBufferIndexLowerBound + vm.height()
 
@@ -265,7 +266,7 @@ func (vm *FileTreeViewModel) PageDown() error {
 }
 
 // PageUp moves to previous page putting the cursor on top
-func (vm *FileTreeViewModel) PageUp() error {
+func (vm *FileTree) PageUp() error {
 	nextBufferIndexLowerBound := vm.bufferIndexLowerBound - vm.height()
 	nextBufferIndexUpperBound := nextBufferIndexLowerBound + vm.height()
 
@@ -290,7 +291,7 @@ func (vm *FileTreeViewModel) PageUp() error {
 }
 
 // getAbsPositionNode determines the selected screen cursor's location in the file tree, returning the selected FileNode.
-func (vm *FileTreeViewModel) getAbsPositionNode(filterRegex *regexp.Regexp) (node *filetree.FileNode) {
+func (vm *FileTree) getAbsPositionNode(filterRegex *regexp.Regexp) (node *filetree.FileNode) {
 	var visitor func(*filetree.FileNode) error
 	var evaluator func(*filetree.FileNode) bool
 	var dfsCounter int
@@ -320,8 +321,8 @@ func (vm *FileTreeViewModel) getAbsPositionNode(filterRegex *regexp.Regexp) (nod
 	return node
 }
 
-// toggleCollapse will collapse/expand the selected FileNode.
-func (vm *FileTreeViewModel) toggleCollapse(filterRegex *regexp.Regexp) error {
+// ToggleCollapse will collapse/expand the selected FileNode.
+func (vm *FileTree) ToggleCollapse(filterRegex *regexp.Regexp) error {
 	node := vm.getAbsPositionNode(filterRegex)
 	if node != nil && node.Data.FileInfo.IsDir {
 		node.Data.ViewInfo.Collapsed = !node.Data.ViewInfo.Collapsed
@@ -329,8 +330,8 @@ func (vm *FileTreeViewModel) toggleCollapse(filterRegex *regexp.Regexp) error {
 	return nil
 }
 
-// toggleCollapseAll will collapse/expand the all directories.
-func (vm *FileTreeViewModel) toggleCollapseAll() error {
+// ToggleCollapseAll will collapse/expand the all directories.
+func (vm *FileTree) ToggleCollapseAll() error {
 	vm.CollapseAll = !vm.CollapseAll
 
 	visitor := func(curNode *filetree.FileNode) error {
@@ -344,25 +345,25 @@ func (vm *FileTreeViewModel) toggleCollapseAll() error {
 
 	err := vm.ModelTree.VisitDepthChildFirst(visitor, evaluator)
 	if err != nil {
-		logrus.Errorf("unable to propagate tree on toggleCollapseAll: %+v", err)
+		logrus.Errorf("unable to propagate tree on ToggleCollapseAll: %+v", err)
 	}
 
 	return nil
 }
 
-// toggleCollapse will collapse/expand the selected FileNode.
-func (vm *FileTreeViewModel) toggleAttributes() error {
+// ToggleCollapse will collapse/expand the selected FileNode.
+func (vm *FileTree) ToggleAttributes() error {
 	vm.ShowAttributes = !vm.ShowAttributes
 	return nil
 }
 
-// toggleShowDiffType will show/hide the selected DiffType in the filetree pane.
-func (vm *FileTreeViewModel) toggleShowDiffType(diffType filetree.DiffType) {
+// ToggleShowDiffType will show/hide the selected DiffType in the filetree pane.
+func (vm *FileTree) ToggleShowDiffType(diffType filetree.DiffType) {
 	vm.HiddenDiffTypes[diffType] = !vm.HiddenDiffTypes[diffType]
 }
 
 // Update refreshes the state objects for future rendering.
-func (vm *FileTreeViewModel) Update(filterRegex *regexp.Regexp, width, height int) error {
+func (vm *FileTree) Update(filterRegex *regexp.Regexp, width, height int) error {
 	vm.refWidth = width
 	vm.refHeight = height
 
@@ -410,21 +411,21 @@ func (vm *FileTreeViewModel) Update(filterRegex *regexp.Regexp, width, height in
 }
 
 // Render flushes the state objects (file tree) to the pane.
-func (vm *FileTreeViewModel) Render() error {
+func (vm *FileTree) Render() error {
 	treeString := vm.ViewTree.StringBetween(vm.bufferIndexLowerBound, vm.bufferIndexUpperBound(), vm.ShowAttributes)
 	lines := strings.Split(treeString, "\n")
 
 	// update the contents
-	vm.mainBuf.Reset()
+	vm.Buffer.Reset()
 	for idx, line := range lines {
 		if idx == vm.bufferIndex {
-			_, err := fmt.Fprintln(&vm.mainBuf, Formatting.Selected(vtclean.Clean(line, false)))
+			_, err := fmt.Fprintln(&vm.Buffer, format.Selected(vtclean.Clean(line, false)))
 			if err != nil {
 				logrus.Debug("unable to write to buffer: ", err)
 				return err
 			}
 		} else {
-			_, err := fmt.Fprintln(&vm.mainBuf, line)
+			_, err := fmt.Fprintln(&vm.Buffer, line)
 			if err != nil {
 				logrus.Debug("unable to write to buffer: ", err)
 				return err

@@ -1,8 +1,9 @@
-package ui
+package viewmodel
 
 import (
 	"bytes"
 	"github.com/wagoodman/dive/dive/image/docker"
+	"github.com/wagoodman/dive/runtime/ui/format"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -72,8 +73,8 @@ func assertTestData(t *testing.T, actualBytes []byte) {
 	helperCheckDiff(t, expectedBytes, actualBytes)
 }
 
-func initializeTestViewModel(t *testing.T) *FileTreeViewModel {
-	result := docker.TestAnalysisFromArchive(t, "../../.data/test-docker-image.tar")
+func initializeTestViewModel(t *testing.T) *FileTree {
+	result := docker.TestAnalysisFromArchive(t, "../../../.data/test-docker-image.tar")
 
 	cache := filetree.NewFileTreeCache(result.RefTrees)
 	err := cache.Build()
@@ -81,7 +82,7 @@ func initializeTestViewModel(t *testing.T) *FileTreeViewModel {
 		t.Fatalf("%s: unable to build cache: %+v", t.Name(), err)
 	}
 
-	Formatting.Selected = color.New(color.ReverseVideo, color.Bold).SprintFunc()
+	format.Selected = color.New(color.ReverseVideo, color.Bold).SprintFunc()
 
 	treeStack, err := filetree.StackTreeRange(result.RefTrees, 0, 0)
 	if err != nil {
@@ -94,7 +95,7 @@ func initializeTestViewModel(t *testing.T) *FileTreeViewModel {
 	return vm
 }
 
-func runTestCase(t *testing.T, vm *FileTreeViewModel, width, height int, filterRegex *regexp.Regexp) {
+func runTestCase(t *testing.T, vm *FileTree, width, height int, filterRegex *regexp.Regexp) {
 	err := vm.Update(filterRegex, width, height)
 	if err != nil {
 		t.Errorf("failed to update viewmodel: %v", err)
@@ -105,7 +106,7 @@ func runTestCase(t *testing.T, vm *FileTreeViewModel, width, height int, filterR
 		t.Errorf("failed to render viewmodel: %v", err)
 	}
 
-	assertTestData(t, vm.mainBuf.Bytes())
+	assertTestData(t, vm.Buffer.Bytes())
 }
 
 func checkError(t *testing.T, err error, message string) {
@@ -152,7 +153,7 @@ func TestFileTreeDirCollapse(t *testing.T) {
 	vm.ShowAttributes = true
 
 	// collapse /bin
-	err := vm.toggleCollapse(nil)
+	err := vm.ToggleCollapse(nil)
 	checkError(t, err, "unable to collapse /bin")
 
 	moved := vm.CursorDown()
@@ -166,7 +167,7 @@ func TestFileTreeDirCollapse(t *testing.T) {
 	}
 
 	// collapse /etc
-	err = vm.toggleCollapse(nil)
+	err = vm.ToggleCollapse(nil)
 	checkError(t, err, "unable to collapse /etc")
 
 	runTestCase(t, vm, width, height, nil)
@@ -179,7 +180,7 @@ func TestFileTreeDirCollapseAll(t *testing.T) {
 	vm.Setup(0, height)
 	vm.ShowAttributes = true
 
-	err := vm.toggleCollapseAll()
+	err := vm.ToggleCollapseAll()
 	checkError(t, err, "unable to collapse all dir")
 
 	runTestCase(t, vm, width, height, nil)
@@ -193,13 +194,13 @@ func TestFileTreeSelectLayer(t *testing.T) {
 	vm.ShowAttributes = true
 
 	// collapse /bin
-	err := vm.toggleCollapse(nil)
+	err := vm.ToggleCollapse(nil)
 	checkError(t, err, "unable to collapse /bin")
 
 	// select the next layer, compareMode = layer
-	err = vm.setTreeByLayer(0, 0, 1, 1)
+	err = vm.SetTreeByLayer(0, 0, 1, 1)
 	if err != nil {
-		t.Errorf("unable to setTreeByLayer: %v", err)
+		t.Errorf("unable to SetTreeByLayer: %v", err)
 	}
 	runTestCase(t, vm, width, height, nil)
 }
@@ -212,12 +213,12 @@ func TestFileShowAggregateChanges(t *testing.T) {
 	vm.ShowAttributes = true
 
 	// collapse /bin
-	err := vm.toggleCollapse(nil)
+	err := vm.ToggleCollapse(nil)
 	checkError(t, err, "unable to collapse /bin")
 
 	// select the next layer, compareMode = layer
-	err = vm.setTreeByLayer(0, 0, 1, 13)
-	checkError(t, err, "unable to setTreeByLayer")
+	err = vm.SetTreeByLayer(0, 0, 1, 13)
+	checkError(t, err, "unable to SetTreeByLayer")
 
 	runTestCase(t, vm, width, height, nil)
 }
@@ -274,7 +275,7 @@ func TestFileTreeDirCursorRight(t *testing.T) {
 	vm.ShowAttributes = true
 
 	// collapse /bin
-	err := vm.toggleCollapse(nil)
+	err := vm.ToggleCollapse(nil)
 	checkError(t, err, "unable to collapse /bin")
 
 	moved := vm.CursorDown()
@@ -288,7 +289,7 @@ func TestFileTreeDirCursorRight(t *testing.T) {
 	}
 
 	// collapse /etc
-	err = vm.toggleCollapse(nil)
+	err = vm.ToggleCollapse(nil)
 	checkError(t, err, "unable to collapse /etc")
 
 	// expand /etc
@@ -321,23 +322,23 @@ func TestFileTreeHideAddedRemovedModified(t *testing.T) {
 	vm.ShowAttributes = true
 
 	// collapse /bin
-	err := vm.toggleCollapse(nil)
+	err := vm.ToggleCollapse(nil)
 	checkError(t, err, "unable to collapse /bin")
 
 	// select the 7th layer, compareMode = layer
-	err = vm.setTreeByLayer(0, 0, 1, 7)
+	err = vm.SetTreeByLayer(0, 0, 1, 7)
 	if err != nil {
-		t.Errorf("unable to setTreeByLayer: %v", err)
+		t.Errorf("unable to SetTreeByLayer: %v", err)
 	}
 
 	// hide added files
-	vm.toggleShowDiffType(filetree.Added)
+	vm.ToggleShowDiffType(filetree.Added)
 
 	// hide modified files
-	vm.toggleShowDiffType(filetree.Modified)
+	vm.ToggleShowDiffType(filetree.Modified)
 
 	// hide removed files
-	vm.toggleShowDiffType(filetree.Removed)
+	vm.ToggleShowDiffType(filetree.Removed)
 
 	runTestCase(t, vm, width, height, nil)
 }
@@ -350,17 +351,17 @@ func TestFileTreeHideUnmodified(t *testing.T) {
 	vm.ShowAttributes = true
 
 	// collapse /bin
-	err := vm.toggleCollapse(nil)
+	err := vm.ToggleCollapse(nil)
 	checkError(t, err, "unable to collapse /bin")
 
 	// select the 7th layer, compareMode = layer
-	err = vm.setTreeByLayer(0, 0, 1, 7)
+	err = vm.SetTreeByLayer(0, 0, 1, 7)
 	if err != nil {
-		t.Errorf("unable to setTreeByLayer: %v", err)
+		t.Errorf("unable to SetTreeByLayer: %v", err)
 	}
 
 	// hide unmodified files
-	vm.toggleShowDiffType(filetree.Unmodified)
+	vm.ToggleShowDiffType(filetree.Unmodified)
 
 	runTestCase(t, vm, width, height, nil)
 }
@@ -373,17 +374,17 @@ func TestFileTreeHideTypeWithFilter(t *testing.T) {
 	vm.ShowAttributes = true
 
 	// collapse /bin
-	err := vm.toggleCollapse(nil)
+	err := vm.ToggleCollapse(nil)
 	checkError(t, err, "unable to collapse /bin")
 
 	// select the 7th layer, compareMode = layer
-	err = vm.setTreeByLayer(0, 0, 1, 7)
+	err = vm.SetTreeByLayer(0, 0, 1, 7)
 	if err != nil {
-		t.Errorf("unable to setTreeByLayer: %v", err)
+		t.Errorf("unable to SetTreeByLayer: %v", err)
 	}
 
 	// hide added files
-	vm.toggleShowDiffType(filetree.Added)
+	vm.ToggleShowDiffType(filetree.Added)
 
 	regex, err := regexp.Compile("saved")
 	if err != nil {

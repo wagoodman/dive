@@ -40,7 +40,7 @@ test-coverage: build
 	./.scripts/test-coverage.sh
 
 validate:
-	grep -R 'const allowTestDataCapture = false' runtime/ui/
+	grep -R 'const allowTestDataCapture = false' runtime/ui/viewmodel
 	go vet ./...
 	@! gofmt -s -l . 2>&1 | grep -vE '^\.git/' | grep -vE '^\.cache/'
 	golangci-lint run
