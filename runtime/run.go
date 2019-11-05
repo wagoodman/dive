@@ -32,6 +32,7 @@ func run(enableUi bool, options Options, imageResolver image.Resolver, events ev
 			return
 		}
 	} else {
+		events.message(utils.TitleFormat("Image Source: ") + options.Source.String() + "://" + options.Image)
 		events.message(utils.TitleFormat("Fetching image...") + " (this can take a while for large images)")
 		img, err = imageResolver.Fetch(options.Image)
 		if err != nil {

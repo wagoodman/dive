@@ -25,19 +25,6 @@ dockers:
     - "quay.io/wagoodman/dive:v{{ .Major }}"
     - "quay.io/wagoodman/dive:v{{ .Major }}.{{ .Minor }}"
     - "quay.io/wagoodman/dive:latest"
-  -
-    binaries:
-      - dive
-    dockerfile: Dockerfile.full
-    image_templates:
-      - "wagoodman/dive:{{ .Tag }}-full"
-      - "wagoodman/dive:v{{ .Major }}-full"
-      - "wagoodman/dive:v{{ .Major }}.{{ .Minor }}-full"
-      - "wagoodman/dive:full"
-      - "quay.io/wagoodman/dive:{{ .Tag }}-full"
-      - "quay.io/wagoodman/dive:v{{ .Major }}-full"
-      - "quay.io/wagoodman/dive:v{{ .Major }}.{{ .Minor }}-full"
-      - "quay.io/wagoodman/dive:full"
 archive:
   format: tar.gz
 

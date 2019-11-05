@@ -105,6 +105,7 @@ func TestRun(t *testing.T) {
 				BuildArgs:  nil,
 			},
 			events: []testEvent{
+				{stdout: "Image Source: docker://dive-example", stderr: "", errorOnExit: false, errMessage: ""},
 				{stdout: "Fetching image... (this can take a while for large images)", stderr: "", errorOnExit: false, errMessage: ""},
 				{stdout: "Analyzing image...", stderr: "", errorOnExit: false, errMessage: ""},
 				{stdout: "Building cache...", stderr: "", errorOnExit: false, errMessage: ""},
@@ -122,6 +123,7 @@ func TestRun(t *testing.T) {
 				BuildArgs: []string{},
 			},
 			events: []testEvent{
+				{stdout: "Image Source: docker://dive-example", stderr: "", errorOnExit: false, errMessage: ""},
 				{stdout: "Fetching image... (this can take a while for large images)", stderr: "", errorOnExit: false, errMessage: ""},
 				{stdout: "Analyzing image...", stderr: "", errorOnExit: false, errMessage: ""},
 				{stdout: "Building cache...", stderr: "", errorOnExit: false, errMessage: ""},
@@ -154,6 +156,7 @@ func TestRun(t *testing.T) {
 				BuildArgs:  nil,
 			},
 			events: []testEvent{
+				{stdout: "Image Source: docker://dive-example", stderr: "", errorOnExit: false, errMessage: ""},
 				{stdout: "Fetching image... (this can take a while for large images)", stderr: "", errorOnExit: false, errMessage: ""},
 				{stdout: "", stderr: "cannot fetch image", errorOnExit: true, errMessage: "some fetch failure"},
 			},
