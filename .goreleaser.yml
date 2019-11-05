@@ -25,24 +25,24 @@ dockers:
     - "quay.io/wagoodman/dive:v{{ .Major }}"
     - "quay.io/wagoodman/dive:v{{ .Major }}.{{ .Minor }}"
     - "quay.io/wagoodman/dive:latest"
-archive:
-  format: tar.gz
 
-  format_overrides:
-    - goos: windows
-      format: zip
+archives:
+  - format: tar.gz
+    format_overrides:
+      - goos: windows
+        format: zip
 
-nfpm:
-  license: MIT
-  maintainer: Alex Goodman
-  homepage: https://github.com/wagoodman/dive/
-  formats:
-    - deb
-    - rpm
+nfpms:
+  - license: MIT
+    maintainer: Alex Goodman
+    homepage: https://github.com/wagoodman/dive/
+    formats:
+      - deb
+      - rpm
 
-brew:
-  github:
-    owner: wagoodman
-    name: homebrew-dive
-  homepage: "https://github.com/wagoodman/dive/"
-  description: "A tool for exploring each layer in a docker image"
+brews:
+  - github:
+      owner: wagoodman
+      name: homebrew-dive
+    homepage: "https://github.com/wagoodman/dive/"
+    description: "A tool for exploring each layer in a docker image"
