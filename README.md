@@ -59,9 +59,11 @@ You only need to replace your `docker build` command with the same `dive build`
 command.
 
 **CI Integration**
+
 Analyze and image and get a pass/fail result based on the image efficiency and wasted space. Simply set `CI=true` in the environment when invoking any valid dive command.
 
-**With Multiple Image Sources and Container Engines Supported**
+**Multiple Image Sources and Container Engines Supported**
+
 With the `--source` option, you can select where to fetch the container image from:
 ```bash
 dive <your-image> --source <source>
@@ -80,14 +82,14 @@ With valid `source` options as such:
 
 **Ubuntu/Debian**
 ```bash
-wget https://github.com/wagoodman/dive/releases/download/v0.8.1/dive_0.8.1_linux_amd64.deb
-sudo apt install ./dive_0.8.1_linux_amd64.deb
+wget https://github.com/wagoodman/dive/releases/download/v0.9.0/dive_0.9.0_linux_amd64.deb
+sudo apt install ./dive_0.9.0_linux_amd64.deb
 ```
 
 **RHEL/Centos**
 ```bash
-curl -OL https://github.com/wagoodman/dive/releases/download/v0.8.1/dive_0.8.1_linux_amd64.rpm
-rpm -i dive_0.8.1_linux_amd64.rpm
+curl -OL https://github.com/wagoodman/dive/releases/download/v0.9.0/dive_0.9.0_linux_amd64.rpm
+rpm -i dive_0.9.0_linux_amd64.rpm
 ```
 
 **Arch Linux**
@@ -106,11 +108,11 @@ The above example assumes [`yay`](https://aur.archlinux.org/packages/yay/) as th
 brew install dive
 ```
 
-or download the latest Darwin build from the [releases page](https://github.com/wagoodman/dive/releases/download/v0.8.1/dive_0.8.1_darwin_amd64.tar.gz).
+or download the latest Darwin build from the [releases page](https://github.com/wagoodman/dive/releases/download/v0.9.0/dive_0.9.0_darwin_amd64.tar.gz).
 
 **Windows**
 
-Download the [latest release](https://github.com/wagoodman/dive/releases/download/v0.8.1/dive_0.8.1_windows_amd64.zip).
+Download the [latest release](https://github.com/wagoodman/dive/releases/download/v0.9.0/dive_0.9.0_windows_amd64.zip).
 
 **Go tools**
 Requires Go version 1.9 or higher.
@@ -131,7 +133,7 @@ or
 docker pull quay.io/wagoodman/dive
 ```
 
-When running you'll need to include the docker client binary and socket file:
+When running you'll need to include the docker socket file:
 ```bash
 docker run --rm -it \
     -v /var/run/docker.sock:/var/run/docker.sock \
