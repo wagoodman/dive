@@ -1,7 +1,7 @@
 name: 'snapshot'
-on: [push, pull_request]
+on: [ push, pull_request ]
 jobs:
-  snapshot:
+  pkg:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/setup-go@v1
@@ -17,8 +17,22 @@ jobs:
     - run: go get ./...
     - run: golangci-lint run -v
     - run: goreleaser --snapshot --skip-publish --rm-dist
+    - uses: actions/upload-artifact@master
+      with:
+        name: ubuntu
+        path: dist
+
+  docker:
+    needs: [ pkg ]
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/setup-go@v1
+      with:
+        go-version: '1.13.x'
+    - uses: actions/checkout@v1
+    - run: ./docker.sh
     - run: docker images
     - uses: actions/upload-artifact@master
       with:
-        name: dist
+        name: alpine
         path: dist
