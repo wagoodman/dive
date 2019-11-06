@@ -80,6 +80,43 @@ With valid `source` options as such:
 
 ## Installation
 
+**Docker (recommended)**
+```bash
+docker pull wagoodman/dive
+```
+
+or
+
+```bash
+docker pull quay.io/wagoodman/dive
+```
+
+When running you'll need to include the docker socket file:
+```bash
+docker run --rm -it \
+    -v /var/run/docker.sock:/var/run/docker.sock \
+    wagoodman/dive:latest <dive arguments...>
+```
+
+Docker for Windows (showing PowerShell compatible line breaks; collapse to a single line for Command Prompt compatibility)
+```bash
+docker run --rm -it `
+    -v /var/run/docker.sock:/var/run/docker.sock `
+    wagoodman/dive:latest <dive arguments...>
+```
+
+**Note:** depending on the version of docker you are running locally you may need to specify the docker API version as an environment variable:
+```bash
+   DOCKER_API_VERSION=1.37 dive ...
+```
+or if you are running with a docker image:
+```bash
+docker run --rm -it \
+    -v /var/run/docker.sock:/var/run/docker.sock \
+    -e DOCKER_API_VERSION=1.37 \
+    wagoodman/dive:latest <dive arguments...>
+```
+
 **Ubuntu/Debian**
 ```bash
 wget https://github.com/wagoodman/dive/releases/download/v0.9.0/dive_0.9.0_linux_amd64.deb
@@ -121,43 +158,6 @@ Requires Go version 1.9 or higher.
 go get github.com/wagoodman/dive
 ```
 *Note*: installing in this way you will not see a proper version when running `dive -v`.
-
-**Docker**
-```bash
-docker pull wagoodman/dive
-```
-
-or
-
-```bash
-docker pull quay.io/wagoodman/dive
-```
-
-When running you'll need to include the docker socket file:
-```bash
-docker run --rm -it \
-    -v /var/run/docker.sock:/var/run/docker.sock \
-    wagoodman/dive:latest <dive arguments...>
-```
-
-Docker for Windows (showing PowerShell compatible line breaks; collapse to a single line for Command Prompt compatibility)
-```bash
-docker run --rm -it `
-    -v /var/run/docker.sock:/var/run/docker.sock `
-    wagoodman/dive:latest <dive arguments...>
-```
-
-**Note:** depending on the version of docker you are running locally you may need to specify the docker API version as an environment variable:
-```bash
-   DOCKER_API_VERSION=1.37 dive ...
-```
-or if you are running with a docker image:
-```bash
-docker run --rm -it \
-    -v /var/run/docker.sock:/var/run/docker.sock \
-    -e DOCKER_API_VERSION=1.37 \
-    wagoodman/dive:latest <dive arguments...>
-```
 
 ## CI Integration
 
