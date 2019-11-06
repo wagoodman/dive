@@ -25,11 +25,20 @@ jobs:
   docker:
     needs: [ pkg ]
     runs-on: ubuntu-latest
+    env:
+      DOCKER_REGISTRY: docker.pkg.github.com
     steps:
     - uses: actions/setup-go@v1
       with:
         go-version: '1.13.x'
     - uses: actions/checkout@v1
+    - name: docker pull
+      run: |
+        echo "$GITHUB_TOKEN" | docker login -u dive-gha --password-stdin "$DOCKER_REGISTRY"
+        docker pull docker.pkg.github.com/wagoodman/dive/dev:latest
+        docker logout "$DOCKER_REGISTRY"
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - run: ./docker.sh
     - run: docker images
     - uses: actions/upload-artifact@master

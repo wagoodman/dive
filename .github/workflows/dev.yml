@@ -1,0 +1,32 @@
+name: 'dev'
+on:
+  push:
+    paths:
+      - '.github/workflows/dev.yml'
+  schedule:
+    - cron: '0 0 * * 5'
+env:
+  DOCKER_BUILDKIT: '1'
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      DOCKER_REGISTRY: docker.pkg.github.com
+    steps:
+    - uses: actions/checkout@v1
+    - name: build image
+      run: |
+        docker build -t wagoodman/dive:dev - <<EOF
+        FROM golang:alpine AS build
+        RUN apk add -U --no-cache gpgme-dev gcc musl-dev btrfs-progs-dev lvm2-dev curl git \
+         && curl -sfL https://install.goreleaser.com/github.com/goreleaser/goreleaser.sh | sh \
+         && curl -L https://download.docker.com/linux/static/stable/x86_64/docker-19.03.1.tgz | tar -xzf - docker/docker --strip-component=1 -C /usr/local/bin
+        EOF
+    - name: docker push
+      if: github.repository == 'wagoodman/dive'
+      run: |
+        echo "$GITHUB_TOKEN" | docker login -u dive-gha --password-stdin "$DOCKER_REGISTRY"
+        docker push ${DOCKER_REGISTRY}/wagoodman/dive/dev:latest
+        docker logout "$DOCKER_REGISTRY"
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
