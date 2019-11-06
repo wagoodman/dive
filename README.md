@@ -98,6 +98,12 @@ docker run --rm -it \
     wagoodman/dive:latest <dive arguments...>
 ```
 
+In a Bash shell, adding the following to `~/.bash_aliases` (and possibly running `source ~/.bash_aliases`) allows you
+to simply run `dive` in place of the docker command:
+```bash
+alias dive='docker run --rm -it -v /var/run/docker.sock:/var/run/docker.sock wagoodman/dive:latest'
+```
+
 Docker for Windows (showing PowerShell compatible line breaks; collapse to a single line for Command Prompt compatibility)
 ```bash
 docker run --rm -it `
