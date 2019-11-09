@@ -3,6 +3,8 @@ release:
 
 builds:
   - binary: dive
+    env:
+      - CGO_ENABLED=0
     goos:
       - windows
       - darwin
