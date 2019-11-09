@@ -40,6 +40,54 @@ ci-test-production-image:
 			'${TEST_IMAGE}' \
 			--ci
 
+ci-test-deb-package-install:
+	docker run \
+		-v //var/run/docker.sock://var/run/docker.sock \
+		-v /${PWD}://src \
+		-w //src \
+		ubuntu:latest \
+			/bin/bash -x -c "\
+				apt update && \
+				apt install -y curl && \
+				curl -L 'https://download.docker.com/linux/static/stable/x86_64/docker-${DOCKER_CLI_VERSION}.tgz' | \
+					tar -vxzf - docker/docker --strip-component=1 && \
+					mv docker /usr/local/bin/ &&\
+				docker version && \
+				apt install ./dist/dive_*_linux_amd64.deb -y && \
+				dive --version && \
+				dive '${TEST_IMAGE}' --ci \
+			"
+
+ci-test-rpm-package-install:
+	docker run \
+		-v //var/run/docker.sock://var/run/docker.sock \
+		-v /${PWD}://src \
+		-w //src \
+		fedora:latest \
+			/bin/bash -x -c "\
+				curl -L 'https://download.docker.com/linux/static/stable/x86_64/docker-${DOCKER_CLI_VERSION}.tgz' | \
+					tar -vxzf - docker/docker --strip-component=1 && \
+					mv docker /usr/local/bin/ &&\
+				docker version && \
+				dnf install ./dist/dive_*_linux_amd64.rpm -y && \
+				dive --version && \
+				dive '${TEST_IMAGE}' --ci \
+			"
+
+ci-test-linux-run:
+	chmod 755 ./dist/dive_linux_amd64/dive && \
+	./dist/dive_linux_amd64/dive '${TEST_IMAGE}'  --ci
+
+# we're not attempting to test docker, just our ability to run on these systems. This avoids setting up docker in CI.
+ci-test-mac-run:
+	chmod 755 ./dist/dive_darwin_amd64/dive && \
+	./dist/dive_darwin_amd64/dive --source docker-archive .data/test-docker-image.tar  --ci --ci-config .data/.dive-ci
+
+# we're not attempting to test docker, just our ability to run on these systems. This avoids setting up docker in CI.
+ci-test-windows-run:
+	./dist/dive_windows_amd64/dive --source docker-archive .data/test-docker-image.tar  --ci --ci-config .data/.dive-ci
+
+
 
 ## For development
 
@@ -64,6 +112,9 @@ build:
 
 generate-test-data:
 	docker build -t dive-test:latest -f .data/Dockerfile.test-image . && docker image save -o .data/test-docker-image.tar dive-test:latest && echo 'Exported test data!'
+
+test:
+	./.scripts/test-coverage.sh
 
 dev:
 	docker run -ti --rm -v $(PWD):/app -w /app -v dive-pkg:/go/pkg/ golang:1.13 bash

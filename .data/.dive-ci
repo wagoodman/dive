@@ -10,6 +10,6 @@ rules:
   highestWastedBytes: 20Mb
 
   # If the amount of wasted space makes up for X% of the image, mark as failed. (fail if the threshold is met or crossed; expressed as a percentage between 0-1)
-  highestUserWastedPercent: 0.10
+  highestUserWastedPercent: 0.5
 
   plugin1/rule1: error
