@@ -9,8 +9,14 @@ all: clean build
 
 ## For CI
 
-ci-test:
+ci-unit-test:
 	go test -cover -v -race ./...
+
+ci-static-analyses:
+	grep -R 'const allowTestDataCapture = false' runtime/ui/viewmodel
+	go vet ./...
+	@! gofmt -s -l . 2>&1 | grep -vE '^\.git/' | grep -vE '^\.cache/'
+	golangci-lint run
 
 ci-install-go-tools:
 	curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sudo sh -s -- -b /usr/local/bin/ latest
@@ -33,6 +39,7 @@ ci-test-production-image:
 		'${PRODUCTION_REGISTRY}/wagoodman/dive:latest' \
 			'${TEST_IMAGE}' \
 			--ci
+
 
 ## For development
 

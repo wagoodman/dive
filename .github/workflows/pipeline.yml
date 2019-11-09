@@ -3,6 +3,8 @@ on: [ push, pull_request ]
 env:
   DOCKER_CLI_VERSION: "19.03.1"
 jobs:
+  # This will run on merge to master, and for PRs with folks that also are part of the GHA beta.
+  # Circle ci will also run for redundancy until GHA is out of beta, since circle checks will always run.
   unit-test:
     strategy:
       matrix:
@@ -33,7 +35,7 @@ jobs:
         run: go get ./...
 
       - name: Test
-        run: make ci-test
+        run: make ci-unit-test
 
   build-artifacts:
     runs-on: ubuntu-latest
@@ -60,10 +62,8 @@ jobs:
         if: steps.package-cache-go-dependencies.outputs.cache-hit != 'true'
         run: go get ./...
 
-      # todo: test gofmt
-
-      - name: Lint
-        run: golangci-lint run -v
+      - name: Linting, formatting, and other static code analyses
+        run: make ci-static-analyses
 
       - name: Build snapshot artifacts
         uses: goreleaser/goreleaser-action@v1

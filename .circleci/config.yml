@@ -1,70 +1,59 @@
-version: 2
+version: 2.1
 
 jobs:
-  golang-1.11:
+  run-static-analyses:
+    parameters:
+      version:
+        type: string
     working_directory: /home/circleci/app
     docker:
-      - image: circleci/golang:1.11
+      - image: circleci/golang:<< parameters.version >>
         environment:
           GO111MODULE: "on"
     steps:
       - checkout
       - restore_cache:
           keys:
-            - golang-1.11-{{ checksum "go.sum" }}
-      - run: make setup-ci
+            - golang-<< parameters.version >>-{{ checksum "go.sum" }}
+      - run: make ci-install-go-tools
       - save_cache:
-          key: golang-1.11-{{ checksum "go.sum" }}
+          key: golang-<< parameters.version >>-{{ checksum "go.sum" }}
           paths:
             - "/go/pkg/mod"
       - run:
-          name: run static analysis & tests
-          command: make ci
+          name: run static analysis
+          command: make ci-static-analyses
 
-  golang-1.12:
+  run-tests:
+    parameters:
+      version:
+        type: string
     working_directory: /home/circleci/app
     docker:
-      - image: circleci/golang:1.12
+      - image: circleci/golang:<< parameters.version >>
         environment:
           GO111MODULE: "on"
     steps:
       - checkout
       - restore_cache:
           keys:
-            - golang-1.12-{{ checksum "go.sum" }}
-      - run: make setup-ci
+            - golang-<< parameters.version >>-{{ checksum "go.sum" }}
+      - run: make ci-install-go-tools
       - save_cache:
-          key: golang-1.12-{{ checksum "go.sum" }}
+          key: golang-<< parameters.version >>-{{ checksum "go.sum" }}
           paths:
             - "/go/pkg/mod"
       - run:
-          name: run static analysis & tests
-          command: make ci
+          name: run unit tests
+          command: make ci-unit-test
 
-  golang-1.13:
-    working_directory: /home/circleci/app
-    docker:
-      - image: circleci/golang:1.13
-        environment:
-          GO111MODULE: "on"
-    steps:
-      - checkout
-      - restore_cache:
-          keys:
-            - golang-1.13-{{ checksum "go.sum" }}
-      - run: make setup-ci
-      - save_cache:
-          key: golang-1.13-{{ checksum "go.sum" }}
-          paths:
-            - "/go/pkg/mod"
-      - run:
-          name: run static analysis & tests
-          command: make ci
 
 workflows:
-  version: 2
   commit:
     jobs:
-      - golang-1.11
-      - golang-1.12
-      - golang-1.13
+      - run-static-analyses:
+          version: "1.13"
+      - run-tests:
+          version: "1.12"
+      - run-tests:
+          version: "1.13"

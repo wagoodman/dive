@@ -39,6 +39,7 @@ dockers:
     binaries:
       - dive
     dockerfile: Dockerfile
+    # todo: on 1.0 remove 'v' prefix
     image_templates:
       - "wagoodman/dive:latest"
       - "wagoodman/dive:{{ .Tag }}"
