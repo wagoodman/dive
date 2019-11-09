@@ -1,0 +1,130 @@
+name: 'app-pipeline'
+on: [ push, pull_request ]
+env:
+  DOCKER_CLI_VERSION: "19.03.1"
+jobs:
+  unit-test:
+    strategy:
+      matrix:
+        go-version: [1.12.x, 1.13.x]
+        # todo: support windows
+        platform: [ubuntu-latest, macos-latest]
+        # platform: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.platform }}
+    steps:
+
+      - uses: actions/setup-go@v1
+        with:
+          go-version: ${{ matrix.go-version }}
+
+      - uses: actions/checkout@v1
+
+      - name: Cache go dependencies
+        id: unit-cache-go-dependencies
+        uses: actions/cache@v1
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Install go dependencies
+        if: steps.unit-cache-go-dependencies.outputs.cache-hit != 'true'
+        run: go get ./...
+
+      - name: Test
+        run: make ci-test
+
+  build-artifacts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-go@v1
+        with:
+          go-version: '1.13.x'
+
+      - uses: actions/checkout@v1
+
+      - name: Install go tools
+        run: make ci-install-go-tools
+
+      - name: Cache go dependencies
+        id: package-cache-go-dependencies
+        uses: actions/cache@v1
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Install dependencies
+        if: steps.package-cache-go-dependencies.outputs.cache-hit != 'true'
+        run: go get ./...
+
+      # todo: test gofmt
+
+      - name: Lint
+        run: golangci-lint run -v
+
+      - name: Build snapshot artifacts
+        uses: goreleaser/goreleaser-action@v1
+        with:
+          version: latest
+          args: release --snapshot --skip-publish --rm-dist
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - run: docker images wagoodman/dive
+
+      # todo: compare against known json output in shared volume
+      - name: Test production image
+        run: make ci-test-production-image
+
+      - uses: actions/upload-artifact@master
+        with:
+          name: artifacts
+          path: dist
+
+  release:
+    needs: [ build-artifacts, unit-test  ]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    steps:
+
+      - uses: actions/setup-go@v1
+        with:
+          go-version: '1.13.x'
+
+      - uses: actions/checkout@v1
+
+      - name: Cache go dependencies
+        id: release-cache-go-dependencies
+        uses: actions/cache@v1
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Install dependencies
+        if: steps.release-cache-go-dependencies.outputs.cache-hit != 'true'
+        run: go get ./...
+
+      - name: Docker login
+        run: make ci-docker-login
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Publish GitHub release
+        uses: goreleaser/goreleaser-action@v1
+        with:
+          version: latest
+          args: release --rm-dist
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Docker logout
+        run: make ci-docker-logout
+
+      - name: Smoke test published image
+        run: make ci-test-production-image
