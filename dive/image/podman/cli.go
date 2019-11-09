@@ -5,6 +5,7 @@ package podman
 import (
 	"fmt"
 	"github.com/wagoodman/dive/utils"
+	"io"
 	"os"
 	"os/exec"
 )
@@ -25,6 +26,25 @@ func runPodmanCmd(cmdStr string, args ...string) error {
 	cmd.Stdin = os.Stdin
 
 	return cmd.Run()
+}
+
+func streamPodmanCmd(args ...string) (error, io.Reader) {
+	if !isPodmanClientBinaryAvailable() {
+		return fmt.Errorf("cannot find podman client executable"), nil
+	}
+
+	cmd := exec.Command("podman", utils.CleanArgs(args)...)
+	cmd.Env = os.Environ()
+
+	reader, writer, err := os.Pipe()
+	if err != nil {
+		return err, nil
+	}
+
+	cmd.Stdout = writer
+	cmd.Stderr = os.Stderr
+
+	return cmd.Start(), reader
 }
 
 func isPodmanClientBinaryAvailable() bool {

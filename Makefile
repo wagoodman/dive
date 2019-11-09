@@ -12,11 +12,15 @@ run-large: build
 	$(BUILD_PATH) amir20/clashleaders:latest
 
 run-podman: build
+	$(BUILD_PATH)  localhost/dive-example:latest  --source podman
+
+run-podman-build: build
 	podman build -t dive-example:latest -f .data/Dockerfile.example .
-	$(BUILD_PATH) localhost/dive-example:latest --engine podman
+	$(BUILD_PATH) localhost/dive-example:latest --source podman
+
 
 run-podman-large: build
-	$(BUILD_PATH) docker.io/amir20/clashleaders:latest --engine podman
+	$(BUILD_PATH) docker.io/amir20/clashleaders:latest --source podman
 
 run-ci: build
 	CI=true $(BUILD_PATH) dive-example:latest --ci-config .data/.dive-ci
