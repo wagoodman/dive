@@ -7,8 +7,8 @@ require (
 	github.com/Microsoft/go-winio v0.4.14 // indirect
 	github.com/cespare/xxhash v1.1.0
 	github.com/docker/cli v0.0.0-20190906153656-016a3232168d
-	github.com/docker/distribution v2.7.1+incompatible // indirect
-	github.com/docker/docker v0.7.3-0.20190309235953-33c3200e0d16
+	github.com/docker/distribution v0.0.0-20191024225408-dee21c0394b5 // indirect
+	github.com/docker/docker v1.4.2-0.20191113233703-44d39013868a
 	github.com/docker/go-connections v0.4.0 // indirect
 	github.com/docker/go-units v0.4.0 // indirect
 	github.com/dustin/go-humanize v1.0.0
@@ -41,7 +41,6 @@ require (
 	github.com/spf13/viper v1.4.0
 	github.com/stretchr/testify v1.4.0 // indirect
 	github.com/wagoodman/keybinding v0.0.0-20181213133715-6a824da6df05
-	golang.org/x/crypto v0.0.0-20190907121410-71b5226ff739
 	golang.org/x/net v0.0.0-20190827160401-ba9fcec4b297
 	golang.org/x/sys v0.0.0-20190907184412-d223b2b6db03 // indirect
 	golang.org/x/text v0.3.2 // indirect
