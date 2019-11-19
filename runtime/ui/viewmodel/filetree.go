@@ -19,7 +19,7 @@ type FileTree struct {
 	ModelTree *filetree.FileTree
 	ViewTree  *filetree.FileTree
 	RefTrees  []*filetree.FileTree
-	cache     filetree.TreeCache
+	cache     filetree.Comparer
 
 	CollapseAll           bool
 	ShowAttributes        bool
@@ -35,7 +35,7 @@ type FileTree struct {
 }
 
 // NewFileTreeViewModel creates a new view object attached the the global [gocui] screen object.
-func NewFileTreeViewModel(tree *filetree.FileTree, refTrees []*filetree.FileTree, cache filetree.TreeCache) (treeViewModel *FileTree, err error) {
+func NewFileTreeViewModel(tree *filetree.FileTree, refTrees []*filetree.FileTree, cache filetree.Comparer) (treeViewModel *FileTree, err error) {
 	treeViewModel = new(FileTree)
 
 	// populate main fields
@@ -101,7 +101,7 @@ func (vm *FileTree) SetTreeByLayer(bottomTreeStart, bottomTreeStop, topTreeStart
 	if topTreeStop > len(vm.RefTrees)-1 {
 		return fmt.Errorf("invalid layer index given: %d of %d", topTreeStop, len(vm.RefTrees)-1)
 	}
-	newTree, err := vm.cache.Get(bottomTreeStart, bottomTreeStop, topTreeStart, topTreeStop)
+	newTree, err := vm.cache.GetTree(filetree.NewTreeIndexKey(bottomTreeStart, bottomTreeStop, topTreeStart, topTreeStop))
 	if err != nil {
 		logrus.Errorf("unable to fetch layer tree from cache: %+v", err)
 		return err

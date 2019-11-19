@@ -8,6 +8,7 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"path"
 	"strings"
 )
 
@@ -119,7 +120,11 @@ func getFileList(tarReader *tar.Reader) ([]filetree.FileInfo, error) {
 			return nil, err
 		}
 
-		name := header.Name
+		// always ensure relative path notations are not parsed as part of the filename
+		name := path.Clean(header.Name)
+		if name == "." {
+			continue
+		}
 
 		switch header.Typeflag {
 		case tar.TypeXGlobalHeader:

@@ -20,7 +20,7 @@ type Controller struct {
 	lookup  map[string]view.Renderer
 }
 
-func NewCollection(g *gocui.Gui, analysis *image.AnalysisResult, cache filetree.TreeCache) (*Controller, error) {
+func NewCollection(g *gocui.Gui, analysis *image.AnalysisResult, cache filetree.Comparer) (*Controller, error) {
 	var err error
 
 	controller := &Controller{
@@ -34,10 +34,11 @@ func NewCollection(g *gocui.Gui, analysis *image.AnalysisResult, cache filetree.
 	}
 	controller.lookup[controller.Layer.Name()] = controller.Layer
 
-	treeStack, err := filetree.StackTreeRange(analysis.RefTrees, 0, 0)
-	if err != nil {
-		return nil, err
-	}
+	//treeStack, err := filetree.StackTreeRange(analysis.RefTrees, 0, 0)
+	//if err != nil {
+	//	return nil, err
+	//}
+	treeStack := analysis.RefTrees[0]
 	controller.Tree, err = view.NewFileTreeView("filetree", g, treeStack, analysis.RefTrees, cache)
 	if err != nil {
 		return nil, err

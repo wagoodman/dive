@@ -121,6 +121,7 @@ func initLogging() {
 
 	if viper.GetBool("log.enabled") {
 		logFileObj, err = os.OpenFile(viper.GetString("log.path"), os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
+		log.SetOutput(logFileObj)
 	} else {
 		log.SetOutput(ioutil.Discard)
 	}
@@ -139,7 +140,6 @@ func initLogging() {
 	}
 
 	log.SetLevel(level)
-	log.SetOutput(logFileObj)
 	log.Debug("Starting Dive...")
 }
 

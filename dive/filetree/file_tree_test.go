@@ -307,10 +307,14 @@ func TestStack(t *testing.T) {
 		t.Errorf("expected no node on whiteout file add, but got %v", node)
 	}
 
-	err = tree1.Stack(tree2)
+	failedPaths, err := tree1.Stack(tree2)
 
 	if err != nil {
 		t.Errorf("Could not stack refTrees: %v", err)
+	}
+
+	if len(failedPaths) > 0 {
+		t.Errorf("expected no filepath errors, got %d", len(failedPaths))
 	}
 
 	expected :=
@@ -415,9 +419,12 @@ func TestCompareWithNoChanges(t *testing.T) {
 			t.Errorf("could not setup test: %v", err)
 		}
 	}
-	err := lowerTree.CompareAndMark(upperTree)
+	failedPaths, err := lowerTree.CompareAndMark(upperTree)
 	if err != nil {
 		t.Errorf("could not setup test: %v", err)
+	}
+	if len(failedPaths) > 0 {
+		t.Errorf("expected no filepath errors, got %d", len(failedPaths))
 	}
 	asserter := func(n *FileNode) error {
 		if n.Path() == "/" {
@@ -463,9 +470,12 @@ func TestCompareWithAdds(t *testing.T) {
 	}
 
 	failedAssertions := []error{}
-	err := lowerTree.CompareAndMark(upperTree)
+	failedPaths, err := lowerTree.CompareAndMark(upperTree)
 	if err != nil {
 		t.Errorf("Expected tree compare to have no errors, got: %v", err)
+	}
+	if len(failedPaths) > 0 {
+		t.Errorf("expected no filepath errors, got %d", len(failedPaths))
 	}
 	asserter := func(n *FileNode) error {
 
@@ -577,11 +587,13 @@ func TestCompareWithChanges(t *testing.T) {
 
 	changedPaths = append(changedPaths, chownPath)
 
-	err = lowerTree.CompareAndMark(upperTree)
+	failedPaths, err := lowerTree.CompareAndMark(upperTree)
 	if err != nil {
 		t.Errorf("unable to compare and mark: %+v", err)
 	}
-
+	if len(failedPaths) > 0 {
+		t.Errorf("expected no filepath errors, got %d", len(failedPaths))
+	}
 	failedAssertions := []error{}
 	asserter := func(n *FileNode) error {
 		p := n.Path()
@@ -642,9 +654,12 @@ func TestCompareWithRemoves(t *testing.T) {
 		}
 	}
 
-	err := lowerTree.CompareAndMark(upperTree)
+	failedPaths, err := lowerTree.CompareAndMark(upperTree)
 	if err != nil {
 		t.Errorf("could not setup test: %v", err)
+	}
+	if len(failedPaths) > 0 {
+		t.Errorf("expected no filepath errors, got %d", len(failedPaths))
 	}
 	failedAssertions := []error{}
 	asserter := func(n *FileNode) error {
@@ -745,7 +760,10 @@ func TestStackRange(t *testing.T) {
 		}
 	}
 	trees := []*FileTree{lowerTree, upperTree, tree}
-	_, err = StackTreeRange(trees, 0, 2)
+	_, failedPaths, err := StackTreeRange(trees, 0, 2)
+	if len(failedPaths) > 0 {
+		t.Errorf("expected no filepath errors, got %d", len(failedPaths))
+	}
 	if err != nil {
 		t.Fatal(err)
 	}
