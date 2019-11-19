@@ -125,6 +125,40 @@ func TestStringBetween(t *testing.T) {
 
 }
 
+func TestRejectPurelyRelativePath(t *testing.T) {
+	tree := NewFileTree()
+	_, _, err := tree.AddPath("./etc/nginx/nginx.conf", FileInfo{})
+	if err != nil {
+		t.Errorf("could not setup test: %v", err)
+	}
+	_, _, err = tree.AddPath("./", FileInfo{})
+
+	if err == nil {
+		t.Errorf("expected to reject relative path, but did not")
+	}
+
+}
+
+func TestAddRelativePath(t *testing.T) {
+	tree := NewFileTree()
+	_, _, err := tree.AddPath("./etc/nginx/nginx.conf", FileInfo{})
+	if err != nil {
+		t.Errorf("could not setup test: %v", err)
+	}
+
+	expected :=
+		`└── etc
+    └── nginx
+        └── nginx.conf
+`
+	actual := tree.String(false)
+
+	if expected != actual {
+		t.Errorf("Expected tree string:\n--->%s<---\nGot:\n--->%s<---", expected, actual)
+	}
+
+}
+
 func TestAddPath(t *testing.T) {
 	tree := NewFileTree()
 	_, _, err := tree.AddPath("/etc/nginx/nginx.conf", FileInfo{})

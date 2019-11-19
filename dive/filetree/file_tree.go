@@ -2,6 +2,7 @@ package filetree
 
 import (
 	"fmt"
+	"path"
 	"sort"
 	"strings"
 
@@ -240,8 +241,12 @@ func (tree *FileTree) GetNode(path string) (*FileNode, error) {
 }
 
 // AddPath adds a new node to the tree with the given payload
-func (tree *FileTree) AddPath(path string, data FileInfo) (*FileNode, []*FileNode, error) {
-	nodeNames := strings.Split(strings.Trim(path, "/"), "/")
+func (tree *FileTree) AddPath(filepath string, data FileInfo) (*FileNode, []*FileNode, error) {
+	filepath = path.Clean(filepath)
+	if filepath == "." {
+		return nil, nil, fmt.Errorf("cannot add relative path '%s'", filepath)
+	}
+	nodeNames := strings.Split(strings.Trim(filepath, "/"), "/")
 	node := tree.Root
 	addedNodes := make([]*FileNode, 0)
 	for idx, name := range nodeNames {
@@ -264,7 +269,7 @@ func (tree *FileTree) AddPath(path string, data FileInfo) (*FileNode, []*FileNod
 
 			if node == nil {
 				// the child could not be added
-				return node, addedNodes, fmt.Errorf(fmt.Sprintf("could not add child node: '%s' (path:'%s')", name, path))
+				return node, addedNodes, fmt.Errorf(fmt.Sprintf("could not add child node: '%s' (path:'%s')", name, filepath))
 			}
 		}
 
