@@ -21,6 +21,9 @@ ci-static-analyses:
 ci-install-go-tools:
 	curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sudo sh -s -- -b /usr/local/bin/ latest
 
+ci-install-ci-tools:
+	curl -sfL https://install.goreleaser.com/github.com/goreleaser/goreleaser.sh | sudo sh -s -- -b /usr/local/bin/ "v0.122.0"
+
 ci-docker-login:
 	echo '${DOCKER_PASSWORD}' | docker login -u '${DOCKER_USERNAME}' --password-stdin '${PRODUCTION_REGISTRY}'
 
@@ -29,6 +32,15 @@ ci-docker-logout:
 
 ci-publish-release:
 	goreleaser --rm-dist
+
+ci-build-snapshot-packages:
+	goreleaser \
+		--snapshot \
+		--skip-publish \
+		--rm-dist
+
+ci-release:
+	release --rm-dist
 
 # todo: add --pull=never when supported by host box
 ci-test-production-image:

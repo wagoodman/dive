@@ -43,8 +43,10 @@ jobs:
 
       - uses: actions/checkout@v1
 
-      - name: Install go tools
-        run: make ci-install-go-tools
+      - name: Install tooling
+        run: |
+          make ci-install-go-tools
+          make ci-install-ci-tools
 
       - name: Cache go dependencies
         id: package-cache-go-dependencies
@@ -62,10 +64,7 @@ jobs:
         run: make ci-static-analyses
 
       - name: Build snapshot artifacts
-        uses: goreleaser/goreleaser-action@v1
-        with:
-          version: latest
-          args: release --snapshot --skip-publish --rm-dist
+        run: make ci-build-snapshot-packages
 
       - run: docker images wagoodman/dive
 
@@ -145,6 +144,9 @@ jobs:
 
       - uses: actions/checkout@v1
 
+      - name: Install tooling
+        run: make ci-install-ci-tools
+
       - name: Cache go dependencies
         id: release-cache-go-dependencies
         uses: actions/cache@v1
@@ -164,10 +166,7 @@ jobs:
           DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Publish GitHub release
-        uses: goreleaser/goreleaser-action@v1
-        with:
-          version: "v0.123.0"
-          args: release --rm-dist
+        run: make ci-release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
