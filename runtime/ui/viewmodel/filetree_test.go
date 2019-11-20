@@ -76,15 +76,18 @@ func assertTestData(t *testing.T, actualBytes []byte) {
 func initializeTestViewModel(t *testing.T) *FileTree {
 	result := docker.TestAnalysisFromArchive(t, "../../../.data/test-docker-image.tar")
 
-	cache := filetree.NewFileTreeCache(result.RefTrees)
-	err := cache.Build()
-	if err != nil {
-		t.Fatalf("%s: unable to build cache: %+v", t.Name(), err)
+	cache := filetree.NewComparer(result.RefTrees)
+	errors := cache.BuildCache()
+	if len(errors) > 0 {
+		t.Fatalf("%s: unable to build cache: %d errors", t.Name(), len(errors))
 	}
 
 	format.Selected = color.New(color.ReverseVideo, color.Bold).SprintFunc()
 
-	treeStack, err := filetree.StackTreeRange(result.RefTrees, 0, 0)
+	treeStack, failedPaths, err := filetree.StackTreeRange(result.RefTrees, 0, 0)
+	if len(failedPaths) > 0 {
+		t.Errorf("expected no filepath errors, got %d", len(failedPaths))
+	}
 	if err != nil {
 		t.Fatalf("%s: unable to stack trees: %v", t.Name(), err)
 	}

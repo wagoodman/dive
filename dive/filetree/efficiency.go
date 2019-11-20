@@ -62,7 +62,12 @@ func Efficiency(trees []*FileTree) (float64, EfficiencySlice) {
 				sizeBytes += curNode.Data.FileInfo.Size
 				return nil
 			}
-			stackedTree, err := StackTreeRange(trees, 0, currentTree-1)
+			stackedTree, failedPaths, err := StackTreeRange(trees, 0, currentTree-1)
+			if len(failedPaths) > 0 {
+				for _, path := range failedPaths {
+					logrus.Errorf(path.String())
+				}
+			}
 			if err != nil {
 				logrus.Errorf("unable to stack tree range: %+v", err)
 				return err

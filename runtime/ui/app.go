@@ -24,7 +24,7 @@ var (
 	appSingleton *app
 )
 
-func newApp(gui *gocui.Gui, analysis *image.AnalysisResult, cache filetree.TreeCache) (*app, error) {
+func newApp(gui *gocui.Gui, analysis *image.AnalysisResult, cache filetree.Comparer) (*app, error) {
 	var err error
 	once.Do(func() {
 		var theControls *Controller
@@ -118,7 +118,7 @@ func (a *app) quit() error {
 }
 
 // Run is the UI entrypoint.
-func Run(analysis *image.AnalysisResult, cache filetree.TreeCache) error {
+func Run(analysis *image.AnalysisResult, treeStack filetree.Comparer) error {
 	var err error
 
 	g, err := gocui.NewGui(gocui.OutputNormal)
@@ -127,7 +127,7 @@ func Run(analysis *image.AnalysisResult, cache filetree.TreeCache) error {
 	}
 	defer g.Close()
 
-	_, err = newApp(g, analysis, cache)
+	_, err = newApp(g, analysis, treeStack)
 	if err != nil {
 		return err
 	}

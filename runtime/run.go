@@ -87,10 +87,13 @@ func run(enableUi bool, options Options, imageResolver image.Resolver, events ev
 
 	} else {
 		events.message(utils.TitleFormat("Building cache..."))
-		cache := filetree.NewFileTreeCache(analysis.RefTrees)
-		err := cache.Build()
-		if err != nil {
-			events.exitWithErrorMessage("cannot build cache tree", err)
+		treeStack := filetree.NewComparer(analysis.RefTrees)
+		errors := treeStack.BuildCache()
+		if errors != nil {
+			for _, err := range errors {
+				events.message("  " + err.Error())
+			}
+			events.exitWithError(fmt.Errorf("file tree has path errors"))
 			return
 		}
 
@@ -102,7 +105,7 @@ func run(enableUi bool, options Options, imageResolver image.Resolver, events ev
 			// enough sleep will prevent this behavior (todo: remove this hack)
 			time.Sleep(100 * time.Millisecond)
 
-			err = ui.Run(analysis, cache)
+			err = ui.Run(analysis, treeStack)
 			if err != nil {
 				events.exitWithError(err)
 				return

@@ -41,7 +41,7 @@ type FileTree struct {
 }
 
 // NewFileTreeView creates a new view object attached the the global [gocui] screen object.
-func NewFileTreeView(name string, gui *gocui.Gui, tree *filetree.FileTree, refTrees []*filetree.FileTree, cache filetree.TreeCache) (controller *FileTree, err error) {
+func NewFileTreeView(name string, gui *gocui.Gui, tree *filetree.FileTree, refTrees []*filetree.FileTree, cache filetree.Comparer) (controller *FileTree, err error) {
 	controller = new(FileTree)
 	controller.listeners = make([]ViewOptionChangeListener, 0)
 
