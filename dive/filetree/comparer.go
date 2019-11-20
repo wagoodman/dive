@@ -152,7 +152,7 @@ func (cmp *Comparer) AggregatedIndexes() <-chan TreeIndexKey {
 func (cmp *Comparer) BuildCache() (errors []error) {
 	for index := range cmp.NaturalIndexes() {
 		pathError, _ := cmp.GetPathErrors(index)
-		if pathError != nil {
+		if len(pathError) > 0 {
 			for _, path := range pathError {
 				errors = append(errors, fmt.Errorf("path error at layer index %s: %s", index, path))
 			}

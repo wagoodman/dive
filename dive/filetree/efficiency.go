@@ -63,7 +63,7 @@ func Efficiency(trees []*FileTree) (float64, EfficiencySlice) {
 				return nil
 			}
 			stackedTree, failedPaths, err := StackTreeRange(trees, 0, currentTree-1)
-			if failedPaths != nil {
+			if len(failedPaths) > 0 {
 				for _, path := range failedPaths {
 					logrus.Errorf(path.String())
 				}
