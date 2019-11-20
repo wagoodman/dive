@@ -3,8 +3,6 @@ on: [ push ]
 env:
   DOCKER_CLI_VERSION: "19.03.1"
 jobs:
-  # This will run on merge to master, and for PRs with folks that also are part of the GHA beta.
-  # Circle ci will also run for redundancy until GHA is out of beta, since circle checks will always run.
   unit-test:
     strategy:
       matrix:
@@ -168,7 +166,7 @@ jobs:
       - name: Publish GitHub release
         uses: goreleaser/goreleaser-action@v1
         with:
-          version: latest
+          version: "v0.123.0"
           args: release --rm-dist
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
