@@ -1,10 +1,8 @@
 name: 'app-pipeline'
-on: [ push, pull_request ]
+on: [ push ]
 env:
   DOCKER_CLI_VERSION: "19.03.1"
 jobs:
-  # This will run on merge to master, and for PRs with folks that also are part of the GHA beta.
-  # Circle ci will also run for redundancy until GHA is out of beta, since circle checks will always run.
   unit-test:
     strategy:
       matrix:
@@ -26,9 +24,8 @@ jobs:
         uses: actions/cache@v1
         with:
           path: ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
+          key: ${{ runner.os }}-go-${{ matrix.go-version }}-${{ hashFiles('**/go.sum') }}
+          restore-keys: ${{ runner.os }}-go-${{ matrix.go-version }}-
 
       - name: Install go dependencies
         if: steps.unit-cache-go-dependencies.outputs.cache-hit != 'true'
@@ -46,17 +43,18 @@ jobs:
 
       - uses: actions/checkout@v1
 
-      - name: Install go tools
-        run: make ci-install-go-tools
+      - name: Install tooling
+        run: |
+          make ci-install-go-tools
+          make ci-install-ci-tools
 
       - name: Cache go dependencies
         id: package-cache-go-dependencies
         uses: actions/cache@v1
         with:
           path: ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
+          key: ${{ runner.os }}-go-prod-${{ hashFiles('**/go.sum') }}
+          restore-keys: ${{ runner.os }}-go-prod-
 
       - name: Install dependencies
         if: steps.package-cache-go-dependencies.outputs.cache-hit != 'true'
@@ -66,12 +64,7 @@ jobs:
         run: make ci-static-analyses
 
       - name: Build snapshot artifacts
-        uses: goreleaser/goreleaser-action@v1
-        with:
-          version: latest
-          args: release --snapshot --skip-publish --rm-dist
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: make ci-build-snapshot-packages
 
       - run: docker images wagoodman/dive
 
@@ -84,8 +77,63 @@ jobs:
           name: artifacts
           path: dist
 
+
+  test-linux-artifacts:
+    needs: [ build-artifacts ]
+    runs-on: ubuntu-latest
+    steps:
+
+      - uses: actions/checkout@master
+
+      - uses: actions/download-artifact@master
+        with:
+          name: artifacts
+          path: dist
+
+      - name: Test linux run
+        run: make ci-test-linux-run
+
+      - name: Test DEB package installation
+        run: make ci-test-deb-package-install
+
+      - name: Test RPM package installation
+        run: make ci-test-rpm-package-install
+
+
+  test-mac-artifacts:
+    needs: [ build-artifacts ]
+    runs-on: macos-latest
+    steps:
+
+      - uses: actions/checkout@master
+
+      - uses: actions/download-artifact@master
+        with:
+          name: artifacts
+          path: dist
+
+      - name: Test darwin run
+        run: make ci-test-mac-run
+
+
+  test-windows-artifacts:
+    needs: [ build-artifacts ]
+    runs-on: windows-latest
+    steps:
+
+      - uses: actions/checkout@master
+
+      - uses: actions/download-artifact@master
+        with:
+          name: artifacts
+          path: dist
+
+      - name: Test windows run
+        run: make ci-test-windows-run
+
+
   release:
-    needs: [ build-artifacts, unit-test  ]
+    needs: [ unit-test, build-artifacts, test-linux-artifacts, test-mac-artifacts, test-windows-artifacts ]
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/v')
     steps:
@@ -96,14 +144,16 @@ jobs:
 
       - uses: actions/checkout@v1
 
+      - name: Install tooling
+        run: make ci-install-ci-tools
+
       - name: Cache go dependencies
         id: release-cache-go-dependencies
         uses: actions/cache@v1
         with:
           path: ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
+          key: ${{ runner.os }}-go-prod-${{ hashFiles('**/go.sum') }}
+          restore-keys: ${{ runner.os }}-go-prod-
 
       - name: Install dependencies
         if: steps.release-cache-go-dependencies.outputs.cache-hit != 'true'
@@ -116,10 +166,7 @@ jobs:
           DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Publish GitHub release
-        uses: goreleaser/goreleaser-action@v1
-        with:
-          version: latest
-          args: release --rm-dist
+        run: make ci-release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

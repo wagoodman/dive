@@ -71,9 +71,9 @@ func run(enableUi bool, options Options, imageResolver image.Resolver, events ev
 	}
 
 	if options.Ci {
-		events.message(fmt.Sprintf("  efficiency: %2.4f %%\n", analysis.Efficiency*100))
-		events.message(fmt.Sprintf("  wastedBytes: %d bytes (%s)\n", analysis.WastedBytes, humanize.Bytes(analysis.WastedBytes)))
-		events.message(fmt.Sprintf("  userWastedPercent: %2.4f %%\n", analysis.WastedUserPercent*100))
+		events.message(fmt.Sprintf("  efficiency: %2.4f %%", analysis.Efficiency*100))
+		events.message(fmt.Sprintf("  wastedBytes: %d bytes (%s)", analysis.WastedBytes, humanize.Bytes(analysis.WastedBytes)))
+		events.message(fmt.Sprintf("  userWastedPercent: %2.4f %%", analysis.WastedUserPercent*100))
 
 		evaluator := ci.NewCiEvaluator(options.CiConfig)
 		pass := evaluator.Evaluate(analysis)
