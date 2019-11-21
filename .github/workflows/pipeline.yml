@@ -1,5 +1,8 @@
 name: 'app-pipeline'
-on: [ push ]
+on:
+  push:
+  pull_request:
+    types: [ opened, reopened ]
 env:
   DOCKER_CLI_VERSION: "19.03.1"
 jobs:
