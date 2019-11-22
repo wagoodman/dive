@@ -1,8 +1,11 @@
 package ui
 
 import (
+	"fmt"
 	"github.com/wagoodman/dive/dive/image"
 	"github.com/wagoodman/dive/runtime/ui/key"
+	"golang.org/x/crypto/ssh/terminal"
+	"os"
 	"sync"
 
 	"github.com/jroimartin/gocui"
@@ -120,6 +123,10 @@ func (a *app) quit() error {
 // Run is the UI entrypoint.
 func Run(analysis *image.AnalysisResult, treeStack filetree.Comparer) error {
 	var err error
+
+	if !terminal.IsTerminal(int(os.Stdout.Fd())) {
+		return fmt.Errorf("no tty present, refusing show ui (if running in docker, use -it args)")
+	}
 
 	g, err := gocui.NewGui(gocui.OutputNormal)
 	if err != nil {
