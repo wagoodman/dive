@@ -5,6 +5,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/wagoodman/dive/runtime/ui/format"
 	"github.com/wagoodman/dive/runtime/ui/key"
+	"github.com/wagoodman/dive/utils"
 	"strings"
 
 	"github.com/jroimartin/gocui"
@@ -17,76 +18,81 @@ type Status struct {
 	gui  *gocui.Gui
 	view *gocui.View
 
-	selectedView Renderer
+	selectedView    Helper
+	requestedHeight int
 
 	helpKeys []*key.Binding
 }
 
-// NewStatusView creates a new view object attached the the global [gocui] screen object.
-func NewStatusView(name string, gui *gocui.Gui) (controller *Status) {
+// newStatusView creates a new view object attached the the global [gocui] screen object.
+func newStatusView(name string, gui *gocui.Gui) (controller *Status) {
 	controller = new(Status)
 
 	// populate main fields
 	controller.name = name
 	controller.gui = gui
 	controller.helpKeys = make([]*key.Binding, 0)
+	controller.requestedHeight = 1
 
 	return controller
 }
 
-func (c *Status) SetCurrentView(r Renderer) {
-	c.selectedView = r
+func (v *Status) SetCurrentView(r Helper) {
+	v.selectedView = r
 }
 
-func (c *Status) Name() string {
-	return c.name
+func (v *Status) Name() string {
+	return v.name
 }
 
-func (c *Status) AddHelpKeys(keys ...*key.Binding) {
-	c.helpKeys = append(c.helpKeys, keys...)
+func (v *Status) AddHelpKeys(keys ...*key.Binding) {
+	v.helpKeys = append(v.helpKeys, keys...)
 }
 
 // Setup initializes the UI concerns within the context of a global [gocui] view object.
-func (c *Status) Setup(v *gocui.View, header *gocui.View) error {
+func (v *Status) Setup(view *gocui.View) error {
+	logrus.Debugf("view.Setup() %s", v.Name())
 
 	// set controller options
-	c.view = v
-	c.view.Frame = false
+	v.view = view
+	v.view.Frame = false
 
-	return c.Render()
+	return v.Render()
 }
 
 // IsVisible indicates if the status view pane is currently initialized.
-func (c *Status) IsVisible() bool {
-	return c != nil
+func (v *Status) IsVisible() bool {
+	return v != nil
 }
 
 // CursorDown moves the cursor down in the details pane (currently indicates nothing).
-func (c *Status) CursorDown() error {
+func (v *Status) CursorDown() error {
 	return nil
 }
 
 // CursorUp moves the cursor up in the details pane (currently indicates nothing).
-func (c *Status) CursorUp() error {
+func (v *Status) CursorUp() error {
 	return nil
 }
 
 // Update refreshes the state objects for future rendering (currently does nothing).
-func (c *Status) Update() error {
+func (v *Status) Update() error {
 	return nil
 }
 
 // Render flushes the state objects to the screen.
-func (c *Status) Render() error {
-	c.gui.Update(func(g *gocui.Gui) error {
-		c.view.Clear()
+func (v *Status) Render() error {
+	logrus.Debugf("view.Render() %s", v.Name())
+
+	v.gui.Update(func(g *gocui.Gui) error {
+		v.view.Clear()
 
 		var selectedHelp string
-		if c.selectedView != nil {
-			selectedHelp = c.selectedView.KeyHelp()
+		if v.selectedView != nil {
+			selectedHelp = v.selectedView.KeyHelp()
 		}
 
-		_, err := fmt.Fprintln(c.view, c.KeyHelp()+selectedHelp+format.StatusNormal("▏"+strings.Repeat(" ", 1000)))
+		_, err := fmt.Fprintln(v.view, v.KeyHelp()+selectedHelp+format.StatusNormal("▏"+strings.Repeat(" ", 1000)))
 		if err != nil {
 			logrus.Debug("unable to write to buffer: ", err)
 		}
@@ -97,10 +103,28 @@ func (c *Status) Render() error {
 }
 
 // KeyHelp indicates all the possible global actions a user can take when any pane is selected.
-func (c *Status) KeyHelp() string {
+func (v *Status) KeyHelp() string {
 	var help string
-	for _, binding := range c.helpKeys {
+	for _, binding := range v.helpKeys {
 		help += binding.RenderKeyHelp()
 	}
 	return help
+}
+
+func (v *Status) Layout(g *gocui.Gui, minX, minY, maxX, maxY int, hasResized bool) error {
+	logrus.Debugf("view.Layout(minX: %d, minY: %d, maxX: %d, maxY: %d) %s", minX, minY, maxX, maxY, v.Name())
+
+	view, viewErr := g.SetView(v.Name(), minX, minY, maxX, maxY)
+	if utils.IsNewView(viewErr) {
+		err := v.Setup(view)
+		if err != nil {
+			logrus.Error("unable to setup status controller", err)
+			return err
+		}
+	}
+	return nil
+}
+
+func (v *Status) RequestedSize(available int) *int {
+	return &v.requestedHeight
 }

@@ -5,6 +5,7 @@ import (
 	"github.com/jroimartin/gocui"
 	"github.com/sirupsen/logrus"
 	"github.com/wagoodman/dive/runtime/ui/format"
+	"github.com/wagoodman/dive/utils"
 	"strings"
 )
 
@@ -13,19 +14,20 @@ type FilterEditListener func(string) error
 // Filter holds the UI objects and data models for populating the bottom row. Specifically the pane that
 // allows the user to filter the file tree by path.
 type Filter struct {
-	name      string
-	gui       *gocui.Gui
-	view      *gocui.View
-	header    *gocui.View
-	headerStr string
-	maxLength int
-	hidden    bool
+	name            string
+	gui             *gocui.Gui
+	view            *gocui.View
+	header          *gocui.View
+	labelStr        string
+	maxLength       int
+	hidden          bool
+	requestedHeight int
 
 	filterEditListeners []FilterEditListener
 }
 
-// NewFilterView creates a new view object attached the the global [gocui] screen object.
-func NewFilterView(name string, gui *gocui.Gui) (controller *Filter) {
+// newFilterView creates a new view object attached the the global [gocui] screen object.
+func newFilterView(name string, gui *gocui.Gui) (controller *Filter) {
 	controller = new(Filter)
 
 	controller.filterEditListeners = make([]FilterEditListener, 0)
@@ -33,50 +35,53 @@ func NewFilterView(name string, gui *gocui.Gui) (controller *Filter) {
 	// populate main fields
 	controller.name = name
 	controller.gui = gui
-	controller.headerStr = "Path Filter: "
+	controller.labelStr = "Path Filter: "
 	controller.hidden = true
+
+	controller.requestedHeight = 1
 
 	return controller
 }
 
-func (c *Filter) AddFilterEditListener(listener ...FilterEditListener) {
-	c.filterEditListeners = append(c.filterEditListeners, listener...)
+func (v *Filter) AddFilterEditListener(listener ...FilterEditListener) {
+	v.filterEditListeners = append(v.filterEditListeners, listener...)
 }
 
-func (c *Filter) Name() string {
-	return c.name
+func (v *Filter) Name() string {
+	return v.name
 }
 
 // Setup initializes the UI concerns within the context of a global [gocui] view object.
-func (c *Filter) Setup(v *gocui.View, header *gocui.View) error {
+func (v *Filter) Setup(view *gocui.View, header *gocui.View) error {
+	logrus.Debugf("view.Setup() %s", v.Name())
 
 	// set controller options
-	c.view = v
-	c.maxLength = 200
-	c.view.Frame = false
-	c.view.BgColor = gocui.AttrReverse
-	c.view.Editable = true
-	c.view.Editor = c
+	v.view = view
+	v.maxLength = 200
+	v.view.Frame = false
+	v.view.BgColor = gocui.AttrReverse
+	v.view.Editable = true
+	v.view.Editor = v
 
-	c.header = header
-	c.header.BgColor = gocui.AttrReverse
-	c.header.Editable = false
-	c.header.Wrap = false
-	c.header.Frame = false
+	v.header = header
+	v.header.BgColor = gocui.AttrReverse
+	v.header.Editable = false
+	v.header.Wrap = false
+	v.header.Frame = false
 
-	return c.Render()
+	return v.Render()
 }
 
 // ToggleFilterView shows/hides the file tree filter pane.
-func (c *Filter) ToggleVisible() error {
+func (v *Filter) ToggleVisible() error {
 	// delete all user input from the tree view
-	c.view.Clear()
+	v.view.Clear()
 
 	// toggle hiding
-	c.hidden = !c.hidden
+	v.hidden = !v.hidden
 
-	if !c.hidden {
-		_, err := c.gui.SetCurrentView(c.name)
+	if !v.hidden {
+		_, err := v.gui.SetCurrentView(v.name)
 		if err != nil {
 			logrus.Error("unable to toggle filter view: ", err)
 			return err
@@ -87,57 +92,52 @@ func (c *Filter) ToggleVisible() error {
 	// reset the cursor for the next time it is visible
 	// Note: there is a subtle gocui behavior here where this cannot be called when the view
 	// is newly visible. Is this a problem with dive or gocui?
-	return c.view.SetCursor(0, 0)
-}
-
-// todo: remove the need for this
-func (c *Filter) HeaderStr() string {
-	return c.headerStr
+	return v.view.SetCursor(0, 0)
 }
 
 // IsVisible indicates if the filter view pane is currently initialized
-func (c *Filter) IsVisible() bool {
-	if c == nil {
+func (v *Filter) IsVisible() bool {
+	if v == nil {
 		return false
 	}
-	return !c.hidden
+	return !v.hidden
 }
 
 // CursorDown moves the cursor down in the filter pane (currently indicates nothing).
-func (c *Filter) CursorDown() error {
+func (v *Filter) CursorDown() error {
 	return nil
 }
 
 // CursorUp moves the cursor up in the filter pane (currently indicates nothing).
-func (c *Filter) CursorUp() error {
+func (v *Filter) CursorUp() error {
 	return nil
 }
 
 // Edit intercepts the key press events in the filer view to update the file view in real time.
-func (c *Filter) Edit(v *gocui.View, key gocui.Key, ch rune, mod gocui.Modifier) {
-	if !c.IsVisible() {
+func (v *Filter) Edit(view *gocui.View, key gocui.Key, ch rune, mod gocui.Modifier) {
+	if !v.IsVisible() {
 		return
 	}
 
-	cx, _ := v.Cursor()
-	ox, _ := v.Origin()
-	limit := ox+cx+1 > c.maxLength
+	cx, _ := view.Cursor()
+	ox, _ := view.Origin()
+	limit := ox+cx+1 > v.maxLength
 	switch {
 	case ch != 0 && mod == 0 && !limit:
-		v.EditWrite(ch)
+		view.EditWrite(ch)
 	case key == gocui.KeySpace && !limit:
-		v.EditWrite(' ')
+		view.EditWrite(' ')
 	case key == gocui.KeyBackspace || key == gocui.KeyBackspace2:
-		v.EditDelete(true)
+		view.EditDelete(true)
 	}
 
 	// notify listeners
-	c.notifyFilterEditListeners()
+	v.notifyFilterEditListeners()
 }
 
-func (c *Filter) notifyFilterEditListeners() {
-	currentValue := strings.TrimSpace(c.view.Buffer())
-	for _, listener := range c.filterEditListeners {
+func (v *Filter) notifyFilterEditListeners() {
+	currentValue := strings.TrimSpace(v.view.Buffer())
+	for _, listener := range v.filterEditListeners {
 		err := listener(currentValue)
 		if err != nil {
 			// note: cannot propagate error from here since this is from the main gogui thread
@@ -147,14 +147,16 @@ func (c *Filter) notifyFilterEditListeners() {
 }
 
 // Update refreshes the state objects for future rendering (currently does nothing).
-func (c *Filter) Update() error {
+func (v *Filter) Update() error {
 	return nil
 }
 
 // Render flushes the state objects to the screen. Currently this is the users path filter input.
-func (c *Filter) Render() error {
-	c.gui.Update(func(g *gocui.Gui) error {
-		_, err := fmt.Fprintln(c.header, format.Header(c.headerStr))
+func (v *Filter) Render() error {
+	logrus.Debugf("view.Render() %s", v.Name())
+
+	v.gui.Update(func(g *gocui.Gui) error {
+		_, err := fmt.Fprintln(v.header, format.Header(v.labelStr))
 		if err != nil {
 			logrus.Error("unable to write to buffer: ", err)
 		}
@@ -164,6 +166,26 @@ func (c *Filter) Render() error {
 }
 
 // KeyHelp indicates all the possible actions a user can take while the current pane is selected.
-func (c *Filter) KeyHelp() string {
+func (v *Filter) KeyHelp() string {
 	return format.StatusControlNormal("▏Type to filter the file tree ")
+}
+
+func (v *Filter) Layout(g *gocui.Gui, minX, minY, maxX, maxY int, hasResized bool) error {
+	logrus.Debugf("view.Layout(minX: %d, minY: %d, maxX: %d, maxY: %d) %s", minX, minY, maxX, maxY, v.Name())
+
+	label, labelErr := g.SetView(v.Name()+"label", minX, minY, len(v.labelStr), maxY)
+	view, viewErr := g.SetView(v.Name(), minX+(len(v.labelStr)-1), minY, maxX, maxY)
+
+	if utils.IsNewView(viewErr, labelErr) {
+		err := v.Setup(view, label)
+		if err != nil {
+			logrus.Error("unable to setup status controller", err)
+			return err
+		}
+	}
+	return nil
+}
+
+func (v *Filter) RequestedSize(available int) *int {
+	return &v.requestedHeight
 }

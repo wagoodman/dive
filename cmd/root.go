@@ -141,6 +141,10 @@ func initLogging() {
 
 	log.SetLevel(level)
 	log.Debug("Starting Dive...")
+	log.Debugf("config filepath: %s", viper.ConfigFileUsed())
+	for k, v := range viper.AllSettings() {
+		log.Debug("config value: ", k, " : ", v)
+	}
 }
 
 // getCfgFile checks for config file in paths from xdg specs
