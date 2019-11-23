@@ -241,8 +241,8 @@ diff:
   hide:
     - added
     - removed
-    - changed
-    - unchanged
+    - modified
+    - unmodified
 
 filetree:
   # The default directory-collapse state
