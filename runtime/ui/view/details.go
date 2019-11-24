@@ -12,7 +12,6 @@ import (
 
 	"github.com/dustin/go-humanize"
 	"github.com/jroimartin/gocui"
-	"github.com/lunixbochs/vtclean"
 )
 
 // Details holds the UI objects and data models for populating the lower-left pane. Specifically the pane that
@@ -49,7 +48,7 @@ func (v *Details) Name() string {
 
 // Setup initializes the UI concerns within the context of a global [gocui] view object.
 func (v *Details) Setup(view *gocui.View, header *gocui.View) error {
-	logrus.Debugf("view.Setup() %s", v.Name())
+	logrus.Tracef("view.Setup() %s", v.Name())
 
 	// set controller options
 	v.view = view
@@ -99,6 +98,15 @@ func (v *Details) CursorUp() error {
 	return CursorUp(v.gui, v.view)
 }
 
+// OnLayoutChange is called whenever the screen dimensions are changed
+func (v *Details) OnLayoutChange() error {
+	err := v.Update()
+	if err != nil {
+		return err
+	}
+	return v.Render()
+}
+
 // Update refreshes the state objects for future rendering.
 func (v *Details) Update() error {
 	return nil
@@ -114,7 +122,7 @@ func (v *Details) SetCurrentLayer(layer *image.Layer) {
 // 3. the estimated wasted image space
 // 4. a list of inefficient file allocations
 func (v *Details) Render() error {
-	logrus.Debugf("view.Render() %s", v.Name())
+	logrus.Tracef("view.Render() %s", v.Name())
 
 	if v.currentLayer == nil {
 		return fmt.Errorf("no layer selected")
@@ -149,10 +157,10 @@ func (v *Details) Render() error {
 		v.header.Clear()
 		width, _ := v.view.Size()
 
-		layerHeaderStr := fmt.Sprintf("[Layer Details]%s", strings.Repeat("─", width-15))
-		imageHeaderStr := fmt.Sprintf("[Image Details]%s", strings.Repeat("─", width-15))
+		layerHeaderStr := format.RenderHeader("Layer Details", width, false)
+		imageHeaderStr := format.RenderHeader("Image Details", width, false)
 
-		_, err := fmt.Fprintln(v.header, format.Header(vtclean.Clean(layerHeaderStr, false)))
+		_, err := fmt.Fprintln(v.header, layerHeaderStr)
 		if err != nil {
 			return err
 		}
@@ -170,7 +178,7 @@ func (v *Details) Render() error {
 		lines = append(lines, format.Header("Digest: ")+v.currentLayer.Digest)
 		lines = append(lines, format.Header("Command:"))
 		lines = append(lines, v.currentLayer.Command)
-		lines = append(lines, "\n"+format.Header(vtclean.Clean(imageHeaderStr, false)))
+		lines = append(lines, "\n"+imageHeaderStr)
 		lines = append(lines, imageSizeStr)
 		lines = append(lines, wastedSpaceStr)
 		lines = append(lines, effStr+"\n")

@@ -57,7 +57,7 @@ func (lm *Manager) Layout(g *gocui.Gui) error {
 			}
 
 			// layout the header within the allocated space
-			err := element.Layout(g, minX, minY, maxX, minY+height, hasResized)
+			err := element.Layout(g, minX, minY, maxX, minY+height)
 			if err != nil {
 				logrus.Errorf("failed to layout '%s' header: %+v", element.Name(), err)
 			}
@@ -138,7 +138,7 @@ func (lm *Manager) Layout(g *gocui.Gui) error {
 			}
 
 			// layout the column within the allocated space
-			err := element.Layout(g, minX, minY, minX+width, maxY, hasResized)
+			err := element.Layout(g, minX, minY, minX+width, maxY)
 			if err != nil {
 				logrus.Errorf("failed to layout '%s' column: %+v", element.Name(), err)
 			}
@@ -165,9 +165,21 @@ func (lm *Manager) Layout(g *gocui.Gui) error {
 			// layout the footer within the allocated space
 			// note: since the headers and rows are inclusive counting from -1 (to account for a border) we must
 			// do the same vertically, thus a -1 is needed for a starting Y
-			err := element.Layout(g, footerMinX, topY, footerMaxX, bottomY, hasResized)
+			err := element.Layout(g, footerMinX, topY, footerMaxX, bottomY)
 			if err != nil {
 				logrus.Errorf("failed to layout '%s' footer: %+v", element.Name(), err)
+			}
+		}
+	}
+
+	// notify everyone of a layout change (allow to update and render)
+	if hasResized {
+		for _, elements := range lm.elements {
+			for _, element := range elements {
+				err := element.OnLayoutChange()
+				if err != nil {
+					return err
+				}
 			}
 		}
 	}

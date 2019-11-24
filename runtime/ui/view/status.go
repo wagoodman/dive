@@ -51,7 +51,7 @@ func (v *Status) AddHelpKeys(keys ...*key.Binding) {
 
 // Setup initializes the UI concerns within the context of a global [gocui] view object.
 func (v *Status) Setup(view *gocui.View) error {
-	logrus.Debugf("view.Setup() %s", v.Name())
+	logrus.Tracef("view.Setup() %s", v.Name())
 
 	// set controller options
 	v.view = view
@@ -80,9 +80,18 @@ func (v *Status) Update() error {
 	return nil
 }
 
+// OnLayoutChange is called whenever the screen dimensions are changed
+func (v *Status) OnLayoutChange() error {
+	err := v.Update()
+	if err != nil {
+		return err
+	}
+	return v.Render()
+}
+
 // Render flushes the state objects to the screen.
 func (v *Status) Render() error {
-	logrus.Debugf("view.Render() %s", v.Name())
+	logrus.Tracef("view.Render() %s", v.Name())
 
 	v.gui.Update(func(g *gocui.Gui) error {
 		v.view.Clear()
@@ -111,8 +120,8 @@ func (v *Status) KeyHelp() string {
 	return help
 }
 
-func (v *Status) Layout(g *gocui.Gui, minX, minY, maxX, maxY int, hasResized bool) error {
-	logrus.Debugf("view.Layout(minX: %d, minY: %d, maxX: %d, maxY: %d) %s", minX, minY, maxX, maxY, v.Name())
+func (v *Status) Layout(g *gocui.Gui, minX, minY, maxX, maxY int) error {
+	logrus.Tracef("view.Layout(minX: %d, minY: %d, maxX: %d, maxY: %d) %s", minX, minY, maxX, maxY, v.Name())
 
 	view, viewErr := g.SetView(v.Name(), minX, minY, maxX, maxY)
 	if utils.IsNewView(viewErr) {

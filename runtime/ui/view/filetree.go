@@ -2,18 +2,15 @@ package view
 
 import (
 	"fmt"
+	"github.com/jroimartin/gocui"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
+	"github.com/wagoodman/dive/dive/filetree"
 	"github.com/wagoodman/dive/runtime/ui/format"
 	"github.com/wagoodman/dive/runtime/ui/key"
 	"github.com/wagoodman/dive/runtime/ui/viewmodel"
 	"github.com/wagoodman/dive/utils"
 	"regexp"
-	"strings"
-
-	"github.com/jroimartin/gocui"
-	"github.com/lunixbochs/vtclean"
-	"github.com/wagoodman/dive/dive/filetree"
 )
 
 const (
@@ -86,7 +83,7 @@ func (v *FileTree) areAttributesVisible() bool {
 
 // Setup initializes the UI concerns within the context of a global [gocui] view object.
 func (v *FileTree) Setup(view *gocui.View, header *gocui.View) error {
-	logrus.Debugf("view.Setup() %s", v.Name())
+	logrus.Tracef("view.Setup() %s", v.Name())
 
 	// set controller options
 	v.view = view
@@ -343,16 +340,12 @@ func (v *FileTree) toggleShowDiffType(diffType filetree.DiffType) error {
 }
 
 // OnLayoutChange is called by the UI framework to inform the view-model of the new screen dimensions
-func (v *FileTree) OnLayoutChange(resized bool) error {
+func (v *FileTree) OnLayoutChange() error {
 	err := v.Update()
 	if err != nil {
 		return err
 	}
-
-	if resized {
-		return v.Render()
-	}
-	return nil
+	return v.Render()
 }
 
 // Update refreshes the state objects for future rendering.
@@ -371,24 +364,21 @@ func (v *FileTree) Update() error {
 
 // Render flushes the state objects (file tree) to the pane.
 func (v *FileTree) Render() error {
-	logrus.Debugf("view.Render() %s", v.Name())
+	logrus.Tracef("view.Render() %s", v.Name())
 
 	title := v.title
-	// indicate when selected
-	if v.gui.CurrentView() == v.view {
-		title = "● " + v.title
-	}
+	isSelected := v.gui.CurrentView() == v.view
 
 	v.gui.Update(func(g *gocui.Gui) error {
 		// update the header
 		v.header.Clear()
 		width, _ := g.Size()
-		headerStr := fmt.Sprintf("[%s]%s\n", title, strings.Repeat("─", width*2))
+		headerStr := format.RenderHeader(title, width, isSelected)
 		if v.vm.ShowAttributes {
 			headerStr += fmt.Sprintf(filetree.AttributeFormat+" %s", "P", "ermission", "UID:GID", "Size", "Filetree")
 		}
 
-		_, _ = fmt.Fprintln(v.header, format.Header(vtclean.Clean(headerStr, false)))
+		_, _ = fmt.Fprintln(v.header, headerStr, false)
 
 		// update the contents
 		v.view.Clear()
@@ -412,8 +402,8 @@ func (v *FileTree) KeyHelp() string {
 	return help
 }
 
-func (v *FileTree) Layout(g *gocui.Gui, minX, minY, maxX, maxY int, hasResized bool) error {
-	logrus.Debugf("view.Layout(minX: %d, minY: %d, maxX: %d, maxY: %d) %s", minX, minY, maxX, maxY, v.Name())
+func (v *FileTree) Layout(g *gocui.Gui, minX, minY, maxX, maxY int) error {
+	logrus.Tracef("view.Layout(minX: %d, minY: %d, maxX: %d, maxY: %d) %s", minX, minY, maxX, maxY, v.Name())
 	attributeRowSize := 0
 	if !v.areAttributesVisible() {
 		attributeRowSize = 1
@@ -431,11 +421,6 @@ func (v *FileTree) Layout(g *gocui.Gui, minX, minY, maxX, maxY int, hasResized b
 			logrus.Error("unable to setup tree controller", err)
 			return err
 		}
-	}
-	err := v.OnLayoutChange(hasResized)
-	if err != nil {
-		logrus.Error("unable to setup layer controller onLayoutChange", err)
-		return err
 	}
 	return nil
 }

@@ -2,16 +2,13 @@ package view
 
 import (
 	"fmt"
+	"github.com/jroimartin/gocui"
+	"github.com/sirupsen/logrus"
+	"github.com/spf13/viper"
 	"github.com/wagoodman/dive/dive/image"
 	"github.com/wagoodman/dive/runtime/ui/format"
 	"github.com/wagoodman/dive/runtime/ui/key"
 	"github.com/wagoodman/dive/runtime/ui/viewmodel"
-	"strings"
-
-	"github.com/jroimartin/gocui"
-	"github.com/lunixbochs/vtclean"
-	"github.com/sirupsen/logrus"
-	"github.com/spf13/viper"
 )
 
 type LayerChangeListener func(viewmodel.LayerSelection) error
@@ -85,7 +82,7 @@ func (v *Layer) Name() string {
 
 // Setup initializes the UI concerns within the context of a global [gocui] view object.
 func (v *Layer) Setup(view *gocui.View, header *gocui.View) error {
-	logrus.Debugf("view.Setup() %s", v.Name())
+	logrus.Tracef("view.Setup() %s", v.Name())
 
 	// set controller options
 	v.view = view
@@ -275,6 +272,15 @@ func (v *Layer) renderCompareBar(layerIdx int) string {
 	return result
 }
 
+// OnLayoutChange is called whenever the screen dimensions are changed
+func (v *Layer) OnLayoutChange() error {
+	err := v.Update()
+	if err != nil {
+		return err
+	}
+	return v.Render()
+}
+
 // Update refreshes the state objects for future rendering (currently does nothing).
 func (v *Layer) Update() error {
 	return nil
@@ -284,21 +290,19 @@ func (v *Layer) Update() error {
 // 1. the layers of the image + metadata
 // 2. the current selected image
 func (v *Layer) Render() error {
-	logrus.Debugf("view.Render() %s", v.Name())
+	logrus.Tracef("view.Render() %s", v.Name())
 
 	// indicate when selected
 	title := "Layers"
-	if v.gui.CurrentView() == v.view {
-		title = "● " + title
-	}
+	isSelected := v.gui.CurrentView() == v.view
 
 	v.gui.Update(func(g *gocui.Gui) error {
 		// update header
 		v.header.Clear()
 		width, _ := g.Size()
-		headerStr := fmt.Sprintf("[%s]%s\n", title, strings.Repeat("─", width*2))
+		headerStr := format.RenderHeader(title, width, isSelected)
 		headerStr += fmt.Sprintf("Cmp"+image.LayerFormat, "Size", "Command")
-		_, err := fmt.Fprintln(v.header, format.Header(vtclean.Clean(headerStr, false)))
+		_, err := fmt.Fprintln(v.header, headerStr)
 		if err != nil {
 			return err
 		}

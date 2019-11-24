@@ -1,7 +1,39 @@
 package format
 
 import (
+	"fmt"
 	"github.com/fatih/color"
+	"github.com/lunixbochs/vtclean"
+	"strings"
+)
+
+const (
+	//selectedLeftBracketStr = " "
+	//selectedRightBracketStr = " "
+	//selectedFillStr = " "
+	//
+	//leftBracketStr = "▏"
+	//rightBracketStr = "▕"
+	//fillStr = "─"
+
+	//selectedLeftBracketStr = " "
+	//selectedRightBracketStr = " "
+	//selectedFillStr = "━"
+	//
+	//leftBracketStr = "▏"
+	//rightBracketStr = "▕"
+	//fillStr = "─"
+
+	selectedLeftBracketStr  = "┃"
+	selectedRightBracketStr = "┣"
+	selectedFillStr         = "━"
+
+	leftBracketStr  = "│"
+	rightBracketStr = "├"
+	fillStr         = "─"
+
+	selectStr = " ● "
+	//selectStr = " "
 )
 
 var (
@@ -24,6 +56,19 @@ func init() {
 	StatusControlNormal = color.New(color.ReverseVideo, color.Bold).SprintFunc()
 	CompareTop = color.New(color.BgMagenta).SprintFunc()
 	CompareBottom = color.New(color.BgGreen).SprintFunc()
+}
+
+func RenderHeader(title string, width int, selected bool) string {
+	if selected {
+		body := Header(fmt.Sprintf("%s%s ", selectStr, title))
+		bodyLen := len(vtclean.Clean(body, false))
+		return fmt.Sprintf("%s%s%s%s\n", selectedLeftBracketStr, body, selectedRightBracketStr, strings.Repeat(selectedFillStr, width-bodyLen-2))
+		//return fmt.Sprintf("%s%s%s%s\n", Selected(selectedLeftBracketStr), body, Selected(selectedRightBracketStr), Selected(strings.Repeat(selectedFillStr, width-bodyLen-2)))
+		//return fmt.Sprintf("%s%s%s%s\n", Selected(selectedLeftBracketStr), body, Selected(selectedRightBracketStr), strings.Repeat(selectedFillStr, width-bodyLen-2))
+	}
+	body := Header(fmt.Sprintf(" %s ", title))
+	bodyLen := len(vtclean.Clean(body, false))
+	return fmt.Sprintf("%s%s%s%s\n", leftBracketStr, body, rightBracketStr, strings.Repeat(fillStr, width-bodyLen-2))
 }
 
 func RenderHelpKey(control, title string, selected bool) string {

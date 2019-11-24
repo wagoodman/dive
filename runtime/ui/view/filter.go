@@ -53,7 +53,7 @@ func (v *Filter) Name() string {
 
 // Setup initializes the UI concerns within the context of a global [gocui] view object.
 func (v *Filter) Setup(view *gocui.View, header *gocui.View) error {
-	logrus.Debugf("view.Setup() %s", v.Name())
+	logrus.Tracef("view.Setup() %s", v.Name())
 
 	// set controller options
 	v.view = view
@@ -153,7 +153,7 @@ func (v *Filter) Update() error {
 
 // Render flushes the state objects to the screen. Currently this is the users path filter input.
 func (v *Filter) Render() error {
-	logrus.Debugf("view.Render() %s", v.Name())
+	logrus.Tracef("view.Render() %s", v.Name())
 
 	v.gui.Update(func(g *gocui.Gui) error {
 		_, err := fmt.Fprintln(v.header, format.Header(v.labelStr))
@@ -170,8 +170,17 @@ func (v *Filter) KeyHelp() string {
 	return format.StatusControlNormal("▏Type to filter the file tree ")
 }
 
-func (v *Filter) Layout(g *gocui.Gui, minX, minY, maxX, maxY int, hasResized bool) error {
-	logrus.Debugf("view.Layout(minX: %d, minY: %d, maxX: %d, maxY: %d) %s", minX, minY, maxX, maxY, v.Name())
+// OnLayoutChange is called whenever the screen dimensions are changed
+func (v *Filter) OnLayoutChange() error {
+	err := v.Update()
+	if err != nil {
+		return err
+	}
+	return v.Render()
+}
+
+func (v *Filter) Layout(g *gocui.Gui, minX, minY, maxX, maxY int) error {
+	logrus.Tracef("view.Layout(minX: %d, minY: %d, maxX: %d, maxY: %d) %s", minX, minY, maxX, maxY, v.Name())
 
 	label, labelErr := g.SetView(v.Name()+"label", minX, minY, len(v.labelStr), maxY)
 	view, viewErr := g.SetView(v.Name(), minX+(len(v.labelStr)-1), minY, maxX, maxY)

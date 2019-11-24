@@ -23,8 +23,24 @@ func (cl *LayerDetailsCompoundLayout) Name() string {
 	return "layer-details-compound-column"
 }
 
-func (cl *LayerDetailsCompoundLayout) Layout(g *gocui.Gui, minX, minY, maxX, maxY int, hasResized bool) error {
-	logrus.Debugf("view.Layout(minX: %d, minY: %d, maxX: %d, maxY: %d) %s", minX, minY, maxX, maxY, cl.Name())
+// OnLayoutChange is called whenever the screen dimensions are changed
+func (cl *LayerDetailsCompoundLayout) OnLayoutChange() error {
+	err := cl.layer.OnLayoutChange()
+	if err != nil {
+		logrus.Error("unable to setup layer controller onLayoutChange", err)
+		return err
+	}
+
+	err = cl.details.OnLayoutChange()
+	if err != nil {
+		logrus.Error("unable to setup details controller onLayoutChange", err)
+		return err
+	}
+	return nil
+}
+
+func (cl *LayerDetailsCompoundLayout) Layout(g *gocui.Gui, minX, minY, maxX, maxY int) error {
+	logrus.Tracef("view.Layout(minX: %d, minY: %d, maxX: %d, maxY: %d) %s", minX, minY, maxX, maxY, cl.Name())
 
 	////////////////////////////////////////////////////////////////////////////////////
 	// Layers View
@@ -55,12 +71,6 @@ func (cl *LayerDetailsCompoundLayout) Layout(g *gocui.Gui, minX, minY, maxX, max
 			logrus.Error("unable to set view to layer", err)
 			return err
 		}
-		// since we are selecting the view, we should rerender to indicate it is selected
-		err = cl.layer.Render()
-		if err != nil {
-			logrus.Error("unable to render layer view", err)
-			return err
-		}
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////
@@ -83,6 +93,7 @@ func (cl *LayerDetailsCompoundLayout) Layout(g *gocui.Gui, minX, minY, maxX, max
 			return err
 		}
 	}
+
 	return nil
 }
 
