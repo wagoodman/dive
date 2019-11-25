@@ -65,16 +65,6 @@ func (v *Status) IsVisible() bool {
 	return v != nil
 }
 
-// CursorDown moves the cursor down in the details pane (currently indicates nothing).
-func (v *Status) CursorDown() error {
-	return nil
-}
-
-// CursorUp moves the cursor up in the details pane (currently indicates nothing).
-func (v *Status) CursorUp() error {
-	return nil
-}
-
 // Update refreshes the state objects for future rendering (currently does nothing).
 func (v *Status) Update() error {
 	return nil

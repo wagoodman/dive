@@ -24,7 +24,7 @@ func (lm *Manager) Add(element Layout, location Location) {
 	lm.elements[location] = append(lm.elements[location], element)
 }
 
-func (lm *Manager) layoutHeaders(g *gocui.Gui, area Area) (Area, error) {
+func (lm *Manager) planAndLayoutHeaders(g *gocui.Gui, area Area) (Area, error) {
 	// layout headers top down
 	if elements, exists := lm.elements[LocationHeader]; exists {
 		for _, element := range elements {
@@ -87,7 +87,7 @@ func (lm *Manager) planFooters(g *gocui.Gui, area Area) (Area, []int) {
 	return area, footerHeights
 }
 
-func (lm *Manager) layoutColumns(g *gocui.Gui, area Area) (Area, error) {
+func (lm *Manager) planAndLayoutColumns(g *gocui.Gui, area Area) (Area, error) {
 	// layout columns left to right
 	if elements, exists := lm.elements[LocationColumn]; exists {
 		widths := make([]int, len(elements))
@@ -204,8 +204,8 @@ func (lm *Manager) Layout(g *gocui.Gui) error {
 
 	// pass 1: plan and layout elements
 
-	// plan and layout all headers
-	area, err := lm.layoutHeaders(g, area)
+	// headers...
+	area, err := lm.planAndLayoutHeaders(g, area)
 	if err != nil {
 		return err
 	}
@@ -215,7 +215,7 @@ func (lm *Manager) Layout(g *gocui.Gui) error {
 	}
 	lm.lastHeaderArea = area
 
-	// plan all footers, don't layout until all columns have been layedout. This is necessary since we must layout from
+	// plan footers... don't layout until all columns have been layedout. This is necessary since we must layout from
 	// top to bottom, but we need the real estate planned for the footers to determine the bottom of the columns.
 	var footerArea = area
 	area, footerHeights := lm.planFooters(g, area)
@@ -225,8 +225,8 @@ func (lm *Manager) Layout(g *gocui.Gui) error {
 	}
 	lm.lastFooterArea = area
 
-	// plan and layout the main columns
-	area, err = lm.layoutColumns(g, area)
+	// columns...
+	area, err = lm.planAndLayoutColumns(g, area)
 	if err != nil {
 		return nil
 	}
@@ -236,7 +236,7 @@ func (lm *Manager) Layout(g *gocui.Gui) error {
 	}
 	lm.lastColumnArea = area
 
-	// layout the footers according to the original available area and planned heights
+	// footers... layout according to the original available area and planned heights
 	err = lm.layoutFooters(g, footerArea, footerHeights)
 	if err != nil {
 		return nil

@@ -103,16 +103,6 @@ func (v *Filter) IsVisible() bool {
 	return !v.hidden
 }
 
-// CursorDown moves the cursor down in the filter pane (currently indicates nothing).
-func (v *Filter) CursorDown() error {
-	return nil
-}
-
-// CursorUp moves the cursor up in the filter pane (currently indicates nothing).
-func (v *Filter) CursorUp() error {
-	return nil
-}
-
 // Edit intercepts the key press events in the filer view to update the file view in real time.
 func (v *Filter) Edit(view *gocui.View, key gocui.Key, ch rune, mod gocui.Modifier) {
 	if !v.IsVisible() {
