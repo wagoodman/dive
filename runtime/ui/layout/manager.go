@@ -6,8 +6,9 @@ import (
 )
 
 type Manager struct {
-	lastX, lastY int
-	elements     map[Location][]Layout
+	lastX, lastY                                   int
+	lastHeaderArea, lastFooterArea, lastColumnArea Area
+	elements                                       map[Location][]Layout
 }
 
 func NewManager() *Manager {
@@ -137,7 +138,7 @@ func (lm *Manager) layoutColumns(g *gocui.Gui, area Area) (Area, error) {
 	return area, nil
 }
 
-func (lm *Manager) layoutFooters(g *gocui.Gui, area Area, footerHeights []int) (Area, error) {
+func (lm *Manager) layoutFooters(g *gocui.Gui, area Area, footerHeights []int) error {
 	// layout footers top down (which is why the list is reversed). Top down is needed due to border overlap.
 	if elements, exists := lm.elements[LocationFooter]; exists {
 		for idx := len(elements) - 1; idx >= 0; idx-- {
@@ -147,7 +148,7 @@ func (lm *Manager) layoutFooters(g *gocui.Gui, area Area, footerHeights []int) (
 			for oIdx := 0; oIdx <= idx; oIdx++ {
 				bottomPadding += footerHeights[oIdx]
 			}
-			topY = area.maxX - bottomPadding - height
+			topY = area.maxY - bottomPadding - height
 			// +1 for border
 			bottomY = topY + height + 1
 
@@ -157,11 +158,11 @@ func (lm *Manager) layoutFooters(g *gocui.Gui, area Area, footerHeights []int) (
 			err := element.Layout(g, area.minX, topY, area.maxX, bottomY)
 			if err != nil {
 				logrus.Errorf("failed to layout '%s' footer: %+v", element.Name(), err)
-				return area, err
+				return err
 			}
 		}
 	}
-	return area, nil
+	return nil
 }
 
 func (lm *Manager) notifyLayoutChange() error {
@@ -184,7 +185,9 @@ func (lm *Manager) notifyLayoutChange() error {
 //  2. since there are borders, in order for it to appear as if there aren't any spaces for borders, the views must
 //     overlap. To prevent screen artifacts, all elements must be layedout from the top of the screen to the bottom.
 func (lm *Manager) Layout(g *gocui.Gui) error {
+	var headerAreaChanged, footerAreaChanged, columnAreaChanged bool
 
+	// grab the latest screen size and compare with the last layout
 	curMaxX, curMaxY := g.Size()
 	area := Area{
 		minX: -1,
@@ -199,16 +202,28 @@ func (lm *Manager) Layout(g *gocui.Gui) error {
 	}
 	lm.lastX, lm.lastY = curMaxX, curMaxY
 
+	// pass 1: plan and layout elements
+
 	// plan and layout all headers
 	area, err := lm.layoutHeaders(g, area)
 	if err != nil {
 		return err
 	}
 
+	if area != lm.lastHeaderArea {
+		headerAreaChanged = true
+	}
+	lm.lastHeaderArea = area
+
 	// plan all footers, don't layout until all columns have been layedout. This is necessary since we must layout from
 	// top to bottom, but we need the real estate planned for the footers to determine the bottom of the columns.
 	var footerArea = area
 	area, footerHeights := lm.planFooters(g, area)
+
+	if area != lm.lastFooterArea {
+		footerAreaChanged = true
+	}
+	lm.lastFooterArea = area
 
 	// plan and layout the main columns
 	area, err = lm.layoutColumns(g, area)
@@ -216,14 +231,21 @@ func (lm *Manager) Layout(g *gocui.Gui) error {
 		return nil
 	}
 
+	if area != lm.lastColumnArea {
+		columnAreaChanged = true
+	}
+	lm.lastColumnArea = area
+
 	// layout the footers according to the original available area and planned heights
-	area, err = lm.layoutFooters(g, footerArea, footerHeights)
+	err = lm.layoutFooters(g, footerArea, footerHeights)
 	if err != nil {
 		return nil
 	}
 
-	// notify everyone of a layout change (allow to update and render)
-	if hasResized {
+	// pass 2: notify everyone of a layout change (allow to update and render)
+	// note: this may mean that each element will update and rerender, which may cause a secondary layout call.
+	// the conditions which we notify elements of layout changes must be very selective!
+	if hasResized || headerAreaChanged || footerAreaChanged || columnAreaChanged {
 		return lm.notifyLayoutChange()
 	}
 
