@@ -3,6 +3,8 @@ package ui
 import (
 	"github.com/wagoodman/dive/dive/image"
 	"github.com/wagoodman/dive/runtime/ui/key"
+	"github.com/wagoodman/dive/runtime/ui/layout"
+	"github.com/wagoodman/dive/runtime/ui/layout/compound"
 	"sync"
 
 	"github.com/jroimartin/gocui"
@@ -16,7 +18,7 @@ const debug = false
 type app struct {
 	gui         *gocui.Gui
 	controllers *Controller
-	layout      *layoutManager
+	layout      *layout.Manager
 }
 
 var (
@@ -27,19 +29,28 @@ var (
 func newApp(gui *gocui.Gui, analysis *image.AnalysisResult, cache filetree.Comparer) (*app, error) {
 	var err error
 	once.Do(func() {
-		var theControls *Controller
+		var controller *Controller
 		var globalHelpKeys []*key.Binding
 
-		theControls, err = NewCollection(gui, analysis, cache)
+		controller, err = NewCollection(gui, analysis, cache)
 		if err != nil {
 			return
 		}
 
-		lm := newLayoutManager(theControls)
+		// note: order matters when adding elements to the layout
+		lm := layout.NewManager()
+		lm.Add(controller.views.Status, layout.LocationFooter)
+		lm.Add(controller.views.Filter, layout.LocationFooter)
+		lm.Add(compound.NewLayerDetailsCompoundLayout(controller.views.Layer, controller.views.Details), layout.LocationColumn)
+		lm.Add(controller.views.Tree, layout.LocationColumn)
 
+		// todo: access this more programmatically
+		if debug {
+			lm.Add(controller.views.Debug, layout.LocationColumn)
+		}
 		gui.Cursor = false
 		//g.Mouse = true
-		gui.SetManagerFunc(lm.layout)
+		gui.SetManagerFunc(lm.Layout)
 
 		// var profileObj = profile.Start(profile.CPUProfile, profile.ProfilePath("."), profile.NoShutdownHook)
 		//
@@ -49,7 +60,7 @@ func newApp(gui *gocui.Gui, analysis *image.AnalysisResult, cache filetree.Compa
 
 		appSingleton = &app{
 			gui:         gui,
-			controllers: theControls,
+			controllers: controller,
 			layout:      lm,
 		}
 
@@ -61,13 +72,13 @@ func newApp(gui *gocui.Gui, analysis *image.AnalysisResult, cache filetree.Compa
 			},
 			{
 				ConfigKeys: []string{"keybinding.toggle-view"},
-				OnAction:   theControls.ToggleView,
+				OnAction:   controller.ToggleView,
 				Display:    "Switch view",
 			},
 			{
 				ConfigKeys: []string{"keybinding.filter-files"},
-				OnAction:   theControls.ToggleFilterView,
-				IsSelected: theControls.Filter.IsVisible,
+				OnAction:   controller.ToggleFilterView,
+				IsSelected: controller.views.Filter.IsVisible,
 				Display:    "Filter",
 			},
 		}
@@ -77,10 +88,10 @@ func newApp(gui *gocui.Gui, analysis *image.AnalysisResult, cache filetree.Compa
 			return
 		}
 
-		theControls.Status.AddHelpKeys(globalHelpKeys...)
+		controller.views.Status.AddHelpKeys(globalHelpKeys...)
 
 		// perform the first update and render now that all resources have been loaded
-		err = theControls.UpdateAndRender()
+		err = controller.UpdateAndRender()
 		if err != nil {
 			return
 		}
@@ -105,8 +116,6 @@ func newApp(gui *gocui.Gui, analysis *image.AnalysisResult, cache filetree.Compa
 // 		}
 // 	}
 // }
-
-var lastX, lastY int
 
 // quit is the gocui callback invoked when the user hits Ctrl+C
 func (a *app) quit() error {

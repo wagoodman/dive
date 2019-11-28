@@ -2,16 +2,15 @@ package view
 
 import (
 	"fmt"
+	"github.com/jroimartin/gocui"
 	"github.com/sirupsen/logrus"
+	"github.com/spf13/viper"
+	"github.com/wagoodman/dive/dive/filetree"
 	"github.com/wagoodman/dive/runtime/ui/format"
 	"github.com/wagoodman/dive/runtime/ui/key"
 	"github.com/wagoodman/dive/runtime/ui/viewmodel"
+	"github.com/wagoodman/dive/utils"
 	"regexp"
-	"strings"
-
-	"github.com/jroimartin/gocui"
-	"github.com/lunixbochs/vtclean"
-	"github.com/wagoodman/dive/dive/filetree"
 )
 
 const (
@@ -33,177 +32,184 @@ type FileTree struct {
 	vm     *viewmodel.FileTree
 	title  string
 
-	filterRegex *regexp.Regexp
-
-	listeners []ViewOptionChangeListener
-
-	helpKeys []*key.Binding
+	filterRegex         *regexp.Regexp
+	listeners           []ViewOptionChangeListener
+	helpKeys            []*key.Binding
+	requestedWidthRatio float64
 }
 
-// NewFileTreeView creates a new view object attached the the global [gocui] screen object.
-func NewFileTreeView(name string, gui *gocui.Gui, tree *filetree.FileTree, refTrees []*filetree.FileTree, cache filetree.Comparer) (controller *FileTree, err error) {
+// newFileTreeView creates a new view object attached the the global [gocui] screen object.
+func newFileTreeView(gui *gocui.Gui, tree *filetree.FileTree, refTrees []*filetree.FileTree, cache filetree.Comparer) (controller *FileTree, err error) {
 	controller = new(FileTree)
 	controller.listeners = make([]ViewOptionChangeListener, 0)
 
 	// populate main fields
-	controller.name = name
+	controller.name = "filetree"
 	controller.gui = gui
 	controller.vm, err = viewmodel.NewFileTreeViewModel(tree, refTrees, cache)
 	if err != nil {
 		return nil, err
 	}
 
+	requestedWidthRatio := viper.GetFloat64("filetree.pane-width")
+	if requestedWidthRatio >= 1 || requestedWidthRatio <= 0 {
+		logrus.Errorf("invalid config value: 'filetree.pane-width' should be 0 < value < 1, given '%v'", requestedWidthRatio)
+		requestedWidthRatio = 0.5
+	}
+	controller.requestedWidthRatio = requestedWidthRatio
+
 	return controller, err
 }
 
-func (c *FileTree) AddViewOptionChangeListener(listener ...ViewOptionChangeListener) {
-	c.listeners = append(c.listeners, listener...)
+func (v *FileTree) AddViewOptionChangeListener(listener ...ViewOptionChangeListener) {
+	v.listeners = append(v.listeners, listener...)
 }
 
-func (c *FileTree) SetTitle(title string) {
-	c.title = title
+func (v *FileTree) SetTitle(title string) {
+	v.title = title
 }
 
-func (c *FileTree) SetFilterRegex(filterRegex *regexp.Regexp) {
-	c.filterRegex = filterRegex
+func (v *FileTree) SetFilterRegex(filterRegex *regexp.Regexp) {
+	v.filterRegex = filterRegex
 }
 
-func (c *FileTree) Name() string {
-	return c.name
+func (v *FileTree) Name() string {
+	return v.name
 }
 
-func (c *FileTree) AreAttributesVisible() bool {
-	return c.vm.ShowAttributes
+func (v *FileTree) areAttributesVisible() bool {
+	return v.vm.ShowAttributes
 }
 
 // Setup initializes the UI concerns within the context of a global [gocui] view object.
-func (c *FileTree) Setup(v *gocui.View, header *gocui.View) error {
+func (v *FileTree) Setup(view *gocui.View, header *gocui.View) error {
+	logrus.Tracef("view.Setup() %s", v.Name())
 
 	// set controller options
-	c.view = v
-	c.view.Editable = false
-	c.view.Wrap = false
-	c.view.Frame = false
+	v.view = view
+	v.view.Editable = false
+	v.view.Wrap = false
+	v.view.Frame = false
 
-	c.header = header
-	c.header.Editable = false
-	c.header.Wrap = false
-	c.header.Frame = false
+	v.header = header
+	v.header.Editable = false
+	v.header.Wrap = false
+	v.header.Frame = false
 
 	var infos = []key.BindingInfo{
 		{
 			ConfigKeys: []string{"keybinding.toggle-collapse-dir"},
-			OnAction:   c.toggleCollapse,
+			OnAction:   v.toggleCollapse,
 			Display:    "Collapse dir",
 		},
 		{
 			ConfigKeys: []string{"keybinding.toggle-collapse-all-dir"},
-			OnAction:   c.toggleCollapseAll,
+			OnAction:   v.toggleCollapseAll,
 			Display:    "Collapse all dir",
 		},
 		{
 			ConfigKeys: []string{"keybinding.toggle-added-files"},
-			OnAction:   func() error { return c.toggleShowDiffType(filetree.Added) },
-			IsSelected: func() bool { return !c.vm.HiddenDiffTypes[filetree.Added] },
+			OnAction:   func() error { return v.toggleShowDiffType(filetree.Added) },
+			IsSelected: func() bool { return !v.vm.HiddenDiffTypes[filetree.Added] },
 			Display:    "Added",
 		},
 		{
 			ConfigKeys: []string{"keybinding.toggle-removed-files"},
-			OnAction:   func() error { return c.toggleShowDiffType(filetree.Removed) },
-			IsSelected: func() bool { return !c.vm.HiddenDiffTypes[filetree.Removed] },
+			OnAction:   func() error { return v.toggleShowDiffType(filetree.Removed) },
+			IsSelected: func() bool { return !v.vm.HiddenDiffTypes[filetree.Removed] },
 			Display:    "Removed",
 		},
 		{
 			ConfigKeys: []string{"keybinding.toggle-modified-files"},
-			OnAction:   func() error { return c.toggleShowDiffType(filetree.Modified) },
-			IsSelected: func() bool { return !c.vm.HiddenDiffTypes[filetree.Modified] },
+			OnAction:   func() error { return v.toggleShowDiffType(filetree.Modified) },
+			IsSelected: func() bool { return !v.vm.HiddenDiffTypes[filetree.Modified] },
 			Display:    "Modified",
 		},
 		{
 			ConfigKeys: []string{"keybinding.toggle-unchanged-files", "keybinding.toggle-unmodified-files"},
-			OnAction:   func() error { return c.toggleShowDiffType(filetree.Unmodified) },
-			IsSelected: func() bool { return !c.vm.HiddenDiffTypes[filetree.Unmodified] },
+			OnAction:   func() error { return v.toggleShowDiffType(filetree.Unmodified) },
+			IsSelected: func() bool { return !v.vm.HiddenDiffTypes[filetree.Unmodified] },
 			Display:    "Unmodified",
 		},
 		{
 			ConfigKeys: []string{"keybinding.toggle-filetree-attributes"},
-			OnAction:   c.toggleAttributes,
-			IsSelected: func() bool { return c.vm.ShowAttributes },
+			OnAction:   v.toggleAttributes,
+			IsSelected: func() bool { return v.vm.ShowAttributes },
 			Display:    "Attributes",
 		},
 		{
 			ConfigKeys: []string{"keybinding.page-up"},
-			OnAction:   c.PageUp,
+			OnAction:   v.PageUp,
 		},
 		{
 			ConfigKeys: []string{"keybinding.page-down"},
-			OnAction:   c.PageDown,
+			OnAction:   v.PageDown,
 		},
 		{
 			Key:      gocui.KeyArrowDown,
 			Modifier: gocui.ModNone,
-			OnAction: c.CursorDown,
+			OnAction: v.CursorDown,
 		},
 		{
 			Key:      gocui.KeyArrowUp,
 			Modifier: gocui.ModNone,
-			OnAction: c.CursorUp,
+			OnAction: v.CursorUp,
 		},
 		{
 			Key:      gocui.KeyArrowLeft,
 			Modifier: gocui.ModNone,
-			OnAction: c.CursorLeft,
+			OnAction: v.CursorLeft,
 		},
 		{
 			Key:      gocui.KeyArrowRight,
 			Modifier: gocui.ModNone,
-			OnAction: c.CursorRight,
+			OnAction: v.CursorRight,
 		},
 	}
 
-	helpKeys, err := key.GenerateBindings(c.gui, c.name, infos)
+	helpKeys, err := key.GenerateBindings(v.gui, v.name, infos)
 	if err != nil {
 		return err
 	}
-	c.helpKeys = helpKeys
+	v.helpKeys = helpKeys
 
-	_, height := c.view.Size()
-	c.vm.Setup(0, height)
-	_ = c.Update()
-	_ = c.Render()
+	_, height := v.view.Size()
+	v.vm.Setup(0, height)
+	_ = v.Update()
+	_ = v.Render()
 
 	return nil
 }
 
 // IsVisible indicates if the file tree view pane is currently initialized
-func (c *FileTree) IsVisible() bool {
-	return c != nil
+func (v *FileTree) IsVisible() bool {
+	return v != nil
 }
 
 // ResetCursor moves the cursor back to the top of the buffer and translates to the top of the buffer.
-func (c *FileTree) resetCursor() {
-	_ = c.view.SetCursor(0, 0)
-	c.vm.ResetCursor()
+func (v *FileTree) resetCursor() {
+	_ = v.view.SetCursor(0, 0)
+	v.vm.ResetCursor()
 }
 
 // SetTreeByLayer populates the view model by stacking the indicated image layer file trees.
-func (c *FileTree) SetTree(bottomTreeStart, bottomTreeStop, topTreeStart, topTreeStop int) error {
-	err := c.vm.SetTreeByLayer(bottomTreeStart, bottomTreeStop, topTreeStart, topTreeStop)
+func (v *FileTree) SetTree(bottomTreeStart, bottomTreeStop, topTreeStart, topTreeStop int) error {
+	err := v.vm.SetTreeByLayer(bottomTreeStart, bottomTreeStop, topTreeStart, topTreeStop)
 	if err != nil {
 		return err
 	}
 
-	_ = c.Update()
-	return c.Render()
+	_ = v.Update()
+	return v.Render()
 }
 
 // CursorDown moves the cursor down and renders the view.
 // Note: we cannot use the gocui buffer since any state change requires writing the entire tree to the buffer.
 // Instead we are keeping an upper and lower bounds of the tree string to render and only flushing
 // this range into the view buffer. This is much faster when tree sizes are large.
-func (c *FileTree) CursorDown() error {
-	if c.vm.CursorDown() {
-		return c.Render()
+func (v *FileTree) CursorDown() error {
+	if v.vm.CursorDown() {
+		return v.Render()
 	}
 	return nil
 }
@@ -212,49 +218,49 @@ func (c *FileTree) CursorDown() error {
 // Note: we cannot use the gocui buffer since any state change requires writing the entire tree to the buffer.
 // Instead we are keeping an upper and lower bounds of the tree string to render and only flushing
 // this range into the view buffer. This is much faster when tree sizes are large.
-func (c *FileTree) CursorUp() error {
-	if c.vm.CursorUp() {
-		return c.Render()
+func (v *FileTree) CursorUp() error {
+	if v.vm.CursorUp() {
+		return v.Render()
 	}
 	return nil
 }
 
 // CursorLeft moves the cursor up until we reach the Parent Node or top of the tree
-func (c *FileTree) CursorLeft() error {
-	err := c.vm.CursorLeft(c.filterRegex)
+func (v *FileTree) CursorLeft() error {
+	err := v.vm.CursorLeft(v.filterRegex)
 	if err != nil {
 		return err
 	}
-	_ = c.Update()
-	return c.Render()
+	_ = v.Update()
+	return v.Render()
 }
 
 // CursorRight descends into directory expanding it if needed
-func (c *FileTree) CursorRight() error {
-	err := c.vm.CursorRight(c.filterRegex)
+func (v *FileTree) CursorRight() error {
+	err := v.vm.CursorRight(v.filterRegex)
 	if err != nil {
 		return err
 	}
-	_ = c.Update()
-	return c.Render()
+	_ = v.Update()
+	return v.Render()
 }
 
 // PageDown moves to next page putting the cursor on top
-func (c *FileTree) PageDown() error {
-	err := c.vm.PageDown()
+func (v *FileTree) PageDown() error {
+	err := v.vm.PageDown()
 	if err != nil {
 		return err
 	}
-	return c.Render()
+	return v.Render()
 }
 
 // PageUp moves to previous page putting the cursor on top
-func (c *FileTree) PageUp() error {
-	err := c.vm.PageUp()
+func (v *FileTree) PageUp() error {
+	err := v.vm.PageUp()
 	if err != nil {
 		return err
 	}
-	return c.Render()
+	return v.Render()
 }
 
 // getAbsPositionNode determines the selected screen cursor's location in the file tree, returning the selected FileNode.
@@ -263,30 +269,30 @@ func (c *FileTree) PageUp() error {
 // }
 
 // ToggleCollapse will collapse/expand the selected FileNode.
-func (c *FileTree) toggleCollapse() error {
-	err := c.vm.ToggleCollapse(c.filterRegex)
+func (v *FileTree) toggleCollapse() error {
+	err := v.vm.ToggleCollapse(v.filterRegex)
 	if err != nil {
 		return err
 	}
-	_ = c.Update()
-	return c.Render()
+	_ = v.Update()
+	return v.Render()
 }
 
 // ToggleCollapseAll will collapse/expand the all directories.
-func (c *FileTree) toggleCollapseAll() error {
-	err := c.vm.ToggleCollapseAll()
+func (v *FileTree) toggleCollapseAll() error {
+	err := v.vm.ToggleCollapseAll()
 	if err != nil {
 		return err
 	}
-	if c.vm.CollapseAll {
-		c.resetCursor()
+	if v.vm.CollapseAll {
+		v.resetCursor()
 	}
-	_ = c.Update()
-	return c.Render()
+	_ = v.Update()
+	return v.Render()
 }
 
-func (c *FileTree) notifyOnViewOptionChangeListeners() error {
-	for _, listener := range c.listeners {
+func (v *FileTree) notifyOnViewOptionChangeListeners() error {
+	for _, listener := range v.listeners {
 		err := listener()
 		if err != nil {
 			logrus.Errorf("notifyOnViewOptionChangeListeners error: %+v", err)
@@ -297,95 +303,89 @@ func (c *FileTree) notifyOnViewOptionChangeListeners() error {
 }
 
 // ToggleAttributes will show/hide file attributes
-func (c *FileTree) toggleAttributes() error {
-	err := c.vm.ToggleAttributes()
+func (v *FileTree) toggleAttributes() error {
+	err := v.vm.ToggleAttributes()
 	if err != nil {
 		return err
 	}
 
-	err = c.Update()
+	err = v.Update()
 	if err != nil {
 		return err
 	}
-	err = c.Render()
+	err = v.Render()
 	if err != nil {
 		return err
 	}
 
 	// we need to render the changes to the status pane as well (not just this contoller/view)
-	return c.notifyOnViewOptionChangeListeners()
+	return v.notifyOnViewOptionChangeListeners()
 }
 
 // ToggleShowDiffType will show/hide the selected DiffType in the filetree pane.
-func (c *FileTree) toggleShowDiffType(diffType filetree.DiffType) error {
-	c.vm.ToggleShowDiffType(diffType)
+func (v *FileTree) toggleShowDiffType(diffType filetree.DiffType) error {
+	v.vm.ToggleShowDiffType(diffType)
 
-	err := c.Update()
+	err := v.Update()
 	if err != nil {
 		return err
 	}
-	err = c.Render()
+	err = v.Render()
 	if err != nil {
 		return err
 	}
 
 	// we need to render the changes to the status pane as well (not just this contoller/view)
-	return c.notifyOnViewOptionChangeListeners()
+	return v.notifyOnViewOptionChangeListeners()
 }
 
 // OnLayoutChange is called by the UI framework to inform the view-model of the new screen dimensions
-func (c *FileTree) OnLayoutChange(resized bool) error {
-	err := c.Update()
+func (v *FileTree) OnLayoutChange() error {
+	err := v.Update()
 	if err != nil {
 		return err
 	}
-
-	if resized {
-		return c.Render()
-	}
-	return nil
+	return v.Render()
 }
 
 // Update refreshes the state objects for future rendering.
-func (c *FileTree) Update() error {
+func (v *FileTree) Update() error {
 	var width, height int
 
-	if c.view != nil {
-		width, height = c.view.Size()
+	if v.view != nil {
+		width, height = v.view.Size()
 	} else {
 		// before the TUI is setup there may not be a controller to reference. Use the entire screen as reference.
-		width, height = c.gui.Size()
+		width, height = v.gui.Size()
 	}
 	// height should account for the header
-	return c.vm.Update(c.filterRegex, width, height-1)
+	return v.vm.Update(v.filterRegex, width, height-1)
 }
 
 // Render flushes the state objects (file tree) to the pane.
-func (c *FileTree) Render() error {
-	title := c.title
-	// indicate when selected
-	if c.gui.CurrentView() == c.view {
-		title = "● " + c.title
-	}
+func (v *FileTree) Render() error {
+	logrus.Tracef("view.Render() %s", v.Name())
 
-	c.gui.Update(func(g *gocui.Gui) error {
+	title := v.title
+	isSelected := v.gui.CurrentView() == v.view
+
+	v.gui.Update(func(g *gocui.Gui) error {
 		// update the header
-		c.header.Clear()
+		v.header.Clear()
 		width, _ := g.Size()
-		headerStr := fmt.Sprintf("[%s]%s\n", title, strings.Repeat("─", width*2))
-		if c.vm.ShowAttributes {
+		headerStr := format.RenderHeader(title, width, isSelected)
+		if v.vm.ShowAttributes {
 			headerStr += fmt.Sprintf(filetree.AttributeFormat+" %s", "P", "ermission", "UID:GID", "Size", "Filetree")
 		}
-
-		_, _ = fmt.Fprintln(c.header, format.Header(vtclean.Clean(headerStr, false)))
+		_, _ = fmt.Fprintln(v.header, headerStr, false)
 
 		// update the contents
-		c.view.Clear()
-		err := c.vm.Render()
+		v.view.Clear()
+		err := v.vm.Render()
 		if err != nil {
 			return err
 		}
-		_, err = fmt.Fprint(c.view, c.vm.Buffer.String())
+		_, err = fmt.Fprint(v.view, v.vm.Buffer.String())
 
 		return err
 	})
@@ -393,10 +393,38 @@ func (c *FileTree) Render() error {
 }
 
 // KeyHelp indicates all the possible actions a user can take while the current pane is selected.
-func (c *FileTree) KeyHelp() string {
+func (v *FileTree) KeyHelp() string {
 	var help string
-	for _, binding := range c.helpKeys {
+	for _, binding := range v.helpKeys {
 		help += binding.RenderKeyHelp()
 	}
 	return help
+}
+
+func (v *FileTree) Layout(g *gocui.Gui, minX, minY, maxX, maxY int) error {
+	logrus.Tracef("view.Layout(minX: %d, minY: %d, maxX: %d, maxY: %d) %s", minX, minY, maxX, maxY, v.Name())
+	attributeRowSize := 0
+	if !v.areAttributesVisible() {
+		attributeRowSize = 1
+	}
+	// header + attribute + border
+	headerSize := 1 + attributeRowSize + 1
+	// note: maxY needs to account for the (invisible) border, thus a +1
+	header, headerErr := g.SetView(v.Name()+"header", minX, minY, maxX, minY+headerSize+1)
+	// we are going to overlap the view over the (invisible) border (so minY will be one less than expected).
+	// additionally, maxY will be bumped by one to include the border
+	view, viewErr := g.SetView(v.Name(), minX, minY+headerSize, maxX, maxY+1)
+	if utils.IsNewView(viewErr, headerErr) {
+		err := v.Setup(view, header)
+		if err != nil {
+			logrus.Error("unable to setup tree controller", err)
+			return err
+		}
+	}
+	return nil
+}
+
+func (v *FileTree) RequestedSize(available int) *int {
+	var requestedWidth = int(float64(available) * (1.0 - v.requestedWidthRatio))
+	return &requestedWidth
 }

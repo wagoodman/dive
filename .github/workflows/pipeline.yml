@@ -64,7 +64,7 @@ jobs:
         run: go get ./...
 
       - name: Linting, formatting, and other static code analyses
-        run: make ci-static-analyses
+        run: make ci-static-analysis
 
       - name: Build snapshot artifacts
         run: make ci-build-snapshot-packages

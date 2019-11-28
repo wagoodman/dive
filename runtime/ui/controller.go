@@ -11,61 +11,33 @@ import (
 )
 
 type Controller struct {
-	gui     *gocui.Gui
-	Tree    *view.FileTree
-	Layer   *view.Layer
-	Status  *view.Status
-	Filter  *view.Filter
-	Details *view.Details
-	lookup  map[string]view.Renderer
+	gui   *gocui.Gui
+	views *view.Views
 }
 
 func NewCollection(g *gocui.Gui, analysis *image.AnalysisResult, cache filetree.Comparer) (*Controller, error) {
-	var err error
+	views, err := view.NewViews(g, analysis, cache)
+	if err != nil {
+		return nil, err
+	}
 
 	controller := &Controller{
-		gui: g,
+		gui:   g,
+		views: views,
 	}
-	controller.lookup = make(map[string]view.Renderer)
-
-	controller.Layer, err = view.NewLayerView("layers", g, analysis.Layers)
-	if err != nil {
-		return nil, err
-	}
-	controller.lookup[controller.Layer.Name()] = controller.Layer
-
-	//treeStack, err := filetree.StackTreeRange(analysis.RefTrees, 0, 0)
-	//if err != nil {
-	//	return nil, err
-	//}
-	treeStack := analysis.RefTrees[0]
-	controller.Tree, err = view.NewFileTreeView("filetree", g, treeStack, analysis.RefTrees, cache)
-	if err != nil {
-		return nil, err
-	}
-	controller.lookup[controller.Tree.Name()] = controller.Tree
 
 	// layer view cursor down event should trigger an update in the file tree
-	controller.Layer.AddLayerChangeListener(controller.onLayerChange)
-
-	controller.Status = view.NewStatusView("status", g)
-	controller.lookup[controller.Status.Name()] = controller.Status
-	// set the layer view as the first selected view
-	controller.Status.SetCurrentView(controller.Layer)
+	controller.views.Layer.AddLayerChangeListener(controller.onLayerChange)
 
 	// update the status pane when a filetree option is changed by the user
-	controller.Tree.AddViewOptionChangeListener(controller.onFileTreeViewOptionChange)
+	controller.views.Tree.AddViewOptionChangeListener(controller.onFileTreeViewOptionChange)
 
-	controller.Filter = view.NewFilterView("filter", g)
-	controller.lookup[controller.Filter.Name()] = controller.Filter
-	controller.Filter.AddFilterEditListener(controller.onFilterEdit)
-
-	controller.Details = view.NewDetailsView("details", g, analysis.Efficiency, analysis.Inefficiencies, analysis.SizeBytes)
-	controller.lookup[controller.Details.Name()] = controller.Details
+	// update the tree view while the user types into the filter view
+	controller.views.Filter.AddFilterEditListener(controller.onFilterEdit)
 
 	// propagate initial conditions to necessary views
 	err = controller.onLayerChange(viewmodel.LayerSelection{
-		Layer:           controller.Layer.CurrentLayer(),
+		Layer:           controller.views.Layer.CurrentLayer(),
 		BottomTreeStart: 0,
 		BottomTreeStop:  0,
 		TopTreeStart:    0,
@@ -80,11 +52,11 @@ func NewCollection(g *gocui.Gui, analysis *image.AnalysisResult, cache filetree.
 }
 
 func (c *Controller) onFileTreeViewOptionChange() error {
-	err := c.Status.Update()
+	err := c.views.Status.Update()
 	if err != nil {
 		return err
 	}
-	return c.Status.Render()
+	return c.views.Status.Render()
 }
 
 func (c *Controller) onFilterEdit(filter string) error {
@@ -98,30 +70,30 @@ func (c *Controller) onFilterEdit(filter string) error {
 		}
 	}
 
-	c.Tree.SetFilterRegex(filterRegex)
+	c.views.Tree.SetFilterRegex(filterRegex)
 
-	err = c.Tree.Update()
+	err = c.views.Tree.Update()
 	if err != nil {
 		return err
 	}
 
-	return c.Tree.Render()
+	return c.views.Tree.Render()
 }
 
 func (c *Controller) onLayerChange(selection viewmodel.LayerSelection) error {
 	// update the details
-	c.Details.SetCurrentLayer(selection.Layer)
+	c.views.Details.SetCurrentLayer(selection.Layer)
 
 	// update the filetree
-	err := c.Tree.SetTree(selection.BottomTreeStart, selection.BottomTreeStop, selection.TopTreeStart, selection.TopTreeStop)
+	err := c.views.Tree.SetTree(selection.BottomTreeStart, selection.BottomTreeStop, selection.TopTreeStart, selection.TopTreeStop)
 	if err != nil {
 		return err
 	}
 
-	if c.Layer.CompareMode == view.CompareAll {
-		c.Tree.SetTitle("Aggregated Layer Contents")
+	if c.views.Layer.CompareMode == view.CompareAll {
+		c.views.Tree.SetTitle("Aggregated Layer Contents")
 	} else {
-		c.Tree.SetTitle("Current Layer Contents")
+		c.views.Tree.SetTitle("Current Layer Contents")
 	}
 
 	// update details and filetree panes
@@ -146,7 +118,7 @@ func (c *Controller) UpdateAndRender() error {
 
 // Update refreshes the state objects for future rendering.
 func (c *Controller) Update() error {
-	for _, controller := range c.lookup {
+	for _, controller := range c.views.All() {
 		err := controller.Update()
 		if err != nil {
 			logrus.Debug("unable to update controller: ")
@@ -158,7 +130,7 @@ func (c *Controller) Update() error {
 
 // Render flushes the state objects to the screen.
 func (c *Controller) Render() error {
-	for _, controller := range c.lookup {
+	for _, controller := range c.views.All() {
 		if controller.IsVisible() {
 			err := controller.Render()
 			if err != nil {
@@ -172,12 +144,12 @@ func (c *Controller) Render() error {
 // ToggleView switches between the file view and the layer view and re-renders the screen.
 func (c *Controller) ToggleView() (err error) {
 	v := c.gui.CurrentView()
-	if v == nil || v.Name() == c.Layer.Name() {
-		_, err = c.gui.SetCurrentView(c.Tree.Name())
-		c.Status.SetCurrentView(c.Tree)
+	if v == nil || v.Name() == c.views.Layer.Name() {
+		_, err = c.gui.SetCurrentView(c.views.Tree.Name())
+		c.views.Status.SetCurrentView(c.views.Tree)
 	} else {
-		_, err = c.gui.SetCurrentView(c.Layer.Name())
-		c.Status.SetCurrentView(c.Layer)
+		_, err = c.gui.SetCurrentView(c.views.Layer.Name())
+		c.views.Status.SetCurrentView(c.views.Layer)
 	}
 
 	if err != nil {
@@ -190,16 +162,16 @@ func (c *Controller) ToggleView() (err error) {
 
 func (c *Controller) ToggleFilterView() error {
 	// delete all user input from the tree view
-	err := c.Filter.ToggleVisible()
+	err := c.views.Filter.ToggleVisible()
 	if err != nil {
 		logrus.Error("unable to toggle filter visibility: ", err)
 		return err
 	}
 
 	// we have just hidden the filter view...
-	if !c.Filter.IsVisible() {
+	if !c.views.Filter.IsVisible() {
 		// ...remove any filter from the tree
-		c.Tree.SetFilterRegex(nil)
+		c.views.Tree.SetFilterRegex(nil)
 
 		// ...adjust focus to a valid (visible) view
 		err = c.ToggleView()
