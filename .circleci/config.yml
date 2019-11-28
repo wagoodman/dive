@@ -22,7 +22,7 @@ jobs:
             - "/go/pkg/mod"
       - run:
           name: run static analysis
-          command: make ci-static-analyses
+          command: make ci-static-analysis
 
   run-tests:
     parameters:

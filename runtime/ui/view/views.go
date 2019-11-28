@@ -12,29 +12,31 @@ type Views struct {
 	Status  *Status
 	Filter  *Filter
 	Details *Details
-	all     []*Renderer
+	Debug   *Debug
 }
 
 func NewViews(g *gocui.Gui, analysis *image.AnalysisResult, cache filetree.Comparer) (*Views, error) {
-	Layer, err := newLayerView("layers", g, analysis.Layers)
+	Layer, err := newLayerView(g, analysis.Layers)
 	if err != nil {
 		return nil, err
 	}
 
 	treeStack := analysis.RefTrees[0]
-	Tree, err := newFileTreeView("filetree", g, treeStack, analysis.RefTrees, cache)
+	Tree, err := newFileTreeView(g, treeStack, analysis.RefTrees, cache)
 	if err != nil {
 		return nil, err
 	}
 
-	Status := newStatusView("status", g)
+	Status := newStatusView(g)
 
 	// set the layer view as the first selected view
 	Status.SetCurrentView(Layer)
 
-	Filter := newFilterView("filter", g)
+	Filter := newFilterView(g)
 
-	Details := newDetailsView("details", g, analysis.Efficiency, analysis.Inefficiencies, analysis.SizeBytes)
+	Details := newDetailsView(g, analysis.Efficiency, analysis.Inefficiencies, analysis.SizeBytes)
+
+	Debug := newDebugView(g)
 
 	return &Views{
 		Tree:    Tree,
@@ -42,6 +44,7 @@ func NewViews(g *gocui.Gui, analysis *image.AnalysisResult, cache filetree.Compa
 		Status:  Status,
 		Filter:  Filter,
 		Details: Details,
+		Debug:   Debug,
 	}, nil
 }
 

@@ -44,6 +44,10 @@ func newApp(gui *gocui.Gui, analysis *image.AnalysisResult, cache filetree.Compa
 		lm.Add(compound.NewLayerDetailsCompoundLayout(controller.views.Layer, controller.views.Details), layout.LocationColumn)
 		lm.Add(controller.views.Tree, layout.LocationColumn)
 
+		// todo: access this more programmatically
+		if debug {
+			lm.Add(controller.views.Debug, layout.LocationColumn)
+		}
 		gui.Cursor = false
 		//g.Mouse = true
 		gui.SetManagerFunc(lm.Layout)

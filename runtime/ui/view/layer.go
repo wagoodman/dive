@@ -31,13 +31,13 @@ type Layer struct {
 }
 
 // newLayerView creates a new view object attached the the global [gocui] screen object.
-func newLayerView(name string, gui *gocui.Gui, layers []*image.Layer) (controller *Layer, err error) {
+func newLayerView(gui *gocui.Gui, layers []*image.Layer) (controller *Layer, err error) {
 	controller = new(Layer)
 
 	controller.listeners = make([]LayerChangeListener, 0)
 
 	// populate main fields
-	controller.name = name
+	controller.name = "layer"
 	controller.gui = gui
 	controller.Layers = layers
 

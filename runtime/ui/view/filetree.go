@@ -39,12 +39,12 @@ type FileTree struct {
 }
 
 // newFileTreeView creates a new view object attached the the global [gocui] screen object.
-func newFileTreeView(name string, gui *gocui.Gui, tree *filetree.FileTree, refTrees []*filetree.FileTree, cache filetree.Comparer) (controller *FileTree, err error) {
+func newFileTreeView(gui *gocui.Gui, tree *filetree.FileTree, refTrees []*filetree.FileTree, cache filetree.Comparer) (controller *FileTree, err error) {
 	controller = new(FileTree)
 	controller.listeners = make([]ViewOptionChangeListener, 0)
 
 	// populate main fields
-	controller.name = name
+	controller.name = "filetree"
 	controller.gui = gui
 	controller.vm, err = viewmodel.NewFileTreeViewModel(tree, refTrees, cache)
 	if err != nil {
@@ -377,7 +377,6 @@ func (v *FileTree) Render() error {
 		if v.vm.ShowAttributes {
 			headerStr += fmt.Sprintf(filetree.AttributeFormat+" %s", "P", "ermission", "UID:GID", "Size", "Filetree")
 		}
-
 		_, _ = fmt.Fprintln(v.header, headerStr, false)
 
 		// update the contents

@@ -29,11 +29,11 @@ type Details struct {
 }
 
 // newDetailsView creates a new view object attached the the global [gocui] screen object.
-func newDetailsView(name string, gui *gocui.Gui, efficiency float64, inefficiencies filetree.EfficiencySlice, imageSize uint64) (controller *Details) {
+func newDetailsView(gui *gocui.Gui, efficiency float64, inefficiencies filetree.EfficiencySlice, imageSize uint64) (controller *Details) {
 	controller = new(Details)
 
 	// populate main fields
-	controller.name = name
+	controller.name = "details"
 	controller.gui = gui
 	controller.efficiency = efficiency
 	controller.inefficiencies = inefficiencies

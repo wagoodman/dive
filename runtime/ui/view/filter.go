@@ -27,13 +27,13 @@ type Filter struct {
 }
 
 // newFilterView creates a new view object attached the the global [gocui] screen object.
-func newFilterView(name string, gui *gocui.Gui) (controller *Filter) {
+func newFilterView(gui *gocui.Gui) (controller *Filter) {
 	controller = new(Filter)
 
 	controller.filterEditListeners = make([]FilterEditListener, 0)
 
 	// populate main fields
-	controller.name = name
+	controller.name = "filter"
 	controller.gui = gui
 	controller.labelStr = "Path Filter: "
 	controller.hidden = true

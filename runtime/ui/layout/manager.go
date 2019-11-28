@@ -113,7 +113,7 @@ func (lm *Manager) planAndLayoutColumns(g *gocui.Gui, area Area) (Area, error) {
 			}
 		}
 
-		defaultWidth := int(availableWidth / variableColumns)
+		defaultWidth := availableWidth / variableColumns
 
 		// second pass: layout columns left to right (based off predetermined widths)
 		for idx, element := range elements {
@@ -177,6 +177,11 @@ func (lm *Manager) notifyLayoutChange() error {
 	return nil
 }
 
+func (lm *Manager) Layout(g *gocui.Gui) error {
+	curMaxX, curMaxY := g.Size()
+	return lm.layout(g, curMaxX, curMaxY)
+}
+
 // layout defines the definition of the window pane size and placement relations to one another. This
 // is invoked at application start and whenever the screen dimensions change.
 // A few things to note:
@@ -184,11 +189,10 @@ func (lm *Manager) notifyLayoutChange() error {
 //     needed (but there are comments!).
 //  2. since there are borders, in order for it to appear as if there aren't any spaces for borders, the views must
 //     overlap. To prevent screen artifacts, all elements must be layedout from the top of the screen to the bottom.
-func (lm *Manager) Layout(g *gocui.Gui) error {
+func (lm *Manager) layout(g *gocui.Gui, curMaxX, curMaxY int) error {
 	var headerAreaChanged, footerAreaChanged, columnAreaChanged bool
 
-	// grab the latest screen size and compare with the last layout
-	curMaxX, curMaxY := g.Size()
+	// compare current screen size with the last known size at time of layout
 	area := Area{
 		minX: -1,
 		minY: -1,
