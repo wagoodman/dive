@@ -165,12 +165,12 @@ func Test_planAndLayoutColumns(t *testing.T) {
 			columns: []*testElement{newTestElement(t, -1, Area{
 				minX: -1,
 				minY: -1,
-				maxX: 119,
+				maxX: 120,
 				maxY: 80,
 			}, LocationColumn)},
 			expected: layoutReturn{
 				area: Area{
-					minX: 119,
+					minX: 120,
 					minY: -1,
 					maxX: 120,
 					maxY: 80,
@@ -214,13 +214,13 @@ func Test_planAndLayoutColumns(t *testing.T) {
 				newTestElement(t, -1, Area{
 					minX: 29,
 					minY: -1,
-					maxX: 119,
+					maxX: 120,
 					maxY: 80,
 				}, LocationColumn),
 			},
 			expected: layoutReturn{
 				area: Area{
-					minX: 119,
+					minX: 120,
 					minY: -1,
 					maxX: 120,
 					maxY: 80,
@@ -280,7 +280,7 @@ func Test_layout(t *testing.T) {
 					Area{
 						minX: -1,
 						minY: 0,
-						maxX: 119,
+						maxX: 120,
 						maxY: 79,
 					}, LocationColumn),
 			},

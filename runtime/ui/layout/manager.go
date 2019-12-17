@@ -95,7 +95,7 @@ func (lm *Manager) planAndLayoutColumns(g *gocui.Gui, area Area) (Area, error) {
 			widths[idx] = -1
 		}
 		variableColumns := len(elements)
-		availableWidth := area.maxX
+		availableWidth := area.maxX + 1
 
 		// first pass: planout the column sizes based on the given requests
 		for idx, element := range elements {
