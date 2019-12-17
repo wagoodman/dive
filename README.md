@@ -2,6 +2,7 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/wagoodman/dive)](https://goreportcard.com/report/github.com/wagoodman/dive)
 [![Pipeline Status](https://circleci.com/gh/wagoodman/dive.svg?style=svg)](https://circleci.com/gh/wagoodman/dive)
 [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg?style=flat)](https://www.paypal.me/wagoodman)
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fwagoodman%2Fdive.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2Fwagoodman%2Fdive?ref=badge_shield)
 
 **A tool for exploring a docker image, layer contents, and discovering ways to shrink the size of your Docker/OCI image.**
 
@@ -265,3 +266,7 @@ dive will search for configs in the following locations:
 - `$XDG_CONFIG_DIRS/dive/*.yaml`
 - `~/.config/dive/*.yaml`
 - `~/.dive.yaml`
+
+
+## License
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fwagoodman%2Fdive.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2Fwagoodman%2Fdive?ref=badge_large)
