@@ -65,7 +65,7 @@ func NewBindingFromConfig(gui *gocui.Gui, influence string, configKeys []string,
 		if err != nil {
 			return nil, err
 		}
-		if keys != nil && len(keys) > 0 {
+		if len(keys) > 0 {
 			parsedKeys = keys
 			break
 		}
