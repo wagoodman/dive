@@ -62,7 +62,10 @@ func NewBindingFromConfig(gui *gocui.Gui, influence string, configKeys []string,
 		logrus.Debugf("parsing keybinding '%s' --> '%s'", configKey, bindStr)
 
 		keys, err := keybinding.ParseAll(bindStr)
-		if err == nil && keys != nil && len(keys) > 0 {
+		if err != nil {
+			return nil, err
+		}
+		if len(keys) > 0 {
 			parsedKeys = keys
 			break
 		}
