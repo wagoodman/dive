@@ -9,11 +9,12 @@ import (
 	"github.com/wagoodman/dive/runtime/ui/format"
 	"github.com/wagoodman/dive/runtime/ui/key"
 	"github.com/wagoodman/dive/runtime/ui/viewmodel"
+	"github.com/wagoodman/dive/utils"
 )
 
 // Layer holds the UI objects and data models for populating the lower-left pane. Specifically the pane that
 // shows the image layers and layer selector.
-type Layer struct {
+type LayerSlim struct {
 	name              string
 	gui               *gocui.Gui
 	view              *gocui.View
@@ -29,7 +30,7 @@ type Layer struct {
 }
 
 // newLayerView creates a new view object attached the the global [gocui] screen object.
-func newLayerView(gui *gocui.Gui, layers []*image.Layer) (controller *Layer, err error) {
+func newLayerSlimView(gui *gocui.Gui, layers []*image.Layer) (controller *Layer, err error) {
 	controller = new(Layer)
 
 	controller.listeners = make([]LayerChangeListener, 0)
@@ -51,11 +52,11 @@ func newLayerView(gui *gocui.Gui, layers []*image.Layer) (controller *Layer, err
 	return controller, err
 }
 
-func (v *Layer) AddLayerChangeListener(listener ...LayerChangeListener) {
+func (v *LayerSlim) AddLayerChangeListener(listener ...LayerChangeListener) {
 	v.listeners = append(v.listeners, listener...)
 }
 
-func (v *Layer) notifyLayerChangeListeners() error {
+func (v *LayerSlim) notifyLayerChangeListeners() error {
 	bottomTreeStart, bottomTreeStop, topTreeStart, topTreeStop := v.getCompareIndexes()
 	selection := viewmodel.LayerSelection{
 		Layer:           v.CurrentLayer(),
@@ -74,12 +75,12 @@ func (v *Layer) notifyLayerChangeListeners() error {
 	return nil
 }
 
-func (v *Layer) Name() string {
+func (v *LayerSlim) Name() string {
 	return v.name
 }
 
 // Setup initializes the UI concerns within the context of a global [gocui] view object.
-func (v *Layer) Setup(view *gocui.View, header *gocui.View) error {
+func (v *LayerSlim) Setup(view *gocui.View, header *gocui.View) error {
 	logrus.Tracef("view.Setup() %s", v.Name())
 
 	// set controller options
@@ -146,18 +147,18 @@ func (v *Layer) Setup(view *gocui.View, header *gocui.View) error {
 }
 
 // height obtains the height of the current pane (taking into account the lost space due to the header).
-func (v *Layer) height() uint {
+func (v *LayerSlim) height() uint {
 	_, height := v.view.Size()
 	return uint(height - 1)
 }
 
 // IsVisible indicates if the layer view pane is currently initialized.
-func (v *Layer) IsVisible() bool {
+func (v *LayerSlim) IsVisible() bool {
 	return v != nil
 }
 
 // PageDown moves to next page putting the cursor on top
-func (v *Layer) PageDown() error {
+func (v *LayerSlim) PageDown() error {
 	step := int(v.height()) + 1
 	targetLayerIndex := v.LayerIndex + step
 
@@ -175,7 +176,7 @@ func (v *Layer) PageDown() error {
 }
 
 // PageUp moves to previous page putting the cursor on top
-func (v *Layer) PageUp() error {
+func (v *LayerSlim) PageUp() error {
 	step := int(v.height()) + 1
 	targetLayerIndex := v.LayerIndex - step
 
@@ -193,7 +194,7 @@ func (v *Layer) PageUp() error {
 }
 
 // CursorDown moves the cursor down in the layer pane (selecting a higher layer).
-func (v *Layer) CursorDown() error {
+func (v *LayerSlim) CursorDown() error {
 	if v.LayerIndex < len(v.Layers) {
 		err := CursorDown(v.gui, v.view)
 		if err == nil {
@@ -204,7 +205,7 @@ func (v *Layer) CursorDown() error {
 }
 
 // CursorUp moves the cursor up in the layer pane (selecting a lower layer).
-func (v *Layer) CursorUp() error {
+func (v *LayerSlim) CursorUp() error {
 	if v.LayerIndex > 0 {
 		err := CursorUp(v.gui, v.view)
 		if err == nil {
@@ -215,7 +216,7 @@ func (v *Layer) CursorUp() error {
 }
 
 // SetCursor resets the cursor and orients the file tree view based on the given layer index.
-func (v *Layer) SetCursor(layer int) error {
+func (v *LayerSlim) SetCursor(layer int) error {
 	v.LayerIndex = layer
 	err := v.notifyLayerChangeListeners()
 	if err != nil {
@@ -226,18 +227,18 @@ func (v *Layer) SetCursor(layer int) error {
 }
 
 // CurrentLayer returns the Layer object currently selected.
-func (v *Layer) CurrentLayer() *image.Layer {
+func (v *LayerSlim) CurrentLayer() *image.Layer {
 	return v.Layers[v.LayerIndex]
 }
 
 // setCompareMode switches the layer comparison between a single-layer comparison to an aggregated comparison.
-func (v *Layer) setCompareMode(compareMode CompareType) error {
+func (v *LayerSlim) setCompareMode(compareMode CompareType) error {
 	v.CompareMode = compareMode
 	return v.notifyLayerChangeListeners()
 }
 
 // getCompareIndexes determines the layer boundaries to use for comparison (based on the current compare mode)
-func (v *Layer) getCompareIndexes() (bottomTreeStart, bottomTreeStop, topTreeStart, topTreeStop int) {
+func (v *LayerSlim) getCompareIndexes() (bottomTreeStart, bottomTreeStop, topTreeStart, topTreeStop int) {
 	bottomTreeStart = v.CompareStartIndex
 	topTreeStop = v.LayerIndex
 
@@ -256,7 +257,7 @@ func (v *Layer) getCompareIndexes() (bottomTreeStart, bottomTreeStop, topTreeSta
 }
 
 // renderCompareBar returns the formatted string for the given layer.
-func (v *Layer) renderCompareBar(layerIdx int) string {
+func (v *LayerSlim) renderCompareBar(layerIdx int) string {
 	bottomTreeStart, bottomTreeStop, topTreeStart, topTreeStop := v.getCompareIndexes()
 	result := "  "
 
@@ -271,7 +272,7 @@ func (v *Layer) renderCompareBar(layerIdx int) string {
 }
 
 // OnLayoutChange is called whenever the screen dimensions are changed
-func (v *Layer) OnLayoutChange() error {
+func (v *LayerSlim) OnLayoutChange() error {
 	err := v.Update()
 	if err != nil {
 		return err
@@ -280,14 +281,14 @@ func (v *Layer) OnLayoutChange() error {
 }
 
 // Update refreshes the state objects for future rendering (currently does nothing).
-func (v *Layer) Update() error {
+func (v *LayerSlim) Update() error {
 	return nil
 }
 
 // Render flushes the state objects to the screen. The layers pane reports:
 // 1. the layers of the image + metadata
 // 2. the current selected image
-func (v *Layer) Render() error {
+func (v *LayerSlim) Render() error {
 	logrus.Tracef("view.Render() %s", v.Name())
 
 	// indicate when selected
@@ -299,7 +300,6 @@ func (v *Layer) Render() error {
 		v.header.Clear()
 		width, _ := g.Size()
 		headerStr := format.RenderHeader(title, width, isSelected)
-		headerStr += fmt.Sprintf("Cmp"+image.LayerFormat, "Size", "Command")
 		_, err := fmt.Fprintln(v.header, headerStr)
 		if err != nil {
 			return err
@@ -330,10 +330,43 @@ func (v *Layer) Render() error {
 }
 
 // KeyHelp indicates all the possible actions a user can take while the current pane is selected.
-func (v *Layer) KeyHelp() string {
+func (v *LayerSlim) KeyHelp() string {
 	var help string
 	for _, binding := range v.helpKeys {
 		help += binding.RenderKeyHelp()
 	}
 	return help
 }
+
+func (v *LayerSlim) Layout(g *gocui.Gui, minX, minY, maxX, maxY int) error {
+	logrus.Tracef("view.LayoutSlim(minX: %d, minY: %d, maxX: %d, maxY: %d) %s", minX, minY, maxX, maxY, v.Name())
+
+	// header + border
+	layerHeaderHeight := 1
+
+	// note: maxY needs to account for the (invisible) border, thus a +1
+	header, headerErr := g.SetView(v.Name()+"header", minX, minY, maxX, maxY+layerHeaderHeight+1)
+
+	main, viewErr := g.SetView(v.Name(), minX, minY+layerHeaderHeight, maxX, maxY)
+
+	if utils.IsNewView(viewErr, headerErr) {
+		err := v.Setup(main, header)
+		if err != nil {
+			logrus.Error("unable to setup slim layer layout", err)
+			return err
+		}
+
+		if _, err = g.SetCurrentView(v.Name()); err != nil {
+			logrus.Error("unable to set view to slim layer", err)
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (v *LayerSlim) RequestedSize(available int) *int {
+	size := 5
+	return &size
+}
+
