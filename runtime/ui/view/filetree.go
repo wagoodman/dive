@@ -404,11 +404,11 @@ func (v *FileTree) KeyHelp() string {
 func (v *FileTree) Layout(g *gocui.Gui, minX, minY, maxX, maxY int) error {
 	logrus.Tracef("view.Layout(minX: %d, minY: %d, maxX: %d, maxY: %d) %s", minX, minY, maxX, maxY, v.Name())
 	attributeRowSize := 0
-	if !v.areAttributesVisible() {
+	if v.areAttributesVisible() {
 		attributeRowSize = 1
 	}
-	// header + attribute + border
-	headerSize := 1 + attributeRowSize + 1
+	// header + attribute header
+	headerSize := 1 + attributeRowSize
 	// note: maxY needs to account for the (invisible) border, thus a +1
 	header, headerErr := g.SetView(v.Name()+"header", minX, minY, maxX, minY+headerSize+1)
 	// we are going to overlap the view over the (invisible) border (so minY will be one less than expected).
