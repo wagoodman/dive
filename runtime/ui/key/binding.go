@@ -59,6 +59,10 @@ func NewBindingFromConfig(gui *gocui.Gui, influence string, configKeys []string,
 	var parsedKeys []keybinding.Key
 	for _, configKey := range configKeys {
 		bindStr := viper.GetString(configKey)
+		if bindStr == "" {
+			logrus.Debug("skipping keybinding '%s' (no value given)", configKey)
+			continue
+		}
 		logrus.Debugf("parsing keybinding '%s' --> '%s'", configKey, bindStr)
 
 		keys, err := keybinding.ParseAll(bindStr)
