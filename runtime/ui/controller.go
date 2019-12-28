@@ -90,7 +90,7 @@ func (c *Controller) onLayerChange(selection viewmodel.LayerSelection) error {
 		return err
 	}
 
-	if c.views.Layer.CompareMode == view.CompareAll {
+	if c.views.Layer.CompareMode() == viewmodel.CompareAllLayers {
 		c.views.Tree.SetTitle("Aggregated Layer Contents")
 	} else {
 		c.views.Tree.SetTitle("Current Layer Contents")
