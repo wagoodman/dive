@@ -97,24 +97,20 @@ func (cl *LayerDetailsCompoundLayout) Layout(g *gocui.Gui, minX, minY, maxX, max
 			if err != nil {
 				return err
 			}
+
+			return nil
 		}
 
-	} else {
+	}
 
-		// note: maxY needs to account for the (invisible) border, thus a +1
-		header, headerErr = g.SetView(cl.details.Name()+"header", minX, detailsMinY, maxX, detailsMinY+detailsHeaderHeight+1)
+	header, headerErr = g.SetView(cl.details.Name()+"header", minX, detailsMinY, maxX, detailsMinY+detailsHeaderHeight)
+	main, viewErr = g.SetView(cl.details.Name(), minX, detailsMinY+detailsHeaderHeight, maxX, maxY)
 
-		// we are going to overlap the view over the (invisible) border (so minY will be one less than expected)
-		// additionally, maxY will be bumped by one to include the border
-		main, viewErr = g.SetView(cl.details.Name(), minX, detailsMinY+detailsHeaderHeight, maxX, maxY+1)
-
-		if utils.IsNewView(viewErr, headerErr) {
-			err := cl.details.Setup(main, header)
-			if err != nil {
-				return err
-			}
+	if utils.IsNewView(viewErr, headerErr) {
+		err := cl.details.Setup(main, header)
+		if err != nil {
+			return err
 		}
-
 	}
 
 	return nil
