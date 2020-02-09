@@ -66,9 +66,6 @@ func initCli() {
 
 // initConfig reads in config file and ENV variables if set.
 func initConfig() {
-	filepathToCfg := getCfgFile(cfgFile)
-	viper.SetConfigFile(filepathToCfg)
-
 	viper.SetDefault("log.level", log.InfoLevel.String())
 	viper.SetDefault("log.path", "./dive.log")
 	viper.SetDefault("log.enabled", false)
@@ -105,9 +102,20 @@ func initConfig() {
 	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
 	viper.AutomaticEnv()
 
-	// If a config file is found, read it in.
-	if err := viper.ReadInConfig(); err == nil {
+	// if config files are present, load them
+	if cfgFile == "" {
+		// default configs are ignored if not found
+		filepathToCfg := getDefaultCfgFile()
+		viper.SetConfigFile(filepathToCfg)
+	} else {
+		viper.SetConfigFile(cfgFile)
+	}
+	err := viper.ReadInConfig()
+	if err == nil {
 		fmt.Println("Using config file:", viper.ConfigFileUsed())
+	} else if cfgFile != "" {
+		fmt.Println(err)
+		os.Exit(0)
 	}
 
 	// set global defaults (for performance)
@@ -147,14 +155,10 @@ func initLogging() {
 	}
 }
 
-// getCfgFile checks for config file in paths from xdg specs
+// getDefaultCfgFile checks for config file in paths from xdg specs
 // and in $HOME/.config/dive/ directory
 // defaults to $HOME/.dive.yaml
-func getCfgFile(fromFlag string) string {
-	if fromFlag != "" {
-		return fromFlag
-	}
-
+func getDefaultCfgFile() string {
 	home, err := homedir.Dir()
 	if err != nil {
 		fmt.Println(err)
