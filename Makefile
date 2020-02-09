@@ -40,7 +40,7 @@ ci-build-snapshot-packages:
 		--rm-dist
 
 ci-release:
-	release --rm-dist
+	goreleaser release --rm-dist
 
 # todo: add --pull=never when supported by host box
 ci-test-production-image:
