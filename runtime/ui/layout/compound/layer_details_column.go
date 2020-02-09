@@ -8,8 +8,9 @@ import (
 )
 
 type LayerDetailsCompoundLayout struct {
-	layer   *view.Layer
-	details *view.Details
+	layer               *view.Layer
+	details             *view.Details
+	constrainRealEstate bool
 }
 
 func NewLayerDetailsCompoundLayout(layer *view.Layer, details *view.Details) *LayerDetailsCompoundLayout {
@@ -48,7 +49,7 @@ func (cl *LayerDetailsCompoundLayout) Layout(g *gocui.Gui, minX, minY, maxX, max
 	// header + border
 	layerHeaderHeight := 2
 
-	layersHeight := len(cl.layer.Layers) + layerHeaderHeight + 1 // layers + header + base image layer row
+	layersHeight := cl.layer.LayerCount() + layerHeaderHeight + 1 // layers + header + base image layer row
 	maxLayerHeight := int(0.75 * float64(maxY))
 	if layersHeight > maxLayerHeight {
 		layersHeight = maxLayerHeight
@@ -80,12 +81,30 @@ func (cl *LayerDetailsCompoundLayout) Layout(g *gocui.Gui, minX, minY, maxX, max
 	// header + border
 	detailsHeaderHeight := 2
 
-	// note: maxY needs to account for the (invisible) border, thus a +1
-	header, headerErr = g.SetView(cl.details.Name()+"header", minX, detailsMinY, maxX, detailsMinY+detailsHeaderHeight+1)
+	v, _ := g.View(cl.details.Name())
+	if v != nil {
+		// the view exists already!
 
-	// we are going to overlap the view over the (invisible) border (so minY will be one less than expected)
-	// additionally, maxY will be bumped by one to include the border
-	main, viewErr = g.SetView(cl.details.Name(), minX, detailsMinY+detailsHeaderHeight, maxX, maxY+1)
+		// don't show the details pane when there isn't enough room on the screen
+		if cl.constrainRealEstate {
+			// take note: deleting a view will invoke layout again, so ensure this call is protected from an infinite loop
+			err := g.DeleteView(cl.details.Name())
+			if err != nil {
+				return err
+			}
+			// take note: deleting a view will invoke layout again, so ensure this call is protected from an infinite loop
+			err = g.DeleteView(cl.details.Name() + "header")
+			if err != nil {
+				return err
+			}
+
+			return nil
+		}
+
+	}
+
+	header, headerErr = g.SetView(cl.details.Name()+"header", minX, detailsMinY, maxX, detailsMinY+detailsHeaderHeight)
+	main, viewErr = g.SetView(cl.details.Name(), minX, detailsMinY+detailsHeaderHeight, maxX, maxY)
 
 	if utils.IsNewView(viewErr, headerErr) {
 		err := cl.details.Setup(main, header)
@@ -98,6 +117,16 @@ func (cl *LayerDetailsCompoundLayout) Layout(g *gocui.Gui, minX, minY, maxX, max
 }
 
 func (cl *LayerDetailsCompoundLayout) RequestedSize(available int) *int {
+	// "available" is the entire screen real estate, so we can guess when its a bit too small and take action.
+	// This isn't perfect, but it gets the job done for now without complicated layout constraint solvers
+	if available < 90 {
+		cl.layer.ConstrainLayout()
+		cl.constrainRealEstate = true
+		size := 8
+		return &size
+	}
+	cl.layer.ExpandLayout()
+	cl.constrainRealEstate = false
 	return nil
 }
 

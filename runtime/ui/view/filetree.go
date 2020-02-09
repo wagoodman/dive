@@ -13,13 +13,6 @@ import (
 	"regexp"
 )
 
-const (
-	CompareLayer CompareType = iota
-	CompareAll
-)
-
-type CompareType int
-
 type ViewOptionChangeListener func() error
 
 // FileTree holds the UI objects and data models for populating the right pane. Specifically the pane that
@@ -75,10 +68,6 @@ func (v *FileTree) SetFilterRegex(filterRegex *regexp.Regexp) {
 
 func (v *FileTree) Name() string {
 	return v.name
-}
-
-func (v *FileTree) areAttributesVisible() bool {
-	return v.vm.ShowAttributes
 }
 
 // Setup initializes the UI concerns within the context of a global [gocui] view object.
@@ -377,7 +366,7 @@ func (v *FileTree) Render() error {
 		if v.vm.ShowAttributes {
 			headerStr += fmt.Sprintf(filetree.AttributeFormat+" %s", "P", "ermission", "UID:GID", "Size", "Filetree")
 		}
-		_, _ = fmt.Fprintln(v.header, headerStr, false)
+		_, _ = fmt.Fprintln(v.header, headerStr)
 
 		// update the contents
 		v.view.Clear()
@@ -404,9 +393,19 @@ func (v *FileTree) KeyHelp() string {
 func (v *FileTree) Layout(g *gocui.Gui, minX, minY, maxX, maxY int) error {
 	logrus.Tracef("view.Layout(minX: %d, minY: %d, maxX: %d, maxY: %d) %s", minX, minY, maxX, maxY, v.Name())
 	attributeRowSize := 0
-	if v.areAttributesVisible() {
+
+	// make the layout responsive to the available realestate. Make more room for the main content by hiding auxillary
+	// content when there is not enough room
+	if maxX-minX < 60 {
+		v.vm.ConstrainLayout()
+	} else {
+		v.vm.ExpandLayout()
+	}
+
+	if v.vm.ShowAttributes {
 		attributeRowSize = 1
 	}
+
 	// header + attribute header
 	headerSize := 1 + attributeRowSize
 	// note: maxY needs to account for the (invisible) border, thus a +1
@@ -425,6 +424,7 @@ func (v *FileTree) Layout(g *gocui.Gui, minX, minY, maxX, maxY int) error {
 }
 
 func (v *FileTree) RequestedSize(available int) *int {
-	var requestedWidth = int(float64(available) * (1.0 - v.requestedWidthRatio))
-	return &requestedWidth
+	//var requestedWidth = int(float64(available) * (1.0 - v.requestedWidthRatio))
+	//return &requestedWidth
+	return nil
 }

@@ -5,6 +5,8 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+type Constraint func(int) int
+
 type Manager struct {
 	lastX, lastY                                   int
 	lastHeaderArea, lastFooterArea, lastColumnArea Area
@@ -111,6 +113,13 @@ func (lm *Manager) planAndLayoutColumns(g *gocui.Gui, area Area) (Area, error) {
 				variableColumns--
 				availableWidth -= widths[idx]
 			}
+		}
+
+		// at least one column must have a variable width, force the last column to be variable if there are no
+		// variable columns
+		if variableColumns == 0 {
+			variableColumns = 1
+			widths[len(widths)-1] = -1
 		}
 
 		defaultWidth := availableWidth / variableColumns

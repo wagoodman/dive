@@ -21,12 +21,15 @@ type FileTree struct {
 	RefTrees  []*filetree.FileTree
 	cache     filetree.Comparer
 
-	CollapseAll           bool
-	ShowAttributes        bool
-	HiddenDiffTypes       []bool
-	TreeIndex             int
-	bufferIndex           int
-	bufferIndexLowerBound int
+	constrainedRealEstate bool
+
+	CollapseAll                 bool
+	ShowAttributes              bool
+	unconstrainedShowAttributes bool
+	HiddenDiffTypes             []bool
+	TreeIndex                   int
+	bufferIndex                 int
+	bufferIndexLowerBound       int
 
 	refHeight int
 	refWidth  int
@@ -40,6 +43,7 @@ func NewFileTreeViewModel(tree *filetree.FileTree, refTrees []*filetree.FileTree
 
 	// populate main fields
 	treeViewModel.ShowAttributes = viper.GetBool("filetree.show-attributes")
+	treeViewModel.unconstrainedShowAttributes = treeViewModel.ShowAttributes
 	treeViewModel.CollapseAll = viper.GetBool("filetree.collapse-dir")
 	treeViewModel.ModelTree = tree
 	treeViewModel.RefTrees = refTrees
@@ -351,8 +355,29 @@ func (vm *FileTree) ToggleCollapseAll() error {
 	return nil
 }
 
+func (vm *FileTree) ConstrainLayout() {
+	if !vm.constrainedRealEstate {
+		logrus.Debugf("constraining filetree layout")
+		vm.constrainedRealEstate = true
+		vm.unconstrainedShowAttributes = vm.ShowAttributes
+		vm.ShowAttributes = false
+	}
+}
+
+func (vm *FileTree) ExpandLayout() {
+	if vm.constrainedRealEstate {
+		logrus.Debugf("expanding filetree layout")
+		vm.ShowAttributes = vm.unconstrainedShowAttributes
+		vm.constrainedRealEstate = false
+	}
+}
+
 // ToggleCollapse will collapse/expand the selected FileNode.
 func (vm *FileTree) ToggleAttributes() error {
+	// ignore any attempt to show the attributes when the layout is constrained
+	if vm.constrainedRealEstate {
+		return nil
+	}
 	vm.ShowAttributes = !vm.ShowAttributes
 	return nil
 }
