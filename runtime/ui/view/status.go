@@ -110,6 +110,15 @@ func (v *Status) KeyHelp() string {
 	return help
 }
 
+func (v *Status) Retop() {
+	logrus.Trace("asserting status on top...")
+	// take note: deleting a view will invoke layout again, so ensure this call is protected from an infinite loop
+	err := v.gui.DeleteView(v.Name())
+	if err != nil {
+		logrus.Errorf("could not put status on top:", err)
+	}
+}
+
 func (v *Status) Layout(g *gocui.Gui, minX, minY, maxX, maxY int) error {
 	logrus.Tracef("view.Layout(minX: %d, minY: %d, maxX: %d, maxY: %d) %s", minX, minY, maxX, maxY, v.Name())
 

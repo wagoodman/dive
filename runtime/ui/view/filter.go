@@ -169,6 +169,19 @@ func (v *Filter) OnLayoutChange() error {
 	return v.Render()
 }
 
+func (v *Filter) Retop() {
+	logrus.Trace("asserting filter on top...")
+	// take note: deleting a view will invoke layout again, so ensure this call is protected from an infinite loop
+	err := v.gui.DeleteView(v.Name()+"label")
+	if err != nil {
+		logrus.Errorf("could not put filter label on top:", err)
+	}
+	err = v.gui.DeleteView(v.Name())
+	if err != nil {
+		logrus.Errorf("could not put filter on top:", err)
+	}
+}
+
 func (v *Filter) Layout(g *gocui.Gui, minX, minY, maxX, maxY int) error {
 	logrus.Tracef("view.Layout(minX: %d, minY: %d, maxX: %d, maxY: %d) %s", minX, minY, maxX, maxY, v.Name())
 

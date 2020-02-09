@@ -13,9 +13,10 @@ import (
 type Controller struct {
 	gui   *gocui.Gui
 	views *view.Views
+
 }
 
-func NewCollection(g *gocui.Gui, analysis *image.AnalysisResult, cache filetree.Comparer) (*Controller, error) {
+func NewController(g *gocui.Gui, analysis *image.AnalysisResult, cache filetree.Comparer) (*Controller, error) {
 	views, err := view.NewViews(g, analysis, cache)
 	if err != nil {
 		return nil, err

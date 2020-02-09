@@ -11,6 +11,7 @@ import (
 	"github.com/wagoodman/dive/runtime/ui/viewmodel"
 	"github.com/wagoodman/dive/utils"
 	"regexp"
+	"sync"
 )
 
 type ViewOptionChangeListener func() error
@@ -22,6 +23,8 @@ type FileTree struct {
 	gui    *gocui.Gui
 	view   *gocui.View
 	header *gocui.View
+	once    sync.Once
+	hidden bool
 	vm     *viewmodel.FileTree
 	title  string
 
@@ -73,6 +76,7 @@ func (v *FileTree) Name() string {
 // Setup initializes the UI concerns within the context of a global [gocui] view object.
 func (v *FileTree) Setup(view *gocui.View, header *gocui.View) error {
 	logrus.Tracef("view.Setup() %s", v.Name())
+	var err error
 
 	// set controller options
 	v.view = view
@@ -85,89 +89,90 @@ func (v *FileTree) Setup(view *gocui.View, header *gocui.View) error {
 	v.header.Wrap = false
 	v.header.Frame = false
 
-	var infos = []key.BindingInfo{
-		{
-			ConfigKeys: []string{"keybinding.toggle-collapse-dir"},
-			OnAction:   v.toggleCollapse,
-			Display:    "Collapse dir",
-		},
-		{
-			ConfigKeys: []string{"keybinding.toggle-collapse-all-dir"},
-			OnAction:   v.toggleCollapseAll,
-			Display:    "Collapse all dir",
-		},
-		{
-			ConfigKeys: []string{"keybinding.toggle-added-files"},
-			OnAction:   func() error { return v.toggleShowDiffType(filetree.Added) },
-			IsSelected: func() bool { return !v.vm.HiddenDiffTypes[filetree.Added] },
-			Display:    "Added",
-		},
-		{
-			ConfigKeys: []string{"keybinding.toggle-removed-files"},
-			OnAction:   func() error { return v.toggleShowDiffType(filetree.Removed) },
-			IsSelected: func() bool { return !v.vm.HiddenDiffTypes[filetree.Removed] },
-			Display:    "Removed",
-		},
-		{
-			ConfigKeys: []string{"keybinding.toggle-modified-files"},
-			OnAction:   func() error { return v.toggleShowDiffType(filetree.Modified) },
-			IsSelected: func() bool { return !v.vm.HiddenDiffTypes[filetree.Modified] },
-			Display:    "Modified",
-		},
-		{
-			ConfigKeys: []string{"keybinding.toggle-unchanged-files", "keybinding.toggle-unmodified-files"},
-			OnAction:   func() error { return v.toggleShowDiffType(filetree.Unmodified) },
-			IsSelected: func() bool { return !v.vm.HiddenDiffTypes[filetree.Unmodified] },
-			Display:    "Unmodified",
-		},
-		{
-			ConfigKeys: []string{"keybinding.toggle-filetree-attributes"},
-			OnAction:   v.toggleAttributes,
-			IsSelected: func() bool { return v.vm.ShowAttributes },
-			Display:    "Attributes",
-		},
-		{
-			ConfigKeys: []string{"keybinding.page-up"},
-			OnAction:   v.PageUp,
-		},
-		{
-			ConfigKeys: []string{"keybinding.page-down"},
-			OnAction:   v.PageDown,
-		},
-		{
-			Key:      gocui.KeyArrowDown,
-			Modifier: gocui.ModNone,
-			OnAction: v.CursorDown,
-		},
-		{
-			Key:      gocui.KeyArrowUp,
-			Modifier: gocui.ModNone,
-			OnAction: v.CursorUp,
-		},
-		{
-			Key:      gocui.KeyArrowLeft,
-			Modifier: gocui.ModNone,
-			OnAction: v.CursorLeft,
-		},
-		{
-			Key:      gocui.KeyArrowRight,
-			Modifier: gocui.ModNone,
-			OnAction: v.CursorRight,
-		},
-	}
+	v.once.Do(func() {
+		var infos = []key.BindingInfo{
+			{
+				ConfigKeys: []string{"keybinding.toggle-collapse-dir"},
+				OnAction:   v.toggleCollapse,
+				Display:    "Collapse dir",
+			},
+			{
+				ConfigKeys: []string{"keybinding.toggle-collapse-all-dir"},
+				OnAction:   v.toggleCollapseAll,
+				Display:    "Collapse all dir",
+			},
+			{
+				ConfigKeys: []string{"keybinding.toggle-added-files"},
+				OnAction:   func() error { return v.toggleShowDiffType(filetree.Added) },
+				IsSelected: func() bool { return !v.vm.HiddenDiffTypes[filetree.Added] },
+				Display:    "Added",
+			},
+			{
+				ConfigKeys: []string{"keybinding.toggle-removed-files"},
+				OnAction:   func() error { return v.toggleShowDiffType(filetree.Removed) },
+				IsSelected: func() bool { return !v.vm.HiddenDiffTypes[filetree.Removed] },
+				Display:    "Removed",
+			},
+			{
+				ConfigKeys: []string{"keybinding.toggle-modified-files"},
+				OnAction:   func() error { return v.toggleShowDiffType(filetree.Modified) },
+				IsSelected: func() bool { return !v.vm.HiddenDiffTypes[filetree.Modified] },
+				Display:    "Modified",
+			},
+			{
+				ConfigKeys: []string{"keybinding.toggle-unchanged-files", "keybinding.toggle-unmodified-files"},
+				OnAction:   func() error { return v.toggleShowDiffType(filetree.Unmodified) },
+				IsSelected: func() bool { return !v.vm.HiddenDiffTypes[filetree.Unmodified] },
+				Display:    "Unmodified",
+			},
+			{
+				ConfigKeys: []string{"keybinding.toggle-filetree-attributes"},
+				OnAction:   v.toggleAttributes,
+				IsSelected: func() bool { return v.vm.ShowAttributes },
+				Display:    "Attributes",
+			},
+			{
+				ConfigKeys: []string{"keybinding.page-up"},
+				OnAction:   v.PageUp,
+			},
+			{
+				ConfigKeys: []string{"keybinding.page-down"},
+				OnAction:   v.PageDown,
+			},
+			{
+				Key:      gocui.KeyArrowDown,
+				Modifier: gocui.ModNone,
+				OnAction: v.CursorDown,
+			},
+			{
+				Key:      gocui.KeyArrowUp,
+				Modifier: gocui.ModNone,
+				OnAction: v.CursorUp,
+			},
+			{
+				Key:      gocui.KeyArrowLeft,
+				Modifier: gocui.ModNone,
+				OnAction: v.CursorLeft,
+			},
+			{
+				Key:      gocui.KeyArrowRight,
+				Modifier: gocui.ModNone,
+				OnAction: v.CursorRight,
+			},
+		}
 
-	helpKeys, err := key.GenerateBindings(v.gui, v.name, infos)
-	if err != nil {
-		return err
-	}
-	v.helpKeys = helpKeys
+		helpKeys, err := key.GenerateBindings(v.gui, v.name, infos)
+		if err != nil {
+			return
+		}
+		v.helpKeys = helpKeys
+	})
 
 	_, height := v.view.Size()
 	v.vm.Setup(0, height)
 	_ = v.Update()
 	_ = v.Render()
-
-	return nil
+	return err
 }
 
 // IsVisible indicates if the file tree view pane is currently initialized
@@ -328,6 +333,30 @@ func (v *FileTree) toggleShowDiffType(diffType filetree.DiffType) error {
 	return v.notifyOnViewOptionChangeListeners()
 }
 
+func (v *FileTree) ToggleHide() error {
+	v.hidden = !v.hidden
+
+	if v.hidden {
+		logrus.Trace("hiding filetree view...")
+
+		// take note: deleting a view will invoke layout again, so ensure this call is protected from an infinite loop
+		err := v.gui.DeleteView(v.Name())
+		if err != nil {
+			return err
+		}
+		// take note: deleting a view will invoke layout again, so ensure this call is protected from an infinite loop
+		err = v.gui.DeleteView(v.Name() + "header")
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (v *FileTree) IsHidden() bool {
+	return v.hidden
+}
+
 // OnLayoutChange is called by the UI framework to inform the view-model of the new screen dimensions
 func (v *FileTree) OnLayoutChange() error {
 	err := v.Update()
@@ -362,7 +391,7 @@ func (v *FileTree) Render() error {
 		// update the header
 		v.header.Clear()
 		width, _ := g.Size()
-		headerStr := format.RenderHeader(title, width, isSelected)
+		headerStr := format.RenderHeader(title, width, isSelected, true)
 		if v.vm.ShowAttributes {
 			headerStr += fmt.Sprintf(filetree.AttributeFormat+" %s", "P", "ermission", "UID:GID", "Size", "Filetree")
 		}
@@ -391,7 +420,7 @@ func (v *FileTree) KeyHelp() string {
 }
 
 func (v *FileTree) Layout(g *gocui.Gui, minX, minY, maxX, maxY int) error {
-	logrus.Tracef("view.Layout(minX: %d, minY: %d, maxX: %d, maxY: %d) %s", minX, minY, maxX, maxY, v.Name())
+	logrus.Tracef("view.Layout(minX: %d, minY: %d, maxX: %d, maxY: %d, hidden: %v) %s", minX, minY, maxX, maxY, v.hidden, v.Name())
 	attributeRowSize := 0
 
 	// make the layout responsive to the available realestate. Make more room for the main content by hiding auxillary
@@ -408,7 +437,6 @@ func (v *FileTree) Layout(g *gocui.Gui, minX, minY, maxX, maxY int) error {
 
 	// header + attribute header
 	headerSize := 1 + attributeRowSize
-	// note: maxY needs to account for the (invisible) border, thus a +1
 	header, headerErr := g.SetView(v.Name()+"header", minX, minY, maxX, minY+headerSize+1)
 	// we are going to overlap the view over the (invisible) border (so minY will be one less than expected).
 	// additionally, maxY will be bumped by one to include the border

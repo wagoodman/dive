@@ -1,6 +1,7 @@
 package layout
 
 import (
+	"fmt"
 	"github.com/jroimartin/gocui"
 	"github.com/sirupsen/logrus"
 )
@@ -24,6 +25,22 @@ func (lm *Manager) Add(element Layout, location Location) {
 		lm.elements[location] = make([]Layout, 0)
 	}
 	lm.elements[location] = append(lm.elements[location], element)
+}
+
+func (lm *Manager) Remove(element Layout) error {
+	for location, elements := range lm.elements {
+		idx := -1
+		for i, el := range elements {
+			if el == element {
+				idx = i
+			}
+		}
+		if idx >= 0 {
+			lm.elements[location] = append(elements[:idx], elements[idx+1:]...)
+			return nil
+		}
+	}
+	return fmt.Errorf("could not remove element from layout manager")
 }
 
 func (lm *Manager) planAndLayoutHeaders(g *gocui.Gui, area Area) (Area, error) {

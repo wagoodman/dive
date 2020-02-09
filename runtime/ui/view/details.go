@@ -157,8 +157,8 @@ func (v *Details) Render() error {
 		v.header.Clear()
 		width, _ := v.view.Size()
 
-		layerHeaderStr := format.RenderHeader("Layer Details", width, false)
-		imageHeaderStr := format.RenderHeader("Image Details", width, false)
+		layerHeaderStr := format.RenderHeader("Layer Details", width, false, false)
+		imageHeaderStr := format.RenderHeader("Image", width, false, false)
 
 		_, err := fmt.Fprintln(v.header, layerHeaderStr)
 		if err != nil {
@@ -182,7 +182,8 @@ func (v *Details) Render() error {
 		lines = append(lines, imageSizeStr)
 		lines = append(lines, wastedSpaceStr)
 		lines = append(lines, effStr+"\n")
-		lines = append(lines, inefficiencyReport)
+		lines = append(lines, format.Header("[^D for detailed image information]"))
+		//lines = append(lines, inefficiencyReport)
 
 		_, err = fmt.Fprintln(v.view, strings.Join(lines, "\n"))
 		if err != nil {

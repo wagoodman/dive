@@ -307,7 +307,7 @@ func (v *Layer) Render() error {
 				return err
 			}
 		} else {
-			headerStr := format.RenderHeader(title, width, isSelected)
+			headerStr := format.RenderHeader(title, width, isSelected, true)
 			headerStr += fmt.Sprintf("Cmp"+image.LayerFormat, "Size", "Command")
 			_, err := fmt.Fprintln(v.header, headerStr)
 			if err != nil {

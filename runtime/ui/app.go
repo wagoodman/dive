@@ -16,9 +16,10 @@ const debug = false
 
 // type global
 type app struct {
-	gui         *gocui.Gui
-	controllers *Controller
-	layout      *layout.Manager
+	gui        *gocui.Gui
+	controller *Controller
+	layout     *layout.Manager
+	detailedMode bool
 }
 
 var (
@@ -32,7 +33,7 @@ func newApp(gui *gocui.Gui, analysis *image.AnalysisResult, cache filetree.Compa
 		var controller *Controller
 		var globalHelpKeys []*key.Binding
 
-		controller, err = NewCollection(gui, analysis, cache)
+		controller, err = NewController(gui, analysis, cache)
 		if err != nil {
 			return
 		}
@@ -59,9 +60,10 @@ func newApp(gui *gocui.Gui, analysis *image.AnalysisResult, cache filetree.Compa
 		// }
 
 		appSingleton = &app{
-			gui:         gui,
-			controllers: controller,
-			layout:      lm,
+			gui:          gui,
+			controller:   controller,
+			layout:       lm,
+			detailedMode: false,
 		}
 
 		var infos = []key.BindingInfo{
@@ -90,6 +92,19 @@ func newApp(gui *gocui.Gui, analysis *image.AnalysisResult, cache filetree.Compa
 
 		controller.views.Status.AddHelpKeys(globalHelpKeys...)
 
+		// dont show these key bindings on the status pane
+		quietKeys := []key.BindingInfo{
+			{
+				ConfigKeys: []string{"keybinding.toggle-details"},
+				OnAction:   appSingleton.toggleDetails,
+				Display:    "",
+			},
+		}
+		_, err = key.GenerateBindings(gui, "", quietKeys)
+		if err != nil {
+			return
+		}
+
 		// perform the first update and render now that all resources have been loaded
 		err = controller.UpdateAndRender()
 		if err != nil {
@@ -106,8 +121,8 @@ func newApp(gui *gocui.Gui, analysis *image.AnalysisResult, cache filetree.Compa
 
 // debugPrint writes the given string to the debug pane (if the debug pane is enabled)
 // func debugPrint(s string) {
-// 	if controllers.Tree != nil && controllers.Tree.gui != nil {
-// 		v, _ := controllers.Tree.gui.View("debug")
+// 	if controller.Tree != nil && controller.Tree.gui != nil {
+// 		v, _ := controller.Tree.gui.View("debug")
 // 		if v != nil {
 // 			if len(v.BufferLines()) > 20 {
 // 				v.Clear()
@@ -125,6 +140,39 @@ func (a *app) quit() error {
 
 	return gocui.ErrQuit
 }
+
+func (a *app) toggleDetails() error {
+	if a.detailedMode {
+		err := a.layout.Remove(a.controller.views.Debug)
+		if err != nil {
+			logrus.Errorf("could not remove DEBUG pane")
+		}
+		a.layout.Add(a.controller.views.Tree, layout.LocationColumn)
+		a.controller.views.Debug.ToggleHide()
+		a.controller.views.Tree.ToggleHide()
+
+		a.controller.views.Status.Retop()
+		a.controller.views.Filter.Retop()
+
+		a.detailedMode = false
+	} else {
+		err := a.layout.Remove(a.controller.views.Tree)
+		if err != nil {
+			logrus.Errorf("could not remove TREE pane")
+		}
+		a.layout.Add(a.controller.views.Debug, layout.LocationColumn)
+		a.controller.views.Debug.ToggleHide()
+		a.controller.views.Tree.ToggleHide()
+
+		a.controller.views.Status.Retop()
+		a.controller.views.Filter.Retop()
+
+		a.detailedMode = true
+	}
+
+	return nil
+}
+
 
 // Run is the UI entrypoint.
 func Run(analysis *image.AnalysisResult, treeStack filetree.Comparer) error {

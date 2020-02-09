@@ -65,7 +65,11 @@ func RenderNoHeader(width int, selected bool) string {
 	return strings.Repeat(fillStr, width)
 }
 
-func RenderHeader(title string, width int, selected bool) string {
+func RenderHeader(title string, width int, selected bool, nl bool) string {
+	newLine := "\n"
+	if !nl{
+		newLine = ""
+	}
 	if selected {
 		body := Header(fmt.Sprintf("%s%s ", selectStr, title))
 		bodyLen := len(vtclean.Clean(body, false))
@@ -73,7 +77,7 @@ func RenderHeader(title string, width int, selected bool) string {
 		if repeatCount < 0 {
 			repeatCount = 0
 		}
-		return fmt.Sprintf("%s%s%s%s\n", selectedLeftBracketStr, body, selectedRightBracketStr, strings.Repeat(selectedFillStr, repeatCount))
+		return fmt.Sprintf("%s%s%s%s%s", selectedLeftBracketStr, body, selectedRightBracketStr, strings.Repeat(selectedFillStr, repeatCount), newLine)
 		//return fmt.Sprintf("%s%s%s%s\n", Selected(selectedLeftBracketStr), body, Selected(selectedRightBracketStr), Selected(strings.Repeat(selectedFillStr, width-bodyLen-2)))
 		//return fmt.Sprintf("%s%s%s%s\n", Selected(selectedLeftBracketStr), body, Selected(selectedRightBracketStr), strings.Repeat(selectedFillStr, width-bodyLen-2))
 	}
@@ -83,7 +87,7 @@ func RenderHeader(title string, width int, selected bool) string {
 	if repeatCount < 0 {
 		repeatCount = 0
 	}
-	return fmt.Sprintf("%s%s%s%s\n", leftBracketStr, body, rightBracketStr, strings.Repeat(fillStr, repeatCount))
+	return fmt.Sprintf("%s%s%s%s%s", leftBracketStr, body, rightBracketStr, strings.Repeat(fillStr, repeatCount), newLine)
 }
 
 func RenderHelpKey(control, title string, selected bool) string {

@@ -14,6 +14,8 @@ type Debug struct {
 	gui    *gocui.Gui
 	view   *gocui.View
 	header *gocui.View
+	//once   sync.Once
+	hidden bool
 
 	selectedView Helper
 }
@@ -25,6 +27,7 @@ func newDebugView(gui *gocui.Gui) (controller *Debug) {
 	// populate main fields
 	controller.name = "debug"
 	controller.gui = gui
+	controller.hidden = true
 
 	return controller
 }
@@ -35,6 +38,29 @@ func (v *Debug) SetCurrentView(r Helper) {
 
 func (v *Debug) Name() string {
 	return v.name
+}
+
+func (v *Debug) ToggleHide() error {
+	v.hidden = !v.hidden
+	if v.hidden {
+		logrus.Trace("hiding debug view...")
+
+		// take note: deleting a view will invoke layout again, so ensure this call is protected from an infinite loop
+		err := v.gui.DeleteView(v.Name())
+		if err != nil {
+			return err
+		}
+		// take note: deleting a view will invoke layout again, so ensure this call is protected from an infinite loop
+		err = v.gui.DeleteView(v.Name() + "header")
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (v *Debug) IsHidden() bool {
+	return v.hidden
 }
 
 // Setup initializes the UI concerns within the context of a global [gocui] view object.
@@ -82,7 +108,7 @@ func (v *Debug) Render() error {
 		// update header...
 		v.header.Clear()
 		width, _ := g.Size()
-		headerStr := format.RenderHeader("Debug", width, false)
+		headerStr := format.RenderHeader("Debug", width, false, false)
 		_, _ = fmt.Fprintln(v.header, headerStr)
 
 		// update view...
@@ -98,7 +124,7 @@ func (v *Debug) Render() error {
 }
 
 func (v *Debug) Layout(g *gocui.Gui, minX, minY, maxX, maxY int) error {
-	logrus.Tracef("view.Layout(minX: %d, minY: %d, maxX: %d, maxY: %d) %s", minX, minY, maxX, maxY, v.Name())
+	logrus.Tracef("view.Layout(minX: %d, minY: %d, maxX: %d, maxY: %d, hidden: %v) %s", minX, minY, maxX, maxY, v.hidden, v.Name())
 
 	// header
 	headerSize := 1
