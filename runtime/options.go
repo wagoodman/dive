@@ -6,10 +6,11 @@ import (
 )
 
 type Options struct {
-	Ci         bool
-	Image      string
-	Source     dive.ImageSource
-	ExportFile string
-	CiConfig   *viper.Viper
-	BuildArgs  []string
+	Ci           bool
+	Image        string
+	Source       dive.ImageSource
+	IgnoreErrors bool
+	ExportFile   string
+	CiConfig     *viper.Viper
+	BuildArgs    []string
 }

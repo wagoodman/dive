@@ -2,6 +2,8 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/sirupsen/logrus"
+	"github.com/spf13/viper"
 	"github.com/wagoodman/dive/dive"
 	"os"
 
@@ -55,11 +57,17 @@ func doAnalyzeCmd(cmd *cobra.Command, args []string) {
 		imageStr = userImage
 	}
 
+	ignoreErrors, err := cmd.PersistentFlags().GetBool("ignore-errors")
+	if err != nil {
+		logrus.Error("unable to get 'ignore-errors' option:", err)
+	}
+
 	runtime.Run(runtime.Options{
-		Ci:         isCi,
-		Source:     sourceType,
-		Image:      imageStr,
-		ExportFile: exportFile,
-		CiConfig:   ciConfig,
+		Ci:           isCi,
+		Source:       sourceType,
+		Image:        imageStr,
+		ExportFile:   exportFile,
+		CiConfig:     ciConfig,
+		IgnoreErrors: viper.GetBool("ignore-errors") || ignoreErrors,
 	})
 }

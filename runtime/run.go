@@ -93,8 +93,10 @@ func run(enableUi bool, options Options, imageResolver image.Resolver, events ev
 			for _, err := range errors {
 				events.message("  " + err.Error())
 			}
-			events.exitWithError(fmt.Errorf("file tree has path errors"))
-			return
+			if !options.IgnoreErrors {
+				events.exitWithError(fmt.Errorf("file tree has path errors (use '--ignore-errors' to attempt to continue)"))
+				return
+			}
 		}
 
 		if enableUi {
