@@ -97,6 +97,8 @@ func initConfig() {
 
 	viper.SetDefault("container-engine", "docker")
 
+	viper.BindPFlag("source", rootCmd.PersistentFlags().Lookup("source"))
+
 	viper.SetEnvPrefix("DIVE")
 	// replace all - with _ when looking for matching environment variables
 	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
