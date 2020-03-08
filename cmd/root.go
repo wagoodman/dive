@@ -48,6 +48,7 @@ func initCli() {
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.dive.yaml, ~/.config/dive/*.yaml, or $XDG_CONFIG_HOME/dive.yaml)")
 	rootCmd.PersistentFlags().String("source", "docker", "The container engine to fetch the image from. Allowed values: "+strings.Join(dive.ImageSources, ", "))
 	rootCmd.PersistentFlags().BoolP("version", "v", false, "display version number")
+	rootCmd.PersistentFlags().BoolP("ignore-errors", "i", false, "ignore image parsing errors and run the analysis anyway")
 	rootCmd.Flags().BoolVar(&isCi, "ci", false, "Skip the interactive TUI and validate against CI rules (same as env var CI=true)")
 	rootCmd.Flags().StringVarP(&exportFile, "json", "j", "", "Skip the interactive TUI and write the layer analysis statistics to a given file.")
 	rootCmd.Flags().StringVar(&ciConfigFile, "ci-config", ".dive-ci", "If CI=true in the environment, use the given yaml to drive validation rules.")
@@ -62,6 +63,9 @@ func initCli() {
 		}
 	}
 
+	if err := ciConfig.BindPFlag("ignore-errors", rootCmd.PersistentFlags().Lookup("ignore-errors")); err != nil {
+		log.Fatalf("Unable to bind 'ignore-errors' flag: %v", err)
+	}
 }
 
 // initConfig reads in config file and ENV variables if set.
@@ -98,6 +102,7 @@ func initConfig() {
 	viper.SetDefault("filetree.show-attributes", true)
 
 	viper.SetDefault("container-engine", "docker")
+	viper.SetDefault("ignore-errors", false)
 
 	err = viper.BindPFlag("source", rootCmd.PersistentFlags().Lookup("source"))
 	if err != nil {

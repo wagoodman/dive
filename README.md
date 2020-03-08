@@ -207,7 +207,8 @@ No configuration is necessary, however, you can create a config file and overrid
 ```yaml
 # supported options are "docker" and "podman"
 container-engine: docker
-
+# continue with analysis even if there are errors parsing the image archive
+ignore-errors: false
 log:
   enabled: true
   path: ./dive.log
