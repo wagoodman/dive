@@ -43,7 +43,7 @@ require (
 	github.com/wagoodman/keybinding v0.0.0-20181213133715-6a824da6df05
 	golang.org/x/crypto v0.0.0-20190907121410-71b5226ff739
 	golang.org/x/net v0.0.0-20190827160401-ba9fcec4b297
-	golang.org/x/sys v0.0.0-20190907184412-d223b2b6db03 // indirect
+	golang.org/x/sys v0.0.0-20200212091648-12a6c2dcc1e4 // indirect
 	golang.org/x/text v0.3.2 // indirect
 	google.golang.org/genproto v0.0.0-20190620144150-6af8c5fc6601 // indirect
 	google.golang.org/grpc v1.21.1 // indirect

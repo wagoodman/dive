@@ -8,6 +8,7 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 	"github.com/wagoodman/dive/runtime"
 )
 
@@ -47,13 +48,13 @@ func doAnalyzeCmd(cmd *cobra.Command, args []string) {
 	sourceType, imageStr = dive.DeriveImageSource(userImage)
 
 	if sourceType == dive.SourceUnknown {
-		sourceStr, err := cmd.PersistentFlags().GetString("source")
-		if err != nil {
-			fmt.Printf("unable to determine image source: %v\n", err)
+		sourceStr := viper.GetString("source")
+		sourceType = dive.ParseImageSource(sourceStr)
+		if sourceType == dive.SourceUnknown {
+			fmt.Printf("unable to determine image source: %v\n", sourceStr)
 			os.Exit(1)
 		}
 
-		sourceType = dive.ParseImageSource(sourceStr)
 		imageStr = userImage
 	}
 

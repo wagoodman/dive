@@ -70,6 +70,8 @@ func initCli() {
 
 // initConfig reads in config file and ENV variables if set.
 func initConfig() {
+	var err error
+
 	viper.SetDefault("log.level", log.InfoLevel.String())
 	viper.SetDefault("log.path", "./dive.log")
 	viper.SetDefault("log.enabled", false)
@@ -102,6 +104,12 @@ func initConfig() {
 	viper.SetDefault("container-engine", "docker")
 	viper.SetDefault("ignore-errors", false)
 
+	err = viper.BindPFlag("source", rootCmd.PersistentFlags().Lookup("source"))
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
 	viper.SetEnvPrefix("DIVE")
 	// replace all - with _ when looking for matching environment variables
 	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
@@ -115,7 +123,7 @@ func initConfig() {
 	} else {
 		viper.SetConfigFile(cfgFile)
 	}
-	err := viper.ReadInConfig()
+	err = viper.ReadInConfig()
 	if err == nil {
 		fmt.Println("Using config file:", viper.ConfigFileUsed())
 	} else if cfgFile != "" {
