@@ -116,7 +116,7 @@ or download the latest Darwin build from the [releases page](https://github.com/
 Download the [latest release](https://github.com/wagoodman/dive/releases/download/v0.9.2/dive_0.9.2_windows_amd64.zip).
 
 **Go tools**
-Requires Go version 1.9 or higher.
+Requires Go version 1.10 or higher.
 
 ```bash
 go get github.com/wagoodman/dive
