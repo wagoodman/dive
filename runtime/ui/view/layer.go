@@ -301,7 +301,7 @@ func (v *Layer) Render() error {
 		width, _ := g.Size()
 		if v.constrainedRealEstate {
 			headerStr := format.RenderNoHeader(width, isSelected)
-			headerStr += fmt.Sprintf("\nLayer")
+			headerStr += "\nLayer"
 			_, err := fmt.Fprintln(v.header, headerStr)
 			if err != nil {
 				return err
