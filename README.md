@@ -61,7 +61,7 @@ command.
 
 **CI Integration**
 
-Analyze and image and get a pass/fail result based on the image efficiency and wasted space. Simply set `CI=true` in the environment when invoking any valid dive command.
+Analyze an image and get a pass/fail result based on the image efficiency and wasted space. Simply set `CI=true` in the environment when invoking any valid dive command.
 
 **Multiple Image Sources and Container Engines Supported**
 
@@ -238,7 +238,7 @@ keybinding:
   page-down: pgdn
 
 diff:
-  # You can change the default files show in the filetree (right pane). All diff types are shown by default.
+  # You can change the default files shown in the filetree (right pane). All diff types are shown by default.
   hide:
     - added
     - removed
@@ -256,7 +256,7 @@ filetree:
   show-attributes: true
 
 layer:
-  # Enable showing all changes from this layer and ever previous layer
+  # Enable showing all changes from this layer and every previous layer
   show-aggregated-changes: false
 
 ```
