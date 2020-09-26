@@ -52,8 +52,8 @@ workflows:
   commit:
     jobs:
       - run-static-analyses:
-          version: "1.13"
+          version: "1.15"
       - run-tests:
-          version: "1.12"
+          version: "1.14"
       - run-tests:
-          version: "1.13"
+          version: "1.15"
