@@ -1,11 +1,17 @@
 package viewmodel
 
 import (
+	"bufio"
 	"bytes"
 	"fmt"
-	"github.com/wagoodman/dive/runtime/ui/format"
+	"os"
 	"regexp"
+	"runtime"
+	"strconv"
 	"strings"
+	"time"
+
+	"github.com/wagoodman/dive/runtime/ui/format"
 
 	"github.com/lunixbochs/vtclean"
 	"github.com/sirupsen/logrus"
@@ -126,6 +132,60 @@ func (vm *FileTree) SetTreeByLayer(bottomTreeStart, bottomTreeStop, topTreeStart
 	}
 
 	vm.ModelTree = newTree
+	return nil
+}
+
+func userHomeDir() string {
+	if runtime.GOOS == "windows" {
+		home := os.Getenv("HOMEDRIVE") + os.Getenv("HOMEPATH")
+		if home == "" {
+			home = os.Getenv("USERPROFILE")
+		}
+		return home
+	} else if runtime.GOOS == "linux" {
+		home := os.Getenv("XDG_CONFIG_HOME")
+		if home != "" {
+			return home
+		}
+	}
+	return os.Getenv("HOME")
+}
+
+// ExportTreeByLayer ...
+func (vm *FileTree) ExportTreeByLayer(vt string) error {
+	home := userHomeDir()
+	f, err := os.Create(home + "/tree-" + strconv.FormatInt(time.Now().Unix(), 10) + ".txt")
+	if err != nil {
+		logrus.Errorf("%+v", err)
+		return err
+	}
+	defer f.Close()
+	
+	// bytes1
+	// TODO: remove color code
+	_, err2 := f.WriteString(vt)
+	if err2 != nil {
+		logrus.Errorf("%+v", err2)
+		return err2
+	}
+
+	err3 := f.Sync()
+	if err3 != nil {
+		logrus.Errorf("%+v", err3)
+		return err3
+	}
+
+	w := bufio.NewWriter(f)
+	// bytes2
+	_, err4 := w.WriteString("\n\nby Dive\n")
+	if err4 != nil {
+		logrus.Errorf("%+v", err4)
+		return err4
+	}
+	// fmt.Printf("wrote %d bytes\n", bytes1 + bytes2)
+
+	w.Flush()
+
 	return nil
 }
 

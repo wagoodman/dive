@@ -2,6 +2,8 @@ package view
 
 import (
 	"fmt"
+	"regexp"
+
 	"github.com/jroimartin/gocui"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
@@ -10,7 +12,6 @@ import (
 	"github.com/wagoodman/dive/runtime/ui/key"
 	"github.com/wagoodman/dive/runtime/ui/viewmodel"
 	"github.com/wagoodman/dive/utils"
-	"regexp"
 )
 
 type ViewOptionChangeListener func() error
@@ -153,6 +154,11 @@ func (v *FileTree) Setup(view *gocui.View, header *gocui.View) error {
 			Key:      gocui.KeyArrowRight,
 			Modifier: gocui.ModNone,
 			OnAction: v.CursorRight,
+		},
+		{
+			ConfigKeys: []string{"keybinding.export-tree-view"},
+			OnAction:   v.ExportTreeByLayer,
+			Display:    "Export Tree view",
 		},
 	}
 
@@ -378,6 +384,15 @@ func (v *FileTree) Render() error {
 
 		return err
 	})
+	return nil
+}
+
+// ExportTreeByLayer ...
+func (v *FileTree) ExportTreeByLayer() error {
+	err := v.vm.ExportTreeByLayer(v.vm.ViewTree.String(false))
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
