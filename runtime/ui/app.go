@@ -1,149 +1,141 @@
 package ui
 
 import (
-	"github.com/wagoodman/dive/dive/image"
-	"github.com/wagoodman/dive/runtime/ui/key"
-	"github.com/wagoodman/dive/runtime/ui/layout"
-	"github.com/wagoodman/dive/runtime/ui/layout/compound"
-	"sync"
-
-	"github.com/jroimartin/gocui"
-	"github.com/sirupsen/logrus"
+	"github.com/gdamore/tcell/v2"
+	"github.com/rivo/tview"
 	"github.com/wagoodman/dive/dive/filetree"
+	"github.com/wagoodman/dive/dive/image"
+	"github.com/wagoodman/dive/runtime/ui/components"
+	"sync"
 )
 
 const debug = false
 
 // type global
-type app struct {
-	gui         *gocui.Gui
-	controllers *Controller
-	layout      *layout.Manager
-}
-
 var (
 	once         sync.Once
-	appSingleton *app
+	appSingleton         *diveApp
 )
 
-func newApp(gui *gocui.Gui, analysis *image.AnalysisResult, cache filetree.Comparer) (*app, error) {
-	var err error
-	once.Do(func() {
-		var controller *Controller
-		var globalHelpKeys []*key.Binding
-
-		controller, err = NewCollection(gui, analysis, cache)
-		if err != nil {
-			return
-		}
-
-		// note: order matters when adding elements to the layout
-		lm := layout.NewManager()
-		lm.Add(controller.views.Status, layout.LocationFooter)
-		lm.Add(controller.views.Filter, layout.LocationFooter)
-		lm.Add(compound.NewLayerDetailsCompoundLayout(controller.views.Layer, controller.views.Details), layout.LocationColumn)
-		lm.Add(controller.views.Tree, layout.LocationColumn)
-
-		// todo: access this more programmatically
-		if debug {
-			lm.Add(controller.views.Debug, layout.LocationColumn)
-		}
-		gui.Cursor = false
-		//g.Mouse = true
-		gui.SetManagerFunc(lm.Layout)
-
-		// var profileObj = profile.Start(profile.CPUProfile, profile.ProfilePath("."), profile.NoShutdownHook)
-		//
-		// onExit = func() {
-		// 	profileObj.Stop()
-		// }
-
-		appSingleton = &app{
-			gui:         gui,
-			controllers: controller,
-			layout:      lm,
-		}
-
-		var infos = []key.BindingInfo{
-			{
-				ConfigKeys: []string{"keybinding.quit"},
-				OnAction:   appSingleton.quit,
-				Display:    "Quit",
-			},
-			{
-				ConfigKeys: []string{"keybinding.toggle-view"},
-				OnAction:   controller.ToggleView,
-				Display:    "Switch view",
-			},
-			{
-				ConfigKeys: []string{"keybinding.filter-files"},
-				OnAction:   controller.ToggleFilterView,
-				IsSelected: controller.views.Filter.IsVisible,
-				Display:    "Filter",
-			},
-		}
-
-		globalHelpKeys, err = key.GenerateBindings(gui, "", infos)
-		if err != nil {
-			return
-		}
-
-		controller.views.Status.AddHelpKeys(globalHelpKeys...)
-
-		// perform the first update and render now that all resources have been loaded
-		err = controller.UpdateAndRender()
-		if err != nil {
-			return
-		}
-
-	})
-
-	return appSingleton, err
+type diveApp struct {
+	app         *tview.Application
+	layers       *components.LayerList
+	fileTree       *components.TreeView
+	finderFocus tview.Primitive
 }
 
-// var profileObj = profile.Start(profile.MemProfile, profile.ProfilePath("."), profile.NoShutdownHook)
-// var onExit func()
 
-// debugPrint writes the given string to the debug pane (if the debug pane is enabled)
-// func debugPrint(s string) {
-// 	if controllers.Tree != nil && controllers.Tree.gui != nil {
-// 		v, _ := controllers.Tree.gui.View("debug")
-// 		if v != nil {
-// 			if len(v.BufferLines()) > 20 {
-// 				v.Clear()
-// 			}
-// 			_, _ = fmt.Fprintln(v, s)
-// 		}
-// 	}
-// }
+func newApp(app *tview.Application, analysis *image.AnalysisResult, cache filetree.Comparer) (*diveApp, error) {
+	var err error
+	once.Do(func() {
 
-// quit is the gocui callback invoked when the user hits Ctrl+C
-func (a *app) quit() error {
+		layersView := components.NewLayerList([]string{})
+		layersView.SetSubtitle("Cmp   Size  Command").SetBorder(true).SetTitle("Layers")
 
-	// profileObj.Stop()
-	// onExit()
+		curTreeIndex := filetree.NewTreeIndexKey(0,0,0,0)
+		curTree, err := cache.GetTree(curTreeIndex)
+		if err != nil {
+			panic(err)
+		}
 
-	return gocui.ErrQuit
+		fileTreeView := components.NewTreeView(curTree)
+		fileTreeView.SetTitle("Files").SetBorder(true)
+
+		layerDetails := tview.NewTextView()
+		layerDetails.SetTitle("Layer Details")
+		layerDetails.SetDynamicColors(true).SetBorder(true)
+		layerDetails.SetText(components.LayerDetailsText(analysis.Layers[0]))
+
+		for _, layer := range analysis.Layers {
+			layersView.AddItem(layer.String()).SetChangedFunc(func(i int, s string, r rune) {
+				bottomStart := intMax(0,i-1) // no values less than zero
+				bottomStop := intMax(0, i-1)
+				curTreeIndex := filetree.NewTreeIndexKey(bottomStart,bottomStop,i,i)
+				curTree, err = cache.GetTree(curTreeIndex)
+				layerDetailText := components.LayerDetailsText(analysis.Layers[i])
+				layerDetails.SetText(layerDetailText)
+				if err != nil {
+					panic(err)
+				}
+
+				fileTreeView.SetTree(curTree)
+			})
+		}
+
+		imageDetails := components.NewImageDetailsView(analysis)
+
+		grid := tview.NewGrid().SetRows(-4,-1,-1)
+		grid.SetBorder(false)
+		grid.AddItem(layersView, 0,0,1,1,5, 10, false).
+			AddItem(layerDetails,1,0,1,1,10,10, false).
+			AddItem(imageDetails,2,0,1, 1,10,10,false)
+
+
+
+		flex := tview.NewFlex().
+			AddItem(grid, 0, 1, true).
+			AddItem(fileTreeView, 0, 1, false)
+
+		switchFocus := func(event *tcell.EventKey) *tcell.EventKey {
+			switch event.Key() {
+			case tcell.KeyTAB:
+				if appSingleton.layers.HasFocus() {
+					appSingleton.app.SetFocus(appSingleton.fileTree)
+				} else {
+					appSingleton.app.SetFocus(appSingleton.layers)
+				}
+				return nil
+			default:
+				return event
+			}
+		}
+
+		app.SetInputCapture(switchFocus)
+
+		app.SetRoot(flex,true).SetFocus(layersView)
+		appSingleton = &diveApp{
+			app: app,
+			fileTree: fileTreeView,
+			layers: layersView,
+		}
+	})
+
+	once.Do(func() {
+		curTreeIndex := filetree.NewTreeIndexKey(0,0,0,0)
+		curTree, err := cache.GetTree(curTreeIndex)
+		if err != nil {
+			panic(err)
+		}
+		fileTreeView := components.NewTreeView(curTree)
+		fileTreeView.SetTitle("Files").SetBorder(true)
+		app.SetRoot(fileTreeView, true).SetFocus(fileTreeView)
+		appSingleton = &diveApp{
+			app: app,
+			fileTree: fileTreeView,
+			layers: nil,
+		}
+	})
+	return appSingleton, err
 }
 
 // Run is the UI entrypoint.
 func Run(analysis *image.AnalysisResult, treeStack filetree.Comparer) error {
-	var err error
+	app := tview.NewApplication()
 
-	g, err := gocui.NewGui(gocui.OutputNormal)
-	if err != nil {
-		return err
-	}
-	defer g.Close()
-
-	_, err = newApp(g, analysis, treeStack)
+	_, err := newApp(app, analysis, treeStack)
 	if err != nil {
 		return err
 	}
 
-	if err := g.MainLoop(); err != nil && err != gocui.ErrQuit {
-		logrus.Error("main loop error: ", err)
+	if err = app.Run(); err != nil {
 		return err
 	}
 	return nil
+}
+
+func intMax(int1 ,int2 int) int {
+	if int1 > int2 {
+		return int1
+	}
+	return int2
 }

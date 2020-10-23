@@ -18,3 +18,5 @@ type AnalysisResult struct {
 	WastedBytes       uint64
 	Inefficiencies    filetree.EfficiencySlice
 }
+
+
