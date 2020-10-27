@@ -21,7 +21,7 @@ type Details struct {
 	gui            *gocui.Gui
 	view           *gocui.View
 	header         *gocui.View
-	imageName	   string
+	imageName      string
 	efficiency     float64
 	inefficiencies filetree.EfficiencySlice
 	imageSize      uint64
