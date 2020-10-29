@@ -21,6 +21,51 @@ func AssertDiffType(node *FileNode, expectedDiffType DiffType) error {
 	return nil
 }
 
+func TestStringMultipleCollapse(t *testing.T) {
+	tree := NewFileTree()
+	bin := tree.Root.AddChild("bin", FileInfo{})
+	bin.AddChild("binary1", FileInfo{})
+	bin.AddChild("binary2", FileInfo{})
+	tree.Root.AddChild("boot", FileInfo{})
+	tree.Root.AddChild("dev", FileInfo{})
+	env := tree.Root.AddChild("env", FileInfo{})
+	env.AddChild(".pwd.lock", FileInfo{})
+	env.AddChild("adduser.conf", FileInfo{})
+	alt := env.AddChild("alternatives", FileInfo{})
+	alt.AddChild("README", FileInfo{})
+
+	bin.Data.ViewInfo.Collapsed = true
+	env.Data.ViewInfo.Collapsed = true
+
+	expected := `├─⊕ bin
+├── boot
+├── dev
+└─⊕ env
+`
+	actual := tree.String(false)
+
+	if expected != actual {
+		t.Errorf("Expected tree string:\n--->%s<---\nGot:\n--->%s<---", expected, actual)
+	}
+}
+
+func TestLastHidden(t *testing.T) {
+	tree := NewFileTree()
+	tree.Root.AddChild("1 node!", FileInfo{})
+	tree.Root.AddChild("2 node!", FileInfo{})
+	three := tree.Root.AddChild("3 node!", FileInfo{})
+	three.Data.ViewInfo.Hidden = true
+
+	expected := 		`├── 1 node!
+└── 2 node!
+`
+	actual := tree.String(false)
+
+	if expected != actual {
+		t.Errorf("Expected tree string:\n--->%s<---\nGot:\n--->%s<---", expected, actual)
+	}
+}
+
 func TestStringCollapsed(t *testing.T) {
 	tree := NewFileTree()
 	tree.Root.AddChild("1 node!", FileInfo{})
@@ -131,8 +176,8 @@ func TestStringBetween(t *testing.T) {
 
 	expected :=
 `│       └── public
-└── tmp
-    └── nonsense
+├── tmp
+│   └── nonsense
 `
 	actual := tree.StringBetween(3, 5, false)
 

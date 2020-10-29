@@ -181,6 +181,7 @@ func (node *FileNode) VisitDepthChildFirst(visitor Visitor, evaluator VisitEvalu
 	for key := range node.Children {
 		keys = append(keys, key)
 	}
+
 	sort.Strings(keys)
 	for _, name := range keys {
 		child := node.Children[name]

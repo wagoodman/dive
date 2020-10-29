@@ -4,28 +4,41 @@ import (
 	"fmt"
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
+	"github.com/sirupsen/logrus"
 )
+
+type LayersViewModel interface {
+	SetLayerIndex(int) bool
+	GetPrintableLayers() []fmt.Stringer
+
+}
 
 type LayerList struct {
 	*tview.Box
 	subtitle string
-	layers       []fmt.Stringer
+	bufferIndexLowerBound int
 	cmpIndex int
 	changed LayerListHandler
 	selectedBackgroundColor tcell.Color
+	LayersViewModel
+
 }
 
-type LayerListHandler func(index int, mainText fmt.Stringer, shortcut rune)
+type LayerListHandler func(index int, shortcut rune)
 
-func NewLayerList(layers []fmt.Stringer) *LayerList {
-	if layers == nil {
-		layers = []fmt.Stringer{}
-	}
+func NewLayerList(model LayersViewModel) *LayerList {
 	return &LayerList{
-		Box: tview.NewBox(),
-		layers: layers,
-		cmpIndex: 0,
+		Box:             tview.NewBox(),
+		cmpIndex:        0,
+		LayersViewModel: model,
 	}
+}
+
+func (ll *LayerList) Setup() *LayerList {
+	ll.SetSubtitle("Cmp   Size  Command").SetBorder(true).
+		SetTitle("Layers").
+		SetTitleAlign(tview.AlignLeft)
+	return ll
 }
 
 func (ll *LayerList) SetSubtitle(subtitle string) *LayerList {
@@ -59,10 +72,14 @@ func (ll *LayerList) Draw(screen tcell.Screen) {
 	x, y, width, height := ll.GetInnerRect()
 
 	cmpString := "  "
-	for yIndex, layer := range ll.layers {
-		if yIndex > height {
+	printableLayers := ll.GetPrintableLayers()
+
+	for yIndex := 0; yIndex < height; yIndex++ {
+		layerIndex := ll.bufferIndexLowerBound + yIndex
+		if layerIndex >= len(printableLayers) {
 			break
 		}
+		layer := printableLayers[layerIndex]
 		var cmpColor tcell.Color
 		switch {
 		case yIndex == ll.cmpIndex:
@@ -89,6 +106,7 @@ func (ll *LayerList) Draw(screen tcell.Screen) {
 				break
 			}
 		}
+
 	}
 }
 
@@ -96,34 +114,22 @@ func (ll *LayerList) InputHandler() func(event *tcell.EventKey, setFocus func(p 
 	return ll.WrapInputHandler(func(event *tcell.EventKey, setFocus func(p tview.Primitive)) {
 		switch event.Key() {
 		case tcell.KeyUp:
-			ll.cmpIndex--
-			if ll.cmpIndex < 0 {
-				ll.cmpIndex = 0
+			if ll.SetLayerIndex(ll.cmpIndex-1) {
+				ll.keyUp()
+				//ll.cmpIndex--
+				//logrus.Debugf("KeyUp pressed, index: %d", ll.cmpIndex)
 			}
 		case tcell.KeyDown:
-			ll.cmpIndex++
-			if ll.cmpIndex >= len(ll.layers) {
-				ll.cmpIndex = len(ll.layers) - 1
+			if ll.SetLayerIndex(ll.cmpIndex+1) {
+				ll.keyDown()
+				//ll.cmpIndex++
+				//logrus.Debugf("KeyUp pressed, index: %d", ll.cmpIndex)
+
 			}
 		}
-		ll.changed(ll.cmpIndex, ll.layers[ll.cmpIndex], event.Rune())
 	})
 }
 
-func (ll *LayerList) InsertItem(index int, value fmt.Stringer) *LayerList {
-	if index < 0 {
-		ll.layers = append(ll.layers, value)
-		return ll
-	}
-	ll.layers = append(ll.layers[:index+1], ll.layers[index:]...)
-	ll.layers[index] = value
-	return ll
-}
-
-func (ll *LayerList) AddItem(mainText fmt.Stringer) *LayerList {
-	ll.InsertItem(-1, mainText)
-	return ll
-}
 
 func (ll *LayerList) Focus(delegate func(p tview.Primitive)) {
 	ll.Box.Focus(delegate)
@@ -137,3 +143,41 @@ func (ll *LayerList) SetChangedFunc(handler LayerListHandler) *LayerList {
 	ll.changed = handler
 	return ll
 }
+
+func (ll *LayerList) keyUp() bool {
+	if ll.cmpIndex <= 0 {
+		return false
+	}
+	ll.cmpIndex--
+	if ll.cmpIndex < ll.bufferIndexLowerBound {
+		ll.bufferIndexLowerBound--
+	}
+
+	logrus.Debugln("keyUp in layers")
+	logrus.Debugf("  cmpIndex: %d", ll.cmpIndex)
+	logrus.Debugf("  bufferIndexLowerBound: %d", ll.bufferIndexLowerBound)
+	return true
+}
+
+func (ll *LayerList) keyDown() bool {
+	_, _, _, height := ll.Box.GetInnerRect()
+	adjustedHeight := height -1
+
+	// treeIndex is the index about where we are in the current file
+	visibleSize := len(ll.GetPrintableLayers())
+	if ll.cmpIndex + 1 + ll.bufferIndexLowerBound >= visibleSize {
+		return false
+	}
+	if ll.cmpIndex+1 >= adjustedHeight {
+		ll.bufferIndexLowerBound++
+	} else {
+		ll.cmpIndex++
+	}
+	logrus.Debugln("keyDown in layers")
+	logrus.Debugf("  cmpIndex: %d", ll.cmpIndex)
+	logrus.Debugf("  bufferIndexLowerBound: %d", ll.bufferIndexLowerBound)
+
+	return true
+}
+
+
