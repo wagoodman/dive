@@ -8,9 +8,14 @@ import (
 	"strconv"
 )
 
+
+type ImageDetails struct {
+	*tview.TextView
+}
+
 func NewImageDetailsView(analysisResult *image.AnalysisResult) *tview.TextView {
-	result := tview.NewTextView().
-		SetDynamicColors(true).
+	result := tview.NewTextView()
+	result.SetDynamicColors(true).
 		SetScrollable(true)
 	result.SetBorder(true).
 		SetTitle("Image Details").

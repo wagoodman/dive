@@ -52,9 +52,54 @@ type renderParams struct {
 	isLast        bool
 }
 
-// renderStringTreeBetween returns a string representing the given tree between the given rows. Since each node
-// is rendered on its own line, the returned string shows the visible nodes not affected by a collapsed parent.
 func (tree *FileTree) renderStringTreeBetween(startRow, stopRow int, showAttributes bool) string {
+	renderTree := NewFileTree()
+	nodeCount := 0
+	visitFunc := func(curNode *FileNode) error {
+		nodeCount++
+		node, _, err := renderTree.AddPath(curNode.Path(), FileInfo{})
+		if err != nil {
+			return err
+		}
+
+		node.Data = *curNode.Data.Copy()
+
+
+		if len(curNode.Children) == 0 && curNode.Data.ViewInfo.Collapsed {
+			node.Data.ViewInfo.Collapsed = false
+		}
+		return nil
+	}
+
+	evaluatorFunc := func(curNode *FileNode) bool {
+		switch {
+		case curNode == nil:
+			return false
+		case nodeCount > stopRow:
+			return false
+		case curNode.Data.ViewInfo.Hidden:
+			return false
+		case curNode.Parent == nil: // should only be true for the root node
+			return true
+		case curNode.Parent.Data.ViewInfo.Collapsed || curNode.Parent.Data.ViewInfo.Hidden:
+			return false
+		default:
+			return true
+		}
+	}
+	err := tree.VisitDepthChildFirst(visitFunc, evaluatorFunc)
+	if err != nil {
+		return ""
+	}
+
+	return renderTree.constructStringBetween(startRow, stopRow, showAttributes)
+}
+
+
+
+	// renderStringTreeBetween returns a string representing the given tree between the given rows. Since each node
+// is rendered on its own line, the returned string shows the visible nodes not affected by a collapsed parent.
+func (tree *FileTree) constructStringBetween(startRow, stopRow int, showAttributes bool) string {
 	// generate a list of nodes to render
 	var params = make([]renderParams, 0)
 	var result string
@@ -84,7 +129,7 @@ func (tree *FileTree) renderStringTreeBetween(startRow, stopRow int, showAttribu
 
 			// visit this node...
 			isLast := idx == (len(currentParams.node.Children) - 1)
-			showCollapsed := child.Data.ViewInfo.Collapsed && len(child.Children) > 0
+			showCollapsed := child.Data.ViewInfo.Collapsed
 
 			// completely copy the reference slice
 			childSpaces := make([]bool, len(currentParams.childSpaces))

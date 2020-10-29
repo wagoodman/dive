@@ -9,17 +9,21 @@ import (
 type LayerList struct {
 	*tview.Box
 	subtitle string
-	// TODO make me an interface
-	layers       []string
+	layers       []fmt.Stringer
 	cmpIndex int
-	changed func(index int, mainText string, shortcut rune)
+	changed LayerListHandler
 	selectedBackgroundColor tcell.Color
 }
 
-func NewLayerList(options []string) *LayerList {
+type LayerListHandler func(index int, mainText fmt.Stringer, shortcut rune)
+
+func NewLayerList(layers []fmt.Stringer) *LayerList {
+	if layers == nil {
+		layers = []fmt.Stringer{}
+	}
 	return &LayerList{
 		Box: tview.NewBox(),
-		layers: options,
+		layers: layers,
 		cmpIndex: 0,
 	}
 }
@@ -106,7 +110,7 @@ func (ll *LayerList) InputHandler() func(event *tcell.EventKey, setFocus func(p 
 	})
 }
 
-func (ll *LayerList) InsertItem(index int, value string) *LayerList {
+func (ll *LayerList) InsertItem(index int, value fmt.Stringer) *LayerList {
 	if index < 0 {
 		ll.layers = append(ll.layers, value)
 		return ll
@@ -116,7 +120,7 @@ func (ll *LayerList) InsertItem(index int, value string) *LayerList {
 	return ll
 }
 
-func (ll *LayerList) AddItem(mainText string) *LayerList {
+func (ll *LayerList) AddItem(mainText fmt.Stringer) *LayerList {
 	ll.InsertItem(-1, mainText)
 	return ll
 }
@@ -129,7 +133,7 @@ func (ll *LayerList) HasFocus() bool {
 	return ll.Box.HasFocus()
 }
 
-func (ll *LayerList) SetChangedFunc(handler func(index int, mainText string, shortcut rune)) *LayerList {
+func (ll *LayerList) SetChangedFunc(handler LayerListHandler) *LayerList {
 	ll.changed = handler
 	return ll
 }

@@ -57,7 +57,24 @@ func TestStringCollapsed(t *testing.T) {
 	if expected != actual {
 		t.Errorf("Expected tree string:\n--->%s<---\nGot:\n--->%s<---", expected, actual)
 	}
+}
 
+func TestStringHidden(t *testing.T) {
+	tree := NewFileTree()
+	tree.Root.AddChild("1 node!", FileInfo{})
+	tree.Root.AddChild("2 node!", FileInfo{})
+	three := tree.Root.AddChild("3 node!", FileInfo{})
+	three.Data.ViewInfo.Hidden = true
+
+	expected :=
+		`├── 1 node!
+└── 2 node!
+`
+	actual := tree.String(false)
+
+	if expected != actual {
+		t.Errorf("Expected tree string:\n--->%s<---\nGot:\n--->%s<---", expected, actual)
+	}
 }
 
 func TestString(t *testing.T) {
@@ -113,9 +130,9 @@ func TestStringBetween(t *testing.T) {
 	}
 
 	expected :=
-		`│       └── public
-├── tmp
-│   └── nonsense
+`│       └── public
+└── tmp
+    └── nonsense
 `
 	actual := tree.StringBetween(3, 5, false)
 
