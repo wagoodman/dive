@@ -3,13 +3,12 @@ package ui
 import (
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
-	"github.com/sirupsen/logrus"
 	"github.com/wagoodman/dive/dive/filetree"
 	"github.com/wagoodman/dive/dive/image"
 	"github.com/wagoodman/dive/runtime/ui/components"
+	"github.com/wagoodman/dive/runtime/ui/extension_components"
+	"github.com/wagoodman/dive/runtime/ui/extension_viewmodels"
 	"github.com/wagoodman/dive/runtime/ui/viewmodels"
-	"os"
-	"path/filepath"
 	"sync"
 )
 
@@ -23,19 +22,33 @@ var (
 
 type diveApp struct {
 	app         *tview.Application
-	layers       *components.LayerList
-	fileTree       *components.TreeView
+	layers       tview.Primitive
+	fileTree       tview.Primitive
+	filterView     tview.Primitive
 }
 
 
 
-func newApp(app *tview.Application, analysis *image.AnalysisResult, cache filetree.Comparer) (*diveApp, error) {
+func newApp(app *tview.Application, analysis *image.AnalysisResult, cache filetree.Comparer, isCNB bool) (*diveApp, error) {
 	var err error
 	once.Do(func() {
 		//initialize viewmodels
 		filterViewModel := viewmodels.NewFilterViewModel(nil)
-		layerViewModel := viewmodels.NewLayersViewModel(analysis.Layers)
-		treeViewModel, err := viewmodels.NewTreeViewModel(cache, layerViewModel, filterViewModel)
+		var layerModel viewmodels.LayersModel
+		var layerDetailsView tview.Primitive
+		if isCNB{
+			cnbLayerViewModel := extension_viewmodels.NewCNBLayersViewModel(analysis.Layers, analysis.BOMMapping)
+			cnbLayerDetailsView := extension_components.NewCNBLayerDetailsView(cnbLayerViewModel).Setup()
+			layerModel = cnbLayerViewModel
+			layerDetailsView = cnbLayerDetailsView
+		} else {
+			layerViewModel := viewmodels.NewLayersViewModel(analysis.Layers)
+			regularLayerDetailsView := components.NewLayerDetailsView(layerViewModel).Setup()
+			layerModel = layerViewModel
+			layerDetailsView = regularLayerDetailsView
+		}
+		//layerViewModel := viewmodels.NewLayersViewModel(analysis.Layers)
+		treeViewModel, err := viewmodels.NewTreeViewModel(cache, layerModel, filterViewModel)
 		if err != nil {
 			panic(err)
 		}
@@ -43,8 +56,7 @@ func newApp(app *tview.Application, analysis *image.AnalysisResult, cache filetr
 		// initialize views
 		imageDetails := components.NewImageDetailsView(analysis)
 
-		filterView := components.NewFilterView(treeViewModel).Setup()
-		layerDetailsView := components.NewLayerDetailsView(treeViewModel).Setup()
+		filterView := components.NewFilterView(filterViewModel).Setup()
 		layersView := components.NewLayerList(treeViewModel).Setup()
 		fileTreeView := components.NewTreeView(treeViewModel).Setup()
 
@@ -63,7 +75,7 @@ func newApp(app *tview.Application, analysis *image.AnalysisResult, cache filetr
 			var result *tcell.EventKey = nil
 			switch event.Key() {
 			case tcell.KeyTAB:
-				if appSingleton.layers.HasFocus() {
+				if appSingleton.app.GetFocus() == appSingleton.layers {
 					appSingleton.app.SetFocus(appSingleton.fileTree)
 				} else {
 					appSingleton.app.SetFocus(appSingleton.layers)
@@ -97,16 +109,10 @@ func newApp(app *tview.Application, analysis *image.AnalysisResult, cache filetr
 }
 
 // Run is the UI entrypoint.
-func Run(analysis *image.AnalysisResult, treeStack filetree.Comparer) error {
-	debugFile := filepath.Join("/tmp", "dive","debug.out")
-	LogOutputFile, _ := os.OpenFile(debugFile, os.O_RDWR | os.O_CREATE | os.O_TRUNC, 0666)
-	defer LogOutputFile.Close()
-	logrus.SetOutput(LogOutputFile)
-	logrus.SetFormatter(&logrus.TextFormatter{})
-	logrus.SetLevel(logrus.DebugLevel)
-	logrus.Debugln("debug start:")
+func Run(analysis *image.AnalysisResult, treeStack filetree.Comparer, isCNB bool) error {
+
 	app := tview.NewApplication()
-	_, err := newApp(app, analysis, treeStack)
+	_, err := newApp(app, analysis, treeStack, isCNB)
 	if err != nil {
 		return err
 	}
@@ -115,11 +121,4 @@ func Run(analysis *image.AnalysisResult, treeStack filetree.Comparer) error {
 		return err
 	}
 	return nil
-}
-
-func intMax(int1 ,int2 int) int {
-	if int1 > int2 {
-		return int1
-	}
-	return int2
 }

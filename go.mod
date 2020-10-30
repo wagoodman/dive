@@ -3,56 +3,63 @@ module github.com/wagoodman/dive
 go 1.13
 
 require (
-	github.com/Azure/go-ansiterm v0.0.0-20170929234023-d6e3b3328b78 // indirect
-	github.com/Microsoft/go-winio v0.4.14 // indirect
+	github.com/OneOfOne/xxhash v1.2.8 // indirect
+	github.com/buildpacks/lifecycle v0.7.2
+	github.com/buildpacks/pack v0.14.2
 	github.com/cespare/xxhash v1.1.0
-	github.com/docker/cli v0.0.0-20190906153656-016a3232168d
-	github.com/docker/distribution v2.7.1+incompatible // indirect
-	github.com/docker/docker v0.7.3-0.20190309235953-33c3200e0d16
-	github.com/docker/go-connections v0.4.0 // indirect
-	github.com/docker/go-units v0.4.0 // indirect
+	github.com/docker/cli v20.10.0-beta1+incompatible
+	github.com/docker/docker v1.4.2-0.20200221181110-62bd5a33f707
 	github.com/dustin/go-humanize v1.0.0
-	github.com/fatih/color v1.7.0
+	github.com/fatih/color v1.9.0
+	github.com/fsnotify/fsnotify v1.4.9 // indirect
 	github.com/gdamore/tcell/v2 v2.0.1-0.20201017141208-acf90d56d591
-	github.com/gogo/protobuf v1.3.0 // indirect
-	github.com/google/go-cmp v0.3.0 // indirect
-	github.com/google/uuid v1.1.1
-	github.com/gorilla/mux v1.7.2 // indirect
+	github.com/golang/protobuf v1.4.3 // indirect
+	github.com/google/go-cmp v0.5.2 // indirect
+	github.com/google/uuid v1.1.2
+	github.com/gopherjs/gopherjs v0.0.0-20200217142428-fce0ec30dd00 // indirect
+	github.com/gorilla/mux v1.8.0 // indirect
 	github.com/jroimartin/gocui v0.4.0
-	github.com/konsorten/go-windows-terminal-sequences v1.0.2 // indirect
-	github.com/logrusorgru/aurora v0.0.0-20190803045625-94edacc10f9b
+	github.com/logrusorgru/aurora v2.0.3+incompatible
 	github.com/lunixbochs/vtclean v1.0.0
-	github.com/magiconair/properties v1.8.1 // indirect
-	github.com/mattn/go-colorable v0.1.2 // indirect
-	github.com/mattn/go-isatty v0.0.9 // indirect
+	github.com/magiconair/properties v1.8.4 // indirect
+	github.com/mattn/go-colorable v0.1.8 // indirect
 	github.com/mitchellh/go-homedir v1.1.0
-	github.com/morikuni/aec v1.0.0 // indirect
-	github.com/nsf/termbox-go v0.0.0-20190817171036-93860e161317 // indirect
-	github.com/opencontainers/go-digest v1.0.0-rc1 // indirect
-	github.com/opencontainers/image-spec v1.0.1 // indirect
-	github.com/pelletier/go-toml v1.4.0 // indirect
+	github.com/mitchellh/mapstructure v1.3.3 // indirect
+	github.com/nsf/termbox-go v0.0.0-20200418040025-38ba6e5628f1 // indirect
+	github.com/opencontainers/go-digest v1.0.0 // indirect
+	github.com/pelletier/go-toml v1.8.1 // indirect
 	github.com/phayes/permbits v0.0.0-20190612203442-39d7c581d2ee
 	github.com/rivo/tview v0.0.0-20201018122409-d551c850a743
-	github.com/sergi/go-diff v1.0.0
-	github.com/sirupsen/logrus v1.4.2
-	github.com/spf13/afero v1.2.2
-	github.com/spf13/cobra v0.0.5
+	github.com/sergi/go-diff v1.1.0
+	github.com/sirupsen/logrus v1.7.0
+	github.com/smartystreets/assertions v1.2.0 // indirect
+	github.com/spaolacci/murmur3 v1.1.0 // indirect
+	github.com/spf13/afero v1.4.1
+	github.com/spf13/cast v1.3.1 // indirect
+	github.com/spf13/cobra v1.1.1
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
-	github.com/spf13/pflag v1.0.5 // indirect
-	github.com/spf13/viper v1.4.0
-	github.com/stretchr/testify v1.4.0 // indirect
-	github.com/wagoodman/keybinding v0.0.0-20181213133715-6a824da6df05
-	golang.org/x/net v0.0.0-20190827160401-ba9fcec4b297
-	google.golang.org/genproto v0.0.0-20190620144150-6af8c5fc6601 // indirect
-	google.golang.org/grpc v1.21.1 // indirect
-	gotest.tools v2.2.0+incompatible // indirect
+	github.com/spf13/viper v1.7.1
+	github.com/stretchr/testify v1.6.1 // indirect
+	golang.org/x/net v0.0.0-20201029055024-942e2f445f3c
+	golang.org/x/sys v0.0.0-20201029080932-201ba4db2418 // indirect
+	golang.org/x/text v0.3.4 // indirect
+	golang.org/x/time v0.0.0-20200630173020-3af7569d3a1e // indirect
+	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
+	google.golang.org/genproto v0.0.0-20201029200359-8ce4113da6f7 // indirect
+	google.golang.org/grpc v1.33.1 // indirect
+	google.golang.org/protobuf v1.25.0 // indirect
+	gopkg.in/check.v1 v1.0.0-20200902074654-038fdea0a05b // indirect
+	gopkg.in/ini.v1 v1.62.0 // indirect
+	gopkg.in/yaml.v2 v2.3.0 // indirect
+	gopkg.in/yaml.v3 v3.0.0-20200615113413-eeeca48fe776 // indirect
+	gotest.tools/v3 v3.0.3 // indirect
 )
 
 // related to an invalid pseudo version in github.com/docker/distribution@v0.0.0-20181126153310-93e082742a009850ac46962150b2f652a822c5ff
-replace github.com/docker/distribution => github.com/docker/distribution v2.7.0-rc.0.0.20181024170156-93e082742a00+incompatible
+//replace github.com/docker/distribution => github.com/docker/distribution v2.7.0-rc.0.0.20181024170156-93e082742a00+incompatible
 
 // related to an invalid pseudo version in github.com/docker/distribution@v0.0.0-20181126153310-93e082742a009850ac46962150b2f652a822c5ff
-replace github.com/docker/docker => github.com/docker/engine v0.0.0-20190822205725-ed20165a37b4
+//replace github.com/docker/docker => github.com/docker/engine v0.0.0-20190822205725-ed20165a37b4
 
 // relates to https://github.com/golangci/golangci-lint/issues/581
 replace github.com/go-critic/go-critic => github.com/go-critic/go-critic v0.3.5-0.20190526074819-1df300866540

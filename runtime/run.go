@@ -35,17 +35,24 @@ func run(enableUi bool, options Options, imageResolver image.Resolver, events ev
 		events.message(utils.TitleFormat("Image Source: ") + options.Source.String() + "://" + options.Image)
 		events.message(utils.TitleFormat("Fetching image...") + " (this can take a while for large images)")
 		img, err = imageResolver.Fetch(options.Image)
+
+		// set image name
+		img.Name = options.Image
 		if err != nil {
 			events.exitWithErrorMessage("cannot fetch image", err)
 			return
 		}
 	}
-
-	events.message(utils.TitleFormat("Analyzing image..."))
+	events.message(utils.TitleFormat("Analyzing image ..."))
 	analysis, err := img.Analyze()
 	if err != nil {
 		events.exitWithErrorMessage("cannot analyze image", err)
 		return
+	}
+
+	if options.CNB {
+		events.message(utils.TitleFormat("Analyzing Cloud Native Buildpacks image..."))
+		analysis, err = img.CNBAnalyze(analysis)
 	}
 
 	if doExport {
@@ -107,7 +114,7 @@ func run(enableUi bool, options Options, imageResolver image.Resolver, events ev
 			// enough sleep will prevent this behavior (todo: remove this hack)
 			time.Sleep(100 * time.Millisecond)
 
-			err = ui.Run(analysis, treeStack)
+			err = ui.Run(analysis, treeStack, options.CNB)
 			if err != nil {
 				events.exitWithError(err)
 				return
