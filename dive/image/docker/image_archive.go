@@ -2,14 +2,16 @@ package docker
 
 import (
 	"archive/tar"
+	"compress/gzip"
 	"fmt"
-	"github.com/wagoodman/dive/dive/filetree"
-	"github.com/wagoodman/dive/dive/image"
 	"io"
 	"io/ioutil"
 	"os"
 	"path"
 	"strings"
+
+	"github.com/wagoodman/dive/dive/filetree"
+	"github.com/wagoodman/dive/dive/image"
 )
 
 type ImageArchive struct {
@@ -48,12 +50,8 @@ func NewImageArchive(tarFile io.ReadCloser) (*ImageArchive, error) {
 
 			if strings.HasSuffix(name, ".tar") {
 				currentLayer++
-				if err != nil {
-					return img, err
-				}
 				layerReader := tar.NewReader(tarReader)
 				tree, err := processLayerTar(name, layerReader)
-
 				if err != nil {
 					return img, err
 				}
@@ -61,7 +59,28 @@ func NewImageArchive(tarFile io.ReadCloser) (*ImageArchive, error) {
 				// add the layer to the image
 				img.layerMap[tree.Name] = tree
 
-			} else if strings.HasSuffix(name, ".json") {
+			} else if strings.HasSuffix(name, ".tar.gz") || strings.HasSuffix(name, "tgz") {
+				currentLayer++
+
+				// Add gzip reader
+				gz, err := gzip.NewReader(tarReader)
+				if err != nil {
+					return img, err
+				}
+
+				// Add tar reader
+				layerReader := tar.NewReader(gz)
+
+				// Process layer
+				tree, err := processLayerTar(name, layerReader)
+				if err != nil {
+					return img, err
+				}
+
+				// add the layer to the image
+				img.layerMap[tree.Name] = tree
+
+			} else if strings.HasSuffix(name, ".json") || strings.HasPrefix(name, "sha256:") {
 				fileBuffer, err := ioutil.ReadAll(tarReader)
 				if err != nil {
 					return img, err
