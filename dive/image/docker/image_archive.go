@@ -13,14 +13,14 @@ import (
 )
 
 type ImageArchive struct {
-	manifest manifest
-	config   config
-	layerMap map[string]*filetree.FileTree
+	Manifest Manifest
+	Config   Config
+	LayerMap map[string]*filetree.FileTree
 }
 
 func NewImageArchive(tarFile io.ReadCloser) (*ImageArchive, error) {
 	img := &ImageArchive{
-		layerMap: make(map[string]*filetree.FileTree),
+		LayerMap: make(map[string]*filetree.FileTree),
 	}
 
 	tarReader := tar.NewReader(tarFile)
@@ -52,14 +52,14 @@ func NewImageArchive(tarFile io.ReadCloser) (*ImageArchive, error) {
 					return img, err
 				}
 				layerReader := tar.NewReader(tarReader)
-				tree, err := processLayerTar(name, layerReader)
+				tree, err := ProcessLayerTar(name, layerReader)
 
 				if err != nil {
 					return img, err
 				}
 
 				// add the layer to the image
-				img.layerMap[tree.Name] = tree
+				img.LayerMap[tree.Name] = tree
 
 			} else if strings.HasSuffix(name, ".json") {
 				fileBuffer, err := ioutil.ReadAll(tarReader)
@@ -76,19 +76,19 @@ func NewImageArchive(tarFile io.ReadCloser) (*ImageArchive, error) {
 		return img, fmt.Errorf("could not find image manifest")
 	}
 
-	img.manifest = newManifest(manifestContent)
+	img.Manifest = newManifest(manifestContent)
 
-	configContent, exists := jsonFiles[img.manifest.ConfigPath]
+	configContent, exists := jsonFiles[img.Manifest.ConfigPath]
 	if !exists {
 		return img, fmt.Errorf("could not find image config")
 	}
 
-	img.config = newConfig(configContent)
+	img.Config = NewConfig(configContent)
 
 	return img, nil
 }
 
-func processLayerTar(name string, reader *tar.Reader) (*filetree.FileTree, error) {
+func ProcessLayerTar(name string, reader *tar.Reader) (*filetree.FileTree, error) {
 	tree := filetree.NewFileTree()
 	tree.Name = name
 
@@ -142,8 +142,8 @@ func (img *ImageArchive) ToImage() (*image.Image, error) {
 	trees := make([]*filetree.FileTree, 0)
 
 	// build the content tree
-	for _, treeName := range img.manifest.LayerTarPaths {
-		tr, exists := img.layerMap[treeName]
+	for _, treeName := range img.Manifest.LayerTarPaths {
+		tr, exists := img.LayerMap[treeName]
 		if exists {
 			trees = append(trees, tr)
 			continue
@@ -163,14 +163,14 @@ func (img *ImageArchive) ToImage() (*image.Image, error) {
 		historyObj := historyEntry{
 			CreatedBy: "(missing)",
 		}
-		for nextHistIdx := histIdx; nextHistIdx < len(img.config.History); nextHistIdx++ {
-			if !img.config.History[nextHistIdx].EmptyLayer {
+		for nextHistIdx := histIdx; nextHistIdx < len(img.Config.History); nextHistIdx++ {
+			if !img.Config.History[nextHistIdx].EmptyLayer {
 				histIdx = nextHistIdx
 				break
 			}
 		}
-		if histIdx < len(img.config.History) && !img.config.History[histIdx].EmptyLayer {
-			historyObj = img.config.History[histIdx]
+		if histIdx < len(img.Config.History) && !img.Config.History[histIdx].EmptyLayer {
+			historyObj = img.Config.History[histIdx]
 			histIdx++
 		}
 

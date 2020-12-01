@@ -5,14 +5,14 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-type manifest struct {
+type Manifest struct {
 	ConfigPath    string   `json:"Config"`
 	RepoTags      []string `json:"RepoTags"`
 	LayerTarPaths []string `json:"Layers"`
 }
 
-func newManifest(manifestBytes []byte) manifest {
-	var manifest []manifest
+func newManifest(manifestBytes []byte) Manifest {
+	var manifest []Manifest
 	err := json.Unmarshal(manifestBytes, &manifest)
 	if err != nil {
 		logrus.Panic(err)

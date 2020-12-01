@@ -5,7 +5,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-type config struct {
+type Config struct {
 	History []historyEntry `json:"history"`
 	RootFs  rootFs         `json:"rootfs"`
 }
@@ -24,8 +24,8 @@ type historyEntry struct {
 	EmptyLayer bool   `json:"empty_layer"`
 }
 
-func newConfig(configBytes []byte) config {
-	var imageConfig config
+func NewConfig(configBytes []byte) Config {
+	var imageConfig Config
 	err := json.Unmarshal(configBytes, &imageConfig)
 	if err != nil {
 		logrus.Panic(err)
