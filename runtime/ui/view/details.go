@@ -21,6 +21,7 @@ type Details struct {
 	gui            *gocui.Gui
 	view           *gocui.View
 	header         *gocui.View
+	imageName      string
 	efficiency     float64
 	inefficiencies filetree.EfficiencySlice
 	imageSize      uint64
@@ -29,12 +30,13 @@ type Details struct {
 }
 
 // newDetailsView creates a new view object attached the the global [gocui] screen object.
-func newDetailsView(gui *gocui.Gui, efficiency float64, inefficiencies filetree.EfficiencySlice, imageSize uint64) (controller *Details) {
+func newDetailsView(gui *gocui.Gui, imageName string, efficiency float64, inefficiencies filetree.EfficiencySlice, imageSize uint64) (controller *Details) {
 	controller = new(Details)
 
 	// populate main fields
 	controller.name = "details"
 	controller.gui = gui
+	controller.imageName = imageName
 	controller.efficiency = efficiency
 	controller.inefficiencies = inefficiencies
 	controller.imageSize = imageSize
@@ -148,6 +150,7 @@ func (v *Details) Render() error {
 		}
 	}
 
+	imageNameStr := fmt.Sprintf("%s %s", format.Header("Image name:"), v.imageName)
 	imageSizeStr := fmt.Sprintf("%s %s", format.Header("Total Image size:"), humanize.Bytes(v.imageSize))
 	effStr := fmt.Sprintf("%s %d %%", format.Header("Image efficiency score:"), int(100.0*v.efficiency))
 	wastedSpaceStr := fmt.Sprintf("%s %s", format.Header("Potential wasted space:"), humanize.Bytes(uint64(wastedSpace)))
@@ -179,6 +182,7 @@ func (v *Details) Render() error {
 		lines = append(lines, format.Header("Command:"))
 		lines = append(lines, v.currentLayer.Command)
 		lines = append(lines, "\n"+imageHeaderStr)
+		lines = append(lines, imageNameStr)
 		lines = append(lines, imageSizeStr)
 		lines = append(lines, wastedSpaceStr)
 		lines = append(lines, effStr+"\n")

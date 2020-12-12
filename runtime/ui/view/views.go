@@ -15,7 +15,7 @@ type Views struct {
 	Debug   *Debug
 }
 
-func NewViews(g *gocui.Gui, analysis *image.AnalysisResult, cache filetree.Comparer) (*Views, error) {
+func NewViews(g *gocui.Gui, imageName string, analysis *image.AnalysisResult, cache filetree.Comparer) (*Views, error) {
 	Layer, err := newLayerView(g, analysis.Layers)
 	if err != nil {
 		return nil, err
@@ -34,7 +34,7 @@ func NewViews(g *gocui.Gui, analysis *image.AnalysisResult, cache filetree.Compa
 
 	Filter := newFilterView(g)
 
-	Details := newDetailsView(g, analysis.Efficiency, analysis.Inefficiencies, analysis.SizeBytes)
+	Details := newDetailsView(g, imageName, analysis.Efficiency, analysis.Inefficiencies, analysis.SizeBytes)
 
 	Debug := newDebugView(g)
 

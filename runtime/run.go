@@ -107,7 +107,7 @@ func run(enableUi bool, options Options, imageResolver image.Resolver, events ev
 			// enough sleep will prevent this behavior (todo: remove this hack)
 			time.Sleep(100 * time.Millisecond)
 
-			err = ui.Run(analysis, treeStack)
+			err = ui.Run(options.Image, analysis, treeStack)
 			if err != nil {
 				events.exitWithError(err)
 				return
