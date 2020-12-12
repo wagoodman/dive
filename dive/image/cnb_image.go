@@ -8,6 +8,7 @@ import (
 	"github.com/wagoodman/dive/dive/filetree"
 )
 
+var ErrMissingCNBMetadata = fmt.Errorf("missing CNB metadata")
 
 func (img *Image) CNBAnalyze(layerAnalysis *AnalysisResult) (*AnalysisResult, error) {
 	client, err := pack.NewClient()
@@ -22,7 +23,7 @@ func (img *Image) CNBAnalyze(layerAnalysis *AnalysisResult) (*AnalysisResult, er
 	}
 	empty := lifecycle.RunImageMetadata{}
 	if imageInfo.Base == empty {
-		return nil, fmt.Errorf("missing metadata")
+		return nil, ErrMissingCNBMetadata
 	}
 	logrus.Debugf("image info %#v", imageInfo)
 
@@ -72,9 +73,9 @@ func buildBOMMapping(layers []*Layer, labelMetadata *pack.ImageInfo) map[string]
 	result := make(map[string]lifecycle.BOMEntry, 0)
 	for layerIndex, layer := range layers {
 		result[layer.Digest] = lifecycle.BOMEntry{
-			Require:   lifecycle.Require{},
+			Require: lifecycle.Require{},
 			Buildpack: lifecycle.Buildpack{
-				ID: fmt.Sprintf("buildpack metadata for layer: %d", layerIndex),
+				ID:      fmt.Sprintf("buildpack metadata for layer: %d", layerIndex),
 				Version: "1.2.3",
 			},
 		}

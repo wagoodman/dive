@@ -17,26 +17,28 @@ const debug = false
 // type global
 var (
 	once         sync.Once
-	appSingleton         *diveApp
+	appSingleton *diveApp
 )
 
 type diveApp struct {
-	app         *tview.Application
-	layers       tview.Primitive
-	fileTree       tview.Primitive
-	filterView     tview.Primitive
+	app        *tview.Application
+	layers     tview.Primitive
+	fileTree   tview.Primitive
+	filterView tview.Primitive
 }
-
-
 
 func newApp(app *tview.Application, analysis *image.AnalysisResult, cache filetree.Comparer, isCNB bool) (*diveApp, error) {
 	var err error
 	once.Do(func() {
+		// ensure the background color is inherited from the terminal emulator
+		//tview.Styles.PrimitiveBackgroundColor = tcell.ColorDefault
+		//tview.Styles.PrimaryTextColor = tcell.ColorDefault
+
 		//initialize viewmodels
 		filterViewModel := viewmodels.NewFilterViewModel(nil)
 		var layerModel viewmodels.LayersModel
 		var layerDetailsView tview.Primitive
-		if isCNB{
+		if isCNB {
 			cnbLayerViewModel := extension_viewmodels.NewCNBLayersViewModel(analysis.Layers, analysis.BOMMapping)
 			cnbLayerDetailsView := extension_components.NewCNBLayerDetailsView(cnbLayerViewModel).Setup()
 			layerModel = cnbLayerViewModel
@@ -54,22 +56,25 @@ func newApp(app *tview.Application, analysis *image.AnalysisResult, cache filetr
 		}
 
 		// initialize views
-		imageDetails := components.NewImageDetailsView(analysis)
+		imageDetailsView := components.NewImageDetailsView(analysis)
+		imageDetailsBox := components.NewWrapper("Image Details", "", imageDetailsView).Setup()
 
 		filterView := components.NewFilterView(filterViewModel).Setup()
-		layersView := components.NewLayerList(treeViewModel).Setup()
-		fileTreeView := components.NewTreeView(treeViewModel).Setup()
 
+		layersView := components.NewLayerList(treeViewModel).Setup()
+		layersBox := components.NewWrapper("Layers", "subtitle!", layersView).Setup()
+
+		fileTreeView := components.NewTreeView(treeViewModel).Setup()
+		fileTreeBox := components.NewWrapper("Current Layer Contents", "subtitle!", fileTreeView).Setup()
 
 		grid := tview.NewGrid()
-		grid.SetRows(-4,-1,-1,1).SetColumns(-1,-1, 3)
+		grid.SetRows(-4, -1, -1, 1).SetColumns(-1, -1, 3)
 		grid.SetBorder(false)
-		grid.AddItem(layersView, 0,0,1,1,5, 10, true).
-			AddItem(layerDetailsView,1,0,1,1,10,40, false).
-			AddItem(imageDetails,2,0,1, 1,10,10,false).
-			AddItem(fileTreeView, 0, 1, 3, 1, 0,0, true).
-			AddItem(filterView, 3,0,1,2,0,0,false)
-
+		grid.AddItem(layersBox, 0, 0, 1, 1, 5, 10, true).
+			AddItem(layerDetailsView, 1, 0, 1, 1, 10, 40, false).
+			AddItem(imageDetailsBox, 2, 0, 1, 1, 10, 10, false).
+			AddItem(fileTreeBox, 0, 1, 3, 1, 0, 0, true).
+			AddItem(filterView, 3, 0, 1, 2, 0, 0, false)
 
 		switchFocus := func(event *tcell.EventKey) *tcell.EventKey {
 			var result *tcell.EventKey = nil
@@ -96,13 +101,13 @@ func newApp(app *tview.Application, analysis *image.AnalysisResult, cache filetr
 
 		grid.SetInputCapture(switchFocus)
 
-		app.SetRoot(grid,true)
+		app.SetRoot(grid, true)
 		appSingleton = &diveApp{
-			app: app,
-			fileTree: fileTreeView,
-			layers: layersView,
+			app:      app,
+			fileTree: fileTreeBox,
+			layers:   layersBox,
 		}
-		app.SetFocus(layersView)
+		app.SetFocus(layersBox)
 	})
 
 	return appSingleton, err

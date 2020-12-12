@@ -34,7 +34,7 @@ type TreeView struct {
 
 func NewTreeView(tree TreeModel) *TreeView {
 	return &TreeView{
-		Box: tview.NewBox(),
+		Box:  tview.NewBox(),
 		tree: tree,
 	}
 }
@@ -46,6 +46,18 @@ func (t *TreeView) Setup() *TreeView {
 	t.tree.SetLayerIndex(0)
 
 	return t
+}
+
+func (ll *TreeView) getBox() *tview.Box {
+	return ll.Box
+}
+
+func (ll *TreeView) getDraw() drawFn {
+	return ll.Draw
+}
+
+func (ll *TreeView) getInputWrapper() inputFn {
+	return ll.InputHandler
 }
 
 // TODO: make these keys configurable
@@ -75,6 +87,7 @@ func (t *TreeView) Focus(delegate func(p tview.Primitive)) {
 func (t *TreeView) HasFocus() bool {
 	return t.Box.HasFocus()
 }
+
 // Private helper methods
 
 func (t *TreeView) spaceDown() bool {
@@ -158,7 +171,7 @@ func (t *TreeView) keyUp() bool {
 func (t *TreeView) keyRight() bool {
 	node := t.getAbsPositionNode()
 
-	_,_, _, height := t.Box.GetInnerRect()
+	_, _, _, height := t.Box.GetInnerRect()
 	if node == nil {
 		return false
 	}
@@ -223,10 +236,9 @@ func (t *TreeView) keyLeft() bool {
 }
 
 func (t *TreeView) bufferIndexUpperBound() int {
-	_,_, _, height := t.Box.GetInnerRect()
+	_, _, _, height := t.Box.GetInnerRect()
 	return t.bufferIndexLowerBound + height
 }
-
 
 func (t *TreeView) Draw(screen tcell.Screen) {
 	t.Box.Draw(screen)
@@ -245,7 +257,7 @@ func (t *TreeView) Draw(screen tcell.Screen) {
 		// Strip out ansi colors, Tview cannot use these
 		stripLine := bytes.NewBuffer(nil)
 		w := tview.ANSIWriter(stripLine)
-		if _, err := io.Copy(w, strings.NewReader(line)); err != nil  {
+		if _, err := io.Copy(w, strings.NewReader(line)); err != nil {
 			//TODO: handle panic gracefully
 			panic(err)
 		}

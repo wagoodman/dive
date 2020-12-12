@@ -29,7 +29,7 @@ require (
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/pelletier/go-toml v1.8.1 // indirect
 	github.com/phayes/permbits v0.0.0-20190612203442-39d7c581d2ee
-	github.com/rivo/tview v0.0.0-20201018122409-d551c850a743
+	github.com/rivo/tview v0.0.0-20201204190810-5406288b8e4e
 	github.com/sergi/go-diff v1.1.0
 	github.com/sirupsen/logrus v1.7.0
 	github.com/smartystreets/assertions v1.2.0 // indirect

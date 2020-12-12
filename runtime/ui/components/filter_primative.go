@@ -19,7 +19,7 @@ type FilterView struct {
 func NewFilterView(filterModel FilterModel) *FilterView {
 	inputField := tview.NewInputField()
 	return &FilterView{
-		InputField: inputField,
+		InputField:  inputField,
 		FilterModel: filterModel,
 	}
 }
@@ -46,6 +46,18 @@ func (fv *FilterView) Setup() *FilterView {
 			return
 		})
 	return fv
+}
+
+func (ll *FilterView) getBox() *tview.Box {
+	return ll.Box
+}
+
+func (ll *FilterView) getDraw() drawFn {
+	return ll.Draw
+}
+
+func (ll *FilterView) getInputWrapper() inputFn {
+	return ll.InputHandler
 }
 
 func (fv *FilterView) Empty() bool {

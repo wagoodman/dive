@@ -10,18 +10,14 @@ import (
 type LayersViewModel interface {
 	SetLayerIndex(int) bool
 	GetPrintableLayers() []fmt.Stringer
-
 }
 
 type LayerList struct {
 	*tview.Box
-	subtitle string
 	bufferIndexLowerBound int
-	cmpIndex int
-	changed LayerListHandler
-	selectedBackgroundColor tcell.Color
+	cmpIndex              int
+	changed               LayerListHandler
 	LayersViewModel
-
 }
 
 type LayerListHandler func(index int, shortcut rune)
@@ -35,41 +31,24 @@ func NewLayerList(model LayersViewModel) *LayerList {
 }
 
 func (ll *LayerList) Setup() *LayerList {
-	ll.SetSubtitle("Cmp   Size  Command").SetBorder(true).
-		SetTitle("Layers").
-		SetTitleAlign(tview.AlignLeft)
 	return ll
 }
 
-func (ll *LayerList) SetSubtitle(subtitle string) *LayerList {
-	ll.subtitle = subtitle
-	return ll
+func (ll *LayerList) getBox() *tview.Box {
+	return ll.Box
 }
 
-func (ll *LayerList) GetSubtitle() string {
-	return ll.subtitle
+func (ll *LayerList) getDraw() drawFn {
+	return ll.Draw
 }
 
-func(ll *LayerList) GetInnerRect() (int,int,int,int) {
-	x,y,width,height := ll.Box.GetInnerRect()
-	if ll.subtitle != "" {
-		return x, y + 1, width, height - 1
-	}
-	return x,y,width,height
-}
-
-func (ll *LayerList) drawSubtitle(screen tcell.Screen) {
-	x,y,width,height := ll.Box.GetInnerRect()
-	if height > 1 {
-		line := fmt.Sprintf("[white]%s", ll.subtitle)
-		tview.Print(screen, line, x, y, width, tview.AlignLeft, tcell.ColorDefault)
-	}
+func (ll *LayerList) getInputWrapper() inputFn {
+	return ll.InputHandler
 }
 
 func (ll *LayerList) Draw(screen tcell.Screen) {
 	ll.Box.Draw(screen)
-	ll.drawSubtitle(screen)
-	x, y, width, height := ll.GetInnerRect()
+	x, y, width, height := ll.Box.GetInnerRect()
 
 	cmpString := "  "
 	printableLayers := ll.GetPrintableLayers()
@@ -114,13 +93,13 @@ func (ll *LayerList) InputHandler() func(event *tcell.EventKey, setFocus func(p 
 	return ll.WrapInputHandler(func(event *tcell.EventKey, setFocus func(p tview.Primitive)) {
 		switch event.Key() {
 		case tcell.KeyUp:
-			if ll.SetLayerIndex(ll.cmpIndex-1) {
+			if ll.SetLayerIndex(ll.cmpIndex - 1) {
 				ll.keyUp()
 				//ll.cmpIndex--
 				//logrus.Debugf("KeyUp pressed, index: %d", ll.cmpIndex)
 			}
 		case tcell.KeyDown:
-			if ll.SetLayerIndex(ll.cmpIndex+1) {
+			if ll.SetLayerIndex(ll.cmpIndex + 1) {
 				ll.keyDown()
 				//ll.cmpIndex++
 				//logrus.Debugf("KeyUp pressed, index: %d", ll.cmpIndex)
@@ -129,7 +108,6 @@ func (ll *LayerList) InputHandler() func(event *tcell.EventKey, setFocus func(p 
 		}
 	})
 }
-
 
 func (ll *LayerList) Focus(delegate func(p tview.Primitive)) {
 	ll.Box.Focus(delegate)
@@ -161,11 +139,11 @@ func (ll *LayerList) keyUp() bool {
 
 func (ll *LayerList) keyDown() bool {
 	_, _, _, height := ll.Box.GetInnerRect()
-	adjustedHeight := height -1
+	adjustedHeight := height - 1
 
 	// treeIndex is the index about where we are in the current file
 	visibleSize := len(ll.GetPrintableLayers())
-	if ll.cmpIndex + 1 + ll.bufferIndexLowerBound >= visibleSize {
+	if ll.cmpIndex+1+ll.bufferIndexLowerBound >= visibleSize {
 		return false
 	}
 	if ll.cmpIndex+1 >= adjustedHeight {
@@ -179,5 +157,3 @@ func (ll *LayerList) keyDown() bool {
 
 	return true
 }
-
-
