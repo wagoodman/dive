@@ -32,7 +32,7 @@ require (
 	github.com/opencontainers/image-spec v1.0.1 // indirect
 	github.com/pelletier/go-toml v1.4.0 // indirect
 	github.com/phayes/permbits v0.0.0-20190612203442-39d7c581d2ee
-	github.com/rivo/tview v0.0.0-20201018122409-d551c850a743
+	github.com/rivo/tview v0.0.0-20201204190810-5406288b8e4e
 	github.com/sergi/go-diff v1.0.0
 	github.com/sirupsen/logrus v1.4.2
 	github.com/spf13/afero v1.2.2
@@ -40,9 +40,11 @@ require (
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/spf13/viper v1.4.0
-	github.com/stretchr/testify v1.4.0 // indirect
-	github.com/wagoodman/keybinding v0.0.0-20181213133715-6a824da6df05
+	go.uber.org/multierr v1.6.0 // indirect
+	go.uber.org/zap v1.16.0
 	golang.org/x/net v0.0.0-20190827160401-ba9fcec4b297
+	golang.org/x/sys v0.0.0-20201211090839-8ad439b19e0f // indirect
+	golang.org/x/text v0.3.4 // indirect
 	google.golang.org/genproto v0.0.0-20190620144150-6af8c5fc6601 // indirect
 	google.golang.org/grpc v1.21.1 // indirect
 	gotest.tools v2.2.0+incompatible // indirect

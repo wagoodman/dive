@@ -1,9 +1,11 @@
 package components
 
 import (
+	"regexp"
+
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
-	"regexp"
+	"go.uber.org/zap"
 )
 
 type FilterModel interface {
@@ -19,7 +21,7 @@ type FilterView struct {
 func NewFilterView(filterModel FilterModel) *FilterView {
 	inputField := tview.NewInputField()
 	return &FilterView{
-		InputField: inputField,
+		InputField:  inputField,
 		FilterModel: filterModel,
 	}
 }
@@ -50,4 +52,9 @@ func (fv *FilterView) Setup() *FilterView {
 
 func (fv *FilterView) Empty() bool {
 	return fv.GetText() == ""
+}
+
+func (fv *FilterView) Draw(screen tcell.Screen) {
+	zap.S().Debug("drawing filter view!!!!!!!!!!!!!!!")
+	fv.InputField.Draw(screen)
 }

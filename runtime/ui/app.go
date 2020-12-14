@@ -1,16 +1,15 @@
 package ui
 
 import (
+	"sync"
+
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
-	"github.com/sirupsen/logrus"
 	"github.com/wagoodman/dive/dive/filetree"
 	"github.com/wagoodman/dive/dive/image"
 	"github.com/wagoodman/dive/runtime/ui/components"
 	"github.com/wagoodman/dive/runtime/ui/viewmodels"
-	"os"
-	"path/filepath"
-	"sync"
+	"go.uber.org/zap"
 )
 
 const debug = false
@@ -18,16 +17,14 @@ const debug = false
 // type global
 var (
 	once         sync.Once
-	appSingleton         *diveApp
+	appSingleton *diveApp
 )
 
 type diveApp struct {
-	app         *tview.Application
-	layers       *components.LayerList
-	fileTree       *components.TreeView
+	app      *tview.Application
+	layers   *components.LayerList
+	fileTree *components.TreeView
 }
-
-
 
 func newApp(app *tview.Application, analysis *image.AnalysisResult, cache filetree.Comparer) (*diveApp, error) {
 	var err error
@@ -48,16 +45,38 @@ func newApp(app *tview.Application, analysis *image.AnalysisResult, cache filetr
 		layersView := components.NewLayerList(treeViewModel).Setup()
 		fileTreeView := components.NewTreeView(treeViewModel).Setup()
 
+		// Implementation notes: should we factor out this setup??
+		leftVisibleGrid := components.NewVisibleFlex()
+		leftVisibleGrid.SetDirection(tview.FlexRow)
+		rightVisibleGrid := components.NewVisibleFlex()
+		rightVisibleGrid.SetDirection(tview.FlexRow)
+		totalVisibleGrid := components.NewVisibleFlex()
 
-		grid := tview.NewGrid()
-		grid.SetRows(-4,-1,-1,1).SetColumns(-1,-1, 3)
-		grid.SetBorder(false)
-		grid.AddItem(layersView, 0,0,1,1,5, 10, true).
-			AddItem(layerDetailsView,1,0,1,1,10,40, false).
-			AddItem(imageDetails,2,0,1, 1,10,10,false).
-			AddItem(fileTreeView, 0, 1, 3, 1, 0,0, true).
-			AddItem(filterView, 3,0,1,2,0,0,false)
+		//
+		visibleLayersView := components.NewVisibleWrapper(layersView)
+		visibleLayerDetails := components.NewVisibleWrapper(layerDetailsView)
+		visibleImageDetails := components.NewVisibleWrapper(imageDetails)
+		visibleFilterView := components.NewVisibleWrapper(filterView)
 
+		// this iterface needs some work we should NOT be using closures...
+		visibleFilterView.SetVisibility(func(p tview.Primitive) bool {
+			zap.S().Info("  -- visible filter is ", !filterView.Empty() || filterView.HasFocus())
+			return !filterView.Empty() || filterView.HasFocus()
+		})
+
+		visibleFileTreeView := components.NewVisibleWrapper(fileTreeView)
+
+		leftVisibleGrid.AddItem(visibleLayersView, 0, 2, true).
+			AddItem(visibleLayerDetails, 0, 1, false).
+			AddItem(visibleImageDetails, 0, 1, false)
+
+
+		rightVisibleGrid.AddItem(visibleFileTreeView, 0, 1, false).
+			AddItem(visibleFilterView, 1, 0, false).
+			SetConsumers(visibleFilterView, []int{0})
+
+		totalVisibleGrid.AddItem(leftVisibleGrid, 0, 1, true).
+			AddItem(rightVisibleGrid, 0, 1, false)
 
 		switchFocus := func(event *tcell.EventKey) *tcell.EventKey {
 			var result *tcell.EventKey = nil
@@ -71,7 +90,7 @@ func newApp(app *tview.Application, analysis *image.AnalysisResult, cache filetr
 			case tcell.KeyCtrlF:
 				if filterView.HasFocus() {
 					filterView.Blur()
-					appSingleton.app.SetFocus(grid)
+					appSingleton.app.SetFocus(visibleFileTreeView)
 				} else {
 					appSingleton.app.SetFocus(filterView)
 				}
@@ -82,13 +101,13 @@ func newApp(app *tview.Application, analysis *image.AnalysisResult, cache filetr
 			return result
 		}
 
-		grid.SetInputCapture(switchFocus)
+		totalVisibleGrid.SetInputCapture(switchFocus)
 
-		app.SetRoot(grid,true)
+		app.SetRoot(totalVisibleGrid, true)
 		appSingleton = &diveApp{
-			app: app,
+			app:      app,
 			fileTree: fileTreeView,
-			layers: layersView,
+			layers:   layersView,
 		}
 		app.SetFocus(layersView)
 	})
@@ -98,15 +117,20 @@ func newApp(app *tview.Application, analysis *image.AnalysisResult, cache filetr
 
 // Run is the UI entrypoint.
 func Run(analysis *image.AnalysisResult, treeStack filetree.Comparer) error {
-	debugFile := filepath.Join("/tmp", "dive","debug.out")
-	LogOutputFile, _ := os.OpenFile(debugFile, os.O_RDWR | os.O_CREATE | os.O_TRUNC, 0666)
-	defer LogOutputFile.Close()
-	logrus.SetOutput(LogOutputFile)
-	logrus.SetFormatter(&logrus.TextFormatter{})
-	logrus.SetLevel(logrus.DebugLevel)
-	logrus.Debugln("debug start:")
+	cfg := zap.NewDevelopmentConfig()
+	cfg.OutputPaths = []string{"/tmp/dive/debug.out"}
+	logger, err := cfg.Build()
+	if err != nil {
+		panic(err)
+	}
+	zap.ReplaceGlobals(logger)
+	defer logger.Sync() // flushes buffer, if any
+	logger.Sugar().Debug("Debug Start")
+
+	zap.S().Info("Starting Hidden Flex Program")
+
 	app := tview.NewApplication()
-	_, err := newApp(app, analysis, treeStack)
+	_, err = newApp(app, analysis, treeStack)
 	if err != nil {
 		return err
 	}
@@ -115,11 +139,4 @@ func Run(analysis *image.AnalysisResult, treeStack filetree.Comparer) error {
 		return err
 	}
 	return nil
-}
-
-func intMax(int1 ,int2 int) int {
-	if int1 > int2 {
-		return int1
-	}
-	return int2
 }
