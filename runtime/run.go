@@ -1,6 +1,7 @@
 package runtime
 
 import (
+	"errors"
 	"fmt"
 	"github.com/dustin/go-humanize"
 	"github.com/sirupsen/logrus"
@@ -13,7 +14,6 @@ import (
 	"github.com/wagoodman/dive/runtime/ui"
 	"github.com/wagoodman/dive/utils"
 	"os"
-	"time"
 )
 
 func run(enableUi bool, options Options, imageResolver image.Resolver, events eventChannel, filesystem afero.Fs) {
@@ -35,17 +35,30 @@ func run(enableUi bool, options Options, imageResolver image.Resolver, events ev
 		events.message(utils.TitleFormat("Image Source: ") + options.Source.String() + "://" + options.Image)
 		events.message(utils.TitleFormat("Fetching image...") + " (this can take a while for large images)")
 		img, err = imageResolver.Fetch(options.Image)
+
+		// set image name
+		img.Name = options.Image
 		if err != nil {
 			events.exitWithErrorMessage("cannot fetch image", err)
 			return
 		}
 	}
-
-	events.message(utils.TitleFormat("Analyzing image..."))
+	events.message(utils.TitleFormat("Analyzing image ..."))
 	analysis, err := img.Analyze()
 	if err != nil {
 		events.exitWithErrorMessage("cannot analyze image", err)
 		return
+	}
+
+	if options.CNB {
+		events.message(utils.TitleFormat("Analyzing Cloud Native Buildpacks image..."))
+		analysis, err = img.CNBAnalyze(analysis)
+		if errors.Is(err, image.ErrMissingCNBMetadata) {
+			options.CNB = false
+		} else if err != nil {
+			events.exitWithErrorMessage("cannot analyze image", err)
+			return
+		}
 	}
 
 	if doExport {
@@ -100,14 +113,7 @@ func run(enableUi bool, options Options, imageResolver image.Resolver, events ev
 		}
 
 		if enableUi {
-			// it appears there is a race condition where termbox.Init() will
-			// block nearly indefinitely when running as the first process in
-			// a Docker container when started within ~25ms of container startup.
-			// I can't seem to determine the exact root cause, however, a large
-			// enough sleep will prevent this behavior (todo: remove this hack)
-			time.Sleep(100 * time.Millisecond)
-
-			err = ui.Run(analysis, treeStack)
+			err = ui.Run(analysis, treeStack, options.CNB)
 			if err != nil {
 				events.exitWithError(err)
 				return

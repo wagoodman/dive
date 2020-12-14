@@ -5,7 +5,6 @@ import (
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
-	"go.uber.org/zap"
 )
 
 type FilterModel interface {
@@ -50,11 +49,18 @@ func (fv *FilterView) Setup() *FilterView {
 	return fv
 }
 
-func (fv *FilterView) Empty() bool {
-	return fv.GetText() == ""
+func (ll *FilterView) getBox() *tview.Box {
+	return ll.Box
 }
 
-func (fv *FilterView) Draw(screen tcell.Screen) {
-	zap.S().Debug("drawing filter view!!!!!!!!!!!!!!!")
-	fv.InputField.Draw(screen)
+func (ll *FilterView) getDraw() drawFn {
+	return ll.Draw
+}
+
+func (ll *FilterView) getInputWrapper() inputFn {
+	return ll.InputHandler
+}
+
+func (fv *FilterView) Empty() bool {
+	return fv.GetText() == ""
 }

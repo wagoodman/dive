@@ -7,6 +7,7 @@ import (
 
 type Options struct {
 	Ci           bool
+	CNB          bool
 	Image        string
 	Source       dive.ImageSource
 	IgnoreErrors bool

@@ -1,6 +1,7 @@
 package image
 
 import (
+	"github.com/buildpacks/lifecycle"
 	"github.com/wagoodman/dive/dive/filetree"
 )
 
@@ -9,6 +10,7 @@ type Analyzer interface {
 }
 
 type AnalysisResult struct {
+	ImageName string
 	Layers            []*Layer
 	RefTrees          []*filetree.FileTree
 	Efficiency        float64
@@ -17,6 +19,7 @@ type AnalysisResult struct {
 	WastedUserPercent float64 // = wasted-bytes/user-size-bytes
 	WastedBytes       uint64
 	Inefficiencies    filetree.EfficiencySlice
+	BOMMapping		  map[string]lifecycle.BOMEntry
 }
 
 

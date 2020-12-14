@@ -21,15 +21,26 @@ type LayerDetailsView struct {
 
 func NewLayerDetailsView(model LayerDetailModel) *LayerDetailsView {
 	return &LayerDetailsView{
-		TextView: tview.NewTextView(),
+		TextView:         tview.NewTextView(),
 		LayerDetailModel: model,
 	}
 }
 
 func (lv *LayerDetailsView) Setup() *LayerDetailsView {
-	lv.SetTitle("Layer Details").SetTitleAlign(tview.AlignLeft)
-	lv.SetDynamicColors(true).SetBorder(true)
+	lv.SetDynamicColors(true)
 	return lv
+}
+
+func (lv *LayerDetailsView) getBox() *tview.Box {
+	return lv.Box
+}
+
+func (lv *LayerDetailsView) getDraw() drawFn {
+	return lv.Draw
+}
+
+func (lv *LayerDetailsView) getInputWrapper() inputFn {
+	return lv.InputHandler
 }
 
 func (lv *LayerDetailsView) Draw(screen tcell.Screen) {
