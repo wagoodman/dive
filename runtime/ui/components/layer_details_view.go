@@ -2,10 +2,11 @@ package components
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 	"github.com/wagoodman/dive/dive/image"
-	"strings"
 )
 
 type LayerDetailModel interface {

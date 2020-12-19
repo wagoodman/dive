@@ -13,11 +13,11 @@ type CNBLayersViewModel struct {
 func NewCNBLayersViewModel(layers []*image.Layer, bomMapping map[string]lifecycle.BOMEntry) *CNBLayersViewModel {
 	return &CNBLayersViewModel{
 		LayersViewModel: NewLayersViewModel(layers),
-		bomMapping: bomMapping,
+		bomMapping:      bomMapping,
 	}
 }
 
-func (cvm *CNBLayersViewModel) GetBOMFromDigest(layerSha string) lifecycle.BOMEntry{
+func (cvm *CNBLayersViewModel) GetBOMFromDigest(layerSha string) lifecycle.BOMEntry {
 	result, ok := cvm.bomMapping[layerSha]
 	if !ok {
 		return lifecycle.BOMEntry{}

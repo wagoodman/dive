@@ -2,11 +2,12 @@ package components
 
 import (
 	"fmt"
+	"strconv"
+
 	"github.com/dustin/go-humanize"
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 	"github.com/wagoodman/dive/dive/image"
-	"strconv"
 )
 
 type ImageDetails struct {

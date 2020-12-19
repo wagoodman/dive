@@ -1,9 +1,10 @@
 package ci
 
 import (
-	"github.com/wagoodman/dive/dive/image/docker"
 	"strings"
 	"testing"
+
+	"github.com/wagoodman/dive/dive/image/docker"
 
 	"github.com/spf13/viper"
 )

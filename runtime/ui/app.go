@@ -78,8 +78,7 @@ func newApp(app *tview.Application, analysis *image.AnalysisResult, cache filetr
 
 		leftVisibleGrid.AddItem(layersBox, 0, 3, true).
 			AddItem(layerDetailsBox, 0, 1, false).
-			AddItem(imageDetailsBox, 0 , 1, false)
-
+			AddItem(imageDetailsBox, 0, 1, false)
 
 		rightVisibleGrid.AddItem(fileTreeBox, 0, 1, false).
 			AddItem(filterView, 1, 0, false).
@@ -87,7 +86,6 @@ func newApp(app *tview.Application, analysis *image.AnalysisResult, cache filetr
 
 		totalVisibleGrid.AddItem(leftVisibleGrid, 0, 1, true).
 			AddItem(rightVisibleGrid, 0, 1, false)
-
 
 		appSingleton = &diveApp{
 			app:      app,
@@ -146,7 +144,7 @@ func Run(analysis *image.AnalysisResult, treeStack filetree.Comparer, isCNB bool
 	if err != nil {
 		return err
 	}
-	
+
 	if err = appSingleton.app.Run(); err != nil {
 		zap.S().Info("app error: ", err.Error())
 		return err

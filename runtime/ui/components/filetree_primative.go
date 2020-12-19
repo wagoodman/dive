@@ -2,12 +2,13 @@ package components
 
 import (
 	"bytes"
+	"io"
+	"strings"
+
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 	"github.com/sirupsen/logrus"
 	"github.com/wagoodman/dive/dive/filetree"
-	"io"
-	"strings"
 )
 
 // TODO simplify this interface.

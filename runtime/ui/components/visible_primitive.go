@@ -19,7 +19,6 @@ func AlwaysVisible(_ tview.Primitive) bool {
 	return true
 }
 
-
 // How can we actually implement this????
 // Either we have to do one of the following
 // 1) we want to use particular and specific methods on an item

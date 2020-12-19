@@ -2,12 +2,13 @@ package ci
 
 import (
 	"fmt"
-	"github.com/dustin/go-humanize"
-	"github.com/wagoodman/dive/dive/image"
-	"github.com/wagoodman/dive/utils"
 	"sort"
 	"strconv"
 	"strings"
+
+	"github.com/dustin/go-humanize"
+	"github.com/wagoodman/dive/dive/image"
+	"github.com/wagoodman/dive/utils"
 
 	"github.com/spf13/viper"
 

@@ -2,8 +2,9 @@ package ci
 
 import (
 	"fmt"
-	"github.com/wagoodman/dive/dive/image"
 	"strconv"
+
+	"github.com/wagoodman/dive/dive/image"
 
 	"github.com/spf13/viper"
 

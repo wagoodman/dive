@@ -1,8 +1,9 @@
 package utils
 
 import (
-	"github.com/logrusorgru/aurora"
 	"strings"
+
+	"github.com/logrusorgru/aurora"
 )
 
 func TitleFormat(s string) string {
