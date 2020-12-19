@@ -33,7 +33,7 @@ func NewVisibleFlex() *VisibleFlex {
 	return &VisibleFlex{
 		Box:       tview.NewBox().SetBackgroundColor(tcell.ColorDefault),
 		direction: tview.FlexColumn,
-		visible:   AlwaysVisible,
+		visible:   Always(true),
 	}
 }
 
@@ -82,10 +82,39 @@ func (f *VisibleFlex) ResizeItem(p tview.Primitive, fixedSize, proportion int) *
 }
 
 // TODO: update the  API here this is pretty rough
-func (f *VisibleFlex) SetConsumers(p VisiblePrimitive, consumes []int) *VisibleFlex {
+// Method provided to give configuration that would otherwise not be possible when primitives are repeated
+func (f *VisibleFlex) SetConsumersByIndex(p VisiblePrimitive, consumeIndicies []int) *VisibleFlex {
 	for i, item := range f.items {
 		if item.Item == p {
-			f.consume[i] = consumes
+			f.consume[i] = consumeIndicies
+		}
+	}
+	return f
+}
+
+// TODO: update the  API here this is pretty rough
+// Implementation notes:
+// we want a list of indicies []int{} where each visible primitive corresponds to the first matching primitive
+// in our list of items
+func (f *VisibleFlex) SetConsumers(p VisiblePrimitive, consumes ...VisiblePrimitive) *VisibleFlex {
+	indexMap := map[VisiblePrimitive]int{}
+	for _, item := range f.items {
+		_, ok := indexMap[item.Item]
+		if !ok {
+			indexMap[item.Item] = len(indexMap)
+		}
+	}
+
+	consumeIndicies := []int{}
+	for _, consumee := range consumes {
+		if idx, ok := indexMap[consumee]; ok {
+			consumeIndicies = append(consumeIndicies, idx)
+		}
+	}
+
+	for i, item := range f.items {
+		if item.Item == p {
+			f.consume[i] = consumeIndicies
 		}
 	}
 	return f

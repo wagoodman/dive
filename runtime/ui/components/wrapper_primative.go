@@ -41,7 +41,7 @@ func NewWrapper(title, subtitle string, inner wrapable) *Wrapper {
 		titleTextView:    tview.NewTextView(),
 		subtitleTextView: tview.NewTextView().SetText(subtitle),
 		inner:            inner,
-		visible:          AlwaysVisible,
+		visible:          Always(true),
 	}
 	w.setTitle(w.inner.getBox().HasFocus())
 	return w

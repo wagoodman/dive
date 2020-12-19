@@ -49,6 +49,8 @@ func newApp(app *tview.Application, analysis *image.AnalysisResult, cache filetr
 			layerModel = layerViewModel
 			layerDetailsBox = components.NewWrapper("Layer Details", "", regularLayerDetailsView).Setup()
 		}
+		layerDetailsBox.SetVisibility(components.MinHeightVisibility(10))
+
 		//layerViewModel := viewmodels.NewLayersViewModel(analysis.Layers)
 		treeViewModel, err := viewmodels.NewTreeViewModel(cache, layerModel, filterViewModel)
 		if err != nil {
@@ -59,6 +61,7 @@ func newApp(app *tview.Application, analysis *image.AnalysisResult, cache filetr
 		// initialize views
 		imageDetailsView := components.NewImageDetailsView(analysis)
 		imageDetailsBox := components.NewWrapper("Image Details", "", imageDetailsView).Setup()
+		imageDetailsBox.SetVisibility(components.MinHeightVisibility(10))
 
 		filterView := components.NewFilterView(treeViewModel).Setup()
 
@@ -78,11 +81,13 @@ func newApp(app *tview.Application, analysis *image.AnalysisResult, cache filetr
 
 		leftVisibleGrid.AddItem(layersBox, 0, 3, true).
 			AddItem(layerDetailsBox, 0, 1, false).
-			AddItem(imageDetailsBox, 0, 1, false)
+			AddItem(imageDetailsBox, 0, 1, false).
+			SetConsumers(layerDetailsBox, layersBox).
+			SetConsumers(imageDetailsBox, layersBox)
 
 		rightVisibleGrid.AddItem(fileTreeBox, 0, 1, false).
 			AddItem(filterView, 1, 0, false).
-			SetConsumers(filterView, []int{0})
+			SetConsumers(filterView, fileTreeBox)
 
 		totalVisibleGrid.AddItem(leftVisibleGrid, 0, 1, true).
 			AddItem(rightVisibleGrid, 0, 1, false)
