@@ -2,9 +2,10 @@ package components
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
-	"strings"
 )
 
 // This was pretty helpful: https://github.com/rivo/tview/wiki/Primitives
@@ -24,6 +25,7 @@ type Wrapper struct {
 	titleRightBox    *tview.Box
 	title            string
 	subtitle         string
+	visible          VisibleFunc
 }
 
 type drawFn func(screen tcell.Screen)
@@ -39,6 +41,7 @@ func NewWrapper(title, subtitle string, inner wrapable) *Wrapper {
 		titleTextView:    tview.NewTextView(),
 		subtitleTextView: tview.NewTextView().SetText(subtitle),
 		inner:            inner,
+		visible:          AlwaysVisible,
 	}
 	w.setTitle(w.inner.getBox().HasFocus())
 	return w
@@ -116,4 +119,13 @@ func (b *Wrapper) setTitle(hasFocus bool) {
 	}
 
 	b.titleTextView.SetText(title)
+}
+
+func (b *Wrapper) Visible() bool {
+	return b.visible(b)
+}
+
+func (b *Wrapper) SetVisibility(visibleFunc VisibleFunc) *Wrapper {
+	b.visible = visibleFunc
+	return b
 }

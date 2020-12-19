@@ -12,7 +12,7 @@ require (
 	github.com/dustin/go-humanize v1.0.0
 	github.com/fatih/color v1.9.0
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
-	github.com/gdamore/tcell/v2 v2.0.1-0.20201017141208-acf90d56d591
+	github.com/gdamore/tcell/v2 v2.1.0
 	github.com/golang/protobuf v1.4.3 // indirect
 	github.com/google/go-cmp v0.5.2 // indirect
 	github.com/google/uuid v1.1.2
@@ -42,7 +42,7 @@ require (
 	github.com/stretchr/testify v1.6.1 // indirect
 	go.uber.org/zap v1.10.0
 	golang.org/x/net v0.0.0-20201029055024-942e2f445f3c
-	golang.org/x/sys v0.0.0-20201029080932-201ba4db2418 // indirect
+	golang.org/x/sys v0.0.0-20201218084310-7d0127a74742 // indirect
 	golang.org/x/text v0.3.4 // indirect
 	golang.org/x/time v0.0.0-20200630173020-3af7569d3a1e // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect

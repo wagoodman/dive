@@ -3,6 +3,8 @@ package runtime
 import (
 	"errors"
 	"fmt"
+	"os"
+
 	"github.com/dustin/go-humanize"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
@@ -13,7 +15,7 @@ import (
 	"github.com/wagoodman/dive/runtime/export"
 	"github.com/wagoodman/dive/runtime/ui"
 	"github.com/wagoodman/dive/utils"
-	"os"
+	"go.uber.org/zap"
 )
 
 func run(enableUi bool, options Options, imageResolver image.Resolver, events eventChannel, filesystem afero.Fs) {
@@ -115,6 +117,7 @@ func run(enableUi bool, options Options, imageResolver image.Resolver, events ev
 		if enableUi {
 			err = ui.Run(analysis, treeStack, options.CNB)
 			if err != nil {
+				zap.S().Error("run info exit: ", err.Error())
 				events.exitWithError(err)
 				return
 			}

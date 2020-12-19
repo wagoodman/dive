@@ -1,12 +1,13 @@
-package extension_components
+package components
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/buildpacks/lifecycle"
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 	"github.com/wagoodman/dive/dive/image"
-	"strings"
 )
 
 type CNBLayerDetailModel interface {
@@ -23,7 +24,7 @@ type CNBLayerDetailsView struct {
 
 func NewCNBLayerDetailsView(model CNBLayerDetailModel) *CNBLayerDetailsView {
 	return &CNBLayerDetailsView{
-		TextView: tview.NewTextView(),
+		TextView:            tview.NewTextView(),
 		CNBLayerDetailModel: model,
 	}
 }
@@ -51,10 +52,18 @@ func layerCNBDetailsText(layer *image.Layer, bom lifecycle.BOMEntry) string {
 	}
 	lines = append(lines, boldString("Id:     ")+layer.Id)
 	lines = append(lines, layer.Command)
-	lines = append(lines, boldString("BOM:   ") + fmt.Sprintf("Entry for: %s", bom.Buildpack.String()))
+	lines = append(lines, boldString("BOM:   ")+fmt.Sprintf("Entry for: %s", bom.Buildpack.String()))
 	return strings.Join(lines, "\n")
 }
 
-func boldString(s string) string {
-	return fmt.Sprintf("[::b]%s[::-]", s)
+func (lv *CNBLayerDetailsView) getBox() *tview.Box {
+	return lv.Box
+}
+
+func (lv *CNBLayerDetailsView) getDraw() drawFn {
+	return lv.Draw
+}
+
+func (lv *CNBLayerDetailsView) getInputWrapper() inputFn {
+	return lv.InputHandler
 }

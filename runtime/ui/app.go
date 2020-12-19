@@ -8,8 +8,6 @@ import (
 	"github.com/wagoodman/dive/dive/filetree"
 	"github.com/wagoodman/dive/dive/image"
 	"github.com/wagoodman/dive/runtime/ui/components"
-	"github.com/wagoodman/dive/runtime/ui/extension_components"
-	"github.com/wagoodman/dive/runtime/ui/extension_viewmodels"
 	"github.com/wagoodman/dive/runtime/ui/viewmodels"
 	"go.uber.org/zap"
 )
@@ -29,7 +27,6 @@ type diveApp struct {
 	filterView tview.Primitive
 }
 
-
 func newApp(app *tview.Application, analysis *image.AnalysisResult, cache filetree.Comparer, isCNB bool) (*diveApp, error) {
 	var err error
 	once.Do(func() {
@@ -40,21 +37,22 @@ func newApp(app *tview.Application, analysis *image.AnalysisResult, cache filetr
 		//initialize viewmodels
 		filterViewModel := viewmodels.NewFilterViewModel(nil)
 		var layerModel viewmodels.LayersModel
-		var layerDetailsView tview.Primitive
+		var layerDetailsBox *components.Wrapper
 		if isCNB {
-			cnbLayerViewModel := extension_viewmodels.NewCNBLayersViewModel(analysis.Layers, analysis.BOMMapping)
-			cnbLayerDetailsView := extension_components.NewCNBLayerDetailsView(cnbLayerViewModel).Setup()
+			cnbLayerViewModel := viewmodels.NewCNBLayersViewModel(analysis.Layers, analysis.BOMMapping)
+			cnbLayerDetailsView := components.NewCNBLayerDetailsView(cnbLayerViewModel).Setup()
 			layerModel = cnbLayerViewModel
-			layerDetailsView = cnbLayerDetailsView
+			layerDetailsBox = components.NewWrapper("CNB Layer Details", "", cnbLayerDetailsView).Setup()
 		} else {
 			layerViewModel := viewmodels.NewLayersViewModel(analysis.Layers)
 			regularLayerDetailsView := components.NewLayerDetailsView(layerViewModel).Setup()
 			layerModel = layerViewModel
-			layerDetailsView = regularLayerDetailsView
+			layerDetailsBox = components.NewWrapper("Layer Details", "", regularLayerDetailsView).Setup()
 		}
 		//layerViewModel := viewmodels.NewLayersViewModel(analysis.Layers)
 		treeViewModel, err := viewmodels.NewTreeViewModel(cache, layerModel, filterViewModel)
 		if err != nil {
+			// TODO: replace panic with a reasonable exit strategy
 			panic(err)
 		}
 
@@ -62,7 +60,7 @@ func newApp(app *tview.Application, analysis *image.AnalysisResult, cache filetr
 		imageDetailsView := components.NewImageDetailsView(analysis)
 		imageDetailsBox := components.NewWrapper("Image Details", "", imageDetailsView).Setup()
 
-		filterView := components.NewFilterView(filterViewModel).Setup()
+		filterView := components.NewFilterView(treeViewModel).Setup()
 
 		layersView := components.NewLayerList(treeViewModel).Setup()
 		layersBox := components.NewWrapper("Layers", "subtitle!", layersView).Setup()
@@ -71,37 +69,31 @@ func newApp(app *tview.Application, analysis *image.AnalysisResult, cache filetr
 		fileTreeBox := components.NewWrapper("Current Layer Contents", "subtitle!", fileTreeView).Setup()
 
 		// Implementation notes: should we factor out this setup??
+		// Probably yes, but difficult to make this both easy to setup & mutable
 		leftVisibleGrid := components.NewVisibleFlex()
 		leftVisibleGrid.SetDirection(tview.FlexRow)
 		rightVisibleGrid := components.NewVisibleFlex()
 		rightVisibleGrid.SetDirection(tview.FlexRow)
 		totalVisibleGrid := components.NewVisibleFlex()
 
-		//
-		visibleLayersView := components.NewVisibleWrapper(layersView)
-		visibleLayerDetails := components.NewVisibleWrapper(layerDetailsView)
-		visibleImageDetails := components.NewVisibleWrapper(imageDetailsBox)
-		visibleFilterView := components.NewVisibleWrapper(filterView)
+		leftVisibleGrid.AddItem(layersBox, 0, 3, true).
+			AddItem(layerDetailsBox, 0, 1, false).
+			AddItem(imageDetailsBox, 0 , 1, false)
 
-		// this iterface needs some work we should NOT be using closures...
-		visibleFilterView.SetVisibility(func(p tview.Primitive) bool {
-			zap.S().Info("  -- visible filter is ", !filterView.Empty() || filterView.HasFocus())
-			return !filterView.Empty() || filterView.HasFocus()
-		})
 
-		visibleFileTreeView := components.NewVisibleWrapper(fileTreeBox)
-
-		leftVisibleGrid.AddItem(visibleLayersView, 0, 2, true).
-			AddItem(visibleLayerDetails, 0, 1, false).
-			AddItem(visibleImageDetails, 0, 1, false)
-
-			// TODO: make sure we use BOX styling set up by wagoodman
-		rightVisibleGrid.AddItem(visibleFileTreeView, 0, 1, false).
-			AddItem(visibleFilterView, 1, 0, false).
-			SetConsumers(visibleFilterView, []int{0})
+		rightVisibleGrid.AddItem(fileTreeBox, 0, 1, false).
+			AddItem(filterView, 1, 0, false).
+			SetConsumers(filterView, []int{0})
 
 		totalVisibleGrid.AddItem(leftVisibleGrid, 0, 1, true).
 			AddItem(rightVisibleGrid, 0, 1, false)
+
+
+		appSingleton = &diveApp{
+			app:      app,
+			fileTree: fileTreeBox,
+			layers:   layersBox,
+		}
 
 		switchFocus := func(event *tcell.EventKey) *tcell.EventKey {
 			var result *tcell.EventKey = nil
@@ -115,7 +107,7 @@ func newApp(app *tview.Application, analysis *image.AnalysisResult, cache filetr
 			case tcell.KeyCtrlF:
 				if filterView.HasFocus() {
 					filterView.Blur()
-					appSingleton.app.SetFocus(visibleFileTreeView)
+					appSingleton.app.SetFocus(fileTreeBox)
 				} else {
 					appSingleton.app.SetFocus(filterView)
 				}
@@ -129,12 +121,7 @@ func newApp(app *tview.Application, analysis *image.AnalysisResult, cache filetr
 		totalVisibleGrid.SetInputCapture(switchFocus)
 
 		app.SetRoot(totalVisibleGrid, true)
-		appSingleton = &diveApp{
-			app:      app,
-			fileTree: fileTreeBox,
-			layers:   layersBox,
-		}
-		app.SetFocus(layersBox)
+		app.SetFocus(totalVisibleGrid)
 	})
 
 	return appSingleton, err
@@ -159,9 +146,11 @@ func Run(analysis *image.AnalysisResult, treeStack filetree.Comparer, isCNB bool
 	if err != nil {
 		return err
 	}
-
-	if err = app.Run(); err != nil {
+	
+	if err = appSingleton.app.Run(); err != nil {
+		zap.S().Info("app error: ", err.Error())
 		return err
 	}
+	zap.S().Info("app run loop exited")
 	return nil
 }

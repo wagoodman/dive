@@ -1,19 +1,18 @@
-package extension_viewmodels
+package viewmodels
 
 import (
 	"github.com/buildpacks/lifecycle"
 	"github.com/wagoodman/dive/dive/image"
-	"github.com/wagoodman/dive/runtime/ui/viewmodels"
 )
 
 type CNBLayersViewModel struct {
-	*viewmodels.LayersViewModel
+	*LayersViewModel
 	bomMapping map[string]lifecycle.BOMEntry
 }
 
 func NewCNBLayersViewModel(layers []*image.Layer, bomMapping map[string]lifecycle.BOMEntry) *CNBLayersViewModel {
 	return &CNBLayersViewModel{
-		LayersViewModel: viewmodels.NewLayersViewModel(layers),
+		LayersViewModel: NewLayersViewModel(layers),
 		bomMapping: bomMapping,
 	}
 }

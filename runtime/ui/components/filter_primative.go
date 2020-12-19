@@ -64,3 +64,7 @@ func (ll *FilterView) getInputWrapper() inputFn {
 func (fv *FilterView) Empty() bool {
 	return fv.GetText() == ""
 }
+
+func (fv *FilterView) Visible() bool {
+	return !fv.Empty() || fv.HasFocus()
+}

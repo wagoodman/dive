@@ -15,27 +15,14 @@ type VisiblePrimitive interface {
 
 type VisibleFunc func(tview.Primitive) bool
 
-type VisibleWrapper struct {
-	tview.Primitive
-	visible VisibleFunc
-}
-
-func (v *VisibleWrapper) Visible() bool {
-	return v.visible(v)
-}
-
-func (v *VisibleWrapper) SetVisibility(visibleFunc VisibleFunc) *VisibleWrapper {
-	v.visible = visibleFunc
-	return v
-}
-
-func NewVisibleWrapper(p tview.Primitive) *VisibleWrapper {
-	return &VisibleWrapper{
-		Primitive: p,
-		visible:   AlwaysVisible,
-	}
-}
-
 func AlwaysVisible(_ tview.Primitive) bool {
 	return true
 }
+
+
+// How can we actually implement this????
+// Either we have to do one of the following
+// 1) we want to use particular and specific methods on an item
+//    - we Have to make VisibleFunc methods know what their base class is ( or at least have a larger interface )
+// 2) How can we make this configurable
+// 3) make this an implementaion detail of each struct that conforms to this interface (this seems like the best idea)

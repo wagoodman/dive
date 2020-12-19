@@ -2,17 +2,18 @@ package viewmodels
 
 import (
 	"fmt"
+	"regexp"
+
 	"github.com/sirupsen/logrus"
 	"github.com/wagoodman/dive/dive/filetree"
 	"github.com/wagoodman/dive/dive/image"
-	"regexp"
+	"go.uber.org/zap"
 )
 
 type FilterModel interface {
 	SetFilter(r *regexp.Regexp)
 	GetFilter() *regexp.Regexp
 }
-
 
 type LayersModel interface {
 	SetLayerIndex(index int) bool
@@ -21,31 +22,29 @@ type LayersModel interface {
 	GetPrintableLayers() []fmt.Stringer
 }
 
-
 type TreeViewModel struct {
 	currentTree *filetree.FileTree
-	cache filetree.Comparer
+	cache       filetree.Comparer
 	// Make this an interface that is composed with the FilterView
 	FilterModel
 	LayersModel
 }
 
-
-func NewTreeViewModel(cache filetree.Comparer,lModel LayersModel, fmodel FilterModel) (*TreeViewModel, error) {
-	curTreeIndex := filetree.NewTreeIndexKey(0,0,0,0)
+func NewTreeViewModel(cache filetree.Comparer, lModel LayersModel, fmodel FilterModel) (*TreeViewModel, error) {
+	curTreeIndex := filetree.NewTreeIndexKey(0, 0, 0, 0)
 	tree, err := cache.GetTree(curTreeIndex)
 	if err != nil {
 		return nil, err
 	}
 	return &TreeViewModel{
 		currentTree: tree,
-		cache: cache,
+		cache:       cache,
 		FilterModel: fmodel,
 		LayersModel: lModel,
 	}, nil
 }
 
-func (tvm *TreeViewModel) StringBetween(startRow , stopRow int, showAttributes bool) string {
+func (tvm *TreeViewModel) StringBetween(startRow, stopRow int, showAttributes bool) string {
 	return tvm.currentTree.StringBetween(startRow, stopRow, showAttributes)
 }
 
@@ -66,6 +65,7 @@ func (tvm *TreeViewModel) VisibleSize() int {
 func (tvm *TreeViewModel) SetFilter(filterRegex *regexp.Regexp) {
 	tvm.FilterModel.SetFilter(filterRegex)
 	if err := tvm.FilterUpdate(); err != nil {
+		zap.S().Error("error updating filter ", err.Error())
 		panic(err)
 	}
 }
@@ -138,7 +138,7 @@ func (tvm *TreeViewModel) setCurrentTree(key filetree.TreeIndexKey) error {
 			collapsedList[node.Path()] = true
 		}
 		return nil
-	},evaluateFunc)
+	}, evaluateFunc)
 
 	newTree.VisitDepthParentFirst(func(node *filetree.FileNode) error {
 		_, ok := collapsedList[node.Path()]
