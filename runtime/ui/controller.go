@@ -1,13 +1,14 @@
 package ui
 
 import (
+	"regexp"
+
 	"github.com/jroimartin/gocui"
 	"github.com/sirupsen/logrus"
 	"github.com/wagoodman/dive/dive/filetree"
 	"github.com/wagoodman/dive/dive/image"
 	"github.com/wagoodman/dive/runtime/ui/view"
 	"github.com/wagoodman/dive/runtime/ui/viewmodel"
-	"regexp"
 )
 
 type Controller struct {
@@ -95,6 +96,8 @@ func (c *Controller) onLayerChange(selection viewmodel.LayerSelection) error {
 	} else {
 		c.views.Tree.SetTitle("Current Layer Contents")
 	}
+
+	c.views.Tree.SetCurrentLayer(selection.Layer)
 
 	// update details and filetree panes
 	return c.UpdateAndRender()

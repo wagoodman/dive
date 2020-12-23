@@ -8,6 +8,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"github.com/wagoodman/dive/dive/filetree"
+	"github.com/wagoodman/dive/dive/image"
 	"github.com/wagoodman/dive/runtime/ui/format"
 	"github.com/wagoodman/dive/runtime/ui/key"
 	"github.com/wagoodman/dive/runtime/ui/viewmodel"
@@ -19,12 +20,13 @@ type ViewOptionChangeListener func() error
 // FileTree holds the UI objects and data models for populating the right pane. Specifically the pane that
 // shows selected layer or aggregate file ASCII tree.
 type FileTree struct {
-	name   string
-	gui    *gocui.Gui
-	view   *gocui.View
-	header *gocui.View
-	vm     *viewmodel.FileTree
-	title  string
+	name         string
+	gui          *gocui.Gui
+	view         *gocui.View
+	header       *gocui.View
+	vm           *viewmodel.FileTree
+	currentLayer *image.Layer
+	title        string
 
 	filterRegex         *regexp.Regexp
 	listeners           []ViewOptionChangeListener
@@ -65,6 +67,10 @@ func (v *FileTree) SetTitle(title string) {
 
 func (v *FileTree) SetFilterRegex(filterRegex *regexp.Regexp) {
 	v.filterRegex = filterRegex
+}
+
+func (v *FileTree) SetCurrentLayer(layer *image.Layer) {
+	v.currentLayer = layer
 }
 
 func (v *FileTree) Name() string {
@@ -389,7 +395,7 @@ func (v *FileTree) Render() error {
 
 // ExportTreeByLayer ...
 func (v *FileTree) ExportTreeByLayer() error {
-	if err := v.vm.ExportTreeByLayer(v.vm.ViewTree.String(false)); err != nil {
+	if err := v.vm.ExportTreeByLayer(v.title, v.currentLayer.Digest, v.currentLayer.Command); err != nil {
 		return err
 	}
 	return nil

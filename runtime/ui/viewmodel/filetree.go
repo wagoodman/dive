@@ -1,7 +1,6 @@
 package viewmodel
 
 import (
-	"bufio"
 	"bytes"
 	"fmt"
 	"os"
@@ -136,35 +135,29 @@ func (vm *FileTree) SetTreeByLayer(bottomTreeStart, bottomTreeStop, topTreeStart
 }
 
 // ExportTreeByLayer ...
-func (vm *FileTree) ExportTreeByLayer(vt string) (err error) {
+func (vm *FileTree) ExportTreeByLayer(viewName, digest, command string) (err error) {
 	workingDir, err := os.Getwd()
 	if err != nil {
 		return err
 	}
-	f, err := os.Create(fmt.Sprintf("%s/tree-%s.txt", workingDir, strconv.FormatInt(time.Now().Unix(), 10)))
+
+	file, err := os.Create(fmt.Sprintf("%s/tree-%s.txt", workingDir, strconv.FormatInt(time.Now().Unix(), 10)))
 	if err != nil {
 		return err
 	}
-	defer f.Close()
+	defer file.Close()
 
-	cleanTree := stripansi.Strip(vt)
-	_, err = f.WriteString(cleanTree)
-	if err != nil {
+	tree := "---\n\n"
+	tree += fmt.Sprintf("%s\n\n", viewName)
+	tree += fmt.Sprintf("Digest: %s\n", digest)
+	tree += fmt.Sprintf("Command: %s\n\n", command)
+	tree += "by Dive\n\n"
+	tree += "---\n\n"
+	tree += stripansi.Strip(vm.ViewTree.String(false))
+
+	if _, err = file.WriteString(tree); err != nil {
 		return err
 	}
-
-	err = f.Sync()
-	if err != nil {
-		return err
-	}
-
-	w := bufio.NewWriter(f)
-	_, err = w.WriteString("\n\nby Dive\n")
-	if err != nil {
-		return err
-	}
-	w.Flush()
-
 	return nil
 }
 
