@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"os"
 	"regexp"
-	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -135,55 +134,34 @@ func (vm *FileTree) SetTreeByLayer(bottomTreeStart, bottomTreeStop, topTreeStart
 	return nil
 }
 
-func userHomeDir() string {
-	if runtime.GOOS == "windows" {
-		home := os.Getenv("HOMEDRIVE") + os.Getenv("HOMEPATH")
-		if home == "" {
-			home = os.Getenv("USERPROFILE")
-		}
-		return home
-	} else if runtime.GOOS == "linux" {
-		home := os.Getenv("XDG_CONFIG_HOME")
-		if home != "" {
-			return home
-		}
-	}
-	return os.Getenv("HOME")
-}
-
 // ExportTreeByLayer ...
-func (vm *FileTree) ExportTreeByLayer(vt string) error {
-	home := userHomeDir()
-	f, err := os.Create(home + "/tree-" + strconv.FormatInt(time.Now().Unix(), 10) + ".txt")
+func (vm *FileTree) ExportTreeByLayer(vt string) (err error) {
+	workingDir, err := os.Getwd()
 	if err != nil {
-		logrus.Errorf("%+v", err)
+		return err
+	}
+	f, err := os.Create(fmt.Sprintf("%s/tree-%s.txt", workingDir, strconv.FormatInt(time.Now().Unix(), 10)))
+	if err != nil {
 		return err
 	}
 	defer f.Close()
 
-	// bytes1
 	// TODO: remove color code
-	_, err2 := f.WriteString(vt)
-	if err2 != nil {
-		logrus.Errorf("%+v", err2)
-		return err2
+	_, err = f.WriteString(vt)
+	if err != nil {
+		return err
 	}
 
-	err3 := f.Sync()
-	if err3 != nil {
-		logrus.Errorf("%+v", err3)
-		return err3
+	err = f.Sync()
+	if err != nil {
+		return err
 	}
 
 	w := bufio.NewWriter(f)
-	// bytes2
-	_, err4 := w.WriteString("\n\nby Dive\n")
-	if err4 != nil {
-		logrus.Errorf("%+v", err4)
-		return err4
+	_, err = w.WriteString("\n\nby Dive\n")
+	if err != nil {
+		return err
 	}
-	// fmt.Printf("wrote %d bytes\n", bytes1 + bytes2)
-
 	w.Flush()
 
 	return nil

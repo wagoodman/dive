@@ -389,8 +389,7 @@ func (v *FileTree) Render() error {
 
 // ExportTreeByLayer ...
 func (v *FileTree) ExportTreeByLayer() error {
-	err := v.vm.ExportTreeByLayer(v.vm.ViewTree.String(false))
-	if err != nil {
+	if err := v.vm.ExportTreeByLayer(v.vm.ViewTree.String(false)); err != nil {
 		return err
 	}
 	return nil
