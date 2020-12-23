@@ -12,6 +12,7 @@ import (
 
 	"github.com/wagoodman/dive/runtime/ui/format"
 
+	"github.com/acarl005/stripansi"
 	"github.com/lunixbochs/vtclean"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
@@ -146,8 +147,8 @@ func (vm *FileTree) ExportTreeByLayer(vt string) (err error) {
 	}
 	defer f.Close()
 
-	// TODO: remove color code
-	_, err = f.WriteString(vt)
+	cleanTree := stripansi.Strip(vt)
+	_, err = f.WriteString(cleanTree)
 	if err != nil {
 		return err
 	}
