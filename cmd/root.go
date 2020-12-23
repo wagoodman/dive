@@ -93,7 +93,7 @@ func initConfig() {
 	viper.SetDefault("keybinding.toggle-unmodified-files", "ctrl+u")
 	viper.SetDefault("keybinding.page-up", "pgup")
 	viper.SetDefault("keybinding.page-down", "pgdn")
-	viper.SetDefault("keybinding.export-tree-view", "ctrl+s")
+	viper.SetDefault("keybinding.export-tree", "ctrl+s")
 
 	viper.SetDefault("diff.hide", "")
 

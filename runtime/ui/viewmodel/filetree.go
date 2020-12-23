@@ -160,7 +160,7 @@ func (vm *FileTree) ExportTreeByLayer(vt string) error {
 		return err
 	}
 	defer f.Close()
-	
+
 	// bytes1
 	// TODO: remove color code
 	_, err2 := f.WriteString(vt)

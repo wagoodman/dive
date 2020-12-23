@@ -156,9 +156,9 @@ func (v *FileTree) Setup(view *gocui.View, header *gocui.View) error {
 			OnAction: v.CursorRight,
 		},
 		{
-			ConfigKeys: []string{"keybinding.export-tree-view"},
+			ConfigKeys: []string{"keybinding.export-tree"},
 			OnAction:   v.ExportTreeByLayer,
-			Display:    "Export Tree view",
+			Display:    "Export tree",
 		},
 	}
 
