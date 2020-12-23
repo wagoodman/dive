@@ -3,10 +3,15 @@ package viewmodel
 import (
 	"bytes"
 	"fmt"
-	"github.com/wagoodman/dive/runtime/ui/format"
+	"os"
 	"regexp"
+	"strconv"
 	"strings"
+	"time"
 
+	"github.com/wagoodman/dive/runtime/ui/format"
+
+	"github.com/acarl005/stripansi"
 	"github.com/lunixbochs/vtclean"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
@@ -126,6 +131,33 @@ func (vm *FileTree) SetTreeByLayer(bottomTreeStart, bottomTreeStop, topTreeStart
 	}
 
 	vm.ModelTree = newTree
+	return nil
+}
+
+// ExportTreeByLayer ...
+func (vm *FileTree) ExportTreeByLayer(viewName, digest, command string) (err error) {
+	workingDir, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+
+	file, err := os.Create(fmt.Sprintf("%s/tree-%s.txt", workingDir, strconv.FormatInt(time.Now().Unix(), 10)))
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	tree := "---\n\n"
+	tree += fmt.Sprintf("%s\n\n", viewName)
+	tree += fmt.Sprintf("Digest: %s\n", digest)
+	tree += fmt.Sprintf("Command: %s\n\n", command)
+	tree += "by Dive\n\n"
+	tree += "---\n\n"
+	tree += stripansi.Strip(vm.ViewTree.String(false))
+
+	if _, err = file.WriteString(tree); err != nil {
+		return err
+	}
 	return nil
 }
 

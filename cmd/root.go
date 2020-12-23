@@ -2,12 +2,13 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/wagoodman/dive/dive"
-	"github.com/wagoodman/dive/dive/filetree"
 	"io/ioutil"
 	"os"
 	"path"
 	"strings"
+
+	"github.com/wagoodman/dive/dive"
+	"github.com/wagoodman/dive/dive/filetree"
 
 	"github.com/mitchellh/go-homedir"
 	log "github.com/sirupsen/logrus"
@@ -92,6 +93,7 @@ func initConfig() {
 	viper.SetDefault("keybinding.toggle-unmodified-files", "ctrl+u")
 	viper.SetDefault("keybinding.page-up", "pgup")
 	viper.SetDefault("keybinding.page-down", "pgdn")
+	viper.SetDefault("keybinding.export-tree", "ctrl+s")
 
 	viper.SetDefault("diff.hide", "")
 

@@ -1,5 +1,6 @@
 /.idea
 /bin 
+.DS_Store
 
 # Binaries for programs and plugins
 *.exe
@@ -22,3 +23,4 @@
 /dist
 .cover
 coverage.txt
+tree-*.txt
