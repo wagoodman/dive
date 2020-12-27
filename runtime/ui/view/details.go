@@ -2,13 +2,14 @@ package view
 
 import (
 	"fmt"
+	"strconv"
+	"strings"
+
 	"github.com/sirupsen/logrus"
 	"github.com/wagoodman/dive/dive/filetree"
 	"github.com/wagoodman/dive/dive/image"
 	"github.com/wagoodman/dive/runtime/ui/format"
 	"github.com/wagoodman/dive/runtime/ui/key"
-	"strconv"
-	"strings"
 
 	"github.com/awesome-gocui/gocui"
 	"github.com/dustin/go-humanize"
@@ -55,7 +56,7 @@ func (v *Details) Setup(view *gocui.View, header *gocui.View) error {
 	// set controller options
 	v.view = view
 	v.view.Editable = false
-	v.view.Wrap = true
+	v.view.Wrap = false
 	v.view.Highlight = false
 	v.view.Frame = false
 
