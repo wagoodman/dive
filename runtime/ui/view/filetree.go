@@ -2,6 +2,8 @@ package view
 
 import (
 	"fmt"
+	"regexp"
+
 	"github.com/jroimartin/gocui"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
@@ -10,7 +12,6 @@ import (
 	"github.com/wagoodman/dive/runtime/ui/key"
 	"github.com/wagoodman/dive/runtime/ui/viewmodel"
 	"github.com/wagoodman/dive/utils"
-	"regexp"
 )
 
 type ViewOptionChangeListener func() error
@@ -125,6 +126,12 @@ func (v *FileTree) Setup(view *gocui.View, header *gocui.View) error {
 			OnAction:   v.toggleAttributes,
 			IsSelected: func() bool { return v.vm.ShowAttributes },
 			Display:    "Attributes",
+		},
+		{
+			ConfigKeys: []string{"keybinding.toggle-wrap-tree"},
+			OnAction:   v.toggleWrapTree,
+			IsSelected: func() bool { return v.view.Wrap },
+			Display:    "Wrap",
 		},
 		{
 			ConfigKeys: []string{"keybinding.page-up"},
@@ -278,6 +285,11 @@ func (v *FileTree) toggleCollapseAll() error {
 	}
 	_ = v.Update()
 	return v.Render()
+}
+
+func (v *FileTree) toggleWrapTree() error {
+	v.view.Wrap = !v.view.Wrap
+	return nil
 }
 
 func (v *FileTree) notifyOnViewOptionChangeListeners() error {
