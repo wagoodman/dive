@@ -10,8 +10,11 @@ github.com/OneOfOne/xxhash v1.2.2/go.mod h1:HSdplMjZKSmBqAxg5vPj2TmRDmfkzw+cTzAE
 github.com/alecthomas/template v0.0.0-20160405071501-a0175ee3bccc/go.mod h1:LOuyumcjzFXgccqObfd/Ljyb9UuFJ6TxHnclSeseNhc=
 github.com/alecthomas/units v0.0.0-20151022065526-2efee857e7cf/go.mod h1:ybxpYRFXyAe+OPACYpWeL0wqObRcbAqCMya13uyzqw0=
 github.com/armon/consul-api v0.0.0-20180202201655-eb2c6b5be1b6/go.mod h1:grANhF5doyWs3UAsr3K4I6qtAmlQcZDesFNEHPZAzj8=
+github.com/awesome-gocui/gocui v0.5.0/go.mod h1:1QikxFaPhe2frKeKvEwZEIGia3haiOxOUXKinrv17mA=
 github.com/awesome-gocui/gocui v0.6.0 h1:hhDJiQC12tEsJNJ+iZBBVaSSLFYo9llFuYpQlL5JZVI=
 github.com/awesome-gocui/gocui v0.6.0/go.mod h1:1QikxFaPhe2frKeKvEwZEIGia3haiOxOUXKinrv17mA=
+github.com/awesome-gocui/keybinding v1.0.0 h1:CrnjCfEhWpjcqIQUan9IllaXeRGELdwfjeUmY7ljbng=
+github.com/awesome-gocui/keybinding v1.0.0/go.mod h1:z0TyCwIhaT97yU+becTse8Dqh2CvYT0FLw0R0uTk0ag=
 github.com/awesome-gocui/termbox-go v0.0.0-20190427202837-c0aef3d18bcc h1:wGNpKcHU8Aadr9yOzsT3GEsFLS7HQu8HxQIomnekqf0=
 github.com/awesome-gocui/termbox-go v0.0.0-20190427202837-c0aef3d18bcc/go.mod h1:tOy3o5Nf1bA17mnK4W41gD7PS3u4Cv0P0pqFcoWMy8s=
 github.com/beorn7/perks v0.0.0-20180321164747-3a771d992973/go.mod h1:Dwedo/Wpr24TaqPxmxbtue+5NUziq4I4S80YR8gNf3Q=

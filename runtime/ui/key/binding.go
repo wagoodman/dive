@@ -4,10 +4,10 @@ import (
 	"fmt"
 
 	"github.com/awesome-gocui/gocui"
+	"github.com/awesome-gocui/keybinding"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"github.com/wagoodman/dive/runtime/ui/format"
-	// "github.com/wagoodman/keybinding"
 )
 
 type BindingInfo struct {
@@ -20,7 +20,7 @@ type BindingInfo struct {
 }
 
 type Binding struct {
-	key         []Key
+	key         []keybinding.Key
 	displayName string
 	selectedFn  func() bool
 	actionFn    func() error
@@ -53,11 +53,11 @@ func GenerateBindings(gui *gocui.Gui, influence string, infos []BindingInfo) ([]
 }
 
 func NewBinding(gui *gocui.Gui, influence string, key gocui.Key, mod gocui.Modifier, displayName string, actionFn func() error) (*Binding, error) {
-	return newBinding(gui, influence, []Key{{Value: key, Modifier: mod}}, displayName, actionFn)
+	return newBinding(gui, influence, []keybinding.Key{{Value: key, Modifier: mod}}, displayName, actionFn)
 }
 
 func NewBindingFromConfig(gui *gocui.Gui, influence string, configKeys []string, displayName string, actionFn func() error) (*Binding, error) {
-	var parsedKeys []Key
+	var parsedKeys []keybinding.Key
 	for _, configKey := range configKeys {
 		bindStr := viper.GetString(configKey)
 		if bindStr == "" {
@@ -66,7 +66,7 @@ func NewBindingFromConfig(gui *gocui.Gui, influence string, configKeys []string,
 		}
 		logrus.Debugf("parsing keybinding '%s' --> '%s'", configKey, bindStr)
 
-		keys, err := ParseAll(bindStr)
+		keys, err := keybinding.ParseAll(bindStr)
 		if err != nil {
 			return nil, err
 		}
@@ -83,7 +83,7 @@ func NewBindingFromConfig(gui *gocui.Gui, influence string, configKeys []string,
 	return newBinding(gui, influence, parsedKeys, displayName, actionFn)
 }
 
-func newBinding(gui *gocui.Gui, influence string, keys []Key, displayName string, actionFn func() error) (*Binding, error) {
+func newBinding(gui *gocui.Gui, influence string, keys []keybinding.Key, displayName string, actionFn func() error) (*Binding, error) {
 	binding := &Binding{
 		key:         keys,
 		displayName: displayName,
