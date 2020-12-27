@@ -10,8 +10,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/awesome-gocui/gocui"
 	"github.com/dustin/go-humanize"
-	"github.com/jroimartin/gocui"
 )
 
 // Details holds the UI objects and data models for populating the lower-left pane. Specifically the pane that

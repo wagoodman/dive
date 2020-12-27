@@ -1,7 +1,7 @@
 package compound
 
 import (
-	"github.com/jroimartin/gocui"
+	"github.com/awesome-gocui/gocui"
 	"github.com/sirupsen/logrus"
 	"github.com/wagoodman/dive/runtime/ui/view"
 	"github.com/wagoodman/dive/utils"
@@ -56,10 +56,10 @@ func (cl *LayerDetailsCompoundLayout) Layout(g *gocui.Gui, minX, minY, maxX, max
 	}
 
 	// note: maxY needs to account for the (invisible) border, thus a +1
-	header, headerErr := g.SetView(cl.layer.Name()+"header", minX, minY, maxX, minY+layerHeaderHeight+1)
+	header, headerErr := g.SetView(cl.layer.Name()+"header", minX, minY, maxX, minY+layerHeaderHeight+1, 0)
 
 	// we are going to overlap the view over the (invisible) border (so minY will be one less than expected)
-	main, viewErr := g.SetView(cl.layer.Name(), minX, minY+layerHeaderHeight, maxX, minY+layerHeaderHeight+layersHeight)
+	main, viewErr := g.SetView(cl.layer.Name(), minX, minY+layerHeaderHeight, maxX, minY+layerHeaderHeight+layersHeight, 0)
 
 	if utils.IsNewView(viewErr, headerErr) {
 		err := cl.layer.Setup(main, header)
@@ -103,8 +103,8 @@ func (cl *LayerDetailsCompoundLayout) Layout(g *gocui.Gui, minX, minY, maxX, max
 
 	}
 
-	header, headerErr = g.SetView(cl.details.Name()+"header", minX, detailsMinY, maxX, detailsMinY+detailsHeaderHeight)
-	main, viewErr = g.SetView(cl.details.Name(), minX, detailsMinY+detailsHeaderHeight, maxX, maxY)
+	header, headerErr = g.SetView(cl.details.Name()+"header", minX, detailsMinY, maxX, detailsMinY+detailsHeaderHeight, 0)
+	main, viewErr = g.SetView(cl.details.Name(), minX, detailsMinY+detailsHeaderHeight, maxX, maxY, 0)
 
 	if utils.IsNewView(viewErr, headerErr) {
 		err := cl.details.Setup(main, header)

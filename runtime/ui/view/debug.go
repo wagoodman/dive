@@ -2,7 +2,8 @@ package view
 
 import (
 	"fmt"
-	"github.com/jroimartin/gocui"
+
+	"github.com/awesome-gocui/gocui"
 	"github.com/sirupsen/logrus"
 	"github.com/wagoodman/dive/runtime/ui/format"
 	"github.com/wagoodman/dive/utils"
@@ -103,10 +104,10 @@ func (v *Debug) Layout(g *gocui.Gui, minX, minY, maxX, maxY int) error {
 	// header
 	headerSize := 1
 	// note: maxY needs to account for the (invisible) border, thus a +1
-	header, headerErr := g.SetView(v.Name()+"header", minX, minY, maxX, minY+headerSize+1)
+	header, headerErr := g.SetView(v.Name()+"header", minX, minY, maxX, minY+headerSize+1, 0)
 	// we are going to overlap the view over the (invisible) border (so minY will be one less than expected).
 	// additionally, maxY will be bumped by one to include the border
-	view, viewErr := g.SetView(v.Name(), minX, minY+headerSize, maxX, maxY+1)
+	view, viewErr := g.SetView(v.Name(), minX, minY+headerSize, maxX, maxY+1, 0)
 	if utils.IsNewView(viewErr, headerErr) {
 		err := v.Setup(view, header)
 		if err != nil {
