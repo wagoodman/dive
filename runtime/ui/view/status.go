@@ -2,13 +2,14 @@ package view
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/sirupsen/logrus"
 	"github.com/wagoodman/dive/runtime/ui/format"
 	"github.com/wagoodman/dive/runtime/ui/key"
 	"github.com/wagoodman/dive/utils"
-	"strings"
 
-	"github.com/jroimartin/gocui"
+	"github.com/awesome-gocui/gocui"
 )
 
 // Status holds the UI objects and data models for populating the bottom-most pane. Specifically the panel
@@ -113,7 +114,7 @@ func (v *Status) KeyHelp() string {
 func (v *Status) Layout(g *gocui.Gui, minX, minY, maxX, maxY int) error {
 	logrus.Tracef("view.Layout(minX: %d, minY: %d, maxX: %d, maxY: %d) %s", minX, minY, maxX, maxY, v.Name())
 
-	view, viewErr := g.SetView(v.Name(), minX, minY, maxX, maxY)
+	view, viewErr := g.SetView(v.Name(), minX, minY, maxX, maxY, 0)
 	if utils.IsNewView(viewErr) {
 		err := v.Setup(view)
 		if err != nil {

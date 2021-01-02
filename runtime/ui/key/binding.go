@@ -2,11 +2,12 @@ package key
 
 import (
 	"fmt"
-	"github.com/jroimartin/gocui"
+
+	"github.com/awesome-gocui/gocui"
+	"github.com/awesome-gocui/keybinding"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"github.com/wagoodman/dive/runtime/ui/format"
-	"github.com/wagoodman/keybinding"
 )
 
 type BindingInfo struct {

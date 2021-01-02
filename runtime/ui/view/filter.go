@@ -2,11 +2,12 @@ package view
 
 import (
 	"fmt"
-	"github.com/jroimartin/gocui"
+	"strings"
+
+	"github.com/awesome-gocui/gocui"
 	"github.com/sirupsen/logrus"
 	"github.com/wagoodman/dive/runtime/ui/format"
 	"github.com/wagoodman/dive/utils"
-	"strings"
 )
 
 type FilterEditListener func(string) error
@@ -172,8 +173,8 @@ func (v *Filter) OnLayoutChange() error {
 func (v *Filter) Layout(g *gocui.Gui, minX, minY, maxX, maxY int) error {
 	logrus.Tracef("view.Layout(minX: %d, minY: %d, maxX: %d, maxY: %d) %s", minX, minY, maxX, maxY, v.Name())
 
-	label, labelErr := g.SetView(v.Name()+"label", minX, minY, len(v.labelStr), maxY)
-	view, viewErr := g.SetView(v.Name(), minX+(len(v.labelStr)-1), minY, maxX, maxY)
+	label, labelErr := g.SetView(v.Name()+"label", minX, minY, len(v.labelStr), maxY, 0)
+	view, viewErr := g.SetView(v.Name(), minX+(len(v.labelStr)-1), minY, maxX, maxY, 0)
 
 	if utils.IsNewView(viewErr, labelErr) {
 		err := v.Setup(view, label)
