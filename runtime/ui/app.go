@@ -133,6 +133,7 @@ func newApp(app *tview.Application, analysis *image.AnalysisResult, cache filetr
 // Run is the UI entrypoint.
 func Run(analysis *image.AnalysisResult, treeStack filetree.Comparer, isCNB bool) error {
 	cfg := zap.NewDevelopmentConfig()
+	os.MkdirAll("/tmp/dive", os.ModePerm)
 	cfg.OutputPaths = []string{"/tmp/dive/debug.out"}
 	logger, err := cfg.Build()
 	if err != nil {
