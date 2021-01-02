@@ -1,7 +1,7 @@
 package utils
 
 import (
-	"github.com/jroimartin/gocui"
+	"github.com/awesome-gocui/gocui"
 	"github.com/sirupsen/logrus"
 )
 

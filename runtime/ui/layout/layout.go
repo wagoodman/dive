@@ -1,6 +1,6 @@
 package layout
 
-import "github.com/jroimartin/gocui"
+import "github.com/awesome-gocui/gocui"
 
 type Layout interface {
 	Name() string

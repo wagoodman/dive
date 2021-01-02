@@ -1,13 +1,14 @@
 package ui
 
 import (
+	"sync"
+
 	"github.com/wagoodman/dive/dive/image"
 	"github.com/wagoodman/dive/runtime/ui/key"
 	"github.com/wagoodman/dive/runtime/ui/layout"
 	"github.com/wagoodman/dive/runtime/ui/layout/compound"
-	"sync"
 
-	"github.com/jroimartin/gocui"
+	"github.com/awesome-gocui/gocui"
 	"github.com/sirupsen/logrus"
 	"github.com/wagoodman/dive/dive/filetree"
 )
@@ -130,7 +131,7 @@ func (a *app) quit() error {
 func Run(imageName string, analysis *image.AnalysisResult, treeStack filetree.Comparer) error {
 	var err error
 
-	g, err := gocui.NewGui(gocui.OutputNormal)
+	g, err := gocui.NewGui(gocui.OutputNormal, true)
 	if err != nil {
 		return err
 	}
