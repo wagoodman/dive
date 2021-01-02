@@ -5,7 +5,7 @@ PWD := ${CURDIR}
 PRODUCTION_REGISTRY = docker.io
 TEST_IMAGE = busybox:latest
 
-all: clean build
+all: gofmt clean build
 
 ## For CI
 
@@ -119,13 +119,13 @@ run-podman-large: build
 run-ci: build
 	CI=true $(BUILD_PATH) dive-example:latest --ci-config .data/.dive-ci
 
-build:
+build: gofmt
 	go build -o $(BUILD_PATH)
 
 generate-test-data:
 	docker build -t dive-test:latest -f .data/Dockerfile.test-image . && docker image save -o .data/test-docker-image.tar dive-test:latest && echo 'Exported test data!'
 
-test:
+test: gofmt
 	./.scripts/test-coverage.sh
 
 dev:
@@ -135,4 +135,5 @@ clean:
 	rm -rf dist
 	go clean
 
-
+gofmt:
+	go fmt -x ./...

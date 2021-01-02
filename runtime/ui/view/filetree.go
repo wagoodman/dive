@@ -128,6 +128,12 @@ func (v *FileTree) Setup(view *gocui.View, header *gocui.View) error {
 			Display:    "Attributes",
 		},
 		{
+			ConfigKeys: []string{"keybinding.toggle-wrap-tree"},
+			OnAction:   v.toggleWrapTree,
+			IsSelected: func() bool { return v.view.Wrap },
+			Display:    "Wrap",
+		},
+		{
 			ConfigKeys: []string{"keybinding.page-up"},
 			OnAction:   v.PageUp,
 		},
@@ -279,6 +285,11 @@ func (v *FileTree) toggleCollapseAll() error {
 	}
 	_ = v.Update()
 	return v.Render()
+}
+
+func (v *FileTree) toggleWrapTree() error {
+	v.view.Wrap = !v.view.Wrap
+	return nil
 }
 
 func (v *FileTree) notifyOnViewOptionChangeListeners() error {

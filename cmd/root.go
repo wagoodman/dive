@@ -2,12 +2,13 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/wagoodman/dive/dive"
-	"github.com/wagoodman/dive/dive/filetree"
 	"io/ioutil"
 	"os"
 	"path"
 	"strings"
+
+	"github.com/wagoodman/dive/dive"
+	"github.com/wagoodman/dive/dive/filetree"
 
 	"github.com/mitchellh/go-homedir"
 	log "github.com/sirupsen/logrus"
@@ -90,6 +91,7 @@ func initConfig() {
 	viper.SetDefault("keybinding.toggle-removed-files", "ctrl+r")
 	viper.SetDefault("keybinding.toggle-modified-files", "ctrl+m")
 	viper.SetDefault("keybinding.toggle-unmodified-files", "ctrl+u")
+	viper.SetDefault("keybinding.toggle-wrap-tree", "ctrl+p")
 	viper.SetDefault("keybinding.page-up", "pgup")
 	viper.SetDefault("keybinding.page-down", "pgdn")
 
