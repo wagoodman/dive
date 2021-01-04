@@ -23,24 +23,26 @@ type LayersModel interface {
 }
 
 type TreeViewModel struct {
-	currentTree *filetree.FileTree
-	cache       filetree.Comparer
+	currentTree     *filetree.FileTree
+	cache           filetree.Comparer
+	hiddenDiffTypes []bool
 	// Make this an interface that is composed with the FilterView
 	FilterModel
 	LayersModel
 }
 
-func NewTreeViewModel(cache filetree.Comparer, lModel LayersModel, fmodel FilterModel) (*TreeViewModel, error) {
+func NewTreeViewModel(cache filetree.Comparer, lModel LayersModel, fModel FilterModel) (*TreeViewModel, error) {
 	curTreeIndex := filetree.NewTreeIndexKey(0, 0, 0, 0)
 	tree, err := cache.GetTree(curTreeIndex)
 	if err != nil {
 		return nil, err
 	}
 	return &TreeViewModel{
-		currentTree: tree,
-		cache:       cache,
-		FilterModel: fmodel,
-		LayersModel: lModel,
+		currentTree:     tree,
+		cache:           cache,
+		hiddenDiffTypes: make([]bool, 4),
+		FilterModel:     fModel,
+		LayersModel:     lModel,
 	}, nil
 }
 
@@ -70,17 +72,28 @@ func (tvm *TreeViewModel) SetFilter(filterRegex *regexp.Regexp) {
 	}
 }
 
+// TODO: this seems like a very expensive operration, look for ways to optimize.
+// TODO make type int a strongly typed argument
+// TODO: handle errors correctly
+func (tvm *TreeViewModel) ToggleHiddenFileType(filetype filetree.DiffType) bool {
+	tvm.hiddenDiffTypes[filetype] = !tvm.hiddenDiffTypes[filetype]
+	if err := tvm.FilterUpdate(); err != nil {
+		zap.S().Error("error updating file type filter ", err.Error())
+		//panic(err)
+		return false
+	}
+	return true
+
+}
+
+// TODO: maek this method private, cant think of a reason for this to be public
 func (tvm *TreeViewModel) FilterUpdate() error {
 	// keep the t selection in parity with the current DiffType selection
 	filter := tvm.GetFilter()
 	err := tvm.currentTree.VisitDepthChildFirst(func(node *filetree.FileNode) error {
+		node.Data.ViewInfo.Hidden = tvm.hiddenDiffTypes[node.Data.DiffType]
 
 		visibleChild := false
-		if filter == nil {
-			node.Data.ViewInfo.Hidden = false
-			return nil
-		}
-
 		for _, child := range node.Children {
 			if !child.Data.ViewInfo.Hidden {
 				visibleChild = true
@@ -89,7 +102,7 @@ func (tvm *TreeViewModel) FilterUpdate() error {
 			}
 		}
 
-		if !visibleChild { // hide nodes that do not match the current file filter regex (also don't unhide nodes that are already hidden)
+		if filter != nil && !node.Data.ViewInfo.Hidden && !visibleChild { // hide nodes that do not match the current file filter regex (also don't unhide nodes that are already hidden)
 			match := filter.FindString(node.Path())
 			node.Data.ViewInfo.Hidden = len(match) == 0
 		}

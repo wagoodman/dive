@@ -30,6 +30,8 @@ type diveApp struct {
 func newApp(app *tview.Application, analysis *image.AnalysisResult, cache filetree.Comparer, isCNB bool) (*diveApp, error) {
 	var err error
 	once.Do(func() {
+		config := components.NewKeyConfig()
+
 		// ensure the background color is inherited from the terminal emulator
 		//tview.Styles.PrimitiveBackgroundColor = tcell.ColorDefault
 		//tview.Styles.PrimaryTextColor = tcell.ColorDefault
@@ -68,7 +70,8 @@ func newApp(app *tview.Application, analysis *image.AnalysisResult, cache filetr
 		layersView := components.NewLayerList(treeViewModel).Setup()
 		layersBox := components.NewWrapper("Layers", "subtitle!", layersView).Setup()
 
-		fileTreeView := components.NewTreeView(treeViewModel).Setup()
+		fileTreeView := components.NewTreeView(treeViewModel)
+		fileTreeView = fileTreeView.Setup(config)
 		fileTreeBox := components.NewWrapper("Current Layer Contents", "subtitle!", fileTreeView).Setup()
 
 		// Implementation notes: should we factor out this setup??
