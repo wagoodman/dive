@@ -102,16 +102,35 @@ func newApp(app *tview.Application, analysis *image.AnalysisResult, cache filetr
 			layers:   layersBox,
 		}
 
+		quitBinding, err := config.GetKeyBinding("keybinding.quit")
+		if err != nil {
+			// TODO handle this as an error
+			panic(err)
+		}
+
+		filterBinding, err := config.GetKeyBinding("keybinding.filter-files")
+		if err != nil {
+			// TODO handle this as an error
+			panic(err)
+		}
+		switchBinding, err := config.GetKeyBinding("keybinding.toggle-view")
+		if err != nil {
+			// TODO handle this as an error
+			panic(err)
+		}
+
 		switchFocus := func(event *tcell.EventKey) *tcell.EventKey {
 			var result *tcell.EventKey = nil
-			switch event.Key() {
-			case tcell.KeyTAB:
+			switch {
+			case quitBinding.Match(event):
+				app.Stop()
+			case switchBinding.Match(event):
 				if appSingleton.app.GetFocus() == appSingleton.layers {
 					appSingleton.app.SetFocus(appSingleton.fileTree)
 				} else {
 					appSingleton.app.SetFocus(appSingleton.layers)
 				}
-			case tcell.KeyCtrlF:
+			case filterBinding.Match(event):
 				if filterView.HasFocus() {
 					filterView.Blur()
 					appSingleton.app.SetFocus(fileTreeBox)

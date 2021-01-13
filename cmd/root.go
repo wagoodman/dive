@@ -80,18 +80,30 @@ func initConfig() {
 	viper.SetDefault("log.path", "./dive.log")
 	viper.SetDefault("log.enabled", false)
 	// keybindings: status view / global
-	viper.SetDefault("keybinding.quit", "ctrl+c")
-	viper.SetDefault("keybinding.toggle-view", "tab")
-	viper.SetDefault("keybinding.filter-files", "ctrl+f, ctrl+slash")
+
+	// This keybinding can be changed but ctrl+C may still quit the application
+	viper.SetDefault("keybinding.quit", components.NewKeyBinding(
+		"Quit",
+		tcell.NewEventKey(tcell.KeyCtrlC, rune(0), tcell.ModCtrl),
+	))
+	viper.SetDefault("keybinding.toggle-view", components.NewKeyBinding(
+		"Switch View",
+		tcell.NewEventKey(tcell.KeyTab, rune(0), tcell.ModNone),
+	))
+
+	viper.SetDefault("keybinding.filter-files", components.NewKeyBinding(
+		"Find",
+		tcell.NewEventKey(tcell.KeyCtrlF, rune(0), tcell.ModCtrl),
+	))
 	// keybindings: layer view
 	viper.SetDefault("keybinding.compare-all", components.NewKeyBinding(
 		"Compare All",
-		tcell.NewEventKey(tcell.KeyCtrlA, rune(0), tcell.ModNone),
+		tcell.NewEventKey(tcell.KeyCtrlA, rune(0), tcell.ModCtrl),
 	))
 
 	viper.SetDefault("keybinding.compare-layer", components.NewKeyBinding(
 		"Compare Layer",
-		tcell.NewEventKey(tcell.KeyCtrlL, rune(0), tcell.ModNone),
+		tcell.NewEventKey(tcell.KeyCtrlL, rune(0), tcell.ModCtrl),
 	))
 
 	// keybindings: filetree view
@@ -104,7 +116,6 @@ func initConfig() {
 		"Collapse All",
 		tcell.NewEventKey(tcell.KeyCtrlSpace, rune(0), tcell.ModCtrl),
 	))
-	//viper.SetDefault("keybinding.toggle-filetree-attributes", "ctrl+b")
 	viper.SetDefault("keybinding.toggle-filetree-attributes", components.NewKeyBinding(
 		"FileTree Attributes",
 		tcell.NewEventKey(tcell.KeyCtrlB, rune(0), tcell.ModCtrl),
