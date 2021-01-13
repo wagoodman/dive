@@ -88,15 +88,17 @@ func initConfig() {
 		"Compare All",
 		tcell.NewEventKey(tcell.KeyCtrlA, rune(0), tcell.ModNone),
 	))
-	viper.SetDefault("keybinding.compare-layer", "ctrl+l")
 
+	viper.SetDefault("keybinding.compare-layer", components.NewKeyBinding(
+		"Compare Layer",
+		tcell.NewEventKey(tcell.KeyCtrlL, rune(0), tcell.ModNone),
+	))
+
+	// keybindings: filetree view
 	viper.SetDefault("keybinding.toggle-collapse-dir", components.NewKeyBinding(
 		"Collapse",
 		tcell.NewEventKey(tcell.KeyRune, ' ', tcell.ModNone),
 	))
-	viper.SetDefault("keybinding.compare-layer", "ctrl+l")
-	// keybindings: filetree view
-	//viper.SetDefault("keybinding.toggle-collapse-all-dir", "ctrl+space")
 
 	viper.SetDefault("keybinding.toggle-collapse-all-dir", components.NewKeyBinding(
 		"Collapse All",

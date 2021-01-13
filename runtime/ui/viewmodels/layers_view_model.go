@@ -46,10 +46,14 @@ func (lm *LayersViewModel) GetCompareIndicies() filetree.TreeIndexKey {
 
 	bottomStart := 0
 	bottomStop := 0
+	topStart := lm.index
 	if lm.mode == CompareSingleLayer {
 		bottomStop = intMax(lm.index-1, 0)
+	} else {
+		topStart = 1
 	}
-	return filetree.NewTreeIndexKey(bottomStart, bottomStop, lm.index, lm.index)
+
+	return filetree.NewTreeIndexKey(bottomStart, bottomStop, topStart, lm.index)
 }
 
 func (lm *LayersViewModel) SetLayerIndex(index int) bool {

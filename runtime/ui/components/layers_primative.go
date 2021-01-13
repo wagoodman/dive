@@ -6,11 +6,15 @@ import (
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 	"github.com/sirupsen/logrus"
+	"github.com/wagoodman/dive/runtime/ui/viewmodels"
+	"go.uber.org/zap"
 )
 
 type LayersViewModel interface {
 	SetLayerIndex(int) bool
 	GetPrintableLayers() []fmt.Stringer
+	SwitchMode()
+	GetMode() viewmodels.LayerCompareMode
 }
 
 type LayerList struct {
@@ -18,6 +22,7 @@ type LayerList struct {
 	bufferIndexLowerBound int
 	cmpIndex              int
 	changed               LayerListHandler
+	inputHandler          func(event *tcell.EventKey, setFocus func(p tview.Primitive))
 	LayersViewModel
 }
 
@@ -28,10 +33,66 @@ func NewLayerList(model LayersViewModel) *LayerList {
 		Box:             tview.NewBox(),
 		cmpIndex:        0,
 		LayersViewModel: model,
+		inputHandler:    nil,
 	}
 }
 
-func (ll *LayerList) Setup() *LayerList {
+func (ll *LayerList) Setup(config KeyBindingConfig) *LayerList {
+	bindingSettings := map[string]keyAction{
+		"keybinding.page-up":   func() bool { return ll.pageUp() },
+		"keybinding.page-down": func() bool { return ll.pageDown() },
+		"keybinding.compare-all": func() bool {
+			if ll.GetMode() == viewmodels.CompareSingleLayer {
+				ll.SwitchMode()
+				return true
+			}
+			return false
+		},
+		"keybinding.compare-layer": func() bool {
+			if ll.GetMode() == viewmodels.CompareAllLayers {
+				ll.SwitchMode()
+				return true
+			}
+			return false
+		},
+	}
+
+	bindingArray := []KeyBinding{}
+	actionArray := []keyAction{}
+
+	for keybinding, action := range bindingSettings {
+		binding, err := config.GetKeyBinding(keybinding)
+		if err != nil {
+			panic(fmt.Errorf("setup error during %s: %w", keybinding, err))
+			// TODO handle this error
+			//return nil
+		}
+		bindingArray = append(bindingArray, binding)
+		actionArray = append(actionArray, action)
+	}
+
+	ll.inputHandler = func(event *tcell.EventKey, setFocus func(p tview.Primitive)) {
+		switch event.Key() {
+		case tcell.KeyUp, tcell.KeyLeft:
+			if ll.SetLayerIndex(ll.cmpIndex - 1) {
+				ll.keyUp()
+				//ll.cmpIndex--
+				//logrus.Debugf("KeyUp pressed, index: %d", ll.cmpIndex)
+			}
+		case tcell.KeyDown, tcell.KeyRight:
+			if ll.SetLayerIndex(ll.cmpIndex + 1) {
+				ll.keyDown()
+				//ll.cmpIndex++
+				//logrus.Debugf("KeyUp pressed, index: %d", ll.cmpIndex)
+
+			}
+		}
+		for idx, binding := range bindingArray {
+			if binding.Match(event) {
+				actionArray[idx]()
+			}
+		}
+	}
 	return ll
 }
 
@@ -62,9 +123,11 @@ func (ll *LayerList) Draw(screen tcell.Screen) {
 		layer := printableLayers[layerIndex]
 		var cmpColor tcell.Color
 		switch {
-		case yIndex == ll.cmpIndex:
+		case layerIndex == ll.cmpIndex:
 			cmpColor = tcell.ColorRed
-		case yIndex < ll.cmpIndex:
+		case layerIndex > 0 && layerIndex < ll.cmpIndex && ll.GetMode() == viewmodels.CompareAllLayers:
+			cmpColor = tcell.ColorRed
+		case layerIndex < ll.cmpIndex:
 			cmpColor = tcell.ColorBlue
 		default:
 			cmpColor = tcell.ColorDefault
@@ -76,10 +139,10 @@ func (ll *LayerList) Draw(screen tcell.Screen) {
 			fg, bg, _ := style.Decompose()
 			style = style.Background(fg).Foreground(bg)
 			switch {
-			case yIndex == ll.cmpIndex:
+			case layerIndex == ll.cmpIndex:
 				screen.SetContent(x+xIndex, y+yIndex, m, c, style)
 				screen.SetContent(x+xIndex, y+yIndex, m, c, style)
-			case yIndex < ll.cmpIndex && xIndex < len(cmpString):
+			case layerIndex < ll.cmpIndex && xIndex < len(cmpString):
 				screen.SetContent(x+xIndex, y+yIndex, m, c, style)
 				screen.SetContent(x+xIndex, y+yIndex, m, c, style)
 			default:
@@ -91,23 +154,7 @@ func (ll *LayerList) Draw(screen tcell.Screen) {
 }
 
 func (ll *LayerList) InputHandler() func(event *tcell.EventKey, setFocus func(p tview.Primitive)) {
-	return ll.WrapInputHandler(func(event *tcell.EventKey, setFocus func(p tview.Primitive)) {
-		switch event.Key() {
-		case tcell.KeyUp:
-			if ll.SetLayerIndex(ll.cmpIndex - 1) {
-				ll.keyUp()
-				//ll.cmpIndex--
-				//logrus.Debugf("KeyUp pressed, index: %d", ll.cmpIndex)
-			}
-		case tcell.KeyDown:
-			if ll.SetLayerIndex(ll.cmpIndex + 1) {
-				ll.keyDown()
-				//ll.cmpIndex++
-				//logrus.Debugf("KeyUp pressed, index: %d", ll.cmpIndex)
-
-			}
-		}
-	})
+	return ll.WrapInputHandler(ll.inputHandler)
 }
 
 func (ll *LayerList) Focus(delegate func(p tview.Primitive)) {
@@ -138,23 +185,47 @@ func (ll *LayerList) keyUp() bool {
 	return true
 }
 
+// TODO (simplify all page increments to rely an a single function)
 func (ll *LayerList) keyDown() bool {
 	_, _, _, height := ll.Box.GetInnerRect()
-	adjustedHeight := height - 1
 
-	// treeIndex is the index about where we are in the current file
 	visibleSize := len(ll.GetPrintableLayers())
-	if ll.cmpIndex+1+ll.bufferIndexLowerBound >= visibleSize {
+	if ll.cmpIndex+1 >= visibleSize {
 		return false
 	}
-	if ll.cmpIndex+1 >= adjustedHeight {
+	ll.cmpIndex++
+	if ll.cmpIndex-ll.bufferIndexLowerBound >= height {
 		ll.bufferIndexLowerBound++
-	} else {
-		ll.cmpIndex++
 	}
 	logrus.Debugln("keyDown in layers")
 	logrus.Debugf("  cmpIndex: %d", ll.cmpIndex)
 	logrus.Debugf("  bufferIndexLowerBound: %d", ll.bufferIndexLowerBound)
 
 	return true
+}
+
+func (ll *LayerList) pageUp() bool {
+	zap.S().Info("layer page up call")
+	_, _, _, height := ll.Box.GetInnerRect()
+
+	ll.cmpIndex = intMax(0, ll.cmpIndex-height)
+	if ll.cmpIndex < ll.bufferIndexLowerBound {
+		ll.bufferIndexLowerBound = ll.cmpIndex
+	}
+
+	return ll.SetLayerIndex(ll.cmpIndex)
+}
+
+func (ll *LayerList) pageDown() bool {
+	zap.S().Info("layer page down call")
+	// two parts of this are moving both the currently selected item & the window as a whole
+
+	_, _, _, height := ll.Box.GetInnerRect()
+	upperBoundIndex := len(ll.GetPrintableLayers()) - 1
+	ll.cmpIndex = intMin(ll.cmpIndex+height, upperBoundIndex)
+	if ll.cmpIndex >= ll.bufferIndexLowerBound+height {
+		ll.bufferIndexLowerBound = intMin(ll.cmpIndex, upperBoundIndex-height+1)
+	}
+
+	return ll.SetLayerIndex(ll.cmpIndex)
 }

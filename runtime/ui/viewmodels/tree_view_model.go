@@ -20,6 +20,8 @@ type LayersModel interface {
 	GetCompareIndicies() filetree.TreeIndexKey
 	GetCurrentLayer() *image.Layer
 	GetPrintableLayers() []fmt.Stringer
+	GetMode() LayerCompareMode
+	SwitchMode()
 }
 
 type TreeViewModel struct {
@@ -118,7 +120,6 @@ func (tvm *TreeViewModel) FilterUpdate() error {
 }
 
 // Override functions
-
 func (tvm *TreeViewModel) SetLayerIndex(index int) bool {
 	if tvm.LayersModel.SetLayerIndex(index) {
 		err := tvm.setCurrentTree(tvm.GetCompareIndicies())
@@ -166,4 +167,10 @@ func (tvm *TreeViewModel) setCurrentTree(key filetree.TreeIndexKey) error {
 		return err
 	}
 	return nil
+}
+
+func (tvm *TreeViewModel) SwitchMode() {
+	tvm.LayersModel.SwitchMode()
+	// TODO: Handle this error
+	tvm.setCurrentTree(tvm.GetCompareIndicies())
 }

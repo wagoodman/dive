@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"os"
 	"sync"
 
 	"github.com/gdamore/tcell/v2"
@@ -67,7 +68,7 @@ func newApp(app *tview.Application, analysis *image.AnalysisResult, cache filetr
 
 		filterView := components.NewFilterView(treeViewModel).Setup()
 
-		layersView := components.NewLayerList(treeViewModel).Setup()
+		layersView := components.NewLayerList(treeViewModel).Setup(config)
 		layersBox := components.NewWrapper("Layers", "subtitle!", layersView).Setup()
 
 		fileTreeView := components.NewTreeView(treeViewModel)
