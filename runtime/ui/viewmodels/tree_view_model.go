@@ -7,7 +7,6 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/wagoodman/dive/dive/filetree"
 	"github.com/wagoodman/dive/dive/image"
-	"go.uber.org/zap"
 )
 
 type FilterModel interface {
@@ -69,7 +68,6 @@ func (tvm *TreeViewModel) VisibleSize() int {
 func (tvm *TreeViewModel) SetFilter(filterRegex *regexp.Regexp) {
 	tvm.FilterModel.SetFilter(filterRegex)
 	if err := tvm.FilterUpdate(); err != nil {
-		zap.S().Error("error updating filter ", err.Error())
 		panic(err)
 	}
 }
@@ -80,7 +78,6 @@ func (tvm *TreeViewModel) SetFilter(filterRegex *regexp.Regexp) {
 func (tvm *TreeViewModel) ToggleHiddenFileType(filetype filetree.DiffType) bool {
 	tvm.hiddenDiffTypes[filetype] = !tvm.hiddenDiffTypes[filetype]
 	if err := tvm.FilterUpdate(); err != nil {
-		zap.S().Error("error updating file type filter ", err.Error())
 		//panic(err)
 		return false
 	}

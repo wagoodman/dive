@@ -1,16 +1,14 @@
 package components
 
 import (
-	"bytes"
 	"fmt"
-	"io"
 	"strings"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 	"github.com/sirupsen/logrus"
 	"github.com/wagoodman/dive/dive/filetree"
-	"go.uber.org/zap"
+	"github.com/wagoodman/dive/runtime/ui/format"
 )
 
 // TODO simplify this interface.
@@ -50,7 +48,7 @@ func NewTreeView(tree TreeModel) *TreeView {
 		tree:              tree,
 		globalCollapseAll: true,
 		showAttributes:    true,
-		inputHandler: nil,
+		inputHandler:      nil,
 	}
 }
 
@@ -70,9 +68,9 @@ func (t *TreeView) Setup(config KeyBindingConfig) *TreeView {
 		"keybinding.toggle-collapse-all-dir":    t.collapseOrExpandAll,
 		"keybinding.toggle-filetree-attributes": func() bool { t.showAttributes = !t.showAttributes; return true },
 		"keybinding.toggle-added-files":         func() bool { t.tree.ToggleHiddenFileType(filetree.Added); return false },
-		"keybinding.toggle-removed-files":       func() bool { return t.tree.ToggleHiddenFileType(filetree.Removed)},
-		"keybinding.toggle-modified-files":      func() bool { return t.tree.ToggleHiddenFileType(filetree.Modified)},
-		"keybinding.toggle-unmodified-files":    func() bool { return t.tree.ToggleHiddenFileType(filetree.Unmodified)},
+		"keybinding.toggle-removed-files":       func() bool { return t.tree.ToggleHiddenFileType(filetree.Removed) },
+		"keybinding.toggle-modified-files":      func() bool { return t.tree.ToggleHiddenFileType(filetree.Modified) },
+		"keybinding.toggle-unmodified-files":    func() bool { return t.tree.ToggleHiddenFileType(filetree.Unmodified) },
 		"keybinding.page-up":                    func() bool { return t.pageUp() },
 		"keybinding.page-down":                  func() bool { return t.pageDown() },
 	}
@@ -169,7 +167,6 @@ func (t *TreeView) collapseDir() bool {
 }
 
 func (t *TreeView) collapseOrExpandAll() bool {
-	zap.S().Info("collapsing all directories")
 	visitor := func(n *filetree.FileNode) error {
 		if n.Data.FileInfo.IsDir {
 			n.Data.ViewInfo.Collapsed = t.globalCollapseAll
@@ -181,13 +178,11 @@ func (t *TreeView) collapseOrExpandAll() bool {
 		return true
 	}
 	if err := t.tree.VisitDepthParentFirst(visitor, evaluator); err != nil {
-		zap.S().Panic("error collapsing all: ", err.Error())
 		panic(fmt.Errorf("error callapsing all dir: %w", err))
 		// TODO log error here
 		//return false
 	}
 
-	zap.S().Info("finished collapsing all directories")
 
 	t.globalCollapseAll = !t.globalCollapseAll
 	return true
@@ -253,7 +248,6 @@ func (t *TreeView) keyUp() bool {
 	logrus.Debugf("  bufferIndexLowerBound: %d", t.bufferIndexLowerBound)
 	return true
 }
-
 
 // TODO add regex filtering
 func (t *TreeView) keyRight() bool {
@@ -326,20 +320,19 @@ func (t *TreeView) keyLeft() bool {
 // TODO make all movement rely on a single function (shouldn't be too dificult really)
 func (t *TreeView) pageDown() bool {
 
-	_,_,_,height := t.GetInnerRect()
+	_, _, _, height := t.GetInnerRect()
 	visibleSize := t.tree.VisibleSize()
-	t.treeIndex = intMin(t.treeIndex + height, visibleSize)
+	t.treeIndex = intMin(t.treeIndex+height, visibleSize)
 	if t.treeIndex >= t.bufferIndexUpperBound() {
-		t.bufferIndexLowerBound = intMin(t.treeIndex, visibleSize - height + 1)
+		t.bufferIndexLowerBound = intMin(t.treeIndex, visibleSize-height+1)
 	}
 	return true
 }
 
-
 func (t *TreeView) pageUp() bool {
-	_,_,_,height := t.GetInnerRect()
+	_, _, _, height := t.GetInnerRect()
 
-	t.treeIndex = intMax(0, t.treeIndex - height)
+	t.treeIndex = intMax(0, t.treeIndex-height)
 	if t.treeIndex < t.bufferIndexLowerBound {
 		t.bufferIndexLowerBound = t.treeIndex
 	}
@@ -357,7 +350,6 @@ func (t *TreeView) Draw(screen tcell.Screen) {
 	selectedIndex := t.treeIndex - t.bufferIndexLowerBound
 	x, y, width, height := t.Box.GetInnerRect()
 	showAttributes := width > 80 && t.showAttributes
-	// TODO add switch for showing attributes.
 	treeString := t.tree.StringBetween(t.bufferIndexLowerBound, t.bufferIndexUpperBound(), showAttributes)
 	lines := strings.Split(treeString, "\n")
 
@@ -366,33 +358,20 @@ func (t *TreeView) Draw(screen tcell.Screen) {
 		if yIndex >= height {
 			break
 		}
-		// Strip out ansi colors, Tview cannot use these
-		stripLine := bytes.NewBuffer(nil)
-		w := tview.ANSIWriter(stripLine)
-		if _, err := io.Copy(w, strings.NewReader(line)); err != nil {
-			//TODO: handle panic gracefully
-			panic(err)
+		//extendedLine := fmt.Sprintf("%s%s",line, strings.Repeat(" ", intMax(0,width - len(line))))
+		lineStyle := tcell.StyleDefault
+		if yIndex == selectedIndex {
+			lineStyle = format.SelectedStyle
 		}
+		format.PrintLine(screen, line, x, y+yIndex, len(line), tview.AlignLeft, lineStyle)
 
-		tview.Print(screen, stripLine.String(), x, y+yIndex, width, tview.AlignLeft, tcell.ColorDefault)
-		for xIndex := 0; xIndex < width; xIndex++ {
-			m, c, style, _ := screen.GetContent(x+xIndex, y+yIndex)
-			style = style.Background(tcell.ColorWhite).Foreground(tcell.ColorBlack).Bold(true)
-			if yIndex == selectedIndex {
-				screen.SetContent(x+xIndex, y+yIndex, m, c, style)
-				screen.SetContent(x+xIndex, y+yIndex, m, c, style)
-			} else if yIndex > selectedIndex {
-				break
-			}
-		}
 	}
 
 }
 
-
 func intMin(a, b int) int {
 	if a < b {
-		return a 
+		return a
 	}
 	return b
 }

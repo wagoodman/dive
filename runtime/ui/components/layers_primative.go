@@ -6,6 +6,7 @@ import (
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 	"github.com/sirupsen/logrus"
+	"github.com/wagoodman/dive/runtime/ui/format"
 	"github.com/wagoodman/dive/runtime/ui/viewmodels"
 	"go.uber.org/zap"
 )
@@ -114,41 +115,27 @@ func (ll *LayerList) Draw(screen tcell.Screen) {
 
 	cmpString := "  "
 	printableLayers := ll.GetPrintableLayers()
-
 	for yIndex := 0; yIndex < height; yIndex++ {
 		layerIndex := ll.bufferIndexLowerBound + yIndex
 		if layerIndex >= len(printableLayers) {
 			break
 		}
 		layer := printableLayers[layerIndex]
-		var cmpColor tcell.Color
+		cmpFormatter := format.Normal
+		lineFormatter := format.Normal
 		switch {
 		case layerIndex == ll.cmpIndex:
-			cmpColor = tcell.ColorRed
+			cmpFormatter = format.CompareTop
+			lineFormatter = format.Selected
 		case layerIndex > 0 && layerIndex < ll.cmpIndex && ll.GetMode() == viewmodels.CompareAllLayers:
-			cmpColor = tcell.ColorRed
+			cmpFormatter = format.CompareTop
 		case layerIndex < ll.cmpIndex:
-			cmpColor = tcell.ColorBlue
-		default:
-			cmpColor = tcell.ColorDefault
+			cmpFormatter = format.CompareBottom
 		}
-		line := fmt.Sprintf("%s[white] %s", cmpString, layer)
-		tview.Print(screen, line, x, y+yIndex, width, tview.AlignLeft, cmpColor)
-		for xIndex := 0; xIndex < width; xIndex++ {
-			m, c, style, _ := screen.GetContent(x+xIndex, y+yIndex)
-			fg, bg, _ := style.Decompose()
-			style = style.Background(fg).Foreground(bg)
-			switch {
-			case layerIndex == ll.cmpIndex:
-				screen.SetContent(x+xIndex, y+yIndex, m, c, style)
-				screen.SetContent(x+xIndex, y+yIndex, m, c, style)
-			case layerIndex < ll.cmpIndex && xIndex < len(cmpString):
-				screen.SetContent(x+xIndex, y+yIndex, m, c, style)
-				screen.SetContent(x+xIndex, y+yIndex, m, c, style)
-			default:
-				break
-			}
-		}
+		line := fmt.Sprintf("%s %s", cmpFormatter(cmpString), lineFormatter(layer.String()))
+		printWidth := intMin(len(line),width)
+		format.PrintLine(screen, line, x, y+yIndex, printWidth, tview.AlignLeft,  tcell.StyleDefault)
+		
 
 	}
 }

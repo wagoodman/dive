@@ -8,6 +8,7 @@ import (
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 	"github.com/wagoodman/dive/dive/image"
+	"github.com/wagoodman/dive/runtime/ui/format"
 )
 
 type ImageDetails struct {
@@ -23,8 +24,7 @@ func NewImageDetailsView(analysisResult *image.AnalysisResult) *ImageDetails {
 }
 
 func (lv *ImageDetails) Setup() *ImageDetails {
-	lv.SetDynamicColors(true).
-		SetScrollable(true)
+	lv.SetDynamicColors(true).SetScrollable(true)
 	return lv
 }
 
@@ -46,8 +46,8 @@ func (lv *ImageDetails) Draw(screen tcell.Screen) {
 }
 
 func (lv *ImageDetails) imageDetailsText() string {
-	template := "%5s  %12s  %-s\n"
-	inefficiencyReport := fmt.Sprintf(template, "[::b]Count[::-]", "[::b]Total Space[::-]", "[::b]Path[::-]")
+	template := format.Header("%5s  %12s  %s\n")
+	inefficiencyReport := fmt.Sprintf(template, "Count", "Total Space", "Path")
 
 	var wastedSpace int64 = 0
 	height := 200
@@ -62,9 +62,9 @@ func (lv *ImageDetails) imageDetailsText() string {
 		}
 	}
 
-	imageSizeStr := fmt.Sprintf("[::b]%s[::-] %s", "Total Image size:", humanize.Bytes(lv.analysisResult.SizeBytes))
-	effStr := fmt.Sprintf("[::b]%s[::-] %d %%", "Image efficiency score:", int(100.0*lv.analysisResult.Efficiency))
-	wastedSpaceStr := fmt.Sprintf("[::b]%s[::-] %s", "Potential wasted space:", humanize.Bytes(uint64(wastedSpace)))
+	imageSizeStr := fmt.Sprintf("%s %s", format.Header("Total Image size:"), humanize.Bytes(lv.analysisResult.SizeBytes))
+	effStr := fmt.Sprintf("%s %d %%", format.Header("Image efficiency score:"), int(100.0*lv.analysisResult.Efficiency))
+	wastedSpaceStr := fmt.Sprintf("%s %s", format.Header("Potential wasted space:"), humanize.Bytes(uint64(wastedSpace)))
 
 	return fmt.Sprintf("%s\n%s\n%s\n%s", imageSizeStr, wastedSpaceStr, effStr, inefficiencyReport)
 }

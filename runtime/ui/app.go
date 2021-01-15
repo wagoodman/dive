@@ -62,7 +62,7 @@ func newApp(app *tview.Application, analysis *image.AnalysisResult, cache filetr
 		}
 
 		// initialize views
-		imageDetailsView := components.NewImageDetailsView(analysis)
+		imageDetailsView := components.NewImageDetailsView(analysis).Setup()
 		imageDetailsBox := components.NewWrapper("Image Details", "", imageDetailsView).Setup()
 		imageDetailsBox.SetVisibility(components.MinHeightVisibility(10))
 

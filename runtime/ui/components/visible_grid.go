@@ -5,7 +5,6 @@ import (
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
-	"go.uber.org/zap"
 )
 
 type flexItem struct {
@@ -196,7 +195,6 @@ func (f *VisibleFlex) InputHandler() func(event *tcell.EventKey, setFocus func(p
 
 func (f *VisibleFlex) Draw(screen tcell.Screen) {
 	// skip drawing if grid is not visible
-	zap.S().Debug("Drawing flex container")
 	x, y, totalWidth, totalHeight := f.GetInnerRect()
 	hiddenFill(screen, f.GetBackgroundColor(), x, y, totalWidth, totalHeight)
 	f.Box.Draw(screen)
@@ -206,7 +204,6 @@ func (f *VisibleFlex) Draw(screen tcell.Screen) {
 	// calculate a value to scale proportions by to avoid proportion rounding errors
 	// (this happens when a item of proportion 2 is consumed by 3 other items)
 	consumeLCM := lcm(lens(f.consume)...)
-	zap.S().Info("consumeLCM: ", consumeLCM)
 
 	// Calculate size and position of the items
 
@@ -233,7 +230,6 @@ func (f *VisibleFlex) Draw(screen tcell.Screen) {
 	fixedSizeDelta := make([]int, len(f.items))
 	proportionLeft := proportionSum
 	distLeft := distSize
-	zap.S().Info("first iteration, calculate size and hide values")
 	for i, item := range f.items {
 		size := item.FixedSize
 		if size <= 0 {
@@ -257,15 +253,12 @@ func (f *VisibleFlex) Draw(screen tcell.Screen) {
 			if !item.Item.Visible() && len(f.consume[i]) > 0 {
 				denom := intMax(len(f.consume[i]), 1)
 				proportionValue := item.Proportion * consumeLCM / denom
-				proportionRem := item.Proportion * consumeLCM % denom
-				zap.S().Info("consume proportion rem ", proportionRem)
 				for _, j := range f.consume[i] {
 					proportionDelta[j] += proportionValue
 				}
 
 				div := item.FixedSize / denom
 				mod := item.FixedSize % denom
-				zap.S().Info("div, mod", div, mod)
 				for _, j := range f.consume[i] {
 					fixedSizeDelta[j] += div
 					if j < mod {
@@ -279,45 +272,31 @@ func (f *VisibleFlex) Draw(screen tcell.Screen) {
 	// go through assign sizes and check if visible
 	proportionLeft = proportionSum
 	distLeft = distSize
-	zap.S().Info("Width: ", totalWidth)
-	zap.S().Info("Height", totalHeight)
-	zap.S().Info("FixedSizeDelta: ", fixedSizeDelta)
 	// second pass where we actually update our views
 	pos = x
 	if f.direction == tview.FlexRow {
 		pos = y
 	}
-	zap.S().Info("second iteration, we actually draw")
 	for i, item := range f.items {
-		zap.S().Info("  drawing at position ", i)
 		size := item.FixedSize + fixedSizeDelta[i]
 		adjustedProportion := (item.Proportion * consumeLCM) + proportionDelta[i]
 		if proportionLeft > 0 && item.Item.Visible() {
 			// actually quite nice how this is going to end up perfectly filling the screen
 			sizeFromProportion := (distLeft * adjustedProportion) / proportionLeft
-			zap.S().Info("  size calculations (adjustedProportion, size, proportionLeft)", adjustedProportion, size, proportionLeft)
 			distLeft -= sizeFromProportion
 			size += sizeFromProportion
 			proportionLeft -= adjustedProportion
-		} else {
-			zap.S().Info("  In unexpected branch ", proportionLeft, item.Item.Visible())
-			//size = 0
 		}
 		if item.Item != nil && item.Item.Visible() {
 			if f.direction == tview.FlexColumn {
-				zap.S().Info("  Flex direction is Column-wise")
-				zap.S().Info("  Setting rectangle to", pos, y, size, totalHeight)
 				item.Item.SetRect(pos, y, size, totalHeight)
 			} else {
-				zap.S().Info("  Flex direction is Row-wise")
-				zap.S().Info("  Setting rectangle to", x, pos, totalWidth, size)
 				item.Item.SetRect(x, pos, totalWidth, size)
 			}
 			// only update pos if we draw this item
 			pos += size
 		}
 		if item.Item != nil && item.Item.Visible() {
-			zap.S().Info("  calling draw function at pos ", i)
 			switch {
 			case item.Item.HasFocus():
 				defer item.Item.Draw(screen)

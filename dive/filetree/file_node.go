@@ -7,9 +7,9 @@ import (
 	"strings"
 
 	"github.com/sirupsen/logrus"
+	"github.com/wagoodman/dive/runtime/ui/format"
 
 	"github.com/dustin/go-humanize"
-	"github.com/fatih/color"
 	"github.com/phayes/permbits"
 )
 
@@ -17,11 +17,18 @@ const (
 	AttributeFormat = "%s%s %11s %10s "
 )
 
-var diffTypeColor = map[DiffType]*color.Color{
-	Added:      color.New(color.FgGreen),
-	Removed:    color.New(color.FgRed),
-	Modified:   color.New(color.FgYellow),
-	Unmodified: color.New(color.Reset),
+//var diffTypeColor = map[DiffType]*color.Color{
+//	Added:      color.New(color.FgGreen),
+//	Removed:    color.New(color.FgRed),
+//	Modified:   color.New(color.FgYellow),
+//	Unmodified: color.New(color.Reset),
+//}
+
+var diffTypeColor = map[DiffType]format.Formatter{
+	Added:      format.Added,
+	Removed:    format.Removed,
+	Modified:   format.Modified,
+	Unmodified: format.Normal,
 }
 
 // FileNode represents a single file, its relation to files beneath it, the tree it exists in, and the metadata of the given file.
@@ -132,7 +139,7 @@ func (node *FileNode) String() string {
 	if node.Data.FileInfo.TypeFlag == tar.TypeSymlink || node.Data.FileInfo.TypeFlag == tar.TypeLink {
 		display += " → " + node.Data.FileInfo.Linkname
 	}
-	return diffTypeColor[node.Data.DiffType].Sprint(display)
+	return diffTypeColor[node.Data.DiffType](display)
 }
 
 // MetadatString returns the FileNode metadata in a columnar string.
@@ -172,7 +179,10 @@ func (node *FileNode) MetadataString() string {
 
 	size := humanize.Bytes(uint64(sizeBytes))
 
-	return diffTypeColor[node.Data.DiffType].Sprint(fmt.Sprintf(AttributeFormat, dir, fileMode, userGroup, size))
+	diffColoring := diffTypeColor[node.Data.DiffType]
+
+	return diffColoring(fmt.Sprintf(AttributeFormat, dir, fileMode, userGroup, size))
+
 }
 
 // VisitDepthChildFirst iterates a tree depth-first (starting at this FileNode), evaluating the deepest depths first (visit on bubble up)

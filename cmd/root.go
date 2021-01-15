@@ -76,9 +76,10 @@ func initCli() {
 func initConfig() {
 	var err error
 
-	viper.SetDefault("log.level", log.InfoLevel.String())
+	//viper.SetDefault("log.level", log.InfoLevel.String())
+	viper.SetDefault("log.level", "debug")
 	viper.SetDefault("log.path", "./dive.log")
-	viper.SetDefault("log.enabled", false)
+	viper.SetDefault("log.enabled", true)
 	// keybindings: status view / global
 
 	// This keybinding can be changed but ctrl+C may still quit the application

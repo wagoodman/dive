@@ -1,9 +1,10 @@
 package viewmodels
 
 import (
+	"fmt"
 	"regexp"
 
-	"go.uber.org/zap"
+	"github.com/sirupsen/logrus"
 )
 
 type FilterViewModel struct {
@@ -18,9 +19,9 @@ func NewFilterViewModel(r *regexp.Regexp) *FilterViewModel {
 
 func (fm *FilterViewModel) SetFilter(r *regexp.Regexp) {
 	if r != nil {
-		zap.S().Info("setting filter ", r.String())
+		logrus.Info(fmt.Sprintf("setting filter: %s", r.String()))
 	} else {
-		zap.S().Info("setting filter nil")
+		logrus.Info("setting filter: nil")
 	}
 	fm.filterRegex = r
 }

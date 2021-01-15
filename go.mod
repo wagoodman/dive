@@ -10,7 +10,6 @@ require (
 	github.com/docker/cli v20.10.0-beta1+incompatible
 	github.com/docker/docker v1.4.2-0.20200221181110-62bd5a33f707
 	github.com/dustin/go-humanize v1.0.0
-	github.com/fatih/color v1.9.0
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
 	github.com/gdamore/tcell/v2 v2.1.0
 	github.com/golang/protobuf v1.4.3 // indirect
@@ -78,3 +77,5 @@ replace github.com/golangci/ineffassign => github.com/golangci/ineffassign v0.0.
 replace github.com/golangci/lint-1 => github.com/golangci/lint-1 v0.0.0-20190420132249-ee948d087217
 
 replace mvdan.cc/unparam => mvdan.cc/unparam v0.0.0-20190209190245-fbb59629db34
+
+replace github.com/rivo/tview => /home/deek/workspace/VMware/dwillist/tview
