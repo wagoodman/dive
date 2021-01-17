@@ -37,7 +37,7 @@ type TreeView struct {
 
 	inputHandler func(event *tcell.EventKey, setFocus func(p tview.Primitive))
 
-	keyBindings map[string]KeyBinding
+	bindingArray []KeyBindingDisplay
 
 	showAttributes bool
 }
@@ -75,8 +75,20 @@ func (t *TreeView) Setup(config KeyBindingConfig) *TreeView {
 		"keybinding.page-down":                  func() bool { return t.pageDown() },
 	}
 
-	bindingArray := []KeyBinding{}
+	bindingUpdateSettings := map[string]bool{
+		"keybinding.toggle-collapse-dir":        false,
+		"keybinding.toggle-collapse-all-dir":    false,
+		"keybinding.toggle-filetree-attributes": true,
+		"keybinding.toggle-added-files":         true,
+		"keybinding.toggle-removed-files":       true,
+		"keybinding.toggle-modified-files":      true,
+		"keybinding.toggle-unmodified-files":    true,
+		"keybinding.page-up":                    false,
+		"keybinding.page-down":                  false,
+	}
+
 	actionArray := []keyAction{}
+	updateArray := []bool{}
 
 	for keybinding, action := range bindingSettings {
 		binding, err := config.GetKeyBinding(keybinding)
@@ -85,8 +97,9 @@ func (t *TreeView) Setup(config KeyBindingConfig) *TreeView {
 			// TODO handle this error
 			//return nil
 		}
-		bindingArray = append(bindingArray, binding)
+		t.bindingArray = append(t.bindingArray, KeyBindingDisplay{KeyBinding: &binding, Selected: false})
 		actionArray = append(actionArray, action)
+		updateArray = append(updateArray, bindingUpdateSettings[keybinding])
 	}
 
 	t.inputHandler = func(event *tcell.EventKey, setFocus func(p tview.Primitive)) {
@@ -101,9 +114,12 @@ func (t *TreeView) Setup(config KeyBindingConfig) *TreeView {
 			t.keyLeft()
 		}
 
-		for idx, binding := range bindingArray {
+		for idx, binding := range t.bindingArray {
 			if binding.Match(event) {
 				actionArray[idx]()
+				if updateArray[idx] {
+					t.bindingArray[idx].Selected = !t.bindingArray[idx].Selected
+				}
 			}
 		}
 	}
@@ -122,6 +138,12 @@ func (t *TreeView) getDraw() drawFn {
 
 func (t *TreeView) getInputWrapper() inputFn {
 	return t.InputHandler
+}
+
+// Keybinding list
+
+func (t *TreeView) GetKeyBindings() []KeyBindingDisplay {
+	return t.bindingArray
 }
 
 // Implementation note:

@@ -17,21 +17,22 @@ const debug = false
 
 // type global
 var (
-	once         sync.Once
-	appSingleton *diveApp
+	once        sync.Once
+	uiSingleton *UI
 )
 
-type diveApp struct {
-	app        *tview.Application
+type UI struct {
+	app        *components.DiveApplication
 	layers     tview.Primitive
 	fileTree   tview.Primitive
 	filterView tview.Primitive
 }
 
-func newApp(app *tview.Application, analysis *image.AnalysisResult, cache filetree.Comparer, isCNB bool) (*diveApp, error) {
+func newApp(app *tview.Application, analysis *image.AnalysisResult, cache filetree.Comparer, isCNB bool) (*UI, error) {
 	var err error
 	once.Do(func() {
 		config := components.NewKeyConfig()
+		diveApplication := components.NewDiveApplication(app)
 
 		// ensure the background color is inherited from the terminal emulator
 		//tview.Styles.PrimitiveBackgroundColor = tcell.ColorDefault
@@ -41,6 +42,8 @@ func newApp(app *tview.Application, analysis *image.AnalysisResult, cache filetr
 		filterViewModel := viewmodels.NewFilterViewModel(nil)
 		var layerModel viewmodels.LayersModel
 		var layerDetailsBox *components.Wrapper
+
+		// TODO extract the CNB specific logic here for now...
 		if isCNB {
 			cnbLayerViewModel := viewmodels.NewCNBLayersViewModel(analysis.Layers, analysis.BOMMapping)
 			cnbLayerDetailsView := components.NewCNBLayerDetailsView(cnbLayerViewModel).Setup()
@@ -75,6 +78,8 @@ func newApp(app *tview.Application, analysis *image.AnalysisResult, cache filetr
 		fileTreeView = fileTreeView.Setup(config)
 		fileTreeBox := components.NewWrapper("Current Layer Contents", "subtitle!", fileTreeView).Setup()
 
+		keyMenuView := components.NewKeyMenuView()
+
 		// Implementation notes: should we factor out this setup??
 		// Probably yes, but difficult to make this both easy to setup & mutable
 		leftVisibleGrid := components.NewVisibleFlex()
@@ -82,6 +87,11 @@ func newApp(app *tview.Application, analysis *image.AnalysisResult, cache filetr
 		rightVisibleGrid := components.NewVisibleFlex()
 		rightVisibleGrid.SetDirection(tview.FlexRow)
 		totalVisibleGrid := components.NewVisibleFlex()
+		gridWithFooter := tview.NewGrid().
+			SetRows(0, 1).
+			SetColumns(0).
+			AddItem(totalVisibleGrid, 0, 0, 1, 1, 0, 0, true).
+			AddItem(keyMenuView, 1, 0, 1, 1, 0, 0, false)
 
 		leftVisibleGrid.AddItem(layersBox, 0, 3, true).
 			AddItem(layerDetailsBox, 0, 1, false).
@@ -96,11 +106,13 @@ func newApp(app *tview.Application, analysis *image.AnalysisResult, cache filetr
 		totalVisibleGrid.AddItem(leftVisibleGrid, 0, 1, true).
 			AddItem(rightVisibleGrid, 0, 1, false)
 
-		appSingleton = &diveApp{
-			app:      app,
+		uiSingleton = &UI{
+			app:      diveApplication,
 			fileTree: fileTreeBox,
 			layers:   layersBox,
 		}
+
+		keyMenuView.AddBoundViews(diveApplication)
 
 		quitBinding, err := config.GetKeyBinding("keybinding.quit")
 		if err != nil {
@@ -118,6 +130,8 @@ func newApp(app *tview.Application, analysis *image.AnalysisResult, cache filetr
 			// TODO handle this as an error
 			panic(err)
 		}
+		diveApplication.AddBindings(quitBinding, filterBinding, switchBinding)
+		diveApplication.AddBoundViews(fileTreeBox, layersBox, filterView)
 
 		switchFocus := func(event *tcell.EventKey) *tcell.EventKey {
 			var result *tcell.EventKey = nil
@@ -125,17 +139,17 @@ func newApp(app *tview.Application, analysis *image.AnalysisResult, cache filetr
 			case quitBinding.Match(event):
 				app.Stop()
 			case switchBinding.Match(event):
-				if appSingleton.app.GetFocus() == appSingleton.layers {
-					appSingleton.app.SetFocus(appSingleton.fileTree)
+				if diveApplication.GetFocus() == uiSingleton.layers {
+					diveApplication.SetFocus(uiSingleton.fileTree)
 				} else {
-					appSingleton.app.SetFocus(appSingleton.layers)
+					diveApplication.SetFocus(uiSingleton.layers)
 				}
 			case filterBinding.Match(event):
 				if filterView.HasFocus() {
 					filterView.Blur()
-					appSingleton.app.SetFocus(fileTreeBox)
+					diveApplication.SetFocus(fileTreeBox)
 				} else {
-					appSingleton.app.SetFocus(filterView)
+					diveApplication.SetFocus(filterView)
 				}
 
 			default:
@@ -144,13 +158,13 @@ func newApp(app *tview.Application, analysis *image.AnalysisResult, cache filetr
 			return result
 		}
 
-		totalVisibleGrid.SetInputCapture(switchFocus)
+		diveApplication.SetInputCapture(switchFocus)
 
-		app.SetRoot(totalVisibleGrid, true)
-		app.SetFocus(totalVisibleGrid)
+		diveApplication.SetRoot(gridWithFooter, true)
+		diveApplication.SetFocus(gridWithFooter)
 	})
 
-	return appSingleton, err
+	return uiSingleton, err
 }
 
 // Run is the UI entrypoint.
@@ -174,7 +188,7 @@ func Run(analysis *image.AnalysisResult, treeStack filetree.Comparer, isCNB bool
 		return err
 	}
 
-	if err = appSingleton.app.Run(); err != nil {
+	if err = uiSingleton.app.Run(); err != nil {
 		zap.S().Info("app error: ", err.Error())
 		return err
 	}

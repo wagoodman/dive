@@ -24,6 +24,9 @@ type LayerList struct {
 	cmpIndex              int
 	changed               LayerListHandler
 	inputHandler          func(event *tcell.EventKey, setFocus func(p tview.Primitive))
+
+	bindingArray []KeyBindingDisplay
+
 	LayersViewModel
 }
 
@@ -58,7 +61,6 @@ func (ll *LayerList) Setup(config KeyBindingConfig) *LayerList {
 		},
 	}
 
-	bindingArray := []KeyBinding{}
 	actionArray := []keyAction{}
 
 	for keybinding, action := range bindingSettings {
@@ -68,7 +70,7 @@ func (ll *LayerList) Setup(config KeyBindingConfig) *LayerList {
 			// TODO handle this error
 			//return nil
 		}
-		bindingArray = append(bindingArray, binding)
+		ll.bindingArray = append(ll.bindingArray, KeyBindingDisplay{KeyBinding: &binding, Selected: false})
 		actionArray = append(actionArray, action)
 	}
 
@@ -88,13 +90,17 @@ func (ll *LayerList) Setup(config KeyBindingConfig) *LayerList {
 
 			}
 		}
-		for idx, binding := range bindingArray {
+		for idx, binding := range ll.bindingArray {
 			if binding.Match(event) {
 				actionArray[idx]()
 			}
 		}
 	}
 	return ll
+}
+
+func (ll *LayerList) GetKeyBindings() []KeyBindingDisplay {
+	return ll.bindingArray
 }
 
 func (ll *LayerList) getBox() *tview.Box {

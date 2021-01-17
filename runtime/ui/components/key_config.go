@@ -16,6 +16,11 @@ type KeyBinding struct{
 	Display    string
 }
 
+type KeyBindingDisplay struct {
+	*KeyBinding
+	Selected bool
+}
+
 type keyAction func() bool
 
 
@@ -58,7 +63,4 @@ func (k *KeyConfig) GetKeyBinding(key string) (result KeyBinding, err error) {
 		return KeyBinding{}, err
 	}
 	return result, err
-	//if config == "" {
-	//	return "", NewMissingConfigErr(lookupName)
-	//}
 }

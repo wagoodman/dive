@@ -43,6 +43,11 @@ func (lv *CNBLayerDetailsView) Draw(screen tcell.Screen) {
 	lv.TextView.Draw(screen)
 }
 
+
+func (lv *CNBLayerDetailsView) GetKeyBindings() []KeyBindingDisplay {
+	return []KeyBindingDisplay {}
+}
+
 func layerCNBDetailsText(layer *image.Layer, bom lifecycle.BOMEntry) string {
 	lines := []string{}
 	if layer.Names != nil && len(layer.Names) > 0 {

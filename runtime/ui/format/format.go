@@ -79,6 +79,8 @@ var (
 
 	// Styles these are needed to completely color a line
 	SelectedStyle tcell.Style = tcell.Style{}.Bold(true).Reverse(true)
+	MenuStyle tcell.Style = tcell.Style{}.Reverse(true)
+	SelectedMenuStyle tcell.Style = tcell.Style{}.Background(tcell.ColorDarkBlue).Foreground(tcell.ColorWhite).Bold(true)
 )
 
 func PrintLine(screen tcell.Screen, text string, x, y, maxWidth, align int, style tcell.Style) (int, int) {

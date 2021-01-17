@@ -68,3 +68,7 @@ func (fv *FilterView) Empty() bool {
 func (fv *FilterView) Visible() bool {
 	return !fv.Empty() || fv.HasFocus()
 }
+
+func (fv *FilterView) GetKeyBindings() []KeyBindingDisplay {
+	return  []KeyBindingDisplay{}
+}

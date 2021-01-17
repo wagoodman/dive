@@ -14,6 +14,7 @@ type wrapable interface {
 	getBox() *tview.Box
 	getDraw() drawFn
 	getInputWrapper() inputFn
+	GetKeyBindings() []KeyBindingDisplay
 }
 
 type Wrapper struct {
@@ -26,6 +27,7 @@ type Wrapper struct {
 	title            string
 	subtitle         string
 	visible          VisibleFunc
+	getKeyBindings   func() []KeyBindingDisplay
 }
 
 type drawFn func(screen tcell.Screen)
@@ -42,6 +44,7 @@ func NewWrapper(title, subtitle string, inner wrapable) *Wrapper {
 		subtitleTextView: tview.NewTextView().SetText(subtitle),
 		inner:            inner,
 		visible:          Always(true),
+		getKeyBindings:   inner.GetKeyBindings,
 	}
 	w.setTitle(w.inner.getBox().HasFocus())
 	return w
@@ -128,4 +131,8 @@ func (b *Wrapper) Visible() bool {
 func (b *Wrapper) SetVisibility(visibleFunc VisibleFunc) *Wrapper {
 	b.visible = visibleFunc
 	return b
+}
+
+func (b *Wrapper) GetKeyBindings() []KeyBindingDisplay {
+	return b.getKeyBindings()
 }

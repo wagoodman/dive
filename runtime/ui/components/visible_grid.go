@@ -7,8 +7,13 @@ import (
 	"github.com/rivo/tview"
 )
 
+type GridPrimitive interface {
+	VisiblePrimitive
+	GetKeyBindings() []KeyBindingDisplay
+}
+
 type flexItem struct {
-	Item       VisiblePrimitive // The item to be positioned. May be nil for an empty item.
+	Item       GridPrimitive // The item to be positioned. May be nil for an empty item.
 	FixedSize  int              // The item's fixed size which may not be changed, 0 if it has no fixed size.
 	Proportion int              // The item's proportion
 	Focus      bool             // Whether or not this item attracts the layout's focus.
@@ -26,6 +31,10 @@ type VisibleFlex struct {
 	direction int
 
 	visible VisibleFunc
+
+	bindingArray []KeyBinding
+
+	inputHandler func(event *tcell.EventKey, setFocus func(p tview.Primitive))
 }
 
 func NewVisibleFlex() *VisibleFlex {
@@ -36,7 +45,24 @@ func NewVisibleFlex() *VisibleFlex {
 	}
 }
 
-func (f *VisibleFlex) SetVisibility(visibleFunc VisibleFunc) VisiblePrimitive {
+func (f *VisibleFlex) GetKeyBindings() []KeyBindingDisplay {
+	result := []KeyBindingDisplay{}
+
+	for _, binding := range f.bindingArray {
+		result = append(result, KeyBindingDisplay{KeyBinding: &binding, Selected: false})
+	}
+
+	for _, item := range f.items {
+		if item.Item.HasFocus() {
+			result = append(result, item.Item.GetKeyBindings()...)
+		}
+	}
+
+	return result
+}
+
+
+func (f *VisibleFlex) SetVisibility(visibleFunc VisibleFunc) GridPrimitive {
 	f.visible = visibleFunc
 	return f
 }
@@ -46,7 +72,7 @@ func (f *VisibleFlex) SetDirection(direction int) *VisibleFlex {
 	return f
 }
 
-func (f *VisibleFlex) AddItem(item VisiblePrimitive, fixedSize, proportion int, focus bool) *VisibleFlex {
+func (f *VisibleFlex) AddItem(item GridPrimitive, fixedSize, proportion int, focus bool) *VisibleFlex {
 	f.items = append(f.items, &flexItem{Item: item, FixedSize: fixedSize, Proportion: proportion, Focus: focus})
 	f.consume = append(f.consume, []int{})
 	return f
@@ -54,7 +80,7 @@ func (f *VisibleFlex) AddItem(item VisiblePrimitive, fixedSize, proportion int, 
 
 // RemoveItem removes all items for the given primitive from the container,
 // keeping the order of the remaining items intact.
-func (f *VisibleFlex) RemoveItem(p VisiblePrimitive) *VisibleFlex {
+func (f *VisibleFlex) RemoveItem(p GridPrimitive) *VisibleFlex {
 	for index := len(f.items) - 1; index >= 0; index-- {
 		if f.items[index].Item == p {
 			f.items = append(f.items[:index], f.items[index+1:]...)
@@ -82,7 +108,7 @@ func (f *VisibleFlex) ResizeItem(p tview.Primitive, fixedSize, proportion int) *
 
 // TODO: update the  API here this is pretty rough
 // Method provided to give configuration that would otherwise not be possible when primitives are repeated
-func (f *VisibleFlex) SetConsumersByIndex(p VisiblePrimitive, consumeIndicies []int) *VisibleFlex {
+func (f *VisibleFlex) SetConsumersByIndex(p GridPrimitive, consumeIndicies []int) *VisibleFlex {
 	for i, item := range f.items {
 		if item.Item == p {
 			f.consume[i] = consumeIndicies
@@ -95,8 +121,8 @@ func (f *VisibleFlex) SetConsumersByIndex(p VisiblePrimitive, consumeIndicies []
 // Implementation notes:
 // we want a list of indicies []int{} where each visible primitive corresponds to the first matching primitive
 // in our list of items
-func (f *VisibleFlex) SetConsumers(p VisiblePrimitive, consumes ...VisiblePrimitive) *VisibleFlex {
-	indexMap := map[VisiblePrimitive]int{}
+func (f *VisibleFlex) SetConsumers(p GridPrimitive, consumes ...GridPrimitive) *VisibleFlex {
+	indexMap := map[GridPrimitive]int{}
 	for _, item := range f.items {
 		_, ok := indexMap[item.Item]
 		if !ok {

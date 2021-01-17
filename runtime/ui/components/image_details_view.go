@@ -68,3 +68,7 @@ func (lv *ImageDetails) imageDetailsText() string {
 
 	return fmt.Sprintf("%s\n%s\n%s\n%s", imageSizeStr, wastedSpaceStr, effStr, inefficiencyReport)
 }
+
+func (lv *ImageDetails) GetKeyBindings() []KeyBindingDisplay {
+	return []KeyBindingDisplay{}
+}

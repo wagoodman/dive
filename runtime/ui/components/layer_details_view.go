@@ -50,6 +50,10 @@ func (lv *LayerDetailsView) Draw(screen tcell.Screen) {
 	lv.TextView.Draw(screen)
 }
 
+func (lv *LayerDetailsView) GetKeyBindings() []KeyBindingDisplay {
+	return []KeyBindingDisplay{}
+}
+
 func layerDetailsText(layer *image.Layer) string {
 	lines := []string{}
 	if layer.Names != nil && len(layer.Names) > 0 {
@@ -67,3 +71,4 @@ func layerDetailsText(layer *image.Layer) string {
 func boldString(s string) string {
 	return fmt.Sprintf("[::b]%s[::-]", s)
 }
+

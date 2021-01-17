@@ -1,0 +1,11 @@
+package componenets
+
+import "github.com/rivo/tview"
+
+type Keybinded interface {
+	GetKeyBindings() []KeyBinding
+}
+
+type KeyMenuPrimitive struct {
+	*tview.TextView
+}
