@@ -68,6 +68,9 @@ func (t *KeyMenuView) Draw(screen tcell.Screen) {
 
 	line := []string{}
 	for _, keyBinding := range t.GetKeyBindings() {
+		if keyBinding.Hide {
+			continue
+		}
 		formatter := format.StatusControlNormal
 		if keyBinding.Selected {
 			formatter = format.StatusControlSelected

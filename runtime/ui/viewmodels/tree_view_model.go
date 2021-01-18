@@ -87,6 +87,7 @@ func (tvm *TreeViewModel) ToggleHiddenFileType(filetype filetree.DiffType) bool 
 
 // TODO: maek this method private, cant think of a reason for this to be public
 func (tvm *TreeViewModel) FilterUpdate() error {
+	logrus.Debug("Updating filter!!!")
 	// keep the t selection in parity with the current DiffType selection
 	filter := tvm.GetFilter()
 	err := tvm.currentTree.VisitDepthChildFirst(func(node *filetree.FileNode) error {

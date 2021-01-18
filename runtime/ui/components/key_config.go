@@ -19,6 +19,16 @@ type KeyBinding struct{
 type KeyBindingDisplay struct {
 	*KeyBinding
 	Selected bool
+	Hide bool
+}
+
+// just print space key as Space
+func (kb *KeyBindingDisplay) Name() string {
+	if kb.Key() == tcell.KeyRune && kb.Rune() == rune(' ') {
+		return "Space"
+	}
+
+	return kb.KeyBinding.Name()
 }
 
 type keyAction func() bool
@@ -28,6 +38,15 @@ func NewKeyBinding(name string, key *tcell.EventKey) KeyBinding {
 	return KeyBinding{
 		EventKey: key,
 		Display: name,
+	}
+}
+
+func NewKeyBindingDisplay(k tcell.Key, ch rune, modMask tcell.ModMask, name string, selected bool, hide bool) KeyBindingDisplay {
+	kb := NewKeyBinding(name, tcell.NewEventKey(k, ch, modMask))
+	return KeyBindingDisplay{
+		KeyBinding: &kb,
+		Selected: selected, 
+		Hide: hide,
 	}
 }
 

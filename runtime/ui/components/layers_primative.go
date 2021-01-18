@@ -23,9 +23,8 @@ type LayerList struct {
 	bufferIndexLowerBound int
 	cmpIndex              int
 	changed               LayerListHandler
-	inputHandler          func(event *tcell.EventKey, setFocus func(p tview.Primitive))
 
-	bindingArray []KeyBindingDisplay
+	keyInputHandler *KeyInputHandler
 
 	LayersViewModel
 }
@@ -37,31 +36,82 @@ func NewLayerList(model LayersViewModel) *LayerList {
 		Box:             tview.NewBox(),
 		cmpIndex:        0,
 		LayersViewModel: model,
-		inputHandler:    nil,
+		keyInputHandler:    NewKeyInputHandler(),
 	}
 }
 
-func (ll *LayerList) Setup(config KeyBindingConfig) *LayerList {
-	bindingSettings := map[string]keyAction{
-		"keybinding.page-up":   func() bool { return ll.pageUp() },
-		"keybinding.page-down": func() bool { return ll.pageDown() },
-		"keybinding.compare-all": func() bool {
+type LayerListViewOption func(ll *LayerList)
+
+func UpLayerListBindingOption(k KeyBindingDisplay) LayerListViewOption {
+	return func (ll *LayerList) {
+		ll.keyInputHandler.AddBinding(k, func() {ll.keyUp()} )
+	}
+}
+
+func DownLayerListBindingOption(k KeyBindingDisplay) LayerListViewOption {
+	return func (ll *LayerList) {
+		ll.keyInputHandler.AddBinding(k, func() {ll.keyDown()} )
+	}
+}
+
+func PageUpLayerListBindingOption(k KeyBindingDisplay) LayerListViewOption {
+	return func (ll *LayerList) {
+		ll.keyInputHandler.AddBinding(k, func() {ll.pageUp()} )
+	}
+}
+
+
+func PageDownLayerListBindingOption(k KeyBindingDisplay) LayerListViewOption {
+	return func (ll *LayerList) {
+		ll.keyInputHandler.AddBinding(k, func() {ll.pageDown()} )
+	}
+}
+
+func CompareAllLayerListBindingOption(k KeyBindingDisplay) LayerListViewOption {
+	return func(ll *LayerList) {
+		ll.keyInputHandler.AddToggleBinding(k, func() {
 			if ll.GetMode() == viewmodels.CompareSingleLayer {
 				ll.SwitchMode()
-				return true
 			}
-			return false
-		},
-		"keybinding.compare-layer": func() bool {
+		})
+	}
+}
+
+
+func CompareLayerLayerListBindingOption(k KeyBindingDisplay) LayerListViewOption {
+	return func(ll *LayerList) {
+		ll.keyInputHandler.AddToggleBinding(k, func() {
 			if ll.GetMode() == viewmodels.CompareAllLayers {
 				ll.SwitchMode()
-				return true
 			}
-			return false
-		},
+		})
+	}
+}
+
+func (ll *LayerList) AddBindingOptions(bindingOptions ...LayerListViewOption) *LayerList {
+	for _, option := range bindingOptions {
+		option(ll)
 	}
 
-	actionArray := []keyAction{}
+	return ll
+}
+
+
+func (ll *LayerList) Setup(config KeyBindingConfig) *LayerList {
+	
+	ll.AddBindingOptions(
+		UpLayerListBindingOption(NewKeyBindingDisplay(tcell.KeyUp, rune(0), tcell.ModNone, "", false, true)),
+		UpLayerListBindingOption(NewKeyBindingDisplay(tcell.KeyLeft, rune(0), tcell.ModNone, "", false, true)),
+		DownLayerListBindingOption(NewKeyBindingDisplay(tcell.KeyDown, rune(0), tcell.ModNone, "", false, true)),
+		DownLayerListBindingOption(NewKeyBindingDisplay(tcell.KeyRight, rune(0), tcell.ModNone, "", false, true)),
+	)
+
+	bindingSettings := map[string]func(KeyBindingDisplay) LayerListViewOption {
+		"keybinding.page-up":  PageUpLayerListBindingOption,
+		"keybinding.page-down": PageDownLayerListBindingOption,
+		"keybinding.compare-all":  CompareAllLayerListBindingOption,
+		"keybinding.compare-layer": CompareLayerLayerListBindingOption,
+	}
 
 	for keybinding, action := range bindingSettings {
 		binding, err := config.GetKeyBinding(keybinding)
@@ -70,37 +120,14 @@ func (ll *LayerList) Setup(config KeyBindingConfig) *LayerList {
 			// TODO handle this error
 			//return nil
 		}
-		ll.bindingArray = append(ll.bindingArray, KeyBindingDisplay{KeyBinding: &binding, Selected: false})
-		actionArray = append(actionArray, action)
+		ll.AddBindingOptions(action(KeyBindingDisplay{KeyBinding: &binding, Selected:false}))
 	}
 
-	ll.inputHandler = func(event *tcell.EventKey, setFocus func(p tview.Primitive)) {
-		switch event.Key() {
-		case tcell.KeyUp, tcell.KeyLeft:
-			if ll.SetLayerIndex(ll.cmpIndex - 1) {
-				ll.keyUp()
-				//ll.cmpIndex--
-				//logrus.Debugf("KeyUp pressed, index: %d", ll.cmpIndex)
-			}
-		case tcell.KeyDown, tcell.KeyRight:
-			if ll.SetLayerIndex(ll.cmpIndex + 1) {
-				ll.keyDown()
-				//ll.cmpIndex++
-				//logrus.Debugf("KeyUp pressed, index: %d", ll.cmpIndex)
-
-			}
-		}
-		for idx, binding := range ll.bindingArray {
-			if binding.Match(event) {
-				actionArray[idx]()
-			}
-		}
-	}
 	return ll
 }
 
 func (ll *LayerList) GetKeyBindings() []KeyBindingDisplay {
-	return ll.bindingArray
+	return ll.keyInputHandler.Order
 }
 
 func (ll *LayerList) getBox() *tview.Box {
@@ -141,13 +168,11 @@ func (ll *LayerList) Draw(screen tcell.Screen) {
 		line := fmt.Sprintf("%s %s", cmpFormatter(cmpString), lineFormatter(layer.String()))
 		printWidth := intMin(len(line),width)
 		format.PrintLine(screen, line, x, y+yIndex, printWidth, tview.AlignLeft,  tcell.StyleDefault)
-		
-
 	}
 }
 
 func (ll *LayerList) InputHandler() func(event *tcell.EventKey, setFocus func(p tview.Primitive)) {
-	return ll.WrapInputHandler(ll.inputHandler)
+	return ll.keyInputHandler.Handle()
 }
 
 func (ll *LayerList) Focus(delegate func(p tview.Primitive)) {
@@ -175,7 +200,7 @@ func (ll *LayerList) keyUp() bool {
 	logrus.Debugln("keyUp in layers")
 	logrus.Debugf("  cmpIndex: %d", ll.cmpIndex)
 	logrus.Debugf("  bufferIndexLowerBound: %d", ll.bufferIndexLowerBound)
-	return true
+	return ll.SetLayerIndex(ll.cmpIndex)
 }
 
 // TODO (simplify all page increments to rely an a single function)
@@ -194,7 +219,7 @@ func (ll *LayerList) keyDown() bool {
 	logrus.Debugf("  cmpIndex: %d", ll.cmpIndex)
 	logrus.Debugf("  bufferIndexLowerBound: %d", ll.bufferIndexLowerBound)
 
-	return true
+	return ll.SetLayerIndex(ll.cmpIndex)
 }
 
 func (ll *LayerList) pageUp() bool {
