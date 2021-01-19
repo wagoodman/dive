@@ -78,4 +78,4 @@ replace github.com/golangci/lint-1 => github.com/golangci/lint-1 v0.0.0-20190420
 
 replace mvdan.cc/unparam => mvdan.cc/unparam v0.0.0-20190209190245-fbb59629db34
 
-replace github.com/rivo/tview => /home/deek/workspace/VMware/dwillist/tview
+replace github.com/rivo/tview => github.com/dwillist/tview v0.0.0-20210114215028-5f3be7b5a4ec

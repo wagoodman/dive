@@ -1,6 +1,8 @@
 package components
 
 import (
+	"fmt"
+
 	"github.com/rivo/tview"
 	"github.com/sirupsen/logrus"
 )
@@ -25,7 +27,7 @@ func (d *DiveApplication) GetKeyBindings() []KeyBindingDisplay {
 	result := []KeyBindingDisplay{}
 	for i := 0; i < len(d.bindings); i++ {
 		binding := d.bindings[i]
-		logrus.Debug("adding keybinding with name %s", binding.Display)
+		logrus.Debug(fmt.Sprintf("adding keybinding with name %s", binding.Display))
 		result = append(result, KeyBindingDisplay{KeyBinding: &binding, Selected: false})
 	}
 

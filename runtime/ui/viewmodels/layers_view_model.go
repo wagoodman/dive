@@ -58,7 +58,7 @@ func (lm *LayersViewModel) GetCompareIndicies() filetree.TreeIndexKey {
 
 func (lm *LayersViewModel) SetLayerIndex(index int) bool {
 	if 0 <= index && index < len(lm.layers) {
-		logrus.Debug("setting index, old: %d, new: %d", lm.index, index)
+		logrus.Debug(fmt.Sprintf("setting index, old: %d, new: %d", lm.index, index))
 		lm.index = index
 		return true
 	}

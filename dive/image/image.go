@@ -5,7 +5,7 @@ import (
 )
 
 type Image struct {
-	Name string
+	Name   string
 	Trees  []*filetree.FileTree
 	Layers []*Layer
 }
@@ -28,7 +28,7 @@ func (img *Image) Analyze() (*AnalysisResult, error) {
 	}
 
 	return &AnalysisResult{
-		ImageName: 		img.Name,
+		ImageName:         img.Name,
 		Layers:            img.Layers,
 		RefTrees:          img.Trees,
 		Efficiency:        efficiency,

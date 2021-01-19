@@ -1,7 +1,6 @@
 package runtime
 
 import (
-	"errors"
 	"fmt"
 	"os"
 
@@ -50,17 +49,6 @@ func run(enableUi bool, options Options, imageResolver image.Resolver, events ev
 	if err != nil {
 		events.exitWithErrorMessage("cannot analyze image", err)
 		return
-	}
-
-	if options.CNB {
-		events.message(utils.TitleFormat("Analyzing Cloud Native Buildpacks image..."))
-		analysis, err = img.CNBAnalyze(analysis)
-		if errors.Is(err, image.ErrMissingCNBMetadata) {
-			options.CNB = false
-		} else if err != nil {
-			events.exitWithErrorMessage("cannot analyze image", err)
-			return
-		}
 	}
 
 	if doExport {
@@ -115,7 +103,7 @@ func run(enableUi bool, options Options, imageResolver image.Resolver, events ev
 		}
 
 		if enableUi {
-			err = ui.Run(analysis, treeStack, options.CNB)
+			err = ui.Run(analysis, treeStack)
 			if err != nil {
 				zap.S().Error("run info exit: ", err.Error())
 				events.exitWithError(err)

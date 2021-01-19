@@ -29,7 +29,7 @@ type UI struct {
 	filterView tview.Primitive
 }
 
-func newApp(app *tview.Application, analysis *image.AnalysisResult, cache filetree.Comparer, isCNB bool) (*UI, error) {
+func newApp(app *tview.Application, analysis *image.AnalysisResult, cache filetree.Comparer) (*UI, error) {
 	var err error
 	once.Do(func() {
 		config := components.NewKeyConfig()
@@ -41,21 +41,11 @@ func newApp(app *tview.Application, analysis *image.AnalysisResult, cache filetr
 
 		//initialize viewmodels
 		filterViewModel := viewmodels.NewFilterViewModel(nil)
-		var layerModel viewmodels.LayersModel
-		var layerDetailsBox *components.Wrapper
 
 		// TODO extract the CNB specific logic here for now...
-		if isCNB {
-			cnbLayerViewModel := viewmodels.NewCNBLayersViewModel(analysis.Layers, analysis.BOMMapping)
-			cnbLayerDetailsView := components.NewCNBLayerDetailsView(cnbLayerViewModel).Setup()
-			layerModel = cnbLayerViewModel
-			layerDetailsBox = components.NewWrapper("CNB Layer Details", "", cnbLayerDetailsView).Setup()
-		} else {
-			layerViewModel := viewmodels.NewLayersViewModel(analysis.Layers)
-			regularLayerDetailsView := components.NewLayerDetailsView(layerViewModel).Setup()
-			layerModel = layerViewModel
-			layerDetailsBox = components.NewWrapper("Layer Details", "", regularLayerDetailsView).Setup()
-		}
+		layerModel := viewmodels.NewLayersViewModel(analysis.Layers)
+		regularLayerDetailsView := components.NewLayerDetailsView(layerModel).Setup()
+		layerDetailsBox := components.NewWrapper("Layer Details", "", regularLayerDetailsView).Setup()
 		layerDetailsBox.SetVisibility(components.MinHeightVisibility(10))
 
 		//layerViewModel := viewmodels.NewLayersViewModel(analysis.Layers)
@@ -171,7 +161,7 @@ func newApp(app *tview.Application, analysis *image.AnalysisResult, cache filetr
 }
 
 // Run is the UI entrypoint.
-func Run(analysis *image.AnalysisResult, treeStack filetree.Comparer, isCNB bool) error {
+func Run(analysis *image.AnalysisResult, treeStack filetree.Comparer) error {
 	cfg := zap.NewDevelopmentConfig()
 	os.MkdirAll("/tmp/dive", os.ModePerm)
 	cfg.OutputPaths = []string{"/tmp/dive/debug.out"}
@@ -186,7 +176,7 @@ func Run(analysis *image.AnalysisResult, treeStack filetree.Comparer, isCNB bool
 	zap.S().Info("Starting Hidden Flex Program")
 
 	app := tview.NewApplication()
-	_, err = newApp(app, analysis, treeStack, isCNB)
+	_, err = newApp(app, analysis, treeStack)
 	if err != nil {
 		return err
 	}

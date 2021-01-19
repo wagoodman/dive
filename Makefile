@@ -13,7 +13,6 @@ ci-unit-test:
 	go test -cover -v -race ./...
 
 ci-static-analysis:
-	grep -R 'const allowTestDataCapture = false' runtime/ui/viewmodel
 	go vet ./...
 	@! gofmt -s -l . 2>&1 | grep -vE '^\.git/' | grep -vE '^\.cache/'
 	golangci-lint run
