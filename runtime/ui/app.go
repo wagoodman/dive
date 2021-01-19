@@ -2,7 +2,6 @@ package ui
 
 import (
 	"fmt"
-	"os"
 	"sync"
 
 	"github.com/gdamore/tcell/v2"
@@ -14,8 +13,6 @@ import (
 	"go.uber.org/zap"
 )
 
-const debug = false
-
 // type global
 var (
 	once        sync.Once
@@ -23,10 +20,9 @@ var (
 )
 
 type UI struct {
-	app        *components.DiveApplication
-	layers     tview.Primitive
-	fileTree   tview.Primitive
-	filterView tview.Primitive
+	app      *components.DiveApplication
+	layers   tview.Primitive
+	fileTree tview.Primitive
 }
 
 func newApp(app *tview.Application, analysis *image.AnalysisResult, cache filetree.Comparer) (*UI, error) {
@@ -162,21 +158,8 @@ func newApp(app *tview.Application, analysis *image.AnalysisResult, cache filetr
 
 // Run is the UI entrypoint.
 func Run(analysis *image.AnalysisResult, treeStack filetree.Comparer) error {
-	cfg := zap.NewDevelopmentConfig()
-	os.MkdirAll("/tmp/dive", os.ModePerm)
-	cfg.OutputPaths = []string{"/tmp/dive/debug.out"}
-	logger, err := cfg.Build()
-	if err != nil {
-		panic(err)
-	}
-	zap.ReplaceGlobals(logger)
-	defer logger.Sync() // flushes buffer, if any
-	logger.Sugar().Debug("Debug Start")
-
-	zap.S().Info("Starting Hidden Flex Program")
-
 	app := tview.NewApplication()
-	_, err = newApp(app, analysis, treeStack)
+	_, err := newApp(app, analysis, treeStack)
 	if err != nil {
 		return err
 	}

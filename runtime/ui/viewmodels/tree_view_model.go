@@ -20,7 +20,7 @@ type LayersModel interface {
 	GetCurrentLayer() *image.Layer
 	GetPrintableLayers() []fmt.Stringer
 	GetMode() LayerCompareMode
-	SwitchMode()
+	SwitchLayerMode() error
 }
 
 type TreeViewModel struct {
@@ -93,16 +93,14 @@ func (tvm *TreeViewModel) FilterUpdate() error {
 	err := tvm.currentTree.VisitDepthChildFirst(func(node *filetree.FileNode) error {
 		node.Data.ViewInfo.Hidden = tvm.hiddenDiffTypes[node.Data.DiffType]
 
-		visibleChild := false
 		for _, child := range node.Children {
 			if !child.Data.ViewInfo.Hidden {
-				visibleChild = true
 				node.Data.ViewInfo.Hidden = false
 				return nil
 			}
 		}
 
-		if filter != nil && !node.Data.ViewInfo.Hidden && !visibleChild { // hide nodes that do not match the current file filter regex (also don't unhide nodes that are already hidden)
+		if filter != nil && !node.Data.ViewInfo.Hidden { // hide nodes that do not match the current file filter regex (also don't unhide nodes that are already hidden)
 			match := filter.FindString(node.Path())
 			node.Data.ViewInfo.Hidden = len(match) == 0
 		}
@@ -119,15 +117,11 @@ func (tvm *TreeViewModel) FilterUpdate() error {
 
 // Override functions
 func (tvm *TreeViewModel) SetLayerIndex(index int) bool {
+	var err error
 	if tvm.LayersModel.SetLayerIndex(index) {
-		err := tvm.setCurrentTree(tvm.GetCompareIndicies())
-		if err != nil {
-			// TODO handle error here
-			return false
-		}
-		return true
+		err = tvm.setCurrentTree(tvm.GetCompareIndicies())
 	}
-	return false
+	return err == nil
 }
 
 func (tvm *TreeViewModel) setCurrentTree(key filetree.TreeIndexKey) error {
@@ -145,20 +139,24 @@ func (tvm *TreeViewModel) setCurrentTree(key filetree.TreeIndexKey) error {
 		return true
 	}
 
-	tvm.currentTree.VisitDepthParentFirst(func(node *filetree.FileNode) error {
+	if err = tvm.currentTree.VisitDepthParentFirst(func(node *filetree.FileNode) error {
 		if node.Data.ViewInfo.Collapsed {
 			collapsedList[node.Path()] = true
 		}
 		return nil
-	}, evaluateFunc)
+	}, evaluateFunc); err != nil {
+		return err
+	}
 
-	newTree.VisitDepthParentFirst(func(node *filetree.FileNode) error {
+	if err = newTree.VisitDepthParentFirst(func(node *filetree.FileNode) error {
 		_, ok := collapsedList[node.Path()]
 		if ok {
 			node.Data.ViewInfo.Collapsed = true
 		}
 		return nil
-	}, evaluateFunc)
+	}, evaluateFunc); err != nil {
+		return err
+	}
 
 	tvm.currentTree = newTree
 	if err := tvm.FilterUpdate(); err != nil {
@@ -167,8 +165,13 @@ func (tvm *TreeViewModel) setCurrentTree(key filetree.TreeIndexKey) error {
 	return nil
 }
 
-func (tvm *TreeViewModel) SwitchMode() {
-	tvm.LayersModel.SwitchMode()
+func (tvm *TreeViewModel) SwitchLayerMode() error {
+	if err := tvm.LayersModel.SwitchLayerMode(); err != nil {
+		return err
+	}
 	// TODO: Handle this error
-	tvm.setCurrentTree(tvm.GetCompareIndicies())
+	if err := tvm.setCurrentTree(tvm.GetCompareIndicies()); err != nil {
+		return err
+	}
+	return nil
 }

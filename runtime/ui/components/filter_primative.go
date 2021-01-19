@@ -44,7 +44,6 @@ func (fv *FilterView) Setup() *FilterView {
 				}
 			}
 			fv.FilterModel.SetFilter(filterRegex)
-			return
 		})
 	return fv
 }

@@ -14,7 +14,7 @@ import (
 type LayersViewModel interface {
 	SetLayerIndex(int) bool
 	GetPrintableLayers() []fmt.Stringer
-	SwitchMode()
+	SwitchLayerMode() error
 	GetMode() viewmodels.LayerCompareMode
 }
 
@@ -68,7 +68,11 @@ func PageDownLayerListBindingOption(k KeyBindingDisplay) LayerListViewOption {
 
 func SwitchCompareLayerListBindingOption(k KeyBindingDisplay) LayerListViewOption {
 	return func(ll *LayerList) { 
-		ll.keyInputHandler.AddToggleBinding(k, func() { ll.SwitchMode() })
+		ll.keyInputHandler.AddToggleBinding(k, func() { 
+			if err := ll.SwitchLayerMode(); err != nil {
+				logrus.Error("SwitchCompareLayers error: ", err.Error())
+			}
+		})
 	}
 }
 

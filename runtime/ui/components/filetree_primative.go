@@ -44,7 +44,6 @@ func (k *KeyInputHandler) AddBinding(binding KeyBindingDisplay, f func() ) *KeyI
 	return k
 }
 
-
 func (k *KeyInputHandler) AddToggleBinding(binding KeyBindingDisplay, f func() ) *KeyInputHandler {
 	index := len(k.Order)
 	k.Order = append(k.Order, binding)
@@ -59,7 +58,6 @@ func (k *KeyInputHandler) Handle() inputHandleFunc {
 		for _, m := range k.Order {
 			if m.Match(event) {
 				k.HandlerMap[m.EventKey]()
-				return
 			}
 		}
 	}
@@ -76,6 +74,18 @@ func UpBindingOption(k KeyBindingDisplay) TreeViewOption {
 func DownBindingOption(k KeyBindingDisplay) TreeViewOption {
 	return func (t *TreeView) {
 		t.keyInputHandler.AddBinding(k, func() {t.keyDown()} )
+	}
+}
+
+func RightBindingOption(k KeyBindingDisplay) TreeViewOption {
+	return func (t *TreeView) {
+		t.keyInputHandler.AddBinding(k, func() {t.keyRight()} )
+	}
+}
+
+func LeftBindingOption(k KeyBindingDisplay) TreeViewOption {
+	return func (t *TreeView) {
+		t.keyInputHandler.AddBinding(k, func() {t.keyLeft()} )
 	}
 }
 
@@ -192,6 +202,8 @@ func (t *TreeView) Setup(config KeyBindingConfig) *TreeView {
 	t.AddBindingOptions(
 		UpBindingOption(NewKeyBindingDisplay(tcell.KeyUp, rune(0), tcell.ModNone, "", false, true)),
 		DownBindingOption(NewKeyBindingDisplay(tcell.KeyDown, rune(0), tcell.ModNone, "", false, true)),
+		LeftBindingOption(NewKeyBindingDisplay(tcell.KeyLeft, rune(0), tcell.ModNone, "", false, true)),
+		RightBindingOption(NewKeyBindingDisplay(tcell.KeyRight, rune(0), tcell.ModNone, "", false, true)),
 	)
 
 
@@ -472,7 +484,7 @@ func (t *TreeView) bufferIndexUpperBound() int {
 func (t *TreeView) Draw(screen tcell.Screen) {
 	t.Box.Draw(screen)
 	selectedIndex := t.treeIndex - t.bufferIndexLowerBound
-	x, y, width, height := t.Box.GetInnerRect()
+	x, y, width, _ := t.Box.GetInnerRect()
 	showAttributes := width > 80 && t.showAttributes
 	treeString := t.tree.StringBetween(t.bufferIndexLowerBound, t.bufferIndexUpperBound(), showAttributes)
 	lines := strings.Split(treeString, "\n")
@@ -483,13 +495,12 @@ func (t *TreeView) Draw(screen tcell.Screen) {
 	}
 
 	format.PrintLine(screen, headerLine, x, y, len(headerLine), tview.AlignLeft, tcell.StyleDefault)
-	x, y, width, height = t.GetInnerRect()
+	x, y, _, height := t.GetInnerRect()
 	// update the contents
 	for yIndex, line := range lines {
 		if yIndex >= height {
 			break
 		}
-		//extendedLine := fmt.Sprintf("%s%s",line, strings.Repeat(" ", intMax(0,width - len(line))))
 		lineStyle := tcell.StyleDefault
 		if yIndex == selectedIndex {
 			lineStyle = format.SelectedStyle

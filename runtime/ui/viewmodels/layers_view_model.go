@@ -32,8 +32,9 @@ func (lm *LayersViewModel) GetMode() LayerCompareMode {
 	return lm.mode
 }
 
-func (lm *LayersViewModel) SwitchMode() {
+func (lm *LayersViewModel) SwitchLayerMode() error {
 	lm.mode = (lm.mode + 1) % 2 //this just cycles the mode
+	return nil
 }
 
 func (lm *LayersViewModel) GetCompareIndicies() filetree.TreeIndexKey {

@@ -96,12 +96,3 @@ func (t *KeyMenuView) Draw(screen tcell.Screen) {
 	format.PrintLine(screen, format.StatusControlNormal(strings.Repeat(" ", intMax(0,width-w))), x+w, y, width, tview.AlignLeft, tcell.StyleDefault)
 
 }
-
-// for wrappers
-func (t *KeyMenuView) getBox() *tview.Box {
-	return t.Box
-}
-
-func (t *KeyMenuView) getDraw() drawFn {
-	return t.Draw
-}

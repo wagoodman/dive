@@ -16,7 +16,6 @@ type LayerDetailModel interface {
 // TODO make this scrollable
 type LayerDetailsView struct {
 	*tview.TextView
-	layerIndex int
 	LayerDetailModel
 }
 

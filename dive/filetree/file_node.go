@@ -28,7 +28,7 @@ var diffTypeColor = map[DiffType]format.Formatter{
 	Added:      format.Added,
 	Removed:    format.Removed,
 	Modified:   format.Modified,
-	Unmodified: format.Normal,
+	Unmodified: format.None,
 }
 
 // FileNode represents a single file, its relation to files beneath it, the tree it exists in, and the metadata of the given file.

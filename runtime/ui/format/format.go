@@ -35,26 +35,20 @@ var (
 	endBracketStr   = "└"
 	fillStr         = "─"
 
-	selectStr = " ● "
+	//selectStr = " ● "
 	//selectStr = " "
 )
 
 type Formatter func(s string) string
 
 func GenerateFormatter(fg, bg, flags string) Formatter {
-	bold := strings.Contains(flags, "b")
 	return func(s string) string {
-		if bold {
-		}
 		return fmt.Sprintf("[%s:%s:%s]%s[-:-:-]", fg, bg, flags, s)
 	}
 }
 
 func GenerateWholeLineFormatter(fg, bg, flags string) Formatter {
-	bold := strings.Contains(flags, "b")
 	return func(s string) string {
-		if bold {
-		}
 		return fmt.Sprintf("[%s:%s:%s]%s", fg, bg, flags, s)
 	}
 }
@@ -63,6 +57,7 @@ var (
 	// Bolds text
 	Header                    Formatter = GenerateFormatter("", "", "b")
 	Normal                    Formatter = GenerateFormatter("", "", "")
+	None                    Formatter = func(s string) string {return s}
 	Selected                  Formatter = GenerateFormatter("", "", "rb")
 	StatusSelected            Formatter = GenerateFormatter(colorTranslate(tcell.ColorWhite), colorTranslate(tcell.ColorDarkMagenta), "")
 	StatusNormal              Formatter = GenerateFormatter("", "", "r")

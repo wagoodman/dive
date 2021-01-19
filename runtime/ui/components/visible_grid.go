@@ -33,8 +33,6 @@ type VisibleFlex struct {
 	visible VisibleFunc
 
 	bindingArray []KeyBinding
-
-	inputHandler func(event *tcell.EventKey, setFocus func(p tview.Primitive))
 }
 
 func NewVisibleFlex() *VisibleFlex {

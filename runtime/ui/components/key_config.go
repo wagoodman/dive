@@ -61,8 +61,6 @@ func (kb *KeyBindingDisplay) Name() string {
 	return s
 }
 
-type keyAction func() bool
-
 func NewKeyBinding(name string, key *tcell.EventKey) KeyBinding {
 	return KeyBinding{
 		EventKey: key,
