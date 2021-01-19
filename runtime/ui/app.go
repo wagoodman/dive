@@ -6,11 +6,12 @@ import (
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
+	"github.com/sirupsen/logrus"
 	"github.com/wagoodman/dive/dive/filetree"
 	"github.com/wagoodman/dive/dive/image"
 	"github.com/wagoodman/dive/runtime/ui/components"
+	"github.com/wagoodman/dive/runtime/ui/format"
 	"github.com/wagoodman/dive/runtime/ui/viewmodels"
-	"go.uber.org/zap"
 )
 
 // type global
@@ -28,17 +29,16 @@ type UI struct {
 func newApp(app *tview.Application, analysis *image.AnalysisResult, cache filetree.Comparer) (*UI, error) {
 	var err error
 	once.Do(func() {
+
+		// TODO: Extract initilaization logic into its own package
+		format.SyncWithTermColors()
+
 		config := components.NewKeyConfig()
 		diveApplication := components.NewDiveApplication(app)
-
-		// ensure the background color is inherited from the terminal emulator
-		//tview.Styles.PrimitiveBackgroundColor = tcell.ColorDefault
-		//tview.Styles.PrimaryTextColor = tcell.ColorDefault
 
 		//initialize viewmodels
 		filterViewModel := viewmodels.NewFilterViewModel(nil)
 
-		// TODO extract the CNB specific logic here for now...
 		layerModel := viewmodels.NewLayersViewModel(analysis.Layers)
 		regularLayerDetailsView := components.NewLayerDetailsView(layerModel).Setup()
 		layerDetailsBox := components.NewWrapper("Layer Details", "", regularLayerDetailsView).Setup()
@@ -47,7 +47,6 @@ func newApp(app *tview.Application, analysis *image.AnalysisResult, cache filetr
 		//layerViewModel := viewmodels.NewLayersViewModel(analysis.Layers)
 		treeViewModel, err := viewmodels.NewTreeViewModel(cache, layerModel, filterViewModel)
 		if err != nil {
-			// TODO: replace panic with a reasonable exit strategy
 			panic(err)
 		}
 
@@ -69,8 +68,6 @@ func newApp(app *tview.Application, analysis *image.AnalysisResult, cache filetr
 
 		keyMenuView := components.NewKeyMenuView()
 
-		// Implementation notes: should we factor out this setup??
-		// Probably yes, but difficult to make this both easy to setup & mutable
 		leftVisibleGrid := components.NewVisibleFlex()
 		leftVisibleGrid.SetDirection(tview.FlexRow)
 		rightVisibleGrid := components.NewVisibleFlex()
@@ -165,9 +162,9 @@ func Run(analysis *image.AnalysisResult, treeStack filetree.Comparer) error {
 	}
 
 	if err = uiSingleton.app.Run(); err != nil {
-		zap.S().Info("app error: ", err.Error())
+		logrus.Error("app error: ", err.Error())
 		return err
 	}
-	zap.S().Info("app run loop exited")
+	logrus.Info("app run loop exited")
 	return nil
 }

@@ -39,6 +39,22 @@ var (
 	//selectStr = " "
 )
 
+func SyncWithTermColors() {
+	tview.Styles.PrimitiveBackgroundColor = tcell.ColorDefault
+	tview.Styles.PrimaryTextColor = tcell.ColorDefault
+	tview.Styles.PrimitiveBackgroundColor = tcell.ColorDefault     // Main background color for primitives.
+	tview.Styles.ContrastBackgroundColor = tcell.ColorDefault     // Background color for contrasting elements.
+	tview.Styles.MoreContrastBackgroundColor = tcell.ColorDefault // Background color for even more contrasting elements.
+	tview.Styles.BorderColor = tcell.ColorDefault                 // Box borders.
+	tview.Styles.TitleColor = tcell.ColorDefault                  // Box titles.
+	tview.Styles.GraphicsColor = tcell.ColorDefault               // Graphics.
+	tview.Styles.PrimaryTextColor = tcell.ColorDefault            // Primary text.
+	tview.Styles.SecondaryTextColor = tcell.ColorDefault          // Secondary text (e.g. labels).
+	tview.Styles.TertiaryTextColor = tcell.ColorDefault           // Tertiary text (e.g. subtitles, notes).
+	tview.Styles.InverseTextColor = tcell.ColorDefault            // Text on primary-colored backgrounds.
+	tview.Styles.ContrastSecondaryTextColor = tcell.ColorDefault  // Secondary text on ContrastBackgroundColor-colored backgrounds.
+}
+
 type Formatter func(s string) string
 
 func GenerateFormatter(fg, bg, flags string) Formatter {
@@ -57,7 +73,7 @@ var (
 	// Bolds text
 	Header                    Formatter = GenerateFormatter("", "", "b")
 	Normal                    Formatter = GenerateFormatter("", "", "")
-	None                    Formatter = func(s string) string {return s}
+	None                      Formatter = func(s string) string { return s }
 	Selected                  Formatter = GenerateFormatter("", "", "rb")
 	StatusSelected            Formatter = GenerateFormatter(colorTranslate(tcell.ColorWhite), colorTranslate(tcell.ColorDarkMagenta), "")
 	StatusNormal              Formatter = GenerateFormatter("", "", "r")
