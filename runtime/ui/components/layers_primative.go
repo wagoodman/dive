@@ -36,55 +36,39 @@ func NewLayerList(model LayersViewModel) *LayerList {
 		Box:             tview.NewBox(),
 		cmpIndex:        0,
 		LayersViewModel: model,
-		keyInputHandler:    NewKeyInputHandler(),
+		keyInputHandler: NewKeyInputHandler(),
 	}
 }
 
 type LayerListViewOption func(ll *LayerList)
 
 func UpLayerListBindingOption(k KeyBindingDisplay) LayerListViewOption {
-	return func (ll *LayerList) {
-		ll.keyInputHandler.AddBinding(k, func() {ll.keyUp()} )
+	return func(ll *LayerList) {
+		ll.keyInputHandler.AddBinding(k, func() { ll.keyUp() })
 	}
 }
 
 func DownLayerListBindingOption(k KeyBindingDisplay) LayerListViewOption {
-	return func (ll *LayerList) {
-		ll.keyInputHandler.AddBinding(k, func() {ll.keyDown()} )
+	return func(ll *LayerList) {
+		ll.keyInputHandler.AddBinding(k, func() { ll.keyDown() })
 	}
 }
 
 func PageUpLayerListBindingOption(k KeyBindingDisplay) LayerListViewOption {
-	return func (ll *LayerList) {
-		ll.keyInputHandler.AddBinding(k, func() {ll.pageUp()} )
+	return func(ll *LayerList) {
+		ll.keyInputHandler.AddBinding(k, func() { ll.pageUp() })
 	}
 }
-
 
 func PageDownLayerListBindingOption(k KeyBindingDisplay) LayerListViewOption {
-	return func (ll *LayerList) {
-		ll.keyInputHandler.AddBinding(k, func() {ll.pageDown()} )
+	return func(ll *LayerList) {
+		ll.keyInputHandler.AddBinding(k, func() { ll.pageDown() })
 	}
 }
 
-func CompareAllLayerListBindingOption(k KeyBindingDisplay) LayerListViewOption {
-	return func(ll *LayerList) {
-		ll.keyInputHandler.AddToggleBinding(k, func() {
-			if ll.GetMode() == viewmodels.CompareSingleLayer {
-				ll.SwitchMode()
-			}
-		})
-	}
-}
-
-
-func CompareLayerLayerListBindingOption(k KeyBindingDisplay) LayerListViewOption {
-	return func(ll *LayerList) {
-		ll.keyInputHandler.AddToggleBinding(k, func() {
-			if ll.GetMode() == viewmodels.CompareAllLayers {
-				ll.SwitchMode()
-			}
-		})
+func SwitchCompareLayerListBindingOption(k KeyBindingDisplay) LayerListViewOption {
+	return func(ll *LayerList) { 
+		ll.keyInputHandler.AddToggleBinding(k, func() { ll.SwitchMode() })
 	}
 }
 
@@ -96,9 +80,8 @@ func (ll *LayerList) AddBindingOptions(bindingOptions ...LayerListViewOption) *L
 	return ll
 }
 
-
 func (ll *LayerList) Setup(config KeyBindingConfig) *LayerList {
-	
+
 	ll.AddBindingOptions(
 		UpLayerListBindingOption(NewKeyBindingDisplay(tcell.KeyUp, rune(0), tcell.ModNone, "", false, true)),
 		UpLayerListBindingOption(NewKeyBindingDisplay(tcell.KeyLeft, rune(0), tcell.ModNone, "", false, true)),
@@ -106,21 +89,26 @@ func (ll *LayerList) Setup(config KeyBindingConfig) *LayerList {
 		DownLayerListBindingOption(NewKeyBindingDisplay(tcell.KeyRight, rune(0), tcell.ModNone, "", false, true)),
 	)
 
-	bindingSettings := map[string]func(KeyBindingDisplay) LayerListViewOption {
-		"keybinding.page-up":  PageUpLayerListBindingOption,
-		"keybinding.page-down": PageDownLayerListBindingOption,
-		"keybinding.compare-all":  CompareAllLayerListBindingOption,
-		"keybinding.compare-layer": CompareLayerLayerListBindingOption,
+	bindingSettings := map[string]func(KeyBindingDisplay) LayerListViewOption{
+		"keybinding.page-up":       PageUpLayerListBindingOption,
+		"keybinding.page-down":     PageDownLayerListBindingOption,
+		"keybinding.compare-all":   SwitchCompareLayerListBindingOption,
+	}
+
+	hideBindings := map[string]interface{}{
+		"keybinding.page-up":   true,
+		"keybinding.page-down": true,
 	}
 
 	for keybinding, action := range bindingSettings {
 		binding, err := config.GetKeyBinding(keybinding)
 		if err != nil {
-			panic(fmt.Errorf("setup error during %s: %w", keybinding, err))
+			panic(fmt.Errorf("setup error for keybinding: %s: %w", keybinding, err))
 			// TODO handle this error
 			//return nil
 		}
-		ll.AddBindingOptions(action(KeyBindingDisplay{KeyBinding: &binding, Selected:false}))
+		_, hidden := hideBindings[keybinding]
+		ll.AddBindingOptions(action(KeyBindingDisplay{KeyBinding: &binding, Selected: false, Hide: hidden}))
 	}
 
 	return ll
@@ -145,6 +133,7 @@ func (ll *LayerList) getInputWrapper() inputFn {
 func (ll *LayerList) Draw(screen tcell.Screen) {
 	ll.Box.Draw(screen)
 	x, y, width, height := ll.Box.GetInnerRect()
+	compressedView := width < 25
 
 	cmpString := "  "
 	printableLayers := ll.GetPrintableLayers()
@@ -166,8 +155,11 @@ func (ll *LayerList) Draw(screen tcell.Screen) {
 			cmpFormatter = format.CompareBottom
 		}
 		line := fmt.Sprintf("%s %s", cmpFormatter(cmpString), lineFormatter(layer.String()))
-		printWidth := intMin(len(line),width)
-		format.PrintLine(screen, line, x, y+yIndex, printWidth, tview.AlignLeft,  tcell.StyleDefault)
+		if compressedView {
+			line = fmt.Sprintf("%s %s", cmpFormatter(cmpString), lineFormatter(fmt.Sprintf("%d", yIndex + 1)))
+		}
+		printWidth := intMin(len(line), width)
+		format.PrintLine(screen, line, x, y+yIndex, printWidth, tview.AlignLeft, tcell.StyleDefault)
 	}
 }
 

@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"fmt"
 	"os"
 	"sync"
 
@@ -72,11 +73,13 @@ func newApp(app *tview.Application, analysis *image.AnalysisResult, cache filetr
 		filterView := components.NewFilterView(treeViewModel).Setup()
 
 		layersView := components.NewLayerList(treeViewModel).Setup(config)
-		layersBox := components.NewWrapper("Layers", "subtitle!", layersView).Setup()
+
+		layerSubtitle := fmt.Sprintf("Cmp%7s  %s", "Size", "Command")
+		layersBox := components.NewWrapper("Layers", layerSubtitle, layersView).Setup()
 
 		fileTreeView := components.NewTreeView(treeViewModel)
 		fileTreeView = fileTreeView.Setup(config)
-		fileTreeBox := components.NewWrapper("Current Layer Contents", "subtitle!", fileTreeView).Setup()
+		fileTreeBox := components.NewWrapper("Current Layer Contents", "", fileTreeView).Setup()
 
 		keyMenuView := components.NewKeyMenuView()
 

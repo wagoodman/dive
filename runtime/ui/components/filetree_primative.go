@@ -207,13 +207,20 @@ func (t *TreeView) Setup(config KeyBindingConfig) *TreeView {
 		"keybinding.page-down":                  PageDownBindingOption,
 	}
 
+	hideBindings := map[string]interface{}{
+		"keybinding.page-up":                    true,
+		"keybinding.page-down":                  true,
+	}
+
 	for keybinding, action := range bindingSettings {
 		binding, err := config.GetKeyBinding(keybinding)
 		if err != nil {
 			panic(fmt.Errorf("setup error during %s: %w", keybinding, err))
 		}
 
-		t.AddBindingOptions(action(KeyBindingDisplay{KeyBinding: &binding, Selected: false}))
+		_, hideValue := hideBindings[keybinding]
+		
+		t.AddBindingOptions(action(KeyBindingDisplay{KeyBinding: &binding, Selected: false, Hide: hideValue}))
 	}
 
 	return t
@@ -326,8 +333,14 @@ func (t *TreeView) getAbsPositionNode() (node *filetree.FileNode) {
 	return node
 }
 
+
+func (t *TreeView) GetInnerRect() (int,int,int,int) {
+	x, y, width, height := t.Box.GetInnerRect()
+	return x, y+1, width, height-1
+}
+
 func (t *TreeView) keyDown() bool {
-	_, _, _, height := t.Box.GetInnerRect()
+	_, _, _, height := t.GetInnerRect()
 
 	// treeIndex is the index about where we are in the current file
 	if t.treeIndex >= t.tree.VisibleSize() {
@@ -364,7 +377,7 @@ func (t *TreeView) keyUp() bool {
 func (t *TreeView) keyRight() bool {
 	node := t.getAbsPositionNode()
 
-	_, _, _, height := t.Box.GetInnerRect()
+	_, _, _, height := t.GetInnerRect()
 	if node == nil {
 		return false
 	}
@@ -452,7 +465,7 @@ func (t *TreeView) pageUp() bool {
 }
 
 func (t *TreeView) bufferIndexUpperBound() int {
-	_, _, _, height := t.Box.GetInnerRect()
+	_, _, _, height := t.GetInnerRect()
 	return t.bufferIndexLowerBound + height
 }
 
@@ -464,6 +477,13 @@ func (t *TreeView) Draw(screen tcell.Screen) {
 	treeString := t.tree.StringBetween(t.bufferIndexLowerBound, t.bufferIndexUpperBound(), showAttributes)
 	lines := strings.Split(treeString, "\n")
 
+	headerLine := "Filetree"
+	if showAttributes {
+		headerLine = fmt.Sprintf("Permission %11s %10s %s", "UID:GID", "Size", "Filetree")
+	}
+
+	format.PrintLine(screen, headerLine, x, y, len(headerLine), tview.AlignLeft, tcell.StyleDefault)
+	x, y, width, height = t.GetInnerRect()
 	// update the contents
 	for yIndex, line := range lines {
 		if yIndex >= height {

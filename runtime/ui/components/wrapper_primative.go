@@ -6,6 +6,7 @@ import (
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
+	"github.com/wagoodman/dive/runtime/ui/format"
 )
 
 // This was pretty helpful: https://github.com/rivo/tview/wiki/Primitives
@@ -40,7 +41,7 @@ func NewWrapper(title, subtitle string, inner wrapable) *Wrapper {
 		flex:             flex,
 		title:            title,
 		subtitle:         subtitle,
-		titleTextView:    tview.NewTextView(),
+		titleTextView:    tview.NewTextView().SetDynamicColors(true),
 		subtitleTextView: tview.NewTextView().SetText(subtitle),
 		inner:            inner,
 		visible:          Always(true),
@@ -75,9 +76,12 @@ func (b *Wrapper) Draw(screen tcell.Screen) {
 	if b.title != "" {
 		b.titleTextView.Draw(screen)
 		x, y, width, _ := b.titleRightBox.GetRect()
+		boarderRune := tview.BoxDrawingsLightHorizontal
+		if b.HasFocus() {
+			boarderRune = tview.BoxDrawingsHeavyHorizontal
+		}
 		for cx := x; cx < x+width; cx++ {
-			// TODO: swap for bold when focused (tview.BoxDrawingsHeavyHorizontal)
-			screen.SetContent(cx, y, tview.BoxDrawingsLightHorizontal, nil, tcell.StyleDefault)
+			screen.SetContent(cx, y, boarderRune, nil, tcell.StyleDefault)
 		}
 	}
 	if b.subtitle != "" {
@@ -110,15 +114,17 @@ func (b *Wrapper) InputHandler() func(event *tcell.EventKey, setFocus func(p tvi
 
 func (b *Wrapper) setTitle(hasFocus bool) {
 	prefix := ""
+	postfix := strings.Repeat(string(tview.BoxDrawingsLightHorizontal), 10)
 	if hasFocus {
 		prefix = "● "
+		postfix = strings.Repeat(string(tview.BoxDrawingsHeavyHorizontal), 10)
 	}
-	// TODO: swap for bold when focused (tview.BoxDrawingsHeavyHorizontal)
-	postfix := strings.Repeat(string(tview.BoxDrawingsLightHorizontal), 10)
-	title := fmt.Sprintf("│ %s%s ├%s", prefix, b.title, postfix)
+	content := format.Header(fmt.Sprintf("%s%s", prefix, b.title))
+	title := fmt.Sprintf("│ %s ├%s", content,  postfix)
 
 	if hasFocus {
-		// TODO: add bold wrapper
+		content = format.Header(fmt.Sprintf("%s%s", prefix, b.title))
+		title = fmt.Sprintf("┃ %s ┣%s", content, postfix)
 	}
 
 	b.titleTextView.SetText(title)

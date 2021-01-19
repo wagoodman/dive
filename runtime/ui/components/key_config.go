@@ -2,6 +2,7 @@ package components
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/spf13/viper"
@@ -10,34 +11,62 @@ import (
 // TODO move this to a more appropriate place
 type KeyConfig struct{}
 
-
-type KeyBinding struct{
+type KeyBinding struct {
 	*tcell.EventKey
-	Display    string
+	Display string
 }
 
 type KeyBindingDisplay struct {
 	*KeyBinding
 	Selected bool
-	Hide bool
+	Hide     bool
 }
 
-// just print space key as Space
 func (kb *KeyBindingDisplay) Name() string {
-	if kb.Key() == tcell.KeyRune && kb.Rune() == rune(' ') {
-		return "Space"
+	s := ""
+	m := []string{}
+	kMod := kb.Modifiers()
+	if kMod&tcell.ModShift != 0 {
+		m = append(m, "Shift")
+	}
+	if kMod&tcell.ModAlt != 0 {
+		m = append(m, "Alt")
+	}
+	if kMod&tcell.ModMeta != 0 {
+		m = append(m, "Meta")
+	}
+	if kMod&tcell.ModCtrl != 0 {
+		m = append(m, "^")
 	}
 
-	return kb.KeyBinding.Name()
+	ok := false
+	key := kb.Key()
+	if s, ok = tcell.KeyNames[key]; !ok {
+		if key == tcell.KeyRune {
+			if kb.Rune() == rune(' ') {
+				s = "Space"
+			} else {
+				s = string(kb.Rune())
+			}
+		} else {
+			s = fmt.Sprintf("Key[%d,%d]", key, int(kb.Rune()))
+		}
+	}
+	if len(m) != 0 {
+		if kMod&tcell.ModCtrl != 0 && strings.HasPrefix(s, "Ctrl-") {
+			s = s[5:]
+		}
+		return fmt.Sprintf("%s%s", strings.Join(m, ""), s)
+	}
+	return s
 }
 
 type keyAction func() bool
 
-
 func NewKeyBinding(name string, key *tcell.EventKey) KeyBinding {
 	return KeyBinding{
 		EventKey: key,
-		Display: name,
+		Display:  name,
 	}
 }
 
@@ -45,8 +74,8 @@ func NewKeyBindingDisplay(k tcell.Key, ch rune, modMask tcell.ModMask, name stri
 	kb := NewKeyBinding(name, tcell.NewEventKey(k, ch, modMask))
 	return KeyBindingDisplay{
 		KeyBinding: &kb,
-		Selected: selected, 
-		Hide: hide,
+		Selected:   selected,
+		Hide:       hide,
 	}
 }
 

@@ -118,39 +118,39 @@ func initConfig() {
 		tcell.NewEventKey(tcell.KeyCtrlSpace, rune(0), tcell.ModCtrl),
 	))
 	viper.SetDefault("keybinding.toggle-filetree-attributes", components.NewKeyBinding(
-		"FileTree Attributes",
+		"Attributes",
 		tcell.NewEventKey(tcell.KeyCtrlB, rune(0), tcell.ModCtrl),
 	))
 
 
 	viper.SetDefault("keybinding.toggle-added-files", components.NewKeyBinding(
-		"Added Files",
+		"Added",
 		tcell.NewEventKey(tcell.KeyCtrlA, rune(0), tcell.ModCtrl),
 	))
 
 
 	viper.SetDefault("keybinding.toggle-removed-files", components.NewKeyBinding(
-		"Removed Files",
+		"Removed",
 		tcell.NewEventKey(tcell.KeyCtrlR, rune(0), tcell.ModCtrl),
 	))
 
 	viper.SetDefault("keybinding.toggle-modified-files", components.NewKeyBinding(
-		"Modified Files",
+		"Modified",
 		tcell.NewEventKey(tcell.KeyCtrlM, rune(0), tcell.ModCtrl),
 	))
 
 	viper.SetDefault("keybinding.toggle-unmodified-files", components.NewKeyBinding(
-		"Unmodified Files",
+		"Unmodified",
 		tcell.NewEventKey(tcell.KeyCtrlU, rune(0), tcell.ModCtrl),
 	))
 
 	viper.SetDefault("keybinding.page-up", components.NewKeyBinding(
-		"Page Up",
+		"Pg Up",
 		tcell.NewEventKey(tcell.KeyPgUp, rune(0), tcell.ModNone),
 	))
 
 	viper.SetDefault("keybinding.page-down", components.NewKeyBinding(
-		"Page Down",
+		"Pg Down",
 		tcell.NewEventKey(tcell.KeyPgDn, rune(0), tcell.ModNone),
 	))
 

@@ -66,19 +66,34 @@ func (t *KeyMenuView) Draw(screen tcell.Screen) {
 	x, y, width, _ := t.Box.GetInnerRect()
 	// TODO: add logic to highlight selected options
 
-	line := []string{}
-	for _, keyBinding := range t.GetKeyBindings() {
-		if keyBinding.Hide {
+	lines := []string{}
+	keyBindings := t.GetKeyBindings()
+	for idx, binding := range keyBindings {
+		if binding.Hide {
 			continue
 		}
-		formatter := format.StatusControlNormal
-		if keyBinding.Selected {
-			formatter = format.StatusControlSelected
+		displayFormatter := format.StatusControlNormal
+		keyBindingFormatter := format.StatusControlNormalBold
+		if binding.Selected {
+			displayFormatter = format.StatusControlSelected
+			keyBindingFormatter = format.StatusControlSelectedBold
 		}
-		line = append(line, formatter(fmt.Sprintf("%s (%s)", keyBinding.Display, keyBinding.Name())))
+		postfix := "⎹"
+		//postfix := "▏"
+		if idx == len(keyBindings)-1 {
+			postfix = " "
+		}
+		prefix :=  " "
+		if idx == 0 {
+			prefix = ""
+		}
+		keyBindingContent := keyBindingFormatter(prefix + binding.Name() + " ")
+		displayContnet := displayFormatter(binding.Display + postfix)
+		lines = append(lines, fmt.Sprintf("%s%s", keyBindingContent, displayContnet))
 	}
-
-	format.PrintLine(screen, strings.Join(line, format.StatusControlNormal(" ▏")), x, y, width, tview.AlignLeft, tcell.StyleDefault)
+	joinedLine := strings.Join(lines, "")
+	_, w := tview.PrintWithStyle(screen, joinedLine, x, y, width, tview.AlignLeft, tcell.StyleDefault)
+	format.PrintLine(screen, format.StatusControlNormal(strings.Repeat(" ", intMax(0,width-w))), x+w, y, width, tview.AlignLeft, tcell.StyleDefault)
 
 }
 

@@ -61,16 +61,18 @@ func GenerateWholeLineFormatter(fg, bg, flags string) Formatter {
 
 var (
 	// Bolds text
-	Header                Formatter = GenerateFormatter("", "", "b")
-	Normal                Formatter = GenerateFormatter("", "", "")
-	Selected              Formatter = GenerateFormatter("", "", "rb")
-	StatusSelected        Formatter = GenerateFormatter(colorTranslate(tcell.ColorWhite), colorTranslate(tcell.ColorDarkMagenta), "")
-	StatusNormal          Formatter = GenerateFormatter("", "", "r")
-	StatusControlSelected Formatter = GenerateFormatter(colorTranslate(tcell.ColorWhite), colorTranslate(tcell.ColorDarkMagenta), "b")
-	StatusControlNormal   Formatter = GenerateFormatter("", "", "rb")
-	CompareTop            Formatter = GenerateFormatter("", colorTranslate(tcell.ColorDarkMagenta), "")
-	CompareBottom         Formatter = GenerateFormatter("", colorTranslate(tcell.ColorDarkGreen), "")
-	FileTreeSelected      Formatter = func(s string) string { return boldReplace(GenerateWholeLineFormatter("", "", "rb")(s)) }
+	Header                    Formatter = GenerateFormatter("", "", "b")
+	Normal                    Formatter = GenerateFormatter("", "", "")
+	Selected                  Formatter = GenerateFormatter("", "", "rb")
+	StatusSelected            Formatter = GenerateFormatter(colorTranslate(tcell.ColorWhite), colorTranslate(tcell.ColorDarkMagenta), "")
+	StatusNormal              Formatter = GenerateFormatter("", "", "r")
+	StatusControlSelected     Formatter = GenerateFormatter(colorTranslate(tcell.ColorWhite), colorTranslate(tcell.ColorDarkMagenta), "")
+	StatusControlSelectedBold Formatter = GenerateFormatter(colorTranslate(tcell.ColorWhite), colorTranslate(tcell.ColorDarkMagenta), "b")
+	StatusControlNormal       Formatter = GenerateFormatter("", "", "r")
+	StatusControlNormalBold   Formatter = GenerateFormatter("", "", "rb")
+	CompareTop                Formatter = GenerateFormatter("", colorTranslate(tcell.ColorDarkMagenta), "")
+	CompareBottom             Formatter = GenerateFormatter("", colorTranslate(tcell.ColorDarkGreen), "")
+	FileTreeSelected          Formatter = func(s string) string { return boldReplace(GenerateWholeLineFormatter("", "", "rb")(s)) }
 
 	// filediff types
 	Added    Formatter = GenerateFormatter(colorTranslate(tcell.ColorGreen), "", "")
@@ -78,8 +80,9 @@ var (
 	Modified Formatter = GenerateFormatter(colorTranslate(tcell.ColorYellow), "", "")
 
 	// Styles these are needed to completely color a line
-	SelectedStyle tcell.Style = tcell.Style{}.Bold(true).Reverse(true)
-	MenuStyle tcell.Style = tcell.Style{}.Reverse(true)
+	HeaderStyle       tcell.Style = tcell.Style{}.Bold(true).Reverse(true)
+	SelectedStyle     tcell.Style = tcell.Style{}.Bold(true).Reverse(true)
+	MenuStyle         tcell.Style = tcell.Style{}.Reverse(true)
 	SelectedMenuStyle tcell.Style = tcell.Style{}.Background(tcell.ColorDarkBlue).Foreground(tcell.ColorWhite).Bold(true)
 )
 
