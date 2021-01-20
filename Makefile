@@ -14,7 +14,7 @@ ci-unit-test:
 
 ci-static-analysis:
 	go vet ./...
-	@! gofmt -s -l . 2>&1 | grep -vE '^\.git/' | grep -vE '^\.cache/'
+	gofmt -s -l . 2>&1 | grep -vE '^\.git/' | grep -vE '^\.cache/'
 	golangci-lint run
 
 ci-install-go-tools:

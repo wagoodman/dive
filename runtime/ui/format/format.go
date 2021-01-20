@@ -124,7 +124,7 @@ func boldReplace(s string) string {
 	return s
 }
 
-// TODO factor me out into a utils package along with my usage in the componenets package
+// TODO factor this out into a utils package along with my usage in the componenets package
 func intMin(a, b int) int {
 	if a < b {
 		return a

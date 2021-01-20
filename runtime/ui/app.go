@@ -45,7 +45,8 @@ func newApp(app *tview.Application, analysis *image.AnalysisResult, cache filetr
 		layerDetailsBox.SetVisibility(components.MinHeightVisibility(10))
 
 		//layerViewModel := viewmodels.NewLayersViewModel(analysis.Layers)
-		treeViewModel, err := viewmodels.NewTreeViewModel(cache, layerModel, filterViewModel)
+		cacheWrapper := CacheWrapper{Cache: &cache}
+		treeViewModel, err := viewmodels.NewTreeViewModel(&cacheWrapper, layerModel, filterViewModel)
 		if err != nil {
 			panic(err)
 		}
@@ -167,4 +168,13 @@ func Run(analysis *image.AnalysisResult, treeStack filetree.Comparer) error {
 	}
 	logrus.Info("app run loop exited")
 	return nil
+}
+
+// TODO move me to initialization package
+type CacheWrapper struct {
+	Cache *filetree.Comparer
+}
+
+func (c *CacheWrapper) GetTree(key filetree.TreeIndexKey) (viewmodels.TreeModel, error) {
+	return c.Cache.GetTree(key)
 }
