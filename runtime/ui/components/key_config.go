@@ -9,6 +9,13 @@ import (
 )
 
 // TODO move this to a more appropriate place
+
+var KeyNames = extendKeyMaps(
+	tcell.KeyNames,
+	map[tcell.Key]string{
+		tcell.KeyCtrlM: "Ctrl-M",
+	})
+
 type KeyConfig struct{}
 
 type KeyBinding struct {
@@ -18,8 +25,8 @@ type KeyBinding struct {
 
 type KeyBindingDisplay struct {
 	*KeyBinding
-	Selected bool
-	Hide     bool
+	Selected func () bool
+	Hide     func () bool
 }
 
 func (kb *KeyBindingDisplay) Name() string {
@@ -41,7 +48,7 @@ func (kb *KeyBindingDisplay) Name() string {
 
 	ok := false
 	key := kb.Key()
-	if s, ok = tcell.KeyNames[key]; !ok {
+	if s, ok = KeyNames[key]; !ok {
 		if key == tcell.KeyRune {
 			if kb.Rune() == rune(' ') {
 				s = "Space"
@@ -68,14 +75,14 @@ func NewKeyBinding(name string, key *tcell.EventKey) KeyBinding {
 	}
 }
 
-func NewKeyBindingDisplay(k tcell.Key, ch rune, modMask tcell.ModMask, name string, selected bool, hide bool) KeyBindingDisplay {
-	kb := NewKeyBinding(name, tcell.NewEventKey(k, ch, modMask))
-	return KeyBindingDisplay{
-		KeyBinding: &kb,
-		Selected:   selected,
-		Hide:       hide,
-	}
-}
+//func NewKeyBindingDisplay(k tcell.Key, ch rune, modMask tcell.ModMask, name string, selected bool, hide bool) KeyBindingDisplay {
+//	kb := NewKeyBinding(name, tcell.NewEventKey(k, ch, modMask))
+//	return KeyBindingDisplay{
+//		KeyBinding: &kb,
+//		Selected:   selected,
+//		Hide:       hide,
+//	}
+//}
 
 func (k *KeyBinding) Match(event *tcell.EventKey) bool {
 	if k.Key() == tcell.KeyRune {
@@ -109,4 +116,17 @@ func (k *KeyConfig) GetKeyBinding(key string) (result KeyBinding, err error) {
 		return KeyBinding{}, err
 	}
 	return result, err
+}
+
+func extendKeyMaps(m, extension map[tcell.Key]string) map[tcell.Key] string {
+	result := map[tcell.Key]string{}
+	for key, val := range m {
+		result[key] = val
+	}
+
+	for key, val := range extension {
+		result[key] = val
+	}
+
+	return result
 }

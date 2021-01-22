@@ -12,7 +12,6 @@ type DiveApplication struct {
 
 	boundList []BoundView
 
-	// todo remove this
 	bindings []KeyBinding
 }
 
@@ -28,7 +27,7 @@ func (d *DiveApplication) GetKeyBindings() []KeyBindingDisplay {
 	for i := 0; i < len(d.bindings); i++ {
 		binding := d.bindings[i]
 		logrus.Debug(fmt.Sprintf("adding keybinding with name %s", binding.Display))
-		result = append(result, KeyBindingDisplay{KeyBinding: &binding, Selected: false})
+		result = append(result, KeyBindingDisplay{KeyBinding: &binding, Selected: AlwaysFalse, Hide: AlwaysFalse})
 	}
 
 	for _, bound := range d.boundList {

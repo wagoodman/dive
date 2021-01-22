@@ -18,6 +18,7 @@ func TestTreeViewModel(t *testing.T) {
 	testVisibleSize(t)
 	testSetFilter(t)
 	testToggleHiddenFileType(t)
+	testGetHiddenFileType(t)
 	testSetLayerIndex(t)
 	testSwitchLayerMode(t)
 }
@@ -284,6 +285,10 @@ func testToggleHiddenFileType(t *testing.T) {
 	if !containsString("dirA", hiddenNames) {
 		t.Fatalf("expected 'file' to be hidden in %#v", hiddenNames)
 	}
+
+}
+
+func testGetHiddenFileType(t *testing.T) {
 
 }
 

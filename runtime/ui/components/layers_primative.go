@@ -42,33 +42,62 @@ func NewLayerList(model LayersViewModel) *LayerList {
 
 type LayerListViewOption func(ll *LayerList)
 
-func UpLayerListBindingOption(k KeyBindingDisplay) LayerListViewOption {
+var AlwaysFalse = func() bool {return false}
+var AlwaysTrue = func() bool {return true}
+
+
+func UpLayerListBindingOption(k KeyBinding) LayerListViewOption {
 	return func(ll *LayerList) {
-		ll.keyInputHandler.AddBinding(k, func() { ll.keyUp() })
+		displayBinding := KeyBindingDisplay{
+			KeyBinding: &k,
+			Selected:   AlwaysFalse,
+			Hide:       AlwaysTrue,
+		}
+		ll.keyInputHandler.AddBinding(displayBinding, func() { ll.keyUp() })
 	}
 }
 
-func DownLayerListBindingOption(k KeyBindingDisplay) LayerListViewOption {
+func DownLayerListBindingOption(k KeyBinding) LayerListViewOption {
 	return func(ll *LayerList) {
-		ll.keyInputHandler.AddBinding(k, func() { ll.keyDown() })
+		displayBinding := KeyBindingDisplay{
+			KeyBinding: &k,
+			Selected:   AlwaysFalse,
+			Hide:       AlwaysTrue,
+		}
+		ll.keyInputHandler.AddBinding(displayBinding, func() { ll.keyDown() })
 	}
 }
 
-func PageUpLayerListBindingOption(k KeyBindingDisplay) LayerListViewOption {
+func PageUpLayerListBindingOption(k KeyBinding) LayerListViewOption {
 	return func(ll *LayerList) {
-		ll.keyInputHandler.AddBinding(k, func() { ll.pageUp() })
+		displayBinding := KeyBindingDisplay{
+			KeyBinding: &k,
+			Selected:   AlwaysFalse,
+			Hide:       AlwaysFalse,
+		}
+		ll.keyInputHandler.AddBinding(displayBinding, func() { ll.pageUp() })
 	}
 }
 
-func PageDownLayerListBindingOption(k KeyBindingDisplay) LayerListViewOption {
+func PageDownLayerListBindingOption(k KeyBinding) LayerListViewOption {
 	return func(ll *LayerList) {
-		ll.keyInputHandler.AddBinding(k, func() { ll.pageDown() })
+		displayBinding := KeyBindingDisplay{
+			KeyBinding: &k,
+			Selected:   AlwaysFalse,
+			Hide:       AlwaysFalse,
+		}
+		ll.keyInputHandler.AddBinding(displayBinding, func() { ll.pageDown() })
 	}
 }
 
-func SwitchCompareLayerListBindingOption(k KeyBindingDisplay) LayerListViewOption {
-	return func(ll *LayerList) { 
-		ll.keyInputHandler.AddToggleBinding(k, func() { 
+func SwitchCompareLayerListBindingOption(k KeyBinding) LayerListViewOption {
+	return func(ll *LayerList) {
+		displayBinding := KeyBindingDisplay{
+			KeyBinding: &k,
+			Selected:   func() bool {return ll.GetMode() == viewmodels.CompareAllLayers},
+			Hide:       AlwaysFalse,
+		}
+		ll.keyInputHandler.AddBinding(displayBinding, func() {
 			if err := ll.SwitchLayerMode(); err != nil {
 				logrus.Error("SwitchCompareLayers error: ", err.Error())
 			}
@@ -87,32 +116,34 @@ func (ll *LayerList) AddBindingOptions(bindingOptions ...LayerListViewOption) *L
 func (ll *LayerList) Setup(config KeyBindingConfig) *LayerList {
 
 	ll.AddBindingOptions(
-		UpLayerListBindingOption(NewKeyBindingDisplay(tcell.KeyUp, rune(0), tcell.ModNone, "", false, true)),
-		UpLayerListBindingOption(NewKeyBindingDisplay(tcell.KeyLeft, rune(0), tcell.ModNone, "", false, true)),
-		DownLayerListBindingOption(NewKeyBindingDisplay(tcell.KeyDown, rune(0), tcell.ModNone, "", false, true)),
-		DownLayerListBindingOption(NewKeyBindingDisplay(tcell.KeyRight, rune(0), tcell.ModNone, "", false, true)),
+		UpLayerListBindingOption(NewKeyBinding("Cursor Up", tcell.NewEventKey(tcell.KeyUp, rune(0), tcell.ModNone))),
+		UpLayerListBindingOption(NewKeyBinding("", tcell.NewEventKey(tcell.KeyLeft, rune(0), tcell.ModNone))),
+		DownLayerListBindingOption(NewKeyBinding("Cursor Down", tcell.NewEventKey(tcell.KeyDown, rune(0), tcell.ModNone))),
+		DownLayerListBindingOption(NewKeyBinding("", tcell.NewEventKey(tcell.KeyRight, rune(0), tcell.ModNone))),
 	)
 
-	bindingSettings := map[string]func(KeyBindingDisplay) LayerListViewOption{
+	bindingOrder := []string {
+		"keybinding.page-up",
+		"keybinding.page-down",
+		"keybinding.compare-all",
+	}
+
+	bindingSettings := map[string]func(KeyBinding) LayerListViewOption{
 		"keybinding.page-up":       PageUpLayerListBindingOption,
 		"keybinding.page-down":     PageDownLayerListBindingOption,
 		"keybinding.compare-all":   SwitchCompareLayerListBindingOption,
 	}
 
-	hideBindings := map[string]interface{}{
-		"keybinding.page-up":   true,
-		"keybinding.page-down": true,
-	}
 
-	for keybinding, action := range bindingSettings {
+	for _, keybinding := range bindingOrder {
+		action := bindingSettings[keybinding]
 		binding, err := config.GetKeyBinding(keybinding)
 		if err != nil {
 			panic(fmt.Errorf("setup error for keybinding: %s: %w", keybinding, err))
 			// TODO handle this error
 			//return nil
 		}
-		_, hidden := hideBindings[keybinding]
-		ll.AddBindingOptions(action(KeyBindingDisplay{KeyBinding: &binding, Selected: false, Hide: hidden}))
+		ll.AddBindingOptions(action(binding))
 	}
 
 	return ll

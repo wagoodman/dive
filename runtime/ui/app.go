@@ -34,6 +34,7 @@ func newApp(app *tview.Application, analysis *image.AnalysisResult, cache filetr
 		format.SyncWithTermColors()
 
 		config := components.NewKeyConfig()
+		appConfig := components.AppConfig{}
 		diveApplication := components.NewDiveApplication(app)
 
 		//initialize viewmodels
@@ -90,8 +91,9 @@ func newApp(app *tview.Application, analysis *image.AnalysisResult, cache filetr
 			AddItem(filterView, 1, 0, false).
 			SetConsumers(filterView, fileTreeBox)
 
-		totalVisibleGrid.AddItem(leftVisibleGrid, 0, 1, true).
-			AddItem(rightVisibleGrid, 0, 1, false)
+		leftPortion, rightPortion := appConfig.GetPaneWidth()
+		totalVisibleGrid.AddItem(leftVisibleGrid, 0, leftPortion, true).
+			AddItem(rightVisibleGrid, 0, rightPortion, false)
 
 		uiSingleton = &UI{
 			app:      diveApplication,

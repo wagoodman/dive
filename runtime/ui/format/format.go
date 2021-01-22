@@ -83,7 +83,6 @@ var (
 	StatusControlNormalBold   Formatter = GenerateFormatter("", "", "rb")
 	CompareTop                Formatter = GenerateFormatter("", colorTranslate(tcell.ColorDarkMagenta), "")
 	CompareBottom             Formatter = GenerateFormatter("", colorTranslate(tcell.ColorDarkGreen), "")
-	FileTreeSelected          Formatter = func(s string) string { return boldReplace(GenerateWholeLineFormatter("", "", "rb")(s)) }
 
 	// filediff types
 	Added    Formatter = GenerateFormatter(colorTranslate(tcell.ColorGreen), "", "")
@@ -91,10 +90,7 @@ var (
 	Modified Formatter = GenerateFormatter(colorTranslate(tcell.ColorYellow), "", "")
 
 	// Styles these are needed to completely color a line
-	HeaderStyle       tcell.Style = tcell.Style{}.Bold(true).Reverse(true)
 	SelectedStyle     tcell.Style = tcell.Style{}.Bold(true).Reverse(true)
-	MenuStyle         tcell.Style = tcell.Style{}.Reverse(true)
-	SelectedMenuStyle tcell.Style = tcell.Style{}.Background(tcell.ColorDarkBlue).Foreground(tcell.ColorWhite).Bold(true)
 )
 
 func PrintLine(screen tcell.Screen, text string, x, y, maxWidth, align int, style tcell.Style) (int, int) {
@@ -115,7 +111,7 @@ func colorTranslate(c tcell.Color) string {
 	return fmt.Sprintf("#%06x", c.Hex())
 }
 
-func boldReplace(s string) string {
+func BoldReplace(s string) string {
 	s = strings.ReplaceAll(s, leftBracketStr, selectedLeftBracketStr)
 	s = strings.ReplaceAll(s, rightBracketStr, selectedRightBracketStr)
 	s = strings.ReplaceAll(s, fillStr, selectedFillStr)

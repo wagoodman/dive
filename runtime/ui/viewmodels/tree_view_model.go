@@ -100,6 +100,12 @@ func (tvm *TreeViewModel) ToggleHiddenFileType(filetype filetree.DiffType) bool 
 	return true
 }
 
+func (tvm *TreeViewModel) GetHiddenFileType(filetype filetree.DiffType) bool {
+	return tvm.hiddenDiffTypes[filetype]
+}
+
+
+
 // TODO: maek this method private, cant think of a reason for this to be public
 func (tvm *TreeViewModel) filterUpdate() error {
 	logrus.Debug("Updating filter!!!")
