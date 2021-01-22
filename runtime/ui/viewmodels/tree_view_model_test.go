@@ -289,7 +289,52 @@ func testToggleHiddenFileType(t *testing.T) {
 }
 
 func testGetHiddenFileType(t *testing.T) {
+	fModel := viewmodels.NewFilterViewModel(nil)
+	lModel := &fakes.LayersModel{}
+	tCache := &fakes.TreeCache{}
+	tModel := &fakes.TreeModel{}
+	tCache.GetTreeCall.Returns.TreeModel = tModel
 
+	tvm, err := viewmodels.NewTreeViewModel(tCache, lModel, fModel)
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+
+	if tvm.GetHiddenFileType(filetree.Added) {
+		t.Fatalf("expected Added filetype to not be hidden by default")
+	}
+
+	if tvm.GetHiddenFileType(filetree.Modified) {
+		t.Fatalf("expected Added filetype to not be hidden by default")
+	}
+
+	if tvm.GetHiddenFileType(filetree.Removed) {
+		t.Fatalf("expected Added filetype to not be hidden by default")
+	}
+
+	if tvm.GetHiddenFileType(filetree.Unmodified) {
+		t.Fatalf("expected Added filetype to not be hidden by default")
+	}
+
+	tvm.ToggleHiddenFileType(filetree.Added)
+	if !tvm.GetHiddenFileType(filetree.Added) {
+		t.Fatalf("expected Added filetype to be hidden after toggling")
+	}
+
+	tvm.ToggleHiddenFileType(filetree.Modified)
+	if !tvm.GetHiddenFileType(filetree.Modified) {
+		t.Fatalf("expected Added filetype to be hidden after toggling")
+	}
+
+	tvm.ToggleHiddenFileType(filetree.Removed)
+	if !tvm.GetHiddenFileType(filetree.Removed) {
+		t.Fatalf("expected Added filetype to be hidden after toggling")
+	}
+
+	tvm.ToggleHiddenFileType(filetree.Unmodified)
+	if !tvm.GetHiddenFileType(filetree.Unmodified) {
+		t.Fatalf("expected Added filetype to be hidden after toggling")
+	}
 }
 
 func testSetLayerIndex(t *testing.T) {
