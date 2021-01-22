@@ -151,6 +151,26 @@ func newApp(app *tview.Application, analysis *image.AnalysisResult, cache filetr
 
 		diveApplication.SetRoot(gridWithFooter, true)
 		diveApplication.SetFocus(gridWithFooter)
+
+		// additional setup configuration
+		if appConfig.GetAggregateLayerSetting() {
+			err := layerModel.SwitchLayerMode()
+			if err != nil {
+				panic(err)
+			}
+		}
+
+		if appConfig.GetCollapseDir() {
+			fileTreeView.CollapseOrExpandAll()
+		}
+
+		for _, hideType := range appConfig.GetDefaultHide() {
+			treeViewModel.ToggleHiddenFileType(hideType)
+		}
+
+		if appConfig.GetShowAttributes() {
+			fileTreeView.ToggleHideAttributes()
+		}
 	})
 
 	return uiSingleton, err

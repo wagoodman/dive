@@ -143,7 +143,7 @@ func CollapseAllBindingOption(k KeyBinding) TreeViewOption {
 			Selected:   AlwaysFalse,
 			Hide:       AlwaysFalse,
 		}
-		t.keyInputHandler.AddBinding(displayBinding, func() { t.collapseOrExpandAll() } )
+		t.keyInputHandler.AddBinding(displayBinding, func() { t.CollapseOrExpandAll() } )
 	}
 }
 
@@ -316,6 +316,10 @@ func (t *TreeView) GetKeyBindings() []KeyBindingDisplay {
 	return t.keyInputHandler.Order
 }
 
+func (t *TreeView) ToggleHideAttributes() {
+	t.showAttributes = !t.showAttributes
+}
+
 // Implementation note:
 // what do we want here??? a binding object?? yes
 func (t *TreeView) InputHandler() func(event *tcell.EventKey, setFocus func(p tview.Primitive)) {
@@ -354,7 +358,7 @@ func (t *TreeView) collapseDir() bool {
 	return true
 }
 
-func (t *TreeView) collapseOrExpandAll() bool {
+func (t *TreeView) CollapseOrExpandAll() bool {
 	visitor := func(n *filetree.FileNode) error {
 		if n.Data.FileInfo.IsDir {
 			n.Data.ViewInfo.Collapsed = t.globalCollapseAll
