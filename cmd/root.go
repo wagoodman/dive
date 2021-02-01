@@ -7,10 +7,8 @@ import (
 	"path"
 	"strings"
 
-	"github.com/gdamore/tcell/v2"
 	"github.com/wagoodman/dive/dive"
 	"github.com/wagoodman/dive/dive/filetree"
-	"github.com/wagoodman/dive/runtime/ui/components"
 
 	"github.com/mitchellh/go-homedir"
 	log "github.com/sirupsen/logrus"
@@ -80,76 +78,24 @@ func initConfig() {
 	viper.SetDefault("log.path", "./dive.log")
 	viper.SetDefault("log.enabled", true)
 	// keybindings: status view / global
-
-	// This keybinding can be changed but ctrl+C may still quit the application
-	viper.SetDefault("keybinding.quit", components.NewKeyBinding(
-		"Quit",
-		tcell.NewEventKey(tcell.KeyCtrlC, rune(0), tcell.ModCtrl),
-	))
-	viper.SetDefault("keybinding.toggle-view", components.NewKeyBinding(
-		"Switch View",
-		tcell.NewEventKey(tcell.KeyTab, rune(0), tcell.ModNone),
-	))
-
-	viper.SetDefault("keybinding.filter-files", components.NewKeyBinding(
-		"Find",
-		tcell.NewEventKey(tcell.KeyCtrlF, rune(0), tcell.ModCtrl),
-	))
+	// keybindings: status view / global
+	viper.SetDefault("keybinding.quit", "Ctrl+C")
+	viper.SetDefault("keybinding.toggle-view", "Tab")
+	viper.SetDefault("keybinding.filter-files", "Ctrl+f")
 	// keybindings: layer view
-	viper.SetDefault("keybinding.compare-all", components.NewKeyBinding(
-		"Compare All",
-		tcell.NewEventKey(tcell.KeyCtrlA, rune(0), tcell.ModCtrl),
-	))
-
-	viper.SetDefault("keybinding.compare-layer", components.NewKeyBinding(
-		"Compare Layer",
-		tcell.NewEventKey(tcell.KeyCtrlL, rune(0), tcell.ModCtrl),
-	))
-
+	viper.SetDefault("keybinding.compare-all", "Ctrl+A")
+	viper.SetDefault("keybinding.compare-layer", "Ctrl+L")
 	// keybindings: filetree view
-	viper.SetDefault("keybinding.toggle-collapse-dir", components.NewKeyBinding(
-		"Collapse",
-		tcell.NewEventKey(tcell.KeyRune, ' ', tcell.ModNone),
-	))
-
-	viper.SetDefault("keybinding.toggle-collapse-all-dir", components.NewKeyBinding(
-		"Collapse All",
-		tcell.NewEventKey(tcell.KeyCtrlSpace, rune(0), tcell.ModCtrl),
-	))
-	viper.SetDefault("keybinding.toggle-filetree-attributes", components.NewKeyBinding(
-		"Attributes",
-		tcell.NewEventKey(tcell.KeyCtrlB, rune(0), tcell.ModCtrl),
-	))
-
-	viper.SetDefault("keybinding.toggle-added-files", components.NewKeyBinding(
-		"Added",
-		tcell.NewEventKey(tcell.KeyCtrlA, rune(0), tcell.ModCtrl),
-	))
-
-	viper.SetDefault("keybinding.toggle-removed-files", components.NewKeyBinding(
-		"Removed",
-		tcell.NewEventKey(tcell.KeyCtrlR, rune(0), tcell.ModCtrl),
-	))
-
-	viper.SetDefault("keybinding.toggle-modified-files", components.NewKeyBinding(
-		"Modified",
-		tcell.NewEventKey(tcell.KeyCtrlM, rune(0), tcell.ModCtrl),
-	))
-
-	viper.SetDefault("keybinding.toggle-unmodified-files", components.NewKeyBinding(
-		"Unmodified",
-		tcell.NewEventKey(tcell.KeyCtrlU, rune(0), tcell.ModCtrl),
-	))
-
-	viper.SetDefault("keybinding.page-up", components.NewKeyBinding(
-		"Pg Up",
-		tcell.NewEventKey(tcell.KeyPgUp, rune(0), tcell.ModNone),
-	))
-
-	viper.SetDefault("keybinding.page-down", components.NewKeyBinding(
-		"Pg Down",
-		tcell.NewEventKey(tcell.KeyPgDn, rune(0), tcell.ModNone),
-	))
+	viper.SetDefault("keybinding.toggle-collapse-dir", "Space")
+	viper.SetDefault("keybinding.toggle-collapse-all-dir", "Ctrl+Space")
+	viper.SetDefault("keybinding.toggle-filetree-attributes", "Ctrl+B")
+	viper.SetDefault("keybinding.toggle-added-files", "Ctrl+A")
+	viper.SetDefault("keybinding.toggle-removed-files", "Ctrl+R")
+	viper.SetDefault("keybinding.toggle-modified-files", "Ctrl+N")
+	viper.SetDefault("keybinding.toggle-unmodified-files", "Ctrl+U")
+	viper.SetDefault("keybinding.toggle-wrap-tree", "Ctrl+P")
+	viper.SetDefault("keybinding.page-up", "PgUp")
+	viper.SetDefault("keybinding.page-down", "PgDn")
 
 	viper.SetDefault("diff.hide", "")
 

@@ -39,6 +39,7 @@ require (
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/viper v1.7.1
 	github.com/stretchr/testify v1.6.1 // indirect
+	gitlab.com/tslocum/cbind v0.1.4
 	go.uber.org/zap v1.10.0
 	golang.org/x/net v0.0.0-20201029055024-942e2f445f3c
 	golang.org/x/sys v0.0.0-20201218084310-7d0127a74742 // indirect
