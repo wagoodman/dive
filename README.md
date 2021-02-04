@@ -105,8 +105,15 @@ The above example assumes [`yay`](https://aur.archlinux.org/packages/yay/) as th
 
 **Mac**
 
+With [Homebrew](https://brew.sh/):
+
 ```bash
 brew install dive
+```
+or [MacPorts](https://www.macports.org/):
+
+```bash
+port install dive
 ```
 
 or download the latest Darwin build from the [releases page](https://github.com/wagoodman/dive/releases/download/v0.9.2/dive_0.9.2_darwin_amd64.tar.gz).
