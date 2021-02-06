@@ -6,6 +6,7 @@ import (
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 	"github.com/sirupsen/logrus"
+	"github.com/wagoodman/dive/runtime/ui/components/helpers"
 	"github.com/wagoodman/dive/runtime/ui/format"
 	"github.com/wagoodman/dive/runtime/ui/viewmodels"
 	"go.uber.org/zap"
@@ -24,7 +25,7 @@ type LayerList struct {
 	cmpIndex              int
 	changed               LayerListHandler
 
-	keyInputHandler *KeyInputHandler
+	keyInputHandler *helpers.KeyInputHandler
 
 	LayersViewModel
 }
@@ -36,19 +37,18 @@ func NewLayerList(model LayersViewModel) *LayerList {
 		Box:             tview.NewBox(),
 		cmpIndex:        0,
 		LayersViewModel: model,
-		keyInputHandler: NewKeyInputHandler(),
+		keyInputHandler: helpers.NewKeyInputHandler(),
 	}
 }
 
 type LayerListViewOption func(ll *LayerList)
 
-var AlwaysFalse = func() bool {return false}
-var AlwaysTrue = func() bool {return true}
+var AlwaysFalse = func() bool { return false }
+var AlwaysTrue = func() bool { return true }
 
-
-func UpLayerListBindingOption(k KeyBinding) LayerListViewOption {
+func UpLayerListBindingOption(k helpers.KeyBinding) LayerListViewOption {
 	return func(ll *LayerList) {
-		displayBinding := KeyBindingDisplay{
+		displayBinding := helpers.KeyBindingDisplay{
 			KeyBinding: &k,
 			Selected:   AlwaysFalse,
 			Hide:       AlwaysTrue,
@@ -57,9 +57,9 @@ func UpLayerListBindingOption(k KeyBinding) LayerListViewOption {
 	}
 }
 
-func DownLayerListBindingOption(k KeyBinding) LayerListViewOption {
+func DownLayerListBindingOption(k helpers.KeyBinding) LayerListViewOption {
 	return func(ll *LayerList) {
-		displayBinding := KeyBindingDisplay{
+		displayBinding := helpers.KeyBindingDisplay{
 			KeyBinding: &k,
 			Selected:   AlwaysFalse,
 			Hide:       AlwaysTrue,
@@ -68,9 +68,9 @@ func DownLayerListBindingOption(k KeyBinding) LayerListViewOption {
 	}
 }
 
-func PageUpLayerListBindingOption(k KeyBinding) LayerListViewOption {
+func PageUpLayerListBindingOption(k helpers.KeyBinding) LayerListViewOption {
 	return func(ll *LayerList) {
-		displayBinding := KeyBindingDisplay{
+		displayBinding := helpers.KeyBindingDisplay{
 			KeyBinding: &k,
 			Selected:   AlwaysFalse,
 			Hide:       AlwaysFalse,
@@ -79,9 +79,9 @@ func PageUpLayerListBindingOption(k KeyBinding) LayerListViewOption {
 	}
 }
 
-func PageDownLayerListBindingOption(k KeyBinding) LayerListViewOption {
+func PageDownLayerListBindingOption(k helpers.KeyBinding) LayerListViewOption {
 	return func(ll *LayerList) {
-		displayBinding := KeyBindingDisplay{
+		displayBinding := helpers.KeyBindingDisplay{
 			KeyBinding: &k,
 			Selected:   AlwaysFalse,
 			Hide:       AlwaysFalse,
@@ -90,11 +90,11 @@ func PageDownLayerListBindingOption(k KeyBinding) LayerListViewOption {
 	}
 }
 
-func SwitchCompareLayerListBindingOption(k KeyBinding) LayerListViewOption {
+func SwitchCompareLayerListBindingOption(k helpers.KeyBinding) LayerListViewOption {
 	return func(ll *LayerList) {
-		displayBinding := KeyBindingDisplay{
+		displayBinding := helpers.KeyBindingDisplay{
 			KeyBinding: &k,
-			Selected:   func() bool {return ll.GetMode() == viewmodels.CompareAllLayers},
+			Selected:   func() bool { return ll.GetMode() == viewmodels.CompareAllLayers },
 			Hide:       AlwaysFalse,
 		}
 		ll.keyInputHandler.AddBinding(displayBinding, func() {
@@ -116,24 +116,23 @@ func (ll *LayerList) AddBindingOptions(bindingOptions ...LayerListViewOption) *L
 func (ll *LayerList) Setup(config KeyBindingConfig) *LayerList {
 
 	ll.AddBindingOptions(
-		UpLayerListBindingOption(NewKeyBinding("Cursor Up", tcell.NewEventKey(tcell.KeyUp, rune(0), tcell.ModNone))),
-		UpLayerListBindingOption(NewKeyBinding("", tcell.NewEventKey(tcell.KeyLeft, rune(0), tcell.ModNone))),
-		DownLayerListBindingOption(NewKeyBinding("Cursor Down", tcell.NewEventKey(tcell.KeyDown, rune(0), tcell.ModNone))),
-		DownLayerListBindingOption(NewKeyBinding("", tcell.NewEventKey(tcell.KeyRight, rune(0), tcell.ModNone))),
+		UpLayerListBindingOption(helpers.NewKeyBinding("Cursor Up", tcell.NewEventKey(tcell.KeyUp, rune(0), tcell.ModNone))),
+		UpLayerListBindingOption(helpers.NewKeyBinding("", tcell.NewEventKey(tcell.KeyLeft, rune(0), tcell.ModNone))),
+		DownLayerListBindingOption(helpers.NewKeyBinding("Cursor Down", tcell.NewEventKey(tcell.KeyDown, rune(0), tcell.ModNone))),
+		DownLayerListBindingOption(helpers.NewKeyBinding("", tcell.NewEventKey(tcell.KeyRight, rune(0), tcell.ModNone))),
 	)
 
-	bindingOrder := []string {
+	bindingOrder := []string{
 		"keybinding.page-up",
 		"keybinding.page-down",
 		"keybinding.compare-all",
 	}
 
-	bindingSettings := map[string]func(KeyBinding) LayerListViewOption{
-		"keybinding.page-up":       PageUpLayerListBindingOption,
-		"keybinding.page-down":     PageDownLayerListBindingOption,
-		"keybinding.compare-all":   SwitchCompareLayerListBindingOption,
+	bindingSettings := map[string]func(helpers.KeyBinding) LayerListViewOption{
+		"keybinding.page-up":     PageUpLayerListBindingOption,
+		"keybinding.page-down":   PageDownLayerListBindingOption,
+		"keybinding.compare-all": SwitchCompareLayerListBindingOption,
 	}
-
 
 	for _, keybinding := range bindingOrder {
 		action := bindingSettings[keybinding]
@@ -149,7 +148,7 @@ func (ll *LayerList) Setup(config KeyBindingConfig) *LayerList {
 	return ll
 }
 
-func (ll *LayerList) GetKeyBindings() []KeyBindingDisplay {
+func (ll *LayerList) GetKeyBindings() []helpers.KeyBindingDisplay {
 	return ll.keyInputHandler.Order
 }
 
@@ -191,7 +190,7 @@ func (ll *LayerList) Draw(screen tcell.Screen) {
 		}
 		line := fmt.Sprintf("%s %s", cmpFormatter(cmpString), lineFormatter(layer.String()))
 		if compressedView {
-			line = fmt.Sprintf("%s %s", cmpFormatter(cmpString), lineFormatter(fmt.Sprintf("%d", yIndex + 1)))
+			line = fmt.Sprintf("%s %s", cmpFormatter(cmpString), lineFormatter(fmt.Sprintf("%d", yIndex+1)))
 		}
 		printWidth := intMin(len(line), width)
 		format.PrintLine(screen, line, x, y+yIndex, printWidth, tview.AlignLeft, tcell.StyleDefault)

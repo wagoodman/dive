@@ -8,6 +8,7 @@ import (
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 	"github.com/wagoodman/dive/dive/image"
+	"github.com/wagoodman/dive/runtime/ui/components/helpers"
 	"github.com/wagoodman/dive/runtime/ui/format"
 )
 
@@ -69,6 +70,6 @@ func (lv *ImageDetails) imageDetailsText() string {
 	return fmt.Sprintf("%s\n%s\n%s\n%s", imageSizeStr, wastedSpaceStr, effStr, inefficiencyReport)
 }
 
-func (lv *ImageDetails) GetKeyBindings() []KeyBindingDisplay {
-	return []KeyBindingDisplay{}
+func (lv *ImageDetails) GetKeyBindings() []helpers.KeyBindingDisplay {
+	return []helpers.KeyBindingDisplay{}
 }

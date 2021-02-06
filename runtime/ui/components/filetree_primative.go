@@ -8,6 +8,7 @@ import (
 	"github.com/rivo/tview"
 	"github.com/sirupsen/logrus"
 	"github.com/wagoodman/dive/dive/filetree"
+	"github.com/wagoodman/dive/runtime/ui/components/helpers"
 	"github.com/wagoodman/dive/runtime/ui/format"
 )
 
@@ -20,190 +21,153 @@ type TreeModel interface {
 	SetLayerIndex(int) bool
 	ToggleHiddenFileType(filetype filetree.DiffType) bool
 	GetHiddenFileType(filetype filetree.DiffType) bool
-
-}
-
-type inputHandleFunc func(event *tcell.EventKey, setFocus func(p tview.Primitive))
-
-// TODO factor out KeyInputHandler and related structs into a separate file
-type KeyInputHandler struct {
-	Order []KeyBindingDisplay
-	HandlerMap map[*tcell.EventKey] func()
-}
-
-func NewKeyInputHandler() *KeyInputHandler {
-	return &KeyInputHandler{
-		Order: []KeyBindingDisplay{},
-		HandlerMap: map[*tcell.EventKey] func(){},
-	}
-}
-
-func (k *KeyInputHandler) AddBinding(binding KeyBindingDisplay, f func() ) *KeyInputHandler {
-	k.Order = append(k.Order, binding)
-	k.HandlerMap[binding.EventKey] = f
-
-	return k
-}
-
-func (k *KeyInputHandler) Handle() inputHandleFunc {
-	return func(event *tcell.EventKey, setFocus func(p tview.Primitive) ) {
-		for _, m := range k.Order {
-			if m.Match(event) {
-				k.HandlerMap[m.EventKey]()
-			}
-		}
-	}
 }
 
 type TreeViewOption func(t *TreeView)
 
-func UpBindingOption(k KeyBinding) TreeViewOption {
-	return func (t *TreeView) {
-		displayBinding := KeyBindingDisplay{
+func UpBindingOption(k helpers.KeyBinding) TreeViewOption {
+	return func(t *TreeView) {
+		displayBinding := helpers.KeyBindingDisplay{
 			KeyBinding: &k,
 			Selected:   AlwaysFalse,
 			Hide:       AlwaysTrue,
 		}
-		t.keyInputHandler.AddBinding(displayBinding, func() {t.keyUp()} )
+		t.keyInputHandler.AddBinding(displayBinding, func() { t.keyUp() })
 	}
 }
 
-func DownBindingOption(k KeyBinding) TreeViewOption {
-	return func (t *TreeView) {
-		displayBinding := KeyBindingDisplay{
+func DownBindingOption(k helpers.KeyBinding) TreeViewOption {
+	return func(t *TreeView) {
+		displayBinding := helpers.KeyBindingDisplay{
 			KeyBinding: &k,
 			Selected:   AlwaysFalse,
 			Hide:       AlwaysTrue,
 		}
-		t.keyInputHandler.AddBinding(displayBinding, func() {t.keyDown()} )
+		t.keyInputHandler.AddBinding(displayBinding, func() { t.keyDown() })
 	}
 }
 
-func RightBindingOption(k KeyBinding) TreeViewOption {
-	return func (t *TreeView) {
-		displayBinding := KeyBindingDisplay{
+func RightBindingOption(k helpers.KeyBinding) TreeViewOption {
+	return func(t *TreeView) {
+		displayBinding := helpers.KeyBindingDisplay{
 			KeyBinding: &k,
 			Selected:   AlwaysFalse,
 			Hide:       AlwaysTrue,
 		}
-		t.keyInputHandler.AddBinding(displayBinding, func() {t.keyRight()} )
+		t.keyInputHandler.AddBinding(displayBinding, func() { t.keyRight() })
 	}
 }
 
-func LeftBindingOption(k KeyBinding) TreeViewOption {
-	return func (t *TreeView) {
-		displayBinding := KeyBindingDisplay{
+func LeftBindingOption(k helpers.KeyBinding) TreeViewOption {
+	return func(t *TreeView) {
+		displayBinding := helpers.KeyBindingDisplay{
 			KeyBinding: &k,
 			Selected:   AlwaysFalse,
 			Hide:       AlwaysTrue,
 		}
-		t.keyInputHandler.AddBinding(displayBinding, func() {t.keyLeft()} )
+		t.keyInputHandler.AddBinding(displayBinding, func() { t.keyLeft() })
 	}
 }
 
-func PageUpBindingOption(k KeyBinding) TreeViewOption {
-	return func (t *TreeView) {
-		displayBinding := KeyBindingDisplay{
+func PageUpBindingOption(k helpers.KeyBinding) TreeViewOption {
+	return func(t *TreeView) {
+		displayBinding := helpers.KeyBindingDisplay{
 			KeyBinding: &k,
 			Selected:   AlwaysFalse,
 			Hide:       AlwaysFalse,
 		}
-		t.keyInputHandler.AddBinding(displayBinding, func() {t.pageUp()} )
+		t.keyInputHandler.AddBinding(displayBinding, func() { t.pageUp() })
 	}
 }
 
-
-func PageDownBindingOption(k KeyBinding) TreeViewOption {
-	return func (t *TreeView) {
-		displayBinding := KeyBindingDisplay{
+func PageDownBindingOption(k helpers.KeyBinding) TreeViewOption {
+	return func(t *TreeView) {
+		displayBinding := helpers.KeyBindingDisplay{
 			KeyBinding: &k,
 			Selected:   AlwaysFalse,
 			Hide:       AlwaysFalse,
 		}
-		t.keyInputHandler.AddBinding(displayBinding, func() {t.pageDown()} )
+		t.keyInputHandler.AddBinding(displayBinding, func() { t.pageDown() })
 	}
 }
 
-
-func CollapseDirBindingOption(k KeyBinding) TreeViewOption {
-	return func (t *TreeView) {
-		displayBinding := KeyBindingDisplay{
+func CollapseDirBindingOption(k helpers.KeyBinding) TreeViewOption {
+	return func(t *TreeView) {
+		displayBinding := helpers.KeyBindingDisplay{
 			KeyBinding: &k,
 			Selected:   AlwaysFalse,
 			Hide:       AlwaysFalse,
 		}
-		t.keyInputHandler.AddBinding(displayBinding, func() { t.collapseDir() } )
+		t.keyInputHandler.AddBinding(displayBinding, func() { t.collapseDir() })
 	}
 }
 
-func CollapseAllBindingOption(k KeyBinding) TreeViewOption {
-	return func (t *TreeView) {
-		displayBinding := KeyBindingDisplay{
+func CollapseAllBindingOption(k helpers.KeyBinding) TreeViewOption {
+	return func(t *TreeView) {
+		displayBinding := helpers.KeyBindingDisplay{
 			KeyBinding: &k,
 			Selected:   AlwaysFalse,
 			Hide:       AlwaysFalse,
 		}
-		t.keyInputHandler.AddBinding(displayBinding, func() { t.CollapseOrExpandAll() } )
+		t.keyInputHandler.AddBinding(displayBinding, func() { t.CollapseOrExpandAll() })
 	}
 }
 
-func ToggleAttributesOption(k KeyBinding) TreeViewOption {
-	return func (t *TreeView) {
-		displayBinding := KeyBindingDisplay{
+func ToggleAttributesOption(k helpers.KeyBinding) TreeViewOption {
+	return func(t *TreeView) {
+		displayBinding := helpers.KeyBindingDisplay{
 			KeyBinding: &k,
-			Selected:   func() bool {return t.showAttributes},
+			Selected:   func() bool { return t.showAttributes },
 			Hide:       AlwaysFalse,
 		}
-		t.keyInputHandler.AddBinding(displayBinding, func() {t.showAttributes = !t.showAttributes})
+		t.keyInputHandler.AddBinding(displayBinding, func() { t.showAttributes = !t.showAttributes })
 	}
 }
 
-func ToggleAddedFilesOption(k KeyBinding) TreeViewOption {
-	return func (t *TreeView) {
-		displayBinding := KeyBindingDisplay{
+func ToggleAddedFilesOption(k helpers.KeyBinding) TreeViewOption {
+	return func(t *TreeView) {
+		displayBinding := helpers.KeyBindingDisplay{
 			KeyBinding: &k,
-			Selected:   func() bool {return t.tree.GetHiddenFileType(filetree.Added)},
+			Selected:   func() bool { return t.tree.GetHiddenFileType(filetree.Added) },
 			Hide:       AlwaysFalse,
 		}
-		t.keyInputHandler.AddBinding(displayBinding, func()  { t.tree.ToggleHiddenFileType(filetree.Added) })
+		t.keyInputHandler.AddBinding(displayBinding, func() { t.tree.ToggleHiddenFileType(filetree.Added) })
 	}
 }
 
-func ToggleRemovedFilesOption(k KeyBinding) TreeViewOption {
-	return func (t *TreeView) {
-		displayBinding := KeyBindingDisplay{
+func ToggleRemovedFilesOption(k helpers.KeyBinding) TreeViewOption {
+	return func(t *TreeView) {
+		displayBinding := helpers.KeyBindingDisplay{
 			KeyBinding: &k,
-			Selected:   func() bool {return t.tree.GetHiddenFileType(filetree.Removed)},
+			Selected:   func() bool { return t.tree.GetHiddenFileType(filetree.Removed) },
 			Hide:       AlwaysFalse,
 		}
-		t.keyInputHandler.AddBinding(displayBinding, func()  { t.tree.ToggleHiddenFileType(filetree.Removed) })
+		t.keyInputHandler.AddBinding(displayBinding, func() { t.tree.ToggleHiddenFileType(filetree.Removed) })
 	}
 }
 
-func ToggleModifiedFilesOption(k KeyBinding) TreeViewOption {
-	return func (t *TreeView) {
-		displayBinding := KeyBindingDisplay{
+func ToggleModifiedFilesOption(k helpers.KeyBinding) TreeViewOption {
+	return func(t *TreeView) {
+		displayBinding := helpers.KeyBindingDisplay{
 			KeyBinding: &k,
-			Selected:   func() bool {return t.tree.GetHiddenFileType(filetree.Modified)},
+			Selected:   func() bool { return t.tree.GetHiddenFileType(filetree.Modified) },
 			Hide:       AlwaysFalse,
 		}
-		t.keyInputHandler.AddBinding(displayBinding, func()  { t.tree.ToggleHiddenFileType(filetree.Modified) })
+		t.keyInputHandler.AddBinding(displayBinding, func() { t.tree.ToggleHiddenFileType(filetree.Modified) })
 
 	}
 }
 
-
-func ToggleUnmodifiedFilesOption(k KeyBinding) TreeViewOption {
-	return func (t *TreeView) {
-		displayBinding := KeyBindingDisplay{
+func ToggleUnmodifiedFilesOption(k helpers.KeyBinding) TreeViewOption {
+	return func(t *TreeView) {
+		displayBinding := helpers.KeyBindingDisplay{
 			KeyBinding: &k,
-			Selected:   func() bool {return t.tree.GetHiddenFileType(filetree.Unmodified)},
+			Selected:   func() bool { return t.tree.GetHiddenFileType(filetree.Unmodified) },
 			Hide:       AlwaysFalse,
 		}
-		t.keyInputHandler.AddBinding(displayBinding, func()  { t.tree.ToggleHiddenFileType(filetree.Unmodified) })
+		t.keyInputHandler.AddBinding(displayBinding, func() { t.tree.ToggleHiddenFileType(filetree.Unmodified) })
 	}
 }
-
 
 type TreeView struct {
 	*tview.Box
@@ -218,7 +182,7 @@ type TreeView struct {
 
 	globalCollapseAll bool
 
-	keyInputHandler *KeyInputHandler
+	keyInputHandler *helpers.KeyInputHandler
 
 	showAttributes bool
 }
@@ -229,7 +193,7 @@ func NewTreeView(tree TreeModel) *TreeView {
 		tree:              tree,
 		globalCollapseAll: true,
 		showAttributes:    true,
-		keyInputHandler: NewKeyInputHandler(),
+		keyInputHandler:   helpers.NewKeyInputHandler(),
 	}
 }
 
@@ -242,22 +206,21 @@ func (t *TreeView) AddBindingOptions(bindingOptions ...TreeViewOption) *TreeView
 }
 
 type KeyBindingConfig interface {
-	GetKeyBinding(key string) (KeyBinding, error)
+	GetKeyBinding(key string) (helpers.KeyBinding, error)
 }
 
-
 // Implementation notes:
- //need to set up our input handler here,
- //Should probably factor out keybinding initialization into a new function
+//need to set up our input handler here,
+//Should probably factor out keybinding initialization into a new function
 
 func (t *TreeView) Setup(config KeyBindingConfig) *TreeView {
 	t.tree.SetLayerIndex(0)
 
 	t.AddBindingOptions(
-		UpBindingOption(NewKeyBinding("Cursor Up", tcell.NewEventKey(tcell.KeyUp, rune(0), tcell.ModNone))),
-		DownBindingOption(NewKeyBinding("Cursor Down", tcell.NewEventKey(tcell.KeyDown, rune(0), tcell.ModNone))),
-		LeftBindingOption(NewKeyBinding("Cursor Left", tcell.NewEventKey(tcell.KeyLeft, rune(0), tcell.ModNone))),
-		RightBindingOption(NewKeyBinding("Cursor Right", tcell.NewEventKey(tcell.KeyRight, rune(0), tcell.ModNone))),
+		UpBindingOption(helpers.NewKeyBinding("Cursor Up", tcell.NewEventKey(tcell.KeyUp, rune(0), tcell.ModNone))),
+		DownBindingOption(helpers.NewKeyBinding("Cursor Down", tcell.NewEventKey(tcell.KeyDown, rune(0), tcell.ModNone))),
+		LeftBindingOption(helpers.NewKeyBinding("Cursor Left", tcell.NewEventKey(tcell.KeyLeft, rune(0), tcell.ModNone))),
+		RightBindingOption(helpers.NewKeyBinding("Cursor Right", tcell.NewEventKey(tcell.KeyRight, rune(0), tcell.ModNone))),
 	)
 
 	bindingOrder := []string{
@@ -272,7 +235,7 @@ func (t *TreeView) Setup(config KeyBindingConfig) *TreeView {
 		"keybinding.page-down",
 	}
 
-	bindingSettings := map[string]func(KeyBinding) TreeViewOption{
+	bindingSettings := map[string]func(helpers.KeyBinding) TreeViewOption{
 		"keybinding.toggle-collapse-dir":        CollapseDirBindingOption,
 		"keybinding.toggle-collapse-all-dir":    CollapseAllBindingOption,
 		"keybinding.toggle-filetree-attributes": ToggleAttributesOption,
@@ -312,7 +275,7 @@ func (t *TreeView) getInputWrapper() inputFn {
 
 // Keybinding list
 
-func (t *TreeView) GetKeyBindings() []KeyBindingDisplay {
+func (t *TreeView) GetKeyBindings() []helpers.KeyBindingDisplay {
 	return t.keyInputHandler.Order
 }
 
@@ -325,7 +288,6 @@ func (t *TreeView) ToggleHideAttributes() {
 func (t *TreeView) InputHandler() func(event *tcell.EventKey, setFocus func(p tview.Primitive)) {
 	return t.keyInputHandler.Handle()
 }
-
 
 func (t *TreeView) WrapInputHandler() func(*tcell.EventKey, func(tview.Primitive)) {
 	return t.Box.WrapInputHandler(t.InputHandler())
@@ -375,7 +337,6 @@ func (t *TreeView) CollapseOrExpandAll() bool {
 		//return false
 	}
 
-
 	t.globalCollapseAll = !t.globalCollapseAll
 
 	return true
@@ -408,10 +369,9 @@ func (t *TreeView) getAbsPositionNode() (node *filetree.FileNode) {
 	return node
 }
 
-
-func (t *TreeView) GetInnerRect() (int,int,int,int) {
+func (t *TreeView) GetInnerRect() (int, int, int, int) {
 	x, y, width, height := t.Box.GetInnerRect()
-	return x, y+1, width, height-1
+	return x, y + 1, width, height - 1
 }
 
 func (t *TreeView) keyDown() bool {

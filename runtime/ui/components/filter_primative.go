@@ -5,6 +5,7 @@ import (
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
+	"github.com/wagoodman/dive/runtime/ui/components/helpers"
 )
 
 type FilterModel interface {
@@ -68,6 +69,6 @@ func (fv *FilterView) Visible() bool {
 	return !fv.Empty() || fv.HasFocus()
 }
 
-func (fv *FilterView) GetKeyBindings() []KeyBindingDisplay {
-	return  []KeyBindingDisplay{}
+func (fv *FilterView) GetKeyBindings() []helpers.KeyBindingDisplay {
+	return []helpers.KeyBindingDisplay{}
 }

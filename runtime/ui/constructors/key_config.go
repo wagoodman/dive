@@ -1,11 +1,11 @@
-package components
+package constructors
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/spf13/viper"
+	"github.com/wagoodman/dive/runtime/ui/components/helpers"
 	"gitlab.com/tslocum/cbind"
 )
 
@@ -30,71 +30,6 @@ var DisplayNames = map[string]string{
 // TODO move this to a more appropriate place
 type KeyConfig struct{}
 
-type KeyBinding struct {
-	*tcell.EventKey
-	Display string
-}
-
-type KeyBindingDisplay struct {
-	*KeyBinding
-	Selected func() bool
-	Hide     func() bool
-}
-
-func (kb *KeyBindingDisplay) Name() string {
-	s := ""
-	m := []string{}
-	kMod := kb.Modifiers()
-	if kMod&tcell.ModShift != 0 {
-		m = append(m, "Shift")
-	}
-	if kMod&tcell.ModAlt != 0 {
-		m = append(m, "Alt")
-	}
-	if kMod&tcell.ModMeta != 0 {
-		m = append(m, "Meta")
-	}
-	if kMod&tcell.ModCtrl != 0 {
-		m = append(m, "^")
-	}
-
-	ok := false
-	key := kb.Key()
-	if s, ok = tcell.KeyNames[key]; !ok {
-		if key == tcell.KeyRune {
-			if kb.Rune() == rune(' ') {
-				s = "Space"
-			} else {
-				s = string(kb.Rune())
-			}
-		} else {
-			s = fmt.Sprintf("Key[%d,%d]", key, int(kb.Rune()))
-		}
-	}
-	if len(m) != 0 {
-		if kMod&tcell.ModCtrl != 0 && strings.HasPrefix(s, "Ctrl-") {
-			s = s[5:]
-		}
-		return fmt.Sprintf("%s%s", strings.Join(m, ""), s)
-	}
-	return s
-}
-
-func NewKeyBinding(name string, key *tcell.EventKey) KeyBinding {
-	return KeyBinding{
-		EventKey: key,
-		Display:  name,
-	}
-}
-
-func (k *KeyBinding) Match(event *tcell.EventKey) bool {
-	if k.Key() == tcell.KeyRune {
-		return k.Rune() == event.Rune() && (k.Modifiers() == event.Modifiers())
-	}
-
-	return k.Key() == event.Key()
-}
-
 type MissingConfigError struct {
 	Field string
 }
@@ -113,17 +48,17 @@ func NewKeyConfig() *KeyConfig {
 	return &KeyConfig{}
 }
 
-func (k *KeyConfig) GetKeyBinding(key string) (KeyBinding, error) {
+func (k *KeyConfig) GetKeyBinding(key string) (helpers.KeyBinding, error) {
 	name, ok := DisplayNames[key]
 	if !ok {
-		return KeyBinding{}, fmt.Errorf("no name for binding %q found", key)
+		return helpers.KeyBinding{}, fmt.Errorf("no name for binding %q found", key)
 	}
 	keyName := viper.GetString(key)
 	mod, tKey, ch, err := cbind.Decode(keyName)
 	if err != nil {
-		return KeyBinding{}, fmt.Errorf("unable to create binding from dive.config file: %q", err)
+		return helpers.KeyBinding{}, fmt.Errorf("unable to create binding from dive.config file: %q", err)
 	}
 	fmt.Printf("creating key event for %s\n", key)
 	fmt.Printf("mod %d, key %d, ch %s\n", mod, tKey, string(ch))
-	return NewKeyBinding(name, tcell.NewEventKey(tKey, ch, mod)), nil
+	return helpers.NewKeyBinding(name, tcell.NewEventKey(tKey, ch, mod)), nil
 }

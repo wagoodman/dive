@@ -7,6 +7,7 @@ import (
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 	"github.com/wagoodman/dive/dive/image"
+	"github.com/wagoodman/dive/runtime/ui/components/helpers"
 )
 
 type LayerDetailModel interface {
@@ -49,8 +50,8 @@ func (lv *LayerDetailsView) Draw(screen tcell.Screen) {
 	lv.TextView.Draw(screen)
 }
 
-func (lv *LayerDetailsView) GetKeyBindings() []KeyBindingDisplay {
-	return []KeyBindingDisplay{}
+func (lv *LayerDetailsView) GetKeyBindings() []helpers.KeyBindingDisplay {
+	return []helpers.KeyBindingDisplay{}
 }
 
 func layerDetailsText(layer *image.Layer) string {
@@ -70,4 +71,3 @@ func layerDetailsText(layer *image.Layer) string {
 func boldString(s string) string {
 	return fmt.Sprintf("[::b]%s[::-]", s)
 }
-

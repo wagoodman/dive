@@ -5,6 +5,7 @@ import (
 
 	"github.com/rivo/tview"
 	"github.com/sirupsen/logrus"
+	"github.com/wagoodman/dive/runtime/ui/components/helpers"
 )
 
 type DiveApplication struct {
@@ -12,7 +13,7 @@ type DiveApplication struct {
 
 	boundList []BoundView
 
-	bindings []KeyBinding
+	bindings []helpers.KeyBinding
 }
 
 func NewDiveApplication(app *tview.Application) *DiveApplication {
@@ -22,12 +23,12 @@ func NewDiveApplication(app *tview.Application) *DiveApplication {
 	}
 }
 
-func (d *DiveApplication) GetKeyBindings() []KeyBindingDisplay {
-	result := []KeyBindingDisplay{}
+func (d *DiveApplication) GetKeyBindings() []helpers.KeyBindingDisplay {
+	result := []helpers.KeyBindingDisplay{}
 	for i := 0; i < len(d.bindings); i++ {
 		binding := d.bindings[i]
 		logrus.Debug(fmt.Sprintf("adding keybinding with name %s", binding.Display))
-		result = append(result, KeyBindingDisplay{KeyBinding: &binding, Selected: AlwaysFalse, Hide: AlwaysFalse})
+		result = append(result, helpers.KeyBindingDisplay{KeyBinding: &binding, Selected: AlwaysFalse, Hide: AlwaysFalse})
 	}
 
 	for _, bound := range d.boundList {
@@ -39,7 +40,7 @@ func (d *DiveApplication) GetKeyBindings() []KeyBindingDisplay {
 	return result
 }
 
-func (d *DiveApplication) AddBindings(bindings ...KeyBinding) *DiveApplication {
+func (d *DiveApplication) AddBindings(bindings ...helpers.KeyBinding) *DiveApplication {
 	d.bindings = append(d.bindings, bindings...)
 
 	return d

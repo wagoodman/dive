@@ -7,12 +7,13 @@ import (
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 	"github.com/sirupsen/logrus"
+	"github.com/wagoodman/dive/runtime/ui/components/helpers"
 	"github.com/wagoodman/dive/runtime/ui/format"
 )
 
 type BoundView interface {
 	HasFocus() bool
-	GetKeyBindings() []KeyBindingDisplay
+	GetKeyBindings() []helpers.KeyBindingDisplay
 }
 
 type KeyMenuView struct {
@@ -49,9 +50,9 @@ func (t *KeyMenuView) RemoveViews(b ...BoundView) *KeyMenuView {
 	return t
 }
 
-func (t *KeyMenuView) GetKeyBindings() []KeyBindingDisplay {
+func (t *KeyMenuView) GetKeyBindings() []helpers.KeyBindingDisplay {
 	logrus.Debug("Getting binding keys from keybinding primitive")
-	result := []KeyBindingDisplay{}
+	result := []helpers.KeyBindingDisplay{}
 	for _, view := range t.boundList {
 		if view.HasFocus() {
 			result = append(result, view.GetKeyBindings()...)
@@ -83,7 +84,7 @@ func (t *KeyMenuView) Draw(screen tcell.Screen) {
 		if idx == len(keyBindings)-1 {
 			postfix = " "
 		}
-		prefix :=  " "
+		prefix := " "
 		if idx == 0 {
 			prefix = ""
 		}
@@ -93,6 +94,6 @@ func (t *KeyMenuView) Draw(screen tcell.Screen) {
 	}
 	joinedLine := strings.Join(lines, "")
 	_, w := tview.PrintWithStyle(screen, joinedLine, x, y, width, tview.AlignLeft, tcell.StyleDefault)
-	format.PrintLine(screen, format.StatusControlNormal(strings.Repeat(" ", intMax(0,width-w))), x+w, y, width, tview.AlignLeft, tcell.StyleDefault)
+	format.PrintLine(screen, format.StatusControlNormal(strings.Repeat(" ", intMax(0, width-w))), x+w, y, width, tview.AlignLeft, tcell.StyleDefault)
 
 }

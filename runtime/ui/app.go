@@ -9,6 +9,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/wagoodman/dive/dive/filetree"
 	"github.com/wagoodman/dive/dive/image"
+	"github.com/wagoodman/dive/runtime/ui/constructors"
 	"github.com/wagoodman/dive/runtime/ui/components"
 	"github.com/wagoodman/dive/runtime/ui/format"
 	"github.com/wagoodman/dive/runtime/ui/viewmodels"
@@ -33,7 +34,7 @@ func newApp(app *tview.Application, analysis *image.AnalysisResult, cache filetr
 		// TODO: Extract initilaization logic into its own package
 		format.SyncWithTermColors()
 
-		config := components.NewKeyConfig()
+		config := constructors.NewKeyConfig()
 		appConfig := components.AppConfig{}
 		diveApplication := components.NewDiveApplication(app)
 

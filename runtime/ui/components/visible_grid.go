@@ -5,18 +5,19 @@ import (
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
+	"github.com/wagoodman/dive/runtime/ui/components/helpers"
 )
 
 type GridPrimitive interface {
 	VisiblePrimitive
-	GetKeyBindings() []KeyBindingDisplay
+	GetKeyBindings() []helpers.KeyBindingDisplay
 }
 
 type flexItem struct {
 	Item       GridPrimitive // The item to be positioned. May be nil for an empty item.
-	FixedSize  int              // The item's fixed size which may not be changed, 0 if it has no fixed size.
-	Proportion int              // The item's proportion
-	Focus      bool             // Whether or not this item attracts the layout's focus.
+	FixedSize  int           // The item's fixed size which may not be changed, 0 if it has no fixed size.
+	Proportion int           // The item's proportion
+	Focus      bool          // Whether or not this item attracts the layout's focus.
 }
 
 type VisibleFlex struct {
@@ -32,7 +33,7 @@ type VisibleFlex struct {
 
 	visible VisibleFunc
 
-	bindingArray []KeyBinding
+	bindingArray []helpers.KeyBinding
 }
 
 func NewVisibleFlex() *VisibleFlex {
@@ -43,11 +44,11 @@ func NewVisibleFlex() *VisibleFlex {
 	}
 }
 
-func (f *VisibleFlex) GetKeyBindings() []KeyBindingDisplay {
-	result := []KeyBindingDisplay{}
+func (f *VisibleFlex) GetKeyBindings() []helpers.KeyBindingDisplay {
+	result := []helpers.KeyBindingDisplay{}
 
 	for _, binding := range f.bindingArray {
-		result = append(result, KeyBindingDisplay{KeyBinding: &binding, Selected: AlwaysFalse, Hide: AlwaysTrue})
+		result = append(result, helpers.KeyBindingDisplay{KeyBinding: &binding, Selected: AlwaysFalse, Hide: AlwaysTrue})
 	}
 
 	for _, item := range f.items {
@@ -58,7 +59,6 @@ func (f *VisibleFlex) GetKeyBindings() []KeyBindingDisplay {
 
 	return result
 }
-
 
 func (f *VisibleFlex) SetVisibility(visibleFunc VisibleFunc) GridPrimitive {
 	f.visible = visibleFunc

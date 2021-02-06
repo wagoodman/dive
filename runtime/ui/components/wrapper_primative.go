@@ -6,6 +6,7 @@ import (
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
+	"github.com/wagoodman/dive/runtime/ui/components/helpers"
 	"github.com/wagoodman/dive/runtime/ui/format"
 )
 
@@ -15,7 +16,7 @@ type wrapable interface {
 	getBox() *tview.Box
 	getDraw() drawFn
 	getInputWrapper() inputFn
-	GetKeyBindings() []KeyBindingDisplay
+	GetKeyBindings() []helpers.KeyBindingDisplay
 }
 
 type Wrapper struct {
@@ -28,7 +29,7 @@ type Wrapper struct {
 	title            string
 	subtitle         string
 	visible          VisibleFunc
-	getKeyBindings   func() []KeyBindingDisplay
+	getKeyBindings   func() []helpers.KeyBindingDisplay
 }
 
 type drawFn func(screen tcell.Screen)
@@ -120,7 +121,7 @@ func (b *Wrapper) setTitle(hasFocus bool) {
 		postfix = strings.Repeat(string(tview.BoxDrawingsHeavyHorizontal), 10)
 	}
 	content := format.Header(fmt.Sprintf("%s%s", prefix, b.title))
-	title := fmt.Sprintf("│ %s ├%s", content,  postfix)
+	title := fmt.Sprintf("│ %s ├%s", content, postfix)
 
 	if hasFocus {
 		content = format.Header(fmt.Sprintf("%s%s", prefix, b.title))
@@ -139,6 +140,6 @@ func (b *Wrapper) SetVisibility(visibleFunc VisibleFunc) *Wrapper {
 	return b
 }
 
-func (b *Wrapper) GetKeyBindings() []KeyBindingDisplay {
+func (b *Wrapper) GetKeyBindings() []helpers.KeyBindingDisplay {
 	return b.getKeyBindings()
 }
