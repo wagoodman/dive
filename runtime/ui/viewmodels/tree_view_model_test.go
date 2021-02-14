@@ -2,12 +2,14 @@ package viewmodels_test
 
 import (
 	tar "archive/tar"
+	"os"
+	"reflect"
+	"regexp"
+	"testing"
+
 	"github.com/wagoodman/dive/dive/filetree"
 	"github.com/wagoodman/dive/runtime/ui/viewmodels"
 	"github.com/wagoodman/dive/runtime/ui/viewmodels/fakes"
-	"os"
-	"regexp"
-	"testing"
 )
 
 func TestTreeViewModel(t *testing.T) {
@@ -37,7 +39,7 @@ func testStringBetween(t *testing.T) {
 		t.Fatalf("unexpected error: %s", err)
 	}
 
-	out := tvm.StringBetween(1,2,true)
+	out := tvm.StringBetween(1, 2, true)
 	if out != expectedString {
 		t.Fatalf("expected: %s got: %s", expectedString, out)
 	}
@@ -149,7 +151,7 @@ func testSetFilter(t *testing.T) {
 	lModel := &fakes.LayersModel{}
 	tCache := &fakes.TreeCache{}
 	tModel := filetree.NewFileTree()
-	_,_, err := tModel.AddPath("/dirA/dirB/file", filetree.FileInfo {
+	_, _, err := tModel.AddPath("/dirA/dirB/file", filetree.FileInfo{
 		Path:     "/dirA/dirB/file",
 		TypeFlag: tar.TypeReg,
 		Size:     100,
@@ -158,10 +160,9 @@ func testSetFilter(t *testing.T) {
 		Gid:      200,
 		IsDir:    false,
 	})
-	errorCheck(t,err)
+	errorCheck(t, err)
 
-
-	_,_,err = tModel.AddPath("/dirA/dirC/other-thing", filetree.FileInfo {
+	_, _, err = tModel.AddPath("/dirA/dirC/other-thing", filetree.FileInfo{
 		Path:     "/dirA/dirC/other-thing",
 		TypeFlag: tar.TypeReg,
 		Size:     1000,
@@ -170,9 +171,9 @@ func testSetFilter(t *testing.T) {
 		Gid:      200,
 		IsDir:    false,
 	})
-	errorCheck(t,err)
+	errorCheck(t, err)
 
-	_,_, err = tModel.AddPath("/dirA/dirB/other-file", filetree.FileInfo {
+	_, _, err = tModel.AddPath("/dirA/dirB/other-file", filetree.FileInfo{
 		Path:     "/dirA/dirB/other-file",
 		TypeFlag: tar.TypeReg,
 		Size:     1000,
@@ -181,7 +182,7 @@ func testSetFilter(t *testing.T) {
 		Gid:      200,
 		IsDir:    false,
 	})
-	errorCheck(t,err)
+	errorCheck(t, err)
 
 	tCache.GetTreeCall.Returns.TreeModel = tModel
 
@@ -192,21 +193,17 @@ func testSetFilter(t *testing.T) {
 
 	hiddenNodes, err := getHiddenNodes(tModel)
 	errorCheck(t, err)
-	if len(hiddenNodes) != 0 {
-		t.Fatalf("expected no nodes to be hidden, got %d", len(hiddenNodes))
-	}
+	assertEqual(t, 0, len(hiddenNodes))
 
 	r := regexp.MustCompile("other-file")
 	tvm.SetFilter(r)
 
 	hiddenNodes, err = getHiddenNodes(tModel)
 	errorCheck(t, err)
-	if len(hiddenNodes) != 1 {
-		t.Fatalf("expected 1 to be hidden, got %d", len(hiddenNodes))
-	}
-	if hiddenNodes[0].Name != "other-file" {
-		t.Fatalf("expected 'other-file' to be hidden, got %s", hiddenNodes[0].Name)
-	}
+	assertEqual(t, 3, len(hiddenNodes))
+	assertEqual(t, "file", hiddenNodes[0].Name)
+	assertEqual(t, "dirC", hiddenNodes[1].Name)
+	assertEqual(t, "other-thing", hiddenNodes[2].Name)
 
 	// Check if directories where all children are hidden are hidden as well
 	r = regexp.MustCompile("file")
@@ -214,26 +211,10 @@ func testSetFilter(t *testing.T) {
 
 	hiddenNodes, err = getHiddenNodes(tModel)
 	errorCheck(t, err)
-	if len(hiddenNodes) != 3 {
-		t.Fatalf("expected 3 nodes to be hidden, got %d", len(hiddenNodes))
-	}
+	assertEqual(t, 2, len(hiddenNodes))
 
-	hiddenNames := []string{}
-	for _, node := range hiddenNodes {
-		hiddenNames = append(hiddenNames, node.Name)
-	}
-
-	if !containsString("other-file", hiddenNames) {
-		t.Fatalf("expected %#v to contain other-file", hiddenNames)
-	}
-
-	if !containsString("file", hiddenNames) {
-		t.Fatalf("expected %#v to contain file", hiddenNames)
-	}
-
-	if !containsString("dirB", hiddenNames) {
-		t.Fatalf("expected %#v to contain dirB", hiddenNames)
-	}
+	assertEqual(t, "dirC", hiddenNodes[0].Name)
+	assertEqual(t, "other-thing", hiddenNodes[1].Name)
 }
 
 func testToggleHiddenFileType(t *testing.T) {
@@ -241,7 +222,7 @@ func testToggleHiddenFileType(t *testing.T) {
 	lModel := &fakes.LayersModel{}
 	tCache := &fakes.TreeCache{}
 	tModel := filetree.NewFileTree()
-	_,_,err := tModel.AddPath("/dirA/file", filetree.FileInfo {
+	_, _, err := tModel.AddPath("/dirA/file", filetree.FileInfo{
 		Path:     "/dirA/file",
 		TypeFlag: tar.TypeReg,
 		Size:     100,
@@ -250,7 +231,7 @@ func testToggleHiddenFileType(t *testing.T) {
 		Gid:      200,
 		IsDir:    false,
 	})
-	errorCheck(t,err)
+	errorCheck(t, err)
 
 	tModel.Root.Children["dirA"].Children["file"].Data.DiffType = filetree.Added
 	tCache.GetTreeCall.Returns.TreeModel = tModel
@@ -262,30 +243,15 @@ func testToggleHiddenFileType(t *testing.T) {
 
 	hiddenNodes, err := getHiddenNodes(tModel)
 	errorCheck(t, err)
-	if len(hiddenNodes) != 0 {
-		t.Fatalf("expected no nodes to be hidden, got %d", len(hiddenNodes))
-	}
+	assertEqual(t, 0, len(hiddenNodes))
 
 	tvm.ToggleHiddenFileType(filetree.Added)
 
 	hiddenNodes, err = getHiddenNodes(tModel)
 	errorCheck(t, err)
-	if len(hiddenNodes) != 2 {
-		t.Fatalf("expected 2 to be hidden, got %d", len(hiddenNodes))
-	}
-	hiddenNames := []string{}
-	for _, node := range hiddenNodes {
-		hiddenNames = append(hiddenNames, node.Name)
-	}
-
-	if !containsString("file", hiddenNames) {
-		t.Fatalf("expected 'file' to be hidden in %#v", hiddenNames)
-	}
-
-	if !containsString("dirA", hiddenNames) {
-		t.Fatalf("expected 'file' to be hidden in %#v", hiddenNames)
-	}
-
+	assertEqual(t, 2, len(hiddenNodes))
+	assertEqual(t, "dirA", hiddenNodes[0].Name)
+	assertEqual(t, "file", hiddenNodes[1].Name)
 }
 
 func testGetHiddenFileType(t *testing.T) {
@@ -351,9 +317,7 @@ func testSetLayerIndex(t *testing.T) {
 
 	testIndex := 10
 	tvm.SetLayerIndex(testIndex)
-	if lModel.SetLayerIndexCall.Receives.Index != testIndex {
-		t.Fatalf("expected index to be %d, got %d", testIndex, lModel.SetLayerIndexCall.Receives.Index)
-	}
+	assertEqual(t, testIndex, lModel.SetLayerIndexCall.Receives.Index)
 }
 
 func testSwitchLayerMode(t *testing.T) {
@@ -361,7 +325,7 @@ func testSwitchLayerMode(t *testing.T) {
 	lModel := &fakes.LayersModel{}
 	tCache := &fakes.TreeCache{}
 	firstTreeModel := filetree.NewFileTree()
-	_, _, err := firstTreeModel.AddPath("/collapsed-dir/collapsed-file", filetree.FileInfo {
+	_, _, err := firstTreeModel.AddPath("/collapsed-dir/collapsed-file", filetree.FileInfo{
 		Path:     "/collapsed-dir/collapsed-file",
 		TypeFlag: tar.TypeReg,
 		Size:     100,
@@ -370,14 +334,14 @@ func testSwitchLayerMode(t *testing.T) {
 		Gid:      200,
 		IsDir:    false,
 	})
-	errorCheck(t,err)
+	errorCheck(t, err)
 
 	// Second tree has no collapsed or hidden values set
 	secondTreeModel := firstTreeModel.Copy()
 
 	firstTreeModel.Root.Children["collapsed-dir"].Data.ViewInfo.Collapsed = true
 
-	_,_, err = secondTreeModel.AddPath("/visible/visible-file", filetree.FileInfo {
+	_, _, err = secondTreeModel.AddPath("/visible/visible-file", filetree.FileInfo{
 		Path:     "/visible/visible-file",
 		TypeFlag: tar.TypeReg,
 		Size:     100,
@@ -386,8 +350,7 @@ func testSwitchLayerMode(t *testing.T) {
 		Gid:      200,
 		IsDir:    false,
 	})
-	errorCheck(t,err)
-
+	errorCheck(t, err)
 
 	collapsedNodes, err := getCollapsedNodes(secondTreeModel)
 	errorCheck(t, err)
@@ -395,10 +358,10 @@ func testSwitchLayerMode(t *testing.T) {
 		t.Fatalf("expected no nodes to be collapsed got %v", collapsedNodes)
 	}
 
-	key := filetree.NewTreeIndexKey(1,2,3,4)
+	key := filetree.NewTreeIndexKey(1, 2, 3, 4)
 	tCache.GetTreeCall.Stub = func(k filetree.TreeIndexKey) (viewmodels.TreeModel, error) {
 		if k == key {
-			return secondTreeModel,nil
+			return secondTreeModel, nil
 		}
 
 		return firstTreeModel, nil
@@ -409,22 +372,16 @@ func testSwitchLayerMode(t *testing.T) {
 		t.Fatalf("unexpected error: %s", err)
 	}
 
-	lModel.GetCompareIndiciesCall.Returns.TreeIndexKey = filetree.NewTreeIndexKey(1,2,3,4)
+	lModel.GetCompareIndiciesCall.Returns.TreeIndexKey = filetree.NewTreeIndexKey(1, 2, 3, 4)
 	err = tvm.SwitchLayerMode()
 	errorCheck(t, err)
 
 	collapsedNodes, err = getCollapsedNodes(secondTreeModel)
 	errorCheck(t, err)
-	if len(collapsedNodes) != 1 {
-		t.Fatalf("expected no nodes to be collapsed got %v", collapsedNodes)
-	}
+	assertEqual(t, 1, len(collapsedNodes))
 
-	if collapsedNodes[0].Name != "collapsed-dir" {
-		t.Fatalf("expected 'collapsed-dir' to be collapsed got %s", collapsedNodes[0].Name)
-	}
+	assertEqual(t, "collapsed-dir", collapsedNodes[0].Name)
 }
-
-
 
 func containsString(needle string, haystack []string) bool {
 	for _, s := range haystack {
@@ -457,15 +414,35 @@ func getCollapsedNodes(tModel *filetree.FileTree) ([]*filetree.FileNode, error) 
 			result = append(result, node)
 		}
 		return nil
-	},nil)
-
+	}, nil)
 
 	return result, err
 }
-
 
 func errorCheck(t *testing.T, err error) {
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
 	}
 }
+
+//
+// Assertion helpers
+//
+
+func assertEqual(t *testing.T, expected interface{}, actual interface{}) {
+	t.Helper()
+	if !reflect.DeepEqual(expected, actual) {
+		t.Fatalf("Expected %#v, got %#v", expected, actual)
+	}
+}
+
+func assertSliceContains(t *testing.T, expected interface{}, container []interface{}) {
+	t.Helper()
+	for i := range container {
+		if reflect.DeepEqual(container[i], expected) {
+			return
+		}
+	}
+	t.Fatalf("Expected value %v not found", expected)
+}
+

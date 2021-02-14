@@ -9,25 +9,6 @@ import (
 	"gitlab.com/tslocum/cbind"
 )
 
-// TODO move key constants out to their own file
-var DisplayNames = map[string]string{
-	"keybinding.quit":                       "Quit",
-	"keybinding.toggle-view":                "Switch View",
-	"keybinding.filter-files":               "Find",
-	"keybinding.compare-all":                "Compare All",
-	"keybinding.compare-layer":              "Compare Layer",
-	"keybinding.toggle-collapse-dir":        "Collapse",
-	"keybinding.toggle-collapse-all-dir":    "Collapse All",
-	"keybinding.toggle-filetree-attributes": "Attributes",
-	"keybinding.toggle-added-files":         "Added",
-	"keybinding.toggle-removed-files":       "Removed",
-	"keybinding.toggle-modified-files":      "Modified",
-	"keybinding.toggle-unmodified-files":    "Unmodified",
-	"keybinding.page-up":                    "Pg Up",
-	"keybinding.page-down":                  "Pg Down",
-}
-
-// TODO move this to a more appropriate place
 type KeyConfig struct{}
 
 type MissingConfigError struct {

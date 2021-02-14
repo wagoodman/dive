@@ -65,7 +65,6 @@ func (t *KeyMenuView) GetKeyBindings() []helpers.KeyBindingDisplay {
 func (t *KeyMenuView) Draw(screen tcell.Screen) {
 	t.Box.Draw(screen)
 	x, y, width, _ := t.Box.GetInnerRect()
-	// TODO: add logic to highlight selected options
 
 	lines := []string{}
 	keyBindings := t.GetKeyBindings()
@@ -80,7 +79,6 @@ func (t *KeyMenuView) Draw(screen tcell.Screen) {
 			keyBindingFormatter = format.StatusControlSelectedBold
 		}
 		postfix := "⎹"
-		//postfix := "▏"
 		if idx == len(keyBindings)-1 {
 			postfix = " "
 		}

@@ -84,6 +84,7 @@ func (tvm *TreeViewModel) VisibleSize() int {
 func (tvm *TreeViewModel) SetFilter(filterRegex *regexp.Regexp) {
 	tvm.FilterModel.SetFilter(filterRegex)
 	if err := tvm.filterUpdate(); err != nil {
+		// TODO -Dan- handle panics
 		panic(err)
 	}
 }
@@ -106,9 +107,7 @@ func (tvm *TreeViewModel) GetHiddenFileType(filetype filetree.DiffType) bool {
 
 
 
-// TODO: maek this method private, cant think of a reason for this to be public
 func (tvm *TreeViewModel) filterUpdate() error {
-	logrus.Debug("Updating filter!!!")
 	// keep the t selection in parity with the current DiffType selection
 	filter := tvm.GetFilter()
 	err := tvm.currentTree.VisitDepthChildFirst(func(node *filetree.FileNode) error {
@@ -127,7 +126,7 @@ func (tvm *TreeViewModel) filterUpdate() error {
 
 		if filter != nil && !node.Data.ViewInfo.Hidden { // hide nodes that do not match the current file filter regex (also don't unhide nodes that are already hidden)
 			match := filter.FindString(node.Path())
-			node.Data.ViewInfo.Hidden = len(match) != 0
+			node.Data.ViewInfo.Hidden = len(match) == 0
 		}
 		return nil
 	}, nil)

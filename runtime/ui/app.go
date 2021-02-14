@@ -2,6 +2,7 @@ package ui
 
 import (
 	"fmt"
+	"log"
 	"sync"
 
 	"github.com/gdamore/tcell/v2"
@@ -9,8 +10,8 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/wagoodman/dive/dive/filetree"
 	"github.com/wagoodman/dive/dive/image"
-	"github.com/wagoodman/dive/runtime/ui/constructors"
 	"github.com/wagoodman/dive/runtime/ui/components"
+	"github.com/wagoodman/dive/runtime/ui/constructors"
 	"github.com/wagoodman/dive/runtime/ui/format"
 	"github.com/wagoodman/dive/runtime/ui/viewmodels"
 )
@@ -39,19 +40,18 @@ func newApp(app *tview.Application, analysis *image.AnalysisResult, cache filetr
 		diveApplication := components.NewDiveApplication(app)
 
 		//initialize viewmodels
-		filterViewModel := viewmodels.NewFilterViewModel(nil)
+		modelConfig := constructors.ModelConfig{
+			Cache:  &CacheWrapper{Cache: &cache},
+			Layers: analysis.Layers,
+		}
+		_, layersViewModel, treeViewModel, err := constructors.InitializeModels(modelConfig)
+		if err != nil {
+			log.Fatal(fmt.Errorf("unable to initialize viewmodels: %q", err))
+		}
 
-		layerModel := viewmodels.NewLayersViewModel(analysis.Layers)
-		regularLayerDetailsView := components.NewLayerDetailsView(layerModel).Setup()
+		regularLayerDetailsView := components.NewLayerDetailsView(layersViewModel).Setup()
 		layerDetailsBox := components.NewWrapper("Layer Details", "", regularLayerDetailsView).Setup()
 		layerDetailsBox.SetVisibility(components.MinHeightVisibility(10))
-
-		//layerViewModel := viewmodels.NewLayersViewModel(analysis.Layers)
-		cacheWrapper := CacheWrapper{Cache: &cache}
-		treeViewModel, err := viewmodels.NewTreeViewModel(&cacheWrapper, layerModel, filterViewModel)
-		if err != nil {
-			panic(err)
-		}
 
 		// initialize views
 		imageDetailsView := components.NewImageDetailsView(analysis).Setup()
@@ -155,7 +155,7 @@ func newApp(app *tview.Application, analysis *image.AnalysisResult, cache filetr
 
 		// additional setup configuration
 		if appConfig.GetAggregateLayerSetting() {
-			err := layerModel.SwitchLayerMode()
+			err := layersViewModel.SwitchLayerMode()
 			if err != nil {
 				panic(err)
 			}
