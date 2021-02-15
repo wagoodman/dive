@@ -6,7 +6,7 @@ import (
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
-	"github.com/sirupsen/logrus"
+	"github.com/wagoodman/dive/internal/log"
 	"github.com/wagoodman/dive/runtime/ui/components/helpers"
 	"github.com/wagoodman/dive/runtime/ui/format"
 )
@@ -34,7 +34,7 @@ func (t *KeyMenuView) AddBoundViews(b ...BoundView) *KeyMenuView {
 }
 
 func (t *KeyMenuView) RemoveViews(b ...BoundView) *KeyMenuView {
-	newBoundList := []BoundView{}
+	var newBoundList []BoundView
 	boundSet := map[BoundView]interface{}{}
 	for _, v := range b {
 		boundSet[v] = true
@@ -51,8 +51,8 @@ func (t *KeyMenuView) RemoveViews(b ...BoundView) *KeyMenuView {
 }
 
 func (t *KeyMenuView) GetKeyBindings() []helpers.KeyBindingDisplay {
-	logrus.Debug("Getting binding keys from keybinding primitive")
-	result := []helpers.KeyBindingDisplay{}
+	log.Trace("getting binding keys from keybinding primitive")
+	var result []helpers.KeyBindingDisplay
 	for _, view := range t.boundList {
 		if view.HasFocus() {
 			result = append(result, view.GetKeyBindings()...)
@@ -66,7 +66,7 @@ func (t *KeyMenuView) Draw(screen tcell.Screen) {
 	t.Box.Draw(screen)
 	x, y, width, _ := t.Box.GetInnerRect()
 
-	lines := []string{}
+	var lines []string
 	keyBindings := t.GetKeyBindings()
 	for idx, binding := range keyBindings {
 		if binding.Hide() {
@@ -87,8 +87,8 @@ func (t *KeyMenuView) Draw(screen tcell.Screen) {
 			prefix = ""
 		}
 		keyBindingContent := keyBindingFormatter(prefix + binding.Name() + " ")
-		displayContnet := displayFormatter(binding.Display + postfix)
-		lines = append(lines, fmt.Sprintf("%s%s", keyBindingContent, displayContnet))
+		displayContent := displayFormatter(binding.Display + postfix)
+		lines = append(lines, fmt.Sprintf("%s%s", keyBindingContent, displayContent))
 	}
 	joinedLine := strings.Join(lines, "")
 	_, w := tview.PrintWithStyle(screen, joinedLine, x, y, width, tview.AlignLeft, tcell.StyleDefault)

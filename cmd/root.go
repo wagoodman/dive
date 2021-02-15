@@ -2,20 +2,20 @@ package cmd
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
-	"path"
 	"strings"
 
-	"github.com/wagoodman/dive/dive"
-	"github.com/wagoodman/dive/dive/filetree"
-
-	"github.com/mitchellh/go-homedir"
-	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"github.com/wagoodman/dive/dive"
+	"github.com/wagoodman/dive/dive/filetree"
+	"github.com/wagoodman/dive/internal/log"
+	"github.com/wagoodman/dive/internal/logger"
+	"github.com/wagoodman/dive/runtime"
+	"github.com/wagoodman/dive/runtime/config"
 )
 
+var appConfig *config.ApplicationConfig
 var cfgFile string
 var exportFile string
 var ciConfigFile string
@@ -60,12 +60,16 @@ func initCli() {
 
 	for _, key := range []string{"lowestEfficiency", "highestWastedBytes", "highestUserWastedPercent"} {
 		if err := ciConfig.BindPFlag(fmt.Sprintf("rules.%s", key), rootCmd.Flags().Lookup(key)); err != nil {
-			log.Fatalf("Unable to bind '%s' flag: %v", key, err)
+			panic(fmt.Errorf("unable to bind '%s' flag: %v", key, err))
 		}
 	}
 
 	if err := ciConfig.BindPFlag("ignore-errors", rootCmd.PersistentFlags().Lookup("ignore-errors")); err != nil {
-		log.Fatalf("Unable to bind 'ignore-errors' flag: %v", err)
+		panic(fmt.Errorf("unable to bind 'ignore-errors' flag: %w", err))
+	}
+
+	if err := viper.BindPFlag("source", rootCmd.PersistentFlags().Lookup("source")); err != nil {
+		panic(fmt.Errorf("unable to bind 'source' flag: %w", err))
 	}
 }
 
@@ -73,143 +77,25 @@ func initCli() {
 func initConfig() {
 	var err error
 
-	//viper.SetDefault("log.level", log.InfoLevel.String())
-	viper.SetDefault("log.level", "debug")
-	viper.SetDefault("log.path", "./dive.log")
-	viper.SetDefault("log.enabled", true)
-	// keybindings: status view / global
-	// keybindings: status view / global
-	viper.SetDefault("keybinding.quit", "Ctrl+C")
-	viper.SetDefault("keybinding.toggle-view", "Tab")
-	viper.SetDefault("keybinding.filter-files", "Ctrl+f")
-	// keybindings: layer view
-	viper.SetDefault("keybinding.compare-all", "Ctrl+A")
-	viper.SetDefault("keybinding.compare-layer", "Ctrl+L")
-	// keybindings: filetree view
-	viper.SetDefault("keybinding.toggle-collapse-dir", "Space")
-	viper.SetDefault("keybinding.toggle-collapse-all-dir", "Ctrl+Space")
-	viper.SetDefault("keybinding.toggle-filetree-attributes", "Ctrl+B")
-	viper.SetDefault("keybinding.toggle-added-files", "Ctrl+A")
-	viper.SetDefault("keybinding.toggle-removed-files", "Ctrl+R")
-	viper.SetDefault("keybinding.toggle-modified-files", "Ctrl+N")
-	viper.SetDefault("keybinding.toggle-unmodified-files", "Ctrl+U")
-	viper.SetDefault("keybinding.toggle-wrap-tree", "Ctrl+P")
-	viper.SetDefault("keybinding.page-up", "PgUp")
-	viper.SetDefault("keybinding.page-down", "PgDn")
-
-	viper.SetDefault("diff.hide", "")
-
-	viper.SetDefault("layer.show-aggregated-changes", false)
-
-	viper.SetDefault("filetree.collapse-dir", false)
-	viper.SetDefault("filetree.pane-width", 0.5)
-	viper.SetDefault("filetree.show-attributes", true)
-
-	viper.SetDefault("container-engine", "docker")
-	viper.SetDefault("ignore-errors", false)
-
-	err = viper.BindPFlag("source", rootCmd.PersistentFlags().Lookup("source"))
+	appConfig, err = config.LoadApplicationConfig(viper.GetViper(), cfgFile)
 	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		panic(err)
 	}
 
-	viper.SetEnvPrefix("DIVE")
-	// replace all - with _ when looking for matching environment variables
-	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
-	viper.AutomaticEnv()
-
-	// if config files are present, load them
-	if cfgFile == "" {
-		// default configs are ignored if not found
-		filepathToCfg := getDefaultCfgFile()
-		viper.SetConfigFile(filepathToCfg)
-	} else {
-		viper.SetConfigFile(cfgFile)
-	}
-	err = viper.ReadInConfig()
-	if err == nil {
-		fmt.Println("Using config file:", viper.ConfigFileUsed())
-	} else if cfgFile != "" {
-		fmt.Println(err)
-		os.Exit(0)
-	}
-
-	// set global defaults (for performance)
-	filetree.GlobalFileTreeCollapse = viper.GetBool("filetree.collapse-dir")
+	// set global defaults
+	filetree.GlobalFileTreeCollapse = appConfig.FileTree.CollapseDir
 }
 
 // initLogging sets up the logging object with a formatter and location
 func initLogging() {
-	var logFileObj *os.File
-	var err error
-
-	if viper.GetBool("log.enabled") {
-		logFileObj, err = os.OpenFile(viper.GetString("log.path"), os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
-		log.SetOutput(logFileObj)
-	} else {
-		log.SetOutput(ioutil.Discard)
+	logCfg := logger.LogrusConfig{
+		EnableConsole: false,
+		EnableFile:    appConfig.Log.Enabled,
+		FileLocation:  appConfig.Log.Path,
+		Level:         appConfig.Log.Level,
 	}
+	runtime.SetLogger(logger.NewLogrusLogger(logCfg))
 
-	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-	}
-
-	Formatter := new(log.TextFormatter)
-	Formatter.DisableTimestamp = true
-	log.SetFormatter(Formatter)
-
-	level, err := log.ParseLevel(viper.GetString("log.level"))
-	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-	}
-
-	log.SetLevel(level)
-	log.Debug("Starting Dive...")
-	log.Debugf("config filepath: %s", viper.ConfigFileUsed())
-	for k, v := range viper.AllSettings() {
-		log.Debug("config value: ", k, " : ", v)
-	}
-}
-
-// getDefaultCfgFile checks for config file in paths from xdg specs
-// and in $HOME/.config/dive/ directory
-// defaults to $HOME/.dive.yaml
-func getDefaultCfgFile() string {
-	home, err := homedir.Dir()
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(0)
-	}
-
-	xdgHome := os.Getenv("XDG_CONFIG_HOME")
-	xdgDirs := os.Getenv("XDG_CONFIG_DIRS")
-	xdgPaths := append([]string{xdgHome}, strings.Split(xdgDirs, ":")...)
-	allDirs := append(xdgPaths, path.Join(home, ".config"))
-
-	for _, val := range allDirs {
-		file := findInPath(val)
-		if len(file) > 0 {
-			return file
-		}
-	}
-	return path.Join(home, ".dive.yaml")
-}
-
-// findInPath returns first "*.yaml" file in path's subdirectory "dive"
-// if not found returns empty string
-func findInPath(pathTo string) string {
-	directory := path.Join(pathTo, "dive")
-	files, err := ioutil.ReadDir(directory)
-	if err != nil {
-		return ""
-	}
-
-	for _, file := range files {
-		filename := file.Name()
-		if path.Ext(filename) == ".yaml" {
-			return path.Join(directory, filename)
-		}
-	}
-	return ""
+	log.Debug("starting dive")
+	log.Debug("config contents:\n", appConfig.String())
 }

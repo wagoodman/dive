@@ -24,15 +24,12 @@ type VisibleFlex struct {
 	*tview.Box
 
 	// The items to be positioned.
-	items []*flexItem
-
+	items   []*flexItem
 	consume [][]int
 
 	// FlexRow or FlexColumn.
-	direction int
-
-	visible VisibleFunc
-
+	direction    int
+	visible      VisibleFunc
 	bindingArray []helpers.KeyBinding
 }
 

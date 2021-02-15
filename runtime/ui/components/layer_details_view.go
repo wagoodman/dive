@@ -55,7 +55,7 @@ func (lv *LayerDetailsView) GetKeyBindings() []helpers.KeyBindingDisplay {
 }
 
 func layerDetailsText(layer *image.Layer) string {
-	lines := []string{}
+	var lines []string
 	if layer.Names != nil && len(layer.Names) > 0 {
 		lines = append(lines, boldString("Tags:   ")+strings.Join(layer.Names, ", "))
 	} else {

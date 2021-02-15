@@ -19,8 +19,8 @@ type KeyBindingDisplay struct {
 }
 
 func (kb *KeyBindingDisplay) Name() string {
-	s := ""
-	m := []string{}
+	var s string
+	var m []string
 	kMod := kb.Modifiers()
 	if kMod&tcell.ModShift != 0 {
 		m = append(m, "Shift")
@@ -39,7 +39,7 @@ func (kb *KeyBindingDisplay) Name() string {
 	key := kb.Key()
 	if s, ok = tcell.KeyNames[key]; !ok {
 		if key == tcell.KeyRune {
-			if kb.Rune() == rune(' ') {
+			if kb.Rune() == ' ' {
 				s = "Space"
 			} else {
 				s = string(kb.Rune())
@@ -50,7 +50,7 @@ func (kb *KeyBindingDisplay) Name() string {
 	}
 	if len(m) != 0 {
 		if kMod&tcell.ModCtrl != 0 && strings.HasPrefix(s, "Ctrl-") {
-			s = s[5:]
+			s = strings.TrimPrefix(s, "Ctrl-")
 		}
 		return fmt.Sprintf("%s%s", strings.Join(m, ""), s)
 	}

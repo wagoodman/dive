@@ -2,12 +2,12 @@ package ui
 
 import (
 	"fmt"
-	"log"
 	"sync"
+
+	"github.com/wagoodman/dive/runtime/config"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
-	"github.com/sirupsen/logrus"
 	"github.com/wagoodman/dive/dive/filetree"
 	"github.com/wagoodman/dive/dive/image"
 	"github.com/wagoodman/dive/runtime/ui/components"
@@ -28,26 +28,35 @@ type UI struct {
 	fileTree tview.Primitive
 }
 
-func newApp(app *tview.Application, analysis *image.AnalysisResult, cache filetree.Comparer) (*UI, error) {
+func newApp(config config.ApplicationConfig, app *tview.Application, analysis *image.AnalysisResult, cache filetree.Comparer) (*UI, error) {
 	var err error
 	once.Do(func() {
 
 		// TODO: Extract initilaization logic into its own package
 		format.SyncWithTermColors()
 
-		config := constructors.NewKeyConfig()
-		appConfig := components.AppConfig{}
+		keyConfig := constructors.NewKeyConfig()
+
 		diveApplication := components.NewDiveApplication(app)
 
 		//initialize viewmodels
-		modelConfig := constructors.ModelConfig{
-			Cache:  &CacheWrapper{Cache: &cache},
-			Layers: analysis.Layers,
-		}
-		_, layersViewModel, treeViewModel, err := constructors.InitializeModels(modelConfig)
+		filterViewModel := viewmodels.NewFilterViewModel(nil)
+		layersViewModel := viewmodels.NewLayersViewModel(analysis.Layers)
+		cacheWrapper := CacheWrapper{Cache: &cache}
+		treeViewModel, err := viewmodels.NewTreeViewModel(&cacheWrapper, layersViewModel, filterViewModel)
 		if err != nil {
-			log.Fatal(fmt.Errorf("unable to initialize viewmodels: %q", err))
+			panic(err)
 		}
+
+		// TODO: this seemed to be partially pushed, commented out for the meantime
+		//modelConfig := constructors.ModelConfig{
+		//	Cache:  &CacheWrapper{Cache: &cache},
+		//	Layers: analysis.Layers,
+		//}
+		//_, layersViewModel, treeViewModel, err := constructors.InitializeModels(modelConfig)
+		//if err != nil {
+		//	log.Fatal(fmt.Errorf("unable to initialize viewmodels: %q", err))
+		//}
 
 		regularLayerDetailsView := components.NewLayerDetailsView(layersViewModel).Setup()
 		layerDetailsBox := components.NewWrapper("Layer Details", "", regularLayerDetailsView).Setup()
@@ -60,13 +69,13 @@ func newApp(app *tview.Application, analysis *image.AnalysisResult, cache filetr
 
 		filterView := components.NewFilterView(treeViewModel).Setup()
 
-		layersView := components.NewLayerList(treeViewModel).Setup(config)
+		layersView := components.NewLayerList(treeViewModel).Setup(keyConfig)
 
 		layerSubtitle := fmt.Sprintf("Cmp%7s  %s", "Size", "Command")
 		layersBox := components.NewWrapper("Layers", layerSubtitle, layersView).Setup()
 
 		fileTreeView := components.NewTreeView(treeViewModel)
-		fileTreeView = fileTreeView.Setup(config)
+		fileTreeView = fileTreeView.Setup(keyConfig)
 		fileTreeBox := components.NewWrapper("Current Layer Contents", "", fileTreeView).Setup()
 
 		keyMenuView := components.NewKeyMenuView()
@@ -92,7 +101,8 @@ func newApp(app *tview.Application, analysis *image.AnalysisResult, cache filetr
 			AddItem(filterView, 1, 0, false).
 			SetConsumers(filterView, fileTreeBox)
 
-		leftPortion, rightPortion := appConfig.GetPaneWidth()
+		rightPortion := int(config.FileTree.PaneWidthRatio * 100)
+		leftPortion := int((1 - config.FileTree.PaneWidthRatio) * 100)
 		totalVisibleGrid.AddItem(leftVisibleGrid, 0, leftPortion, true).
 			AddItem(rightVisibleGrid, 0, rightPortion, false)
 
@@ -104,18 +114,18 @@ func newApp(app *tview.Application, analysis *image.AnalysisResult, cache filetr
 
 		keyMenuView.AddBoundViews(diveApplication)
 
-		quitBinding, err := config.GetKeyBinding("keybinding.quit")
+		quitBinding, err := keyConfig.GetKeyBinding("keybinding.quit")
 		if err != nil {
 			// TODO handle this as an error
 			panic(err)
 		}
 
-		filterBinding, err := config.GetKeyBinding("keybinding.filter-files")
+		filterBinding, err := keyConfig.GetKeyBinding("keybinding.filter-files")
 		if err != nil {
 			// TODO handle this as an error
 			panic(err)
 		}
-		switchBinding, err := config.GetKeyBinding("keybinding.toggle-view")
+		switchBinding, err := keyConfig.GetKeyBinding("keybinding.toggle-view")
 		if err != nil {
 			// TODO handle this as an error
 			panic(err)
@@ -154,22 +164,22 @@ func newApp(app *tview.Application, analysis *image.AnalysisResult, cache filetr
 		diveApplication.SetFocus(gridWithFooter)
 
 		// additional setup configuration
-		if appConfig.GetAggregateLayerSetting() {
+		if config.Layer.ShowAggregatedChanges {
 			err := layersViewModel.SwitchLayerMode()
 			if err != nil {
 				panic(err)
 			}
 		}
 
-		if appConfig.GetCollapseDir() {
+		if config.FileTree.CollapseDir {
 			fileTreeView.CollapseOrExpandAll()
 		}
 
-		for _, hideType := range appConfig.GetDefaultHide() {
+		for _, hideType := range config.Diff.DiffTypes {
 			treeViewModel.ToggleHiddenFileType(hideType)
 		}
 
-		if appConfig.GetShowAttributes() {
+		if config.FileTree.ShowAttributes {
 			fileTreeView.ToggleHideAttributes()
 		}
 	})
@@ -178,18 +188,15 @@ func newApp(app *tview.Application, analysis *image.AnalysisResult, cache filetr
 }
 
 // Run is the UI entrypoint.
-func Run(analysis *image.AnalysisResult, treeStack filetree.Comparer) error {
-	app := tview.NewApplication()
-	_, err := newApp(app, analysis, treeStack)
+func Run(config config.ApplicationConfig, analysis *image.AnalysisResult, treeStack filetree.Comparer) error {
+	_, err := newApp(config, tview.NewApplication(), analysis, treeStack)
 	if err != nil {
 		return err
 	}
 
 	if err = uiSingleton.app.Run(); err != nil {
-		logrus.Error("app error: ", err.Error())
 		return err
 	}
-	logrus.Info("app run loop exited")
 	return nil
 }
 

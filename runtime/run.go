@@ -4,25 +4,31 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/wagoodman/dive/runtime/config"
+
 	"github.com/dustin/go-humanize"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 	"github.com/wagoodman/dive/dive"
 	"github.com/wagoodman/dive/dive/filetree"
 	"github.com/wagoodman/dive/dive/image"
+	"github.com/wagoodman/dive/internal/log"
 	"github.com/wagoodman/dive/runtime/ci"
 	"github.com/wagoodman/dive/runtime/export"
 	"github.com/wagoodman/dive/runtime/ui"
 	"github.com/wagoodman/dive/utils"
 )
 
-func run(enableUi bool, options Options, imageResolver image.Resolver, events eventChannel, filesystem afero.Fs) {
+func run(config config.ApplicationConfig, enableUi bool, options Options, imageResolver image.Resolver, events eventChannel, filesystem afero.Fs) {
 	var img *image.Image
 	var err error
 	defer close(events)
 
 	doExport := options.ExportFile != ""
 	doBuild := len(options.BuildArgs) > 0
+
+	if config.ConfigFile != "" {
+		events.message(fmt.Sprintf("Using config file: %s", config.ConfigFile))
+	}
 
 	if doBuild {
 		events.message(utils.TitleFormat("Building image..."))
@@ -102,9 +108,11 @@ func run(enableUi bool, options Options, imageResolver image.Resolver, events ev
 		}
 
 		if enableUi {
-			err = ui.Run(analysis, treeStack)
+			err = ui.Run(config, analysis, treeStack)
 			if err != nil {
-				logrus.Fatal("run info exit: ", err.Error())
+				log.WithFields(
+					"error", err,
+				).Errorf("UI error")
 				events.exitWithError(err)
 				return
 			}
@@ -112,20 +120,19 @@ func run(enableUi bool, options Options, imageResolver image.Resolver, events ev
 	}
 }
 
-func Run(options Options) {
+func Run(options Options, config config.ApplicationConfig) {
 	var exitCode int
 	var events = make(eventChannel)
 
 	imageResolver, err := dive.GetImageResolver(options.Source)
 	if err != nil {
 		message := "cannot determine image provider"
-		logrus.Error(message)
-		logrus.Error(err)
+		log.Errorf("%s : %+v", message, err.Error())
 		fmt.Fprintf(os.Stderr, "%s: %+v\n", message, err)
 		os.Exit(1)
 	}
 
-	go run(true, options, imageResolver, events, afero.NewOsFs())
+	go run(config, true, options, imageResolver, events, afero.NewOsFs())
 
 	for event := range events {
 		if event.stdout != "" {
@@ -140,7 +147,7 @@ func Run(options Options) {
 		}
 
 		if event.err != nil {
-			logrus.Error(event.err)
+			log.Error(event.err)
 			_, err := fmt.Fprintln(os.Stderr, event.err.Error())
 			if err != nil {
 				fmt.Println("error: could not write to buffer:", err)

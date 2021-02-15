@@ -6,11 +6,10 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/sirupsen/logrus"
-	"github.com/wagoodman/dive/runtime/ui/format"
-
 	"github.com/dustin/go-humanize"
 	"github.com/phayes/permbits"
+	"github.com/wagoodman/dive/internal/log"
+	"github.com/wagoodman/dive/runtime/ui/format"
 )
 
 const (
@@ -173,7 +172,7 @@ func (node *FileNode) MetadataString() string {
 
 		err := node.VisitDepthChildFirst(sizer, nil)
 		if err != nil {
-			logrus.Errorf("unable to propagate node for metadata: %+v", err)
+			log.Errorf("unable to propagate node for metadata: %+v", err)
 		}
 	}
 

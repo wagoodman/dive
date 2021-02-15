@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"regexp"
 
-	"github.com/sirupsen/logrus"
+	"github.com/wagoodman/dive/internal/log"
 )
 
 type FilterViewModel struct {
@@ -19,9 +19,9 @@ func NewFilterViewModel(r *regexp.Regexp) *FilterViewModel {
 
 func (fm *FilterViewModel) SetFilter(r *regexp.Regexp) {
 	if r != nil {
-		logrus.Info(fmt.Sprintf("setting filter: %s", r.String()))
+		log.Info(fmt.Sprintf("setting filter: %s", r.String()))
 	} else {
-		logrus.Info("setting filter: nil")
+		log.Info("setting filter: nil")
 	}
 	fm.filterRegex = r
 }

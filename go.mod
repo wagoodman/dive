@@ -3,28 +3,33 @@ module github.com/wagoodman/dive
 go 1.13
 
 require (
+	github.com/Microsoft/go-winio v0.4.15-0.20190919025122-fc70bd9a86b5 // indirect
 	github.com/OneOfOne/xxhash v1.2.8 // indirect
+	github.com/buildpacks/imgutil v0.0.0-20200805143852-1844b230530d // indirect
 	github.com/buildpacks/lifecycle v0.7.2
-	github.com/buildpacks/pack v0.14.2
 	github.com/cespare/xxhash v1.1.0
+	github.com/containerd/containerd v1.3.3 // indirect
 	github.com/docker/cli v20.10.0-beta1+incompatible
 	github.com/docker/docker v1.4.2-0.20200221181110-62bd5a33f707
 	github.com/dustin/go-humanize v1.0.0
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
 	github.com/gdamore/tcell/v2 v2.1.0
+	github.com/gogo/protobuf v1.3.1 // indirect
+	github.com/golang/mock v1.4.1 // indirect
 	github.com/golang/protobuf v1.4.3 // indirect
 	github.com/google/go-cmp v0.5.2 // indirect
+	github.com/google/go-containerregistry v0.0.0-20200313165449-955bf358a3d8 // indirect
 	github.com/google/uuid v1.1.2
 	github.com/gopherjs/gopherjs v0.0.0-20200217142428-fce0ec30dd00 // indirect
 	github.com/gorilla/mux v1.8.0 // indirect
-	github.com/jroimartin/gocui v0.4.0
+	github.com/kr/text v0.2.0 // indirect
 	github.com/logrusorgru/aurora v2.0.3+incompatible
 	github.com/lunixbochs/vtclean v1.0.0
 	github.com/magiconair/properties v1.8.4 // indirect
 	github.com/mattn/go-colorable v0.1.8 // indirect
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mitchellh/mapstructure v1.3.3 // indirect
-	github.com/nsf/termbox-go v0.0.0-20200418040025-38ba6e5628f1 // indirect
+	github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/pelletier/go-toml v1.8.1 // indirect
 	github.com/phayes/permbits v0.0.0-20190612203442-39d7c581d2ee
@@ -39,8 +44,8 @@ require (
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/viper v1.7.1
 	github.com/stretchr/testify v1.6.1 // indirect
+	github.com/x-cray/logrus-prefixed-formatter v0.5.2
 	gitlab.com/tslocum/cbind v0.1.4
-	go.uber.org/zap v1.10.0
 	golang.org/x/net v0.0.0-20201029055024-942e2f445f3c
 	golang.org/x/sys v0.0.0-20201218084310-7d0127a74742 // indirect
 	golang.org/x/text v0.3.4 // indirect
@@ -51,7 +56,7 @@ require (
 	google.golang.org/protobuf v1.25.0 // indirect
 	gopkg.in/check.v1 v1.0.0-20200902074654-038fdea0a05b // indirect
 	gopkg.in/ini.v1 v1.62.0 // indirect
-	gopkg.in/yaml.v2 v2.3.0 // indirect
+	gopkg.in/yaml.v2 v2.4.0
 	gopkg.in/yaml.v3 v3.0.0-20200615113413-eeeca48fe776 // indirect
 	gotest.tools/v3 v3.0.3 // indirect
 )

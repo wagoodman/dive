@@ -5,11 +5,10 @@ import (
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
-	"github.com/sirupsen/logrus"
+	"github.com/wagoodman/dive/internal/log"
 	"github.com/wagoodman/dive/runtime/ui/components/helpers"
 	"github.com/wagoodman/dive/runtime/ui/format"
 	"github.com/wagoodman/dive/runtime/ui/viewmodels"
-	"go.uber.org/zap"
 )
 
 type LayersViewModel interface {
@@ -99,7 +98,7 @@ func SwitchCompareLayerListBindingOption(k helpers.KeyBinding) LayerListViewOpti
 		}
 		ll.keyInputHandler.AddBinding(displayBinding, func() {
 			if err := ll.SwitchLayerMode(); err != nil {
-				logrus.Error("SwitchCompareLayers error: ", err.Error())
+				log.Error("SwitchCompareLayers error: ", err.Error())
 			}
 		})
 	}
@@ -223,9 +222,12 @@ func (ll *LayerList) keyUp() bool {
 		ll.bufferIndexLowerBound--
 	}
 
-	logrus.Debugln("keyUp in layers")
-	logrus.Debugf("  cmpIndex: %d", ll.cmpIndex)
-	logrus.Debugf("  bufferIndexLowerBound: %d", ll.bufferIndexLowerBound)
+	log.WithFields(
+		"component", "LayerList",
+		"cmpIndex", ll.cmpIndex,
+		"bufferIndexLowerBound", ll.bufferIndexLowerBound,
+	).Tracef("keyUp event")
+
 	return ll.SetLayerIndex(ll.cmpIndex)
 }
 
@@ -241,15 +243,21 @@ func (ll *LayerList) keyDown() bool {
 	if ll.cmpIndex-ll.bufferIndexLowerBound >= height {
 		ll.bufferIndexLowerBound++
 	}
-	logrus.Debugln("keyDown in layers")
-	logrus.Debugf("  cmpIndex: %d", ll.cmpIndex)
-	logrus.Debugf("  bufferIndexLowerBound: %d", ll.bufferIndexLowerBound)
+
+	log.WithFields(
+		"component", "LayerList",
+		"cmpIndex", ll.cmpIndex,
+		"bufferIndexLowerBound", ll.bufferIndexLowerBound,
+	).Tracef("keyDown event")
 
 	return ll.SetLayerIndex(ll.cmpIndex)
 }
 
 func (ll *LayerList) pageUp() bool {
-	zap.S().Info("layer page up call")
+	log.WithFields(
+		"component", "LayerList",
+	).Tracef("pageUp event")
+
 	_, _, _, height := ll.Box.GetInnerRect()
 
 	ll.cmpIndex = intMax(0, ll.cmpIndex-height)
@@ -261,7 +269,9 @@ func (ll *LayerList) pageUp() bool {
 }
 
 func (ll *LayerList) pageDown() bool {
-	zap.S().Info("layer page down call")
+	log.WithFields(
+		"component", "LayerList",
+	).Tracef("pageDown event")
 	// two parts of this are moving both the currently selected item & the window as a whole
 
 	_, _, _, height := ll.Box.GetInnerRect()

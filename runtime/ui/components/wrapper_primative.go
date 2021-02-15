@@ -12,7 +12,7 @@ import (
 
 // This was pretty helpful: https://github.com/rivo/tview/wiki/Primitives
 
-type wrapable interface {
+type wrappable interface {
 	getBox() *tview.Box
 	getDraw() drawFn
 	getInputWrapper() inputFn
@@ -24,7 +24,7 @@ type Wrapper struct {
 	flex             *tview.Flex
 	titleTextView    *tview.TextView
 	subtitleTextView *tview.TextView
-	inner            wrapable
+	inner            wrappable
 	titleRightBox    *tview.Box
 	title            string
 	subtitle         string
@@ -35,7 +35,7 @@ type Wrapper struct {
 type drawFn func(screen tcell.Screen)
 type inputFn func() func(event *tcell.EventKey, setFocus func(p tview.Primitive))
 
-func NewWrapper(title, subtitle string, inner wrapable) *Wrapper {
+func NewWrapper(title, subtitle string, inner wrappable) *Wrapper {
 	flex := tview.NewFlex().SetDirection(tview.FlexRow)
 	w := &Wrapper{
 		Box:              flex.Box,

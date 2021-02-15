@@ -2,10 +2,11 @@ package filetree
 
 import (
 	"archive/tar"
-	"github.com/cespare/xxhash"
-	"github.com/sirupsen/logrus"
 	"io"
 	"os"
+
+	"github.com/cespare/xxhash"
+	"github.com/wagoodman/dive/internal/log"
 )
 
 // FileInfo contains tar metadata for a specific FileNode
@@ -54,7 +55,7 @@ func NewFileInfo(realPath, path string, info os.FileInfo) FileInfo {
 
 		linkName, err = os.Readlink(realPath)
 		if err != nil {
-			logrus.Panic("unable to read link:", realPath, err)
+			log.Errorf("unable to read link=%q : %+v", realPath, err)
 		}
 
 	} else if info.IsDir() {
@@ -69,7 +70,7 @@ func NewFileInfo(realPath, path string, info os.FileInfo) FileInfo {
 	if fileType != tar.TypeDir {
 		file, err := os.Open(realPath)
 		if err != nil {
-			logrus.Panic("unable to read file:", realPath)
+			log.Errorf("unable to read file: %s", realPath)
 		}
 		defer file.Close()
 		hash = getHashFromReader(file)
@@ -127,7 +128,7 @@ func getHashFromReader(reader io.Reader) uint64 {
 	for {
 		n, err := reader.Read(buf)
 		if err != nil && err != io.EOF {
-			logrus.Panic(err)
+			log.Error(err)
 		}
 		if n == 0 {
 			break
@@ -135,7 +136,7 @@ func getHashFromReader(reader io.Reader) uint64 {
 
 		_, err = h.Write(buf[:n])
 		if err != nil {
-			logrus.Panic(err)
+			log.Error(err)
 		}
 	}
 
