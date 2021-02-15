@@ -1,19 +1,15 @@
 package components
 
 import (
-	"fmt"
-
 	"github.com/rivo/tview"
-	"github.com/sirupsen/logrus"
+	"github.com/wagoodman/dive/internal/log"
 	"github.com/wagoodman/dive/runtime/ui/components/helpers"
 )
 
 type DiveApplication struct {
 	*tview.Application
-
 	boundList []BoundView
-
-	bindings []helpers.KeyBinding
+	bindings  []helpers.KeyBinding
 }
 
 func NewDiveApplication(app *tview.Application) *DiveApplication {
@@ -24,10 +20,10 @@ func NewDiveApplication(app *tview.Application) *DiveApplication {
 }
 
 func (d *DiveApplication) GetKeyBindings() []helpers.KeyBindingDisplay {
-	result := []helpers.KeyBindingDisplay{}
+	var result []helpers.KeyBindingDisplay
 	for i := 0; i < len(d.bindings); i++ {
 		binding := d.bindings[i]
-		logrus.Debug(fmt.Sprintf("adding keybinding with name %s", binding.Display))
+		log.WithFields("name", binding.Display).Tracef("adding keybinding")
 		result = append(result, helpers.KeyBindingDisplay{KeyBinding: &binding, Selected: AlwaysFalse, Hide: AlwaysFalse})
 	}
 

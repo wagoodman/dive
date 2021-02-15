@@ -2,12 +2,12 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/sirupsen/logrus"
-	"github.com/spf13/viper"
-	"github.com/wagoodman/dive/dive"
 	"os"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
+	"github.com/wagoodman/dive/dive"
+	"github.com/wagoodman/dive/internal/log"
 	"github.com/wagoodman/dive/runtime"
 )
 
@@ -59,7 +59,7 @@ func doAnalyzeCmd(cmd *cobra.Command, args []string) {
 
 	ignoreErrors, err := cmd.PersistentFlags().GetBool("ignore-errors")
 	if err != nil {
-		logrus.Error("unable to get 'ignore-errors' option:", err)
+		log.Error("unable to get 'ignore-errors' option:", err)
 	}
 
 	runtime.Run(runtime.Options{
@@ -69,5 +69,6 @@ func doAnalyzeCmd(cmd *cobra.Command, args []string) {
 		ExportFile:   exportFile,
 		CiConfig:     ciConfig,
 		IgnoreErrors: viper.GetBool("ignore-errors") || ignoreErrors,
-	})
+	},
+		*appConfig)
 }

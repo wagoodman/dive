@@ -33,5 +33,5 @@ func doBuildCmd(cmd *cobra.Command, args []string) {
 		BuildArgs:  args,
 		ExportFile: exportFile,
 		CiConfig:   ciConfig,
-	})
+	}, *appConfig)
 }

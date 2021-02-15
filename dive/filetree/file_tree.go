@@ -6,8 +6,9 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/wagoodman/dive/internal/log"
+
 	"github.com/google/uuid"
-	"github.com/sirupsen/logrus"
 )
 
 const (
@@ -52,8 +53,7 @@ type renderParams struct {
 	isLast        bool
 }
 
-
-	// renderStringTreeBetween returns a string representing the given tree between the given rows. Since each node
+// renderStringTreeBetween returns a string representing the given tree between the given rows. Since each node
 // is rendered on its own line, the returned string shows the visible nodes not affected by a collapsed parent.
 func (tree *FileTree) renderStringTreeBetween(startRow, stopRow int, showAttributes bool) string {
 	// generate a list of nodes to render
@@ -75,7 +75,7 @@ func (tree *FileTree) renderStringTreeBetween(startRow, stopRow int, showAttribu
 		// we should always visit nodes in order
 		sort.Strings(keys)
 		lastIndex := len(keys) - 1
-		for  ; lastIndex > 0; lastIndex--{
+		for ; lastIndex > 0; lastIndex-- {
 			key := keys[lastIndex]
 			if currentParams.node.Children[key].Data.ViewInfo.Hidden {
 				continue
@@ -158,7 +158,7 @@ func (tree *FileTree) VisibleSize() int {
 	}
 	err := tree.VisitDepthParentFirst(visitor, visitEvaluator)
 	if err != nil {
-		logrus.Errorf("unable to determine visible tree size: %+v", err)
+		log.Errorf("unable to determine visible tree size: %+v", err)
 	}
 
 	// don't include root
@@ -191,7 +191,7 @@ func (tree *FileTree) Copy() *FileTree {
 	}, nil)
 
 	if err != nil {
-		logrus.Errorf("unable to propagate tree on copy(): %+v", err)
+		log.Errorf("unable to propagate tree on copy(): %+v", err)
 	}
 
 	return newTree
@@ -393,7 +393,7 @@ func StackTreeRange(trees []*FileTree, start, stop int) (*FileTree, []PathError,
 			errors = append(errors, failedPaths...)
 		}
 		if err != nil {
-			logrus.Errorf("could not stack tree range: %v", err)
+			log.Errorf("could not stack tree range: %v", err)
 			return nil, nil, err
 		}
 	}

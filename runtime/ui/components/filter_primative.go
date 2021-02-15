@@ -49,16 +49,16 @@ func (fv *FilterView) Setup() *FilterView {
 	return fv
 }
 
-func (ll *FilterView) getBox() *tview.Box {
-	return ll.Box
+func (fv *FilterView) getBox() *tview.Box {
+	return fv.Box
 }
 
-func (ll *FilterView) getDraw() drawFn {
-	return ll.Draw
+func (fv *FilterView) getDraw() drawFn {
+	return fv.Draw
 }
 
-func (ll *FilterView) getInputWrapper() inputFn {
-	return ll.InputHandler
+func (fv *FilterView) getInputWrapper() inputFn {
+	return fv.InputHandler
 }
 
 func (fv *FilterView) Empty() bool {

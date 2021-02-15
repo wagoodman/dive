@@ -6,8 +6,8 @@ import (
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
-	"github.com/sirupsen/logrus"
 	"github.com/wagoodman/dive/dive/filetree"
+	"github.com/wagoodman/dive/internal/log"
 	"github.com/wagoodman/dive/runtime/ui/components/helpers"
 	"github.com/wagoodman/dive/runtime/ui/format"
 )
@@ -306,23 +306,17 @@ func (t *TreeView) HasFocus() bool {
 func (t *TreeView) collapseDir() bool {
 	node := t.getAbsPositionNode()
 	if node != nil && node.Data.FileInfo.IsDir {
-		logrus.Debugf("collapsing node %s", node.Path())
+		log.WithFields(
+			"path", node.Path(),
+		).Trace("collapsing node")
 		node.Data.ViewInfo.Collapsed = !node.Data.ViewInfo.Collapsed
 	}
-	if node != nil {
-		logrus.Debugf("unable to collapse node %s", node.Path())
-		logrus.Debugf("  IsDir: %t", node.Data.FileInfo.IsDir)
-
-	} else {
-		logrus.Debugf("unable to collapse nil node")
-	}
-
 	return true
 }
 
 func (t *TreeView) CollapseOrExpandAll() bool {
 	visitor := func(n *filetree.FileNode) error {
-		if n.Data.FileInfo.IsDir {
+		if n != nil && n.Data.FileInfo.IsDir {
 			n.Data.ViewInfo.Collapsed = t.globalCollapseAll
 		}
 		return nil
@@ -332,9 +326,9 @@ func (t *TreeView) CollapseOrExpandAll() bool {
 		return true
 	}
 	if err := t.tree.VisitDepthParentFirst(visitor, evaluator); err != nil {
-		panic(fmt.Errorf("error callapsing all dir: %w", err))
-		// TODO log error here
-		//return false
+		err = fmt.Errorf("error collapsing all directories: %w", err)
+		log.Error(err)
+		panic(err)
 	}
 
 	t.globalCollapseAll = !t.globalCollapseAll
@@ -363,7 +357,7 @@ func (t *TreeView) getAbsPositionNode() (node *filetree.FileNode) {
 
 	err := t.tree.VisitDepthParentFirst(visitor, evaluator)
 	if err != nil {
-		logrus.Errorf("unable to get node position: %+v", err)
+		log.Errorf("unable to get node position: %+v", err)
 	}
 
 	return node
@@ -386,10 +380,13 @@ func (t *TreeView) keyDown() bool {
 		t.bufferIndexLowerBound++
 	}
 
-	logrus.Debugf("  treeIndex: %d", t.treeIndex)
-	logrus.Debugf("  bufferIndexLowerBound: %d", t.bufferIndexLowerBound)
-	logrus.Debugf("  height: %d", height)
-
+	log.WithFields(
+		"component", "TreeView",
+		"path", t.getAbsPositionNode().Path(),
+		"treeIndex", t.treeIndex,
+		"bufferIndexLowerBound", t.bufferIndexLowerBound,
+		"height", height,
+	).Tracef("keyDown event")
 	return true
 }
 
@@ -402,9 +399,12 @@ func (t *TreeView) keyUp() bool {
 		t.bufferIndexLowerBound--
 	}
 
-	logrus.Debugf("keyUp end at: %s", t.getAbsPositionNode().Path())
-	logrus.Debugf("  treeIndex: %d", t.treeIndex)
-	logrus.Debugf("  bufferIndexLowerBound: %d", t.bufferIndexLowerBound)
+	log.WithFields(
+		"component", "TreeView",
+		"path", t.getAbsPositionNode().Path(),
+		"treeIndex", t.treeIndex,
+		"bufferIndexLowerBound", t.bufferIndexLowerBound,
+	).Tracef("keyUp event")
 	return true
 }
 

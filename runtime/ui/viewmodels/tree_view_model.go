@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"regexp"
 
-	"github.com/sirupsen/logrus"
 	"github.com/wagoodman/dive/dive/filetree"
 	"github.com/wagoodman/dive/dive/image"
+	"github.com/wagoodman/dive/internal/log"
 )
 
 //go:generate faux --interface FilterModel --output fakes/fake_filter_model.go
@@ -14,6 +14,7 @@ type FilterModel interface {
 	SetFilter(r *regexp.Regexp)
 	GetFilter() *regexp.Regexp
 }
+
 //go:generate faux --interface LayersModel --output fakes/fake_layers_model.go
 type LayersModel interface {
 	SetLayerIndex(index int) bool
@@ -36,7 +37,6 @@ type TreeModel interface {
 	VisitDepthChildFirst(visitor filetree.Visitor, evaluator filetree.VisitEvaluator) error
 	RemovePath(path string) error
 	VisibleSize() int
-
 }
 
 type TreeViewModel struct {
@@ -105,9 +105,11 @@ func (tvm *TreeViewModel) GetHiddenFileType(filetype filetree.DiffType) bool {
 	return tvm.hiddenDiffTypes[filetype]
 }
 
-
-
 func (tvm *TreeViewModel) filterUpdate() error {
+	log.WithFields(
+		"model", "treeView",
+	).Trace("updating filter")
+
 	// keep the t selection in parity with the current DiffType selection
 	filter := tvm.GetFilter()
 	err := tvm.currentTree.VisitDepthChildFirst(func(node *filetree.FileNode) error {
@@ -132,7 +134,7 @@ func (tvm *TreeViewModel) filterUpdate() error {
 	}, nil)
 
 	if err != nil {
-		logrus.Errorf("error updating filter on current tree: %s", err)
+		log.Errorf("error updating filter on current tree: %s", err)
 		return err
 	}
 

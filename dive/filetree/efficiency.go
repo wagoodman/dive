@@ -3,7 +3,7 @@ package filetree
 import (
 	"sort"
 
-	"github.com/sirupsen/logrus"
+	"github.com/wagoodman/dive/internal/log"
 )
 
 // EfficiencyData represents the storage and reference statistics for a given file tree path.
@@ -65,11 +65,11 @@ func Efficiency(trees []*FileTree) (float64, EfficiencySlice) {
 			stackedTree, failedPaths, err := StackTreeRange(trees, 0, currentTree-1)
 			if len(failedPaths) > 0 {
 				for _, path := range failedPaths {
-					logrus.Errorf(path.String())
+					log.Errorf(path.String())
 				}
 			}
 			if err != nil {
-				logrus.Errorf("unable to stack tree range: %+v", err)
+				log.Errorf("unable to stack tree range: %+v", err)
 				return err
 			}
 
@@ -81,7 +81,7 @@ func Efficiency(trees []*FileTree) (float64, EfficiencySlice) {
 			if previousTreeNode.Data.FileInfo.IsDir {
 				err = previousTreeNode.VisitDepthChildFirst(sizer, nil)
 				if err != nil {
-					logrus.Errorf("unable to propagate whiteout dir: %+v", err)
+					log.Errorf("unable to propagate whiteout dir: %+v", err)
 					return err
 				}
 			}
@@ -109,7 +109,7 @@ func Efficiency(trees []*FileTree) (float64, EfficiencySlice) {
 		currentTree = idx
 		err := tree.VisitDepthChildFirst(visitor, visitEvaluator)
 		if err != nil {
-			logrus.Errorf("unable to propagate ref tree: %+v", err)
+			log.Errorf("unable to propagate ref tree: %+v", err)
 		}
 	}
 

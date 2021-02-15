@@ -3,9 +3,9 @@ package viewmodels
 import (
 	"fmt"
 
-	"github.com/sirupsen/logrus"
 	"github.com/wagoodman/dive/dive/filetree"
 	"github.com/wagoodman/dive/dive/image"
+	"github.com/wagoodman/dive/internal/log"
 )
 
 const (
@@ -59,7 +59,12 @@ func (lm *LayersViewModel) GetCompareIndicies() filetree.TreeIndexKey {
 
 func (lm *LayersViewModel) SetLayerIndex(index int) bool {
 	if 0 <= index && index < len(lm.layers) {
-		logrus.Debug(fmt.Sprintf("setting index, old: %d, new: %d", lm.index, index))
+		log.WithFields(
+			"component", "LayersViewModel",
+			"from", lm.index,
+			"to", index,
+		).Tracef("setting layer index")
+
 		lm.index = index
 		return true
 	}
