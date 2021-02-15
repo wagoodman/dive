@@ -37,6 +37,7 @@ type TreeModel interface {
 	VisitDepthChildFirst(visitor filetree.Visitor, evaluator filetree.VisitEvaluator) error
 	RemovePath(path string) error
 	VisibleSize() int
+	GetNode(path string) (*filetree.FileNode, error)
 }
 
 type TreeViewModel struct {
@@ -79,6 +80,10 @@ func (tvm *TreeViewModel) RemovePath(path string) error {
 }
 func (tvm *TreeViewModel) VisibleSize() int {
 	return tvm.currentTree.VisibleSize()
+}
+
+func (tvm *TreeViewModel) GetNode(path string) (*filetree.FileNode, error) {
+	return tvm.currentTree.GetNode(path)
 }
 
 func (tvm *TreeViewModel) SetFilter(filterRegex *regexp.Regexp) {
@@ -151,38 +156,23 @@ func (tvm *TreeViewModel) SetLayerIndex(index int) bool {
 }
 
 func (tvm *TreeViewModel) setCurrentTree(key filetree.TreeIndexKey) error {
-	collapsedList := map[string]interface{}{}
-
 	newTree, err := tvm.cache.GetTree(key)
 	if err != nil {
 		return err
 	}
 
-	evaluateFunc := func(node *filetree.FileNode) bool {
-		if node.Parent != nil && node.Parent.Data.ViewInfo.Hidden {
-			return false
-		}
-		return true
-	}
-
-	if err = tvm.currentTree.VisitDepthParentFirst(func(node *filetree.FileNode) error {
-		if node.Data.ViewInfo.Collapsed {
-			collapsedList[node.Path()] = true
-		}
-		return nil
-	}, evaluateFunc); err != nil {
-		return err
-	}
-
-	if err = newTree.VisitDepthParentFirst(func(node *filetree.FileNode) error {
-		_, ok := collapsedList[node.Path()]
-		if ok {
-			node.Data.ViewInfo.Collapsed = true
+	// we should visit each node in the currently displayed tree and ensure that the next tree
+	// has all of the current view state for all paths that exist in the new tree. This ensures that if a
+	// user collapsed a directory, then that directory will stay collapsed when changing trees. This also
+	// ensures that if a user changes back to the same tree again that the latest state is used from the
+	// current tree selected and not from stale state from a previous user selection.
+	tvm.currentTree.VisitDepthParentFirst(func(node *filetree.FileNode) error {
+		newNode, err := newTree.GetNode(node.Path())
+		if err == nil {
+			newNode.Data.ViewInfo = node.Data.ViewInfo
 		}
 		return nil
-	}, evaluateFunc); err != nil {
-		return err
-	}
+	}, nil)
 
 	tvm.currentTree = newTree
 	if err := tvm.filterUpdate(); err != nil {
