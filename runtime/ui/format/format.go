@@ -42,7 +42,7 @@ var (
 func SyncWithTermColors() {
 	tview.Styles.PrimitiveBackgroundColor = tcell.ColorDefault
 	tview.Styles.PrimaryTextColor = tcell.ColorDefault
-	tview.Styles.PrimitiveBackgroundColor = tcell.ColorDefault     // Main background color for primitives.
+	tview.Styles.PrimitiveBackgroundColor = tcell.ColorDefault    // Main background color for primitives.
 	tview.Styles.ContrastBackgroundColor = tcell.ColorDefault     // Background color for contrasting elements.
 	tview.Styles.MoreContrastBackgroundColor = tcell.ColorDefault // Background color for even more contrasting elements.
 	tview.Styles.BorderColor = tcell.ColorDefault                 // Box borders.
@@ -75,22 +75,22 @@ var (
 	Normal                    Formatter = GenerateFormatter("", "", "")
 	None                      Formatter = func(s string) string { return s }
 	Selected                  Formatter = GenerateFormatter("", "", "rb")
-	StatusSelected            Formatter = GenerateFormatter(colorTranslate(tcell.ColorWhite), colorTranslate(tcell.ColorDarkMagenta), "")
+	StatusSelected            Formatter = GenerateFormatter("white", "purple", "")
 	StatusNormal              Formatter = GenerateFormatter("", "", "r")
-	StatusControlSelected     Formatter = GenerateFormatter(colorTranslate(tcell.ColorWhite), colorTranslate(tcell.ColorDarkMagenta), "")
-	StatusControlSelectedBold Formatter = GenerateFormatter(colorTranslate(tcell.ColorWhite), colorTranslate(tcell.ColorDarkMagenta), "b")
+	StatusControlSelected     Formatter = GenerateFormatter("white", "purple", "")
+	StatusControlSelectedBold Formatter = GenerateFormatter("white", "purple", "b")
 	StatusControlNormal       Formatter = GenerateFormatter("", "", "r")
 	StatusControlNormalBold   Formatter = GenerateFormatter("", "", "rb")
-	CompareTop                Formatter = GenerateFormatter("", colorTranslate(tcell.ColorDarkMagenta), "")
-	CompareBottom             Formatter = GenerateFormatter("", colorTranslate(tcell.ColorDarkGreen), "")
+	CompareTop                Formatter = GenerateFormatter("", "purple", "")
+	CompareBottom             Formatter = GenerateFormatter("", "green", "")
 
 	// filediff types
-	Added    Formatter = GenerateFormatter(colorTranslate(tcell.ColorGreen), "", "")
-	Removed  Formatter = GenerateFormatter(colorTranslate(tcell.ColorRed), "", "")
-	Modified Formatter = GenerateFormatter(colorTranslate(tcell.ColorYellow), "", "")
+	Added    Formatter = GenerateFormatter("green", "", "")
+	Removed  Formatter = GenerateFormatter("red", "", "")
+	Modified Formatter = GenerateFormatter("yellow", "", "")
 
 	// Styles these are needed to completely color a line
-	SelectedStyle     tcell.Style = tcell.Style{}.Bold(true).Reverse(true)
+	SelectedStyle tcell.Style = tcell.Style{}.Bold(true).Reverse(true)
 )
 
 func PrintLine(screen tcell.Screen, text string, x, y, maxWidth, align int, style tcell.Style) (int, int) {
@@ -105,10 +105,6 @@ func PrintLine(screen tcell.Screen, text string, x, y, maxWidth, align int, styl
 		screen.SetContent(x+w, y, rune(' '), nil, style)
 	}
 	return b, w
-}
-
-func colorTranslate(c tcell.Color) string {
-	return fmt.Sprintf("#%06x", c.Hex())
 }
 
 func BoldReplace(s string) string {
