@@ -45,7 +45,7 @@ func (f *VisibleFlex) GetKeyBindings() []helpers.KeyBindingDisplay {
 	result := []helpers.KeyBindingDisplay{}
 
 	for _, binding := range f.bindingArray {
-		result = append(result, helpers.KeyBindingDisplay{KeyBinding: &binding, Selected: AlwaysFalse, Hide: AlwaysTrue})
+		result = append(result, helpers.KeyBindingDisplay{KeyBinding: &binding, Selected: alwaysFalse, Hide: alwaysTrue})
 	}
 
 	for _, item := range f.items {

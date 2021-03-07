@@ -16,7 +16,7 @@ type ApplicationConfig struct {
 	ConfigFile      string
 	FileTree        fileTreeViewConfig `mapstructure:"filetree"`
 	Layer           layerViewConfig    `mapstructure:"layer"`
-	Keybinding      keybindingConfig   `mapstructure:"keybinding"`
+	Keybinding      KeybindingConfig   `mapstructure:"keybinding"`
 	Diff            diffConfig         `mapstructure:"diff"`
 	Log             loggingConfig      `mapstructure:"log"`
 	ContainerEngine string             `mapstructure:"container-engine"`
@@ -141,7 +141,7 @@ func setDefaultConfigValues(v *viper.Viper) {
 	v.SetDefault("keybinding.toggle-filetree-attributes", "Ctrl+B")
 	v.SetDefault("keybinding.toggle-added-files", "Ctrl+A")
 	v.SetDefault("keybinding.toggle-removed-files", "Ctrl+R")
-	v.SetDefault("keybinding.toggle-modified-files", "Ctrl+N")
+	v.SetDefault("keybinding.toggle-modified-files", "Ctrl+M")
 	v.SetDefault("keybinding.toggle-unmodified-files", "Ctrl+U")
 	v.SetDefault("keybinding.toggle-wrap-tree", "Ctrl+P")
 	v.SetDefault("keybinding.page-up", "PgUp")

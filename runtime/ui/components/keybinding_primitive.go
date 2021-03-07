@@ -78,13 +78,13 @@ func (t *KeyMenuView) Draw(screen tcell.Screen) {
 			displayFormatter = format.StatusControlSelected
 			keyBindingFormatter = format.StatusControlSelectedBold
 		}
-		postfix := "⎹"
+		postfix := " "
 		if idx == len(keyBindings)-1 {
 			postfix = " "
 		}
-		prefix := " "
+		prefix := "▏"
 		if idx == 0 {
-			prefix = ""
+			prefix = " "
 		}
 		keyBindingContent := keyBindingFormatter(prefix + binding.Name() + " ")
 		displayContent := displayFormatter(binding.Display + postfix)

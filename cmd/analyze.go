@@ -5,9 +5,7 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	"github.com/wagoodman/dive/dive"
-	"github.com/wagoodman/dive/internal/log"
 	"github.com/wagoodman/dive/runtime"
 )
 
@@ -47,7 +45,7 @@ func doAnalyzeCmd(cmd *cobra.Command, args []string) {
 	sourceType, imageStr = dive.DeriveImageSource(userImage)
 
 	if sourceType == dive.SourceUnknown {
-		sourceStr := viper.GetString("source")
+		sourceStr := appConfig.ContainerEngine
 		sourceType = dive.ParseImageSource(sourceStr)
 		if sourceType == dive.SourceUnknown {
 			fmt.Printf("unable to determine image source: %v\n", sourceStr)
@@ -57,18 +55,13 @@ func doAnalyzeCmd(cmd *cobra.Command, args []string) {
 		imageStr = userImage
 	}
 
-	ignoreErrors, err := cmd.PersistentFlags().GetBool("ignore-errors")
-	if err != nil {
-		log.Error("unable to get 'ignore-errors' option:", err)
-	}
-
 	runtime.Run(runtime.Options{
 		Ci:           isCi,
 		Source:       sourceType,
 		Image:        imageStr,
 		ExportFile:   exportFile,
 		CiConfig:     ciConfig,
-		IgnoreErrors: viper.GetBool("ignore-errors") || ignoreErrors,
+		IgnoreErrors: appConfig.IgnoreErrors,
 	},
 		*appConfig)
 }

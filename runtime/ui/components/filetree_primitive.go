@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/wagoodman/dive/runtime/config"
+
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 	"github.com/wagoodman/dive/dive/filetree"
@@ -25,145 +27,158 @@ type TreeModel interface {
 
 type TreeViewOption func(t *TreeView)
 
-func UpBindingOption(k helpers.KeyBinding) TreeViewOption {
+func upBindingOption() TreeViewOption {
+	k := helpers.NewKeyBinding("Cursor Up", tcell.NewEventKey(tcell.KeyUp, rune(0), tcell.ModNone))
 	return func(t *TreeView) {
 		displayBinding := helpers.KeyBindingDisplay{
 			KeyBinding: &k,
-			Selected:   AlwaysFalse,
-			Hide:       AlwaysTrue,
+			Selected:   alwaysFalse,
+			Hide:       alwaysTrue,
 		}
 		t.keyInputHandler.AddBinding(displayBinding, func() { t.keyUp() })
 	}
 }
 
-func DownBindingOption(k helpers.KeyBinding) TreeViewOption {
+func downBindingOption() TreeViewOption {
+	k := helpers.NewKeyBinding("Cursor Down", tcell.NewEventKey(tcell.KeyDown, rune(0), tcell.ModNone))
 	return func(t *TreeView) {
 		displayBinding := helpers.KeyBindingDisplay{
 			KeyBinding: &k,
-			Selected:   AlwaysFalse,
-			Hide:       AlwaysTrue,
+			Selected:   alwaysFalse,
+			Hide:       alwaysTrue,
 		}
 		t.keyInputHandler.AddBinding(displayBinding, func() { t.keyDown() })
 	}
 }
 
-func RightBindingOption(k helpers.KeyBinding) TreeViewOption {
+func rightBindingOption() TreeViewOption {
+	k := helpers.NewKeyBinding("Cursor Right", tcell.NewEventKey(tcell.KeyRight, rune(0), tcell.ModNone))
 	return func(t *TreeView) {
 		displayBinding := helpers.KeyBindingDisplay{
 			KeyBinding: &k,
-			Selected:   AlwaysFalse,
-			Hide:       AlwaysTrue,
+			Selected:   alwaysFalse,
+			Hide:       alwaysTrue,
 		}
 		t.keyInputHandler.AddBinding(displayBinding, func() { t.keyRight() })
 	}
 }
 
-func LeftBindingOption(k helpers.KeyBinding) TreeViewOption {
+func leftBindingOption() TreeViewOption {
+	k := helpers.NewKeyBinding("Cursor Left", tcell.NewEventKey(tcell.KeyLeft, rune(0), tcell.ModNone))
 	return func(t *TreeView) {
 		displayBinding := helpers.KeyBindingDisplay{
 			KeyBinding: &k,
-			Selected:   AlwaysFalse,
-			Hide:       AlwaysTrue,
+			Selected:   alwaysFalse,
+			Hide:       alwaysTrue,
 		}
 		t.keyInputHandler.AddBinding(displayBinding, func() { t.keyLeft() })
 	}
 }
 
-func PageUpBindingOption(k helpers.KeyBinding) TreeViewOption {
+func pageUpBindingOption(bindingValue string) TreeViewOption {
+	k := helpers.NewKeyBinding("Pg Up", helpers.DecodeBinding(bindingValue))
 	return func(t *TreeView) {
 		displayBinding := helpers.KeyBindingDisplay{
 			KeyBinding: &k,
-			Selected:   AlwaysFalse,
-			Hide:       AlwaysFalse,
+			Selected:   alwaysFalse,
+			Hide:       alwaysTrue,
 		}
 		t.keyInputHandler.AddBinding(displayBinding, func() { t.pageUp() })
 	}
 }
 
-func PageDownBindingOption(k helpers.KeyBinding) TreeViewOption {
+func pageDownBindingOption(bindingValue string) TreeViewOption {
+	k := helpers.NewKeyBinding("Pg Down", helpers.DecodeBinding(bindingValue))
 	return func(t *TreeView) {
 		displayBinding := helpers.KeyBindingDisplay{
 			KeyBinding: &k,
-			Selected:   AlwaysFalse,
-			Hide:       AlwaysFalse,
+			Selected:   alwaysFalse,
+			Hide:       alwaysTrue,
 		}
 		t.keyInputHandler.AddBinding(displayBinding, func() { t.pageDown() })
 	}
 }
 
-func CollapseDirBindingOption(k helpers.KeyBinding) TreeViewOption {
+func collapseDirBindingOption(bindingValue string) TreeViewOption {
+	k := helpers.NewKeyBinding("Collapse", helpers.DecodeBinding(bindingValue))
 	return func(t *TreeView) {
 		displayBinding := helpers.KeyBindingDisplay{
 			KeyBinding: &k,
-			Selected:   AlwaysFalse,
-			Hide:       AlwaysFalse,
+			Selected:   alwaysFalse,
+			Hide:       alwaysFalse,
 		}
 		t.keyInputHandler.AddBinding(displayBinding, func() { t.collapseDir() })
 	}
 }
 
-func CollapseAllBindingOption(k helpers.KeyBinding) TreeViewOption {
+func collapseAllBindingOption(bindingValue string) TreeViewOption {
+	k := helpers.NewKeyBinding("Collapse All", helpers.DecodeBinding(bindingValue))
 	return func(t *TreeView) {
 		displayBinding := helpers.KeyBindingDisplay{
 			KeyBinding: &k,
-			Selected:   AlwaysFalse,
-			Hide:       AlwaysFalse,
+			Selected:   alwaysFalse,
+			Hide:       alwaysFalse,
 		}
 		t.keyInputHandler.AddBinding(displayBinding, func() { t.CollapseOrExpandAll() })
 	}
 }
 
-func ToggleAttributesOption(k helpers.KeyBinding) TreeViewOption {
+func toggleAttributesOption(bindingValue string) TreeViewOption {
+	k := helpers.NewKeyBinding("Attr.", helpers.DecodeBinding(bindingValue))
 	return func(t *TreeView) {
 		displayBinding := helpers.KeyBindingDisplay{
 			KeyBinding: &k,
 			Selected:   func() bool { return t.showAttributes },
-			Hide:       AlwaysFalse,
+			Hide:       alwaysFalse,
 		}
 		t.keyInputHandler.AddBinding(displayBinding, func() { t.showAttributes = !t.showAttributes })
 	}
 }
 
-func ToggleAddedFilesOption(k helpers.KeyBinding) TreeViewOption {
+func toggleAddedFilesOption(bindingValue string) TreeViewOption {
+	k := helpers.NewKeyBinding("Added", helpers.DecodeBinding(bindingValue))
 	return func(t *TreeView) {
 		displayBinding := helpers.KeyBindingDisplay{
 			KeyBinding: &k,
-			Selected:   func() bool { return t.tree.GetHiddenFileType(filetree.Added) },
-			Hide:       AlwaysFalse,
+			Selected:   func() bool { return !t.tree.GetHiddenFileType(filetree.Added) },
+			Hide:       alwaysFalse,
 		}
 		t.keyInputHandler.AddBinding(displayBinding, func() { t.tree.ToggleHiddenFileType(filetree.Added) })
 	}
 }
 
-func ToggleRemovedFilesOption(k helpers.KeyBinding) TreeViewOption {
+func toggleRemovedFilesOption(bindingValue string) TreeViewOption {
+	k := helpers.NewKeyBinding("Removed", helpers.DecodeBinding(bindingValue))
 	return func(t *TreeView) {
 		displayBinding := helpers.KeyBindingDisplay{
 			KeyBinding: &k,
-			Selected:   func() bool { return t.tree.GetHiddenFileType(filetree.Removed) },
-			Hide:       AlwaysFalse,
+			Selected:   func() bool { return !t.tree.GetHiddenFileType(filetree.Removed) },
+			Hide:       alwaysFalse,
 		}
 		t.keyInputHandler.AddBinding(displayBinding, func() { t.tree.ToggleHiddenFileType(filetree.Removed) })
 	}
 }
 
-func ToggleModifiedFilesOption(k helpers.KeyBinding) TreeViewOption {
+func toggleModifiedFilesOption(bindingValue string) TreeViewOption {
+	k := helpers.NewKeyBinding("Modified", helpers.DecodeBinding(bindingValue))
 	return func(t *TreeView) {
 		displayBinding := helpers.KeyBindingDisplay{
 			KeyBinding: &k,
-			Selected:   func() bool { return t.tree.GetHiddenFileType(filetree.Modified) },
-			Hide:       AlwaysFalse,
+			Selected:   func() bool { return !t.tree.GetHiddenFileType(filetree.Modified) },
+			Hide:       alwaysFalse,
 		}
 		t.keyInputHandler.AddBinding(displayBinding, func() { t.tree.ToggleHiddenFileType(filetree.Modified) })
 
 	}
 }
 
-func ToggleUnmodifiedFilesOption(k helpers.KeyBinding) TreeViewOption {
+func toggleUnmodifiedFilesOption(bindingValue string) TreeViewOption {
+	k := helpers.NewKeyBinding("Unmodified", helpers.DecodeBinding(bindingValue))
 	return func(t *TreeView) {
 		displayBinding := helpers.KeyBindingDisplay{
 			KeyBinding: &k,
-			Selected:   func() bool { return t.tree.GetHiddenFileType(filetree.Unmodified) },
-			Hide:       AlwaysFalse,
+			Selected:   func() bool { return !t.tree.GetHiddenFileType(filetree.Unmodified) },
+			Hide:       alwaysFalse,
 		}
 		t.keyInputHandler.AddBinding(displayBinding, func() { t.tree.ToggleHiddenFileType(filetree.Unmodified) })
 	}
@@ -172,19 +187,14 @@ func ToggleUnmodifiedFilesOption(k helpers.KeyBinding) TreeViewOption {
 type TreeView struct {
 	*tview.Box
 	tree TreeModel
-
 	// Note that the following two fields are distinct
 	// treeIndex is the index about where we are in the current fileTree
 	// this should be updated every keypress
-	treeIndex int
-
+	treeIndex             int
 	bufferIndexLowerBound int
-
-	globalCollapseAll bool
-
-	keyInputHandler *helpers.KeyInputHandler
-
-	showAttributes bool
+	globalCollapseAll     bool
+	keyInputHandler       *helpers.KeyInputHandler
+	showAttributes        bool
 }
 
 func NewTreeView(tree TreeModel) *TreeView {
@@ -205,58 +215,28 @@ func (t *TreeView) AddBindingOptions(bindingOptions ...TreeViewOption) *TreeView
 	return t
 }
 
-type KeyBindingConfig interface {
-	GetKeyBinding(key string) (helpers.KeyBinding, error)
-}
-
 // Implementation notes:
 //need to set up our input handler here,
 //Should probably factor out keybinding initialization into a new function
 
-func (t *TreeView) Setup(config KeyBindingConfig) *TreeView {
+func (t *TreeView) Setup(cfg config.KeybindingConfig) *TreeView {
 	t.tree.SetLayerIndex(0)
 
 	t.AddBindingOptions(
-		UpBindingOption(helpers.NewKeyBinding("Cursor Up", tcell.NewEventKey(tcell.KeyUp, rune(0), tcell.ModNone))),
-		DownBindingOption(helpers.NewKeyBinding("Cursor Down", tcell.NewEventKey(tcell.KeyDown, rune(0), tcell.ModNone))),
-		LeftBindingOption(helpers.NewKeyBinding("Cursor Left", tcell.NewEventKey(tcell.KeyLeft, rune(0), tcell.ModNone))),
-		RightBindingOption(helpers.NewKeyBinding("Cursor Right", tcell.NewEventKey(tcell.KeyRight, rune(0), tcell.ModNone))),
+		upBindingOption(),
+		downBindingOption(),
+		leftBindingOption(),
+		rightBindingOption(),
+		collapseDirBindingOption(cfg.ToggleCollapseDir),
+		collapseAllBindingOption(cfg.ToggleCollapseAllDir),
+		toggleAddedFilesOption(cfg.ToggleAddedFiles),
+		toggleRemovedFilesOption(cfg.ToggleRemovedFiles),
+		toggleModifiedFilesOption(cfg.ToggleModifiedFiles),
+		toggleUnmodifiedFilesOption(cfg.ToggleUnmodifiedFiles),
+		toggleAttributesOption(cfg.ToggleFileTreeAttributes),
+		pageUpBindingOption(cfg.PageUp),
+		pageDownBindingOption(cfg.PageDown),
 	)
-
-	bindingOrder := []string{
-		"keybinding.toggle-collapse-dir",
-		"keybinding.toggle-collapse-all-dir",
-		"keybinding.toggle-filetree-attributes",
-		"keybinding.toggle-added-files",
-		"keybinding.toggle-removed-files",
-		"keybinding.toggle-modified-files",
-		"keybinding.toggle-unmodified-files",
-		"keybinding.page-up",
-		"keybinding.page-down",
-	}
-
-	bindingSettings := map[string]func(helpers.KeyBinding) TreeViewOption{
-		"keybinding.toggle-collapse-dir":        CollapseDirBindingOption,
-		"keybinding.toggle-collapse-all-dir":    CollapseAllBindingOption,
-		"keybinding.toggle-filetree-attributes": ToggleAttributesOption,
-		"keybinding.toggle-added-files":         ToggleAddedFilesOption,
-		"keybinding.toggle-removed-files":       ToggleRemovedFilesOption,
-		"keybinding.toggle-modified-files":      ToggleModifiedFilesOption,
-		"keybinding.toggle-unmodified-files":    ToggleUnmodifiedFilesOption,
-		"keybinding.page-up":                    PageUpBindingOption,
-		"keybinding.page-down":                  PageDownBindingOption,
-	}
-
-	for _, keybinding := range bindingOrder {
-		action := bindingSettings[keybinding]
-		binding, err := config.GetKeyBinding(keybinding)
-		if err != nil {
-			panic(fmt.Errorf("setup error during %s: %w", keybinding, err))
-		}
-
-		t.AddBindingOptions(action(binding))
-	}
-
 	return t
 }
 

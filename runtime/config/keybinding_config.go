@@ -1,8 +1,8 @@
 package config
 
-type keybindingConfig struct {
+type KeybindingConfig struct {
 	Quit                     string `mapstructure:"quit"`
-	ToggleViews              string `mapstructure:"toggle-view"`
+	ToggleView               string `mapstructure:"toggle-view" `
 	FilterFiles              string `mapstructure:"filter-files"`
 	CompareAll               string `mapstructure:"compare-all"`
 	CompareLayer             string `mapstructure:"compare-layer"`

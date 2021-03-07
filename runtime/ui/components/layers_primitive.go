@@ -3,6 +3,8 @@ package components
 import (
 	"fmt"
 
+	"github.com/wagoodman/dive/runtime/config"
+
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 	"github.com/wagoodman/dive/internal/log"
@@ -40,71 +42,95 @@ func NewLayerList(model LayersViewModel) *LayerList {
 	}
 }
 
-type LayerListViewOption func(ll *LayerList)
+type layerListViewOption func(ll *LayerList)
 
-var AlwaysFalse = func() bool { return false }
-var AlwaysTrue = func() bool { return true }
+var alwaysFalse = func() bool { return false }
+var alwaysTrue = func() bool { return true }
 
-func UpLayerListBindingOption(k helpers.KeyBinding) LayerListViewOption {
+func upLayerListBindingOption() layerListViewOption {
+	k := helpers.NewKeyBinding("Cursor Up", tcell.NewEventKey(tcell.KeyUp, rune(0), tcell.ModNone))
 	return func(ll *LayerList) {
 		displayBinding := helpers.KeyBindingDisplay{
 			KeyBinding: &k,
-			Selected:   AlwaysFalse,
-			Hide:       AlwaysTrue,
+			Selected:   alwaysFalse,
+			Hide:       alwaysTrue,
 		}
 		ll.keyInputHandler.AddBinding(displayBinding, func() { ll.keyUp() })
 	}
 }
 
-func DownLayerListBindingOption(k helpers.KeyBinding) LayerListViewOption {
+func downLayerListBindingOption() layerListViewOption {
+	k := helpers.NewKeyBinding("Cursor Down", tcell.NewEventKey(tcell.KeyDown, rune(0), tcell.ModNone))
+
 	return func(ll *LayerList) {
 		displayBinding := helpers.KeyBindingDisplay{
 			KeyBinding: &k,
-			Selected:   AlwaysFalse,
-			Hide:       AlwaysTrue,
+			Selected:   alwaysFalse,
+			Hide:       alwaysTrue,
 		}
 		ll.keyInputHandler.AddBinding(displayBinding, func() { ll.keyDown() })
 	}
 }
 
-func PageUpLayerListBindingOption(k helpers.KeyBinding) LayerListViewOption {
+func pageUpLayerListBindingOption(bindingValue string) layerListViewOption {
+	k := helpers.NewKeyBinding("Pg Up", helpers.DecodeBinding(bindingValue))
 	return func(ll *LayerList) {
 		displayBinding := helpers.KeyBindingDisplay{
 			KeyBinding: &k,
-			Selected:   AlwaysFalse,
-			Hide:       AlwaysFalse,
+			Selected:   alwaysFalse,
+			Hide:       alwaysTrue,
 		}
 		ll.keyInputHandler.AddBinding(displayBinding, func() { ll.pageUp() })
 	}
 }
 
-func PageDownLayerListBindingOption(k helpers.KeyBinding) LayerListViewOption {
+func pageDownLayerListBindingOption(bindingValue string) layerListViewOption {
+	k := helpers.NewKeyBinding("Pg Down", helpers.DecodeBinding(bindingValue))
 	return func(ll *LayerList) {
 		displayBinding := helpers.KeyBindingDisplay{
 			KeyBinding: &k,
-			Selected:   AlwaysFalse,
-			Hide:       AlwaysFalse,
+			Selected:   alwaysFalse,
+			Hide:       alwaysTrue,
 		}
 		ll.keyInputHandler.AddBinding(displayBinding, func() { ll.pageDown() })
 	}
 }
 
-func SwitchCompareLayerListBindingOption(k helpers.KeyBinding) LayerListViewOption {
+func compareAllLayerListBindingOption(bindingValue string) layerListViewOption {
+	k := helpers.NewKeyBinding("Aggregate Changes", helpers.DecodeBinding(bindingValue))
 	return func(ll *LayerList) {
 		displayBinding := helpers.KeyBindingDisplay{
 			KeyBinding: &k,
 			Selected:   func() bool { return ll.GetMode() == viewmodels.CompareAllLayers },
-			Hide:       AlwaysFalse,
+			Hide:       alwaysFalse,
 		}
 		ll.keyInputHandler.AddBinding(displayBinding, func() {
+			// TODO: swap out switch for set
 			if err := ll.SwitchLayerMode(); err != nil {
-				log.Error("SwitchCompareLayers error: ", err.Error())
+				log.WithFields("error", err).Error("CompareAllLayers failed")
 			}
 		})
 	}
 }
 
-func (ll *LayerList) AddBindingOptions(bindingOptions ...LayerListViewOption) *LayerList {
+func compareSingleLayerListBindingOption(bindingValue string) layerListViewOption {
+	k := helpers.NewKeyBinding("Layer Changes", helpers.DecodeBinding(bindingValue))
+	return func(ll *LayerList) {
+		displayBinding := helpers.KeyBindingDisplay{
+			KeyBinding: &k,
+			Selected:   func() bool { return ll.GetMode() == viewmodels.CompareSingleLayer },
+			Hide:       alwaysFalse,
+		}
+		ll.keyInputHandler.AddBinding(displayBinding, func() {
+			// TODO: swap out switch for set
+			if err := ll.SwitchLayerMode(); err != nil {
+				log.WithFields("error", err).Error("CompareSingleLayer failed")
+			}
+		})
+	}
+}
+
+func (ll *LayerList) AddBindingOptions(bindingOptions ...layerListViewOption) *LayerList {
 	for _, option := range bindingOptions {
 		option(ll)
 	}
@@ -112,38 +138,15 @@ func (ll *LayerList) AddBindingOptions(bindingOptions ...LayerListViewOption) *L
 	return ll
 }
 
-func (ll *LayerList) Setup(config KeyBindingConfig) *LayerList {
-
+func (ll *LayerList) Setup(cfg config.KeybindingConfig) *LayerList {
 	ll.AddBindingOptions(
-		UpLayerListBindingOption(helpers.NewKeyBinding("Cursor Up", tcell.NewEventKey(tcell.KeyUp, rune(0), tcell.ModNone))),
-		UpLayerListBindingOption(helpers.NewKeyBinding("", tcell.NewEventKey(tcell.KeyLeft, rune(0), tcell.ModNone))),
-		DownLayerListBindingOption(helpers.NewKeyBinding("Cursor Down", tcell.NewEventKey(tcell.KeyDown, rune(0), tcell.ModNone))),
-		DownLayerListBindingOption(helpers.NewKeyBinding("", tcell.NewEventKey(tcell.KeyRight, rune(0), tcell.ModNone))),
+		upLayerListBindingOption(),
+		downLayerListBindingOption(),
+		pageUpLayerListBindingOption(cfg.PageUp),
+		pageDownLayerListBindingOption(cfg.PageDown),
+		compareSingleLayerListBindingOption(cfg.CompareLayer),
+		compareAllLayerListBindingOption(cfg.CompareAll),
 	)
-
-	bindingOrder := []string{
-		"keybinding.page-up",
-		"keybinding.page-down",
-		"keybinding.compare-all",
-	}
-
-	bindingSettings := map[string]func(helpers.KeyBinding) LayerListViewOption{
-		"keybinding.page-up":     PageUpLayerListBindingOption,
-		"keybinding.page-down":   PageDownLayerListBindingOption,
-		"keybinding.compare-all": SwitchCompareLayerListBindingOption,
-	}
-
-	for _, keybinding := range bindingOrder {
-		action := bindingSettings[keybinding]
-		binding, err := config.GetKeyBinding(keybinding)
-		if err != nil {
-			panic(fmt.Errorf("setup error for keybinding: %s: %w", keybinding, err))
-			// TODO handle this error
-			//return nil
-		}
-		ll.AddBindingOptions(action(binding))
-	}
-
 	return ll
 }
 

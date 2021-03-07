@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/wagoodman/dive/runtime/ui/components/helpers"
+
 	"github.com/wagoodman/dive/runtime/config"
 
 	"github.com/gdamore/tcell/v2"
@@ -11,7 +13,6 @@ import (
 	"github.com/wagoodman/dive/dive/filetree"
 	"github.com/wagoodman/dive/dive/image"
 	"github.com/wagoodman/dive/runtime/ui/components"
-	"github.com/wagoodman/dive/runtime/ui/constructors"
 	"github.com/wagoodman/dive/runtime/ui/format"
 	"github.com/wagoodman/dive/runtime/ui/viewmodels"
 )
@@ -34,8 +35,6 @@ func newApp(config config.ApplicationConfig, app *tview.Application, analysis *i
 
 		// TODO: Extract initilaization logic into its own package
 		format.SyncWithTermColors()
-
-		keyConfig := constructors.NewKeyConfig()
 
 		diveApplication := components.NewDiveApplication(app)
 
@@ -69,13 +68,13 @@ func newApp(config config.ApplicationConfig, app *tview.Application, analysis *i
 
 		filterView := components.NewFilterView(treeViewModel).Setup()
 
-		layersView := components.NewLayerList(treeViewModel).Setup(keyConfig)
+		layersView := components.NewLayerList(treeViewModel).Setup(config.Keybinding)
 
 		layerSubtitle := fmt.Sprintf("Cmp%7s  %s", "Size", "Command")
 		layersBox := components.NewWrapper("Layers", layerSubtitle, layersView).Setup()
 
 		fileTreeView := components.NewTreeView(treeViewModel)
-		fileTreeView = fileTreeView.Setup(keyConfig)
+		fileTreeView = fileTreeView.Setup(config.Keybinding)
 		fileTreeBox := components.NewWrapper("Current Layer Contents", "", fileTreeView).Setup()
 
 		keyMenuView := components.NewKeyMenuView()
@@ -114,22 +113,10 @@ func newApp(config config.ApplicationConfig, app *tview.Application, analysis *i
 
 		keyMenuView.AddBoundViews(diveApplication)
 
-		quitBinding, err := keyConfig.GetKeyBinding("keybinding.quit")
-		if err != nil {
-			// TODO handle this as an error
-			panic(err)
-		}
+		quitBinding := helpers.NewKeyBinding("Quit", helpers.DecodeBinding(config.Keybinding.Quit))
+		switchBinding := helpers.NewKeyBinding("Switch View", helpers.DecodeBinding(config.Keybinding.ToggleView))
+		filterBinding := helpers.NewKeyBinding("Find", helpers.DecodeBinding(config.Keybinding.FilterFiles))
 
-		filterBinding, err := keyConfig.GetKeyBinding("keybinding.filter-files")
-		if err != nil {
-			// TODO handle this as an error
-			panic(err)
-		}
-		switchBinding, err := keyConfig.GetKeyBinding("keybinding.toggle-view")
-		if err != nil {
-			// TODO handle this as an error
-			panic(err)
-		}
 		diveApplication.AddBindings(quitBinding, filterBinding, switchBinding)
 		diveApplication.AddBoundViews(fileTreeBox, layersBox, filterView)
 
@@ -179,7 +166,7 @@ func newApp(config config.ApplicationConfig, app *tview.Application, analysis *i
 			treeViewModel.ToggleHiddenFileType(hideType)
 		}
 
-		if config.FileTree.ShowAttributes {
+		if !config.FileTree.ShowAttributes {
 			fileTreeView.ToggleHideAttributes()
 		}
 	})

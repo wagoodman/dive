@@ -24,7 +24,7 @@ func (d *DiveApplication) GetKeyBindings() []helpers.KeyBindingDisplay {
 	for i := 0; i < len(d.bindings); i++ {
 		binding := d.bindings[i]
 		log.WithFields("name", binding.Display).Tracef("adding keybinding")
-		result = append(result, helpers.KeyBindingDisplay{KeyBinding: &binding, Selected: AlwaysFalse, Hide: AlwaysFalse})
+		result = append(result, helpers.KeyBindingDisplay{KeyBinding: &binding, Selected: alwaysFalse, Hide: alwaysFalse})
 	}
 
 	for _, bound := range d.boundList {
