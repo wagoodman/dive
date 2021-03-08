@@ -11,15 +11,15 @@ import (
 
 // FileInfo contains tar metadata for a specific FileNode
 type FileInfo struct {
-	Path     string
-	TypeFlag byte
-	Linkname string
-	hash     uint64
-	Size     int64
-	Mode     os.FileMode
-	Uid      int
-	Gid      int
-	IsDir    bool
+	Path     string      `json:"path"`
+	TypeFlag byte        `json:"typeFlag"`
+	Linkname string      `json:"linkName"`
+	hash     uint64      //`json:"hash"`
+	Size     int64       `json:"size"`
+	Mode     os.FileMode `json:"fileMode"`
+	Uid      int         `json:"uid"`
+	Gid      int         `json:"gid"`
+	IsDir    bool        `json:"isDir"`
 }
 
 // NewFileInfoFromTarHeader extracts the metadata from a tar header and file contents and generates a new FileInfo object.
