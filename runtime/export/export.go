@@ -28,9 +28,9 @@ func NewExport(analysis *diveImage.AnalysisResult) *export {
 
 	// export layers in order
 	for idx, curLayer := range analysis.Layers {
-		layerFileList := make([]filetree.NodeData, 0)
+		layerFileList := make([]filetree.FileInfo, 0)
 		visitor := func(node *filetree.FileNode) error {
-			layerFileList = append(layerFileList, node.Data)
+			layerFileList = append(layerFileList, node.Data.FileInfo)
 			return nil
 		}
 		err := curLayer.Tree.VisitDepthChildFirst(visitor, nil)

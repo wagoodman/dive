@@ -10,5 +10,5 @@ type layer struct {
 	DigestID  string              `json:"digestId"`
 	SizeBytes uint64              `json:"sizeBytes"`
 	Command   string              `json:"command"`
-	FileList  []filetree.NodeData `json:"fileList"`
+	FileList  []filetree.FileInfo `json:"fileList"`
 }
