@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/sergi/go-diff/diffmatchpatch"
-
 	"github.com/wagoodman/dive/dive/image/docker"
 )
 
