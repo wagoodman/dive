@@ -13,8 +13,8 @@ github.com/armon/consul-api v0.0.0-20180202201655-eb2c6b5be1b6/go.mod h1:grANhF5
 github.com/awesome-gocui/gocui v0.5.0/go.mod h1:1QikxFaPhe2frKeKvEwZEIGia3haiOxOUXKinrv17mA=
 github.com/awesome-gocui/gocui v0.6.0 h1:hhDJiQC12tEsJNJ+iZBBVaSSLFYo9llFuYpQlL5JZVI=
 github.com/awesome-gocui/gocui v0.6.0/go.mod h1:1QikxFaPhe2frKeKvEwZEIGia3haiOxOUXKinrv17mA=
-github.com/awesome-gocui/keybinding v1.0.0 h1:CrnjCfEhWpjcqIQUan9IllaXeRGELdwfjeUmY7ljbng=
-github.com/awesome-gocui/keybinding v1.0.0/go.mod h1:z0TyCwIhaT97yU+becTse8Dqh2CvYT0FLw0R0uTk0ag=
+github.com/awesome-gocui/keybinding v1.0.1-0.20190805183143-864552bd36b7 h1:DDdWoFOtXWySkgCiGGn80TM/E2FS2T1qJBJJxup9+Vo=
+github.com/awesome-gocui/keybinding v1.0.1-0.20190805183143-864552bd36b7/go.mod h1:z0TyCwIhaT97yU+becTse8Dqh2CvYT0FLw0R0uTk0ag=
 github.com/awesome-gocui/termbox-go v0.0.0-20190427202837-c0aef3d18bcc h1:wGNpKcHU8Aadr9yOzsT3GEsFLS7HQu8HxQIomnekqf0=
 github.com/awesome-gocui/termbox-go v0.0.0-20190427202837-c0aef3d18bcc/go.mod h1:tOy3o5Nf1bA17mnK4W41gD7PS3u4Cv0P0pqFcoWMy8s=
 github.com/beorn7/perks v0.0.0-20180321164747-3a771d992973/go.mod h1:Dwedo/Wpr24TaqPxmxbtue+5NUziq4I4S80YR8gNf3Q=
