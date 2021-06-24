@@ -5,6 +5,16 @@
 
 **A tool for exploring a docker image, layer contents, and discovering ways to shrink the size of your Docker/OCI image.**
 
+## Happening soon: [OSS Virtual Meetup](https://get.anchore.com/anchore-oss-meetup-jun-30-2021/)
+
+**When:** June 30, 11am-noon PT
+
+**What:** 3 fast-paced talks about using [Syft](https://github.com/anchore/syft), [Grype](https://github.com/anchore/grype), and [Dive](https://github.com/wagoodman/dive) to aid in exploring and managing your container images.
+
+[**Register here!**](https://get.anchore.com/anchore-oss-meetup-jun-30-2021/)
+
+
+
 ![Image](.data/demo.gif)
 
 To analyze a Docker image simply run dive with an image tag/id/digest:
