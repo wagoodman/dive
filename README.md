@@ -83,6 +83,13 @@ With valid `source` options as such:
 ## Installation
 
 **Ubuntu/Debian**
+Third party repository ([Azlux's one](http://packages.azlux.fr/)) :
+```
+echo "deb [signed-by=/usr/share/keyrings/azlux-archive-keyring.gpg] http://packages.azlux.fr/debian/ bullseye main" | sudo tee /etc/apt/sources.list.d/azlux.list
+sudo wget -O /usr/share/keyrings/azlux-archive-keyring.gpg  https://azlux.fr/repo.gpg
+sudo apt update && sudo apt install dive
+ ```
+or for manual install :
 ```bash
 wget https://github.com/wagoodman/dive/releases/download/v0.9.2/dive_0.9.2_linux_amd64.deb
 sudo apt install ./dive_0.9.2_linux_amd64.deb
