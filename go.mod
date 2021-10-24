@@ -17,7 +17,6 @@ require (
 	github.com/fatih/color v1.9.0
 	github.com/google/uuid v1.1.2
 	github.com/gorilla/mux v1.7.2 // indirect
-	github.com/konsorten/go-windows-terminal-sequences v1.0.2 // indirect
 	github.com/logrusorgru/aurora v0.0.0-20190803045625-94edacc10f9b
 	github.com/lunixbochs/vtclean v1.0.0
 	github.com/mitchellh/go-homedir v1.1.0
@@ -26,7 +25,7 @@ require (
 	github.com/opencontainers/image-spec v1.0.1 // indirect
 	github.com/phayes/permbits v0.0.0-20190612203442-39d7c581d2ee
 	github.com/sergi/go-diff v1.0.0
-	github.com/sirupsen/logrus v1.4.2
+	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/afero v1.6.0
 	github.com/spf13/cobra v0.0.5
 	github.com/spf13/viper v1.9.0
