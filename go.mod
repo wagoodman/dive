@@ -4,33 +4,43 @@ go 1.13
 
 require (
 	github.com/Azure/go-ansiterm v0.0.0-20170929234023-d6e3b3328b78 // indirect
-	github.com/Microsoft/go-winio v0.4.14 // indirect
-	github.com/awesome-gocui/gocui v0.6.0
+	github.com/Microsoft/go-winio v0.5.1 // indirect
+	github.com/awesome-gocui/gocui v1.0.1
 	github.com/awesome-gocui/keybinding v1.0.0
 	github.com/cespare/xxhash v1.1.0
-	github.com/docker/cli v0.0.0-20190906153656-016a3232168d
+	github.com/docker/cli v20.10.9+incompatible
 	github.com/docker/distribution v2.7.1+incompatible // indirect
-	github.com/docker/docker v0.7.3-0.20190309235953-33c3200e0d16
+	github.com/docker/docker v20.10.9+incompatible
 	github.com/docker/go-connections v0.4.0 // indirect
 	github.com/docker/go-units v0.4.0 // indirect
 	github.com/dustin/go-humanize v1.0.0
 	github.com/fatih/color v1.13.0
+	github.com/gdamore/tcell/v2 v2.4.0 // indirect
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/mux v1.7.2 // indirect
-	github.com/logrusorgru/aurora v0.0.0-20190803045625-94edacc10f9b
+	github.com/logrusorgru/aurora v2.0.3+incompatible
+	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
 	github.com/lunixbochs/vtclean v1.0.0
+	github.com/mattn/go-colorable v0.1.11 // indirect
+	github.com/mattn/go-runewidth v0.0.13 // indirect
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/morikuni/aec v1.0.0 // indirect
-	github.com/opencontainers/go-digest v1.0.0-rc1 // indirect
+	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.0.1 // indirect
 	github.com/phayes/permbits v0.0.0-20190612203442-39d7c581d2ee
 	github.com/sergi/go-diff v1.2.0
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/afero v1.6.0
-	github.com/spf13/cobra v0.0.7
+	github.com/spf13/cobra v1.2.1
 	github.com/spf13/viper v1.9.0
-	golang.org/x/net v0.0.0-20210503060351-7fd8e65b6420
+	golang.org/x/net v0.0.0-20211020060615-d418f374d309
+	golang.org/x/sys v0.0.0-20211023085530-d6a326fbbf70 // indirect
+	golang.org/x/term v0.0.0-20210927222741-03fcf44c2211 // indirect
+	golang.org/x/text v0.3.7 // indirect
+	google.golang.org/genproto v0.0.0-20211021150943-2b146023228c // indirect
+	google.golang.org/grpc v1.41.0 // indirect
 	gotest.tools v2.2.0+incompatible // indirect
+	gotest.tools/v3 v3.0.3 // indirect
 )
 
 // related to an invalid pseudo version in github.com/docker/distribution@v0.0.0-20181126153310-93e082742a009850ac46962150b2f652a822c5ff
