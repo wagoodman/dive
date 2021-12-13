@@ -8,7 +8,7 @@ require (
 	github.com/awesome-gocui/gocui v1.0.1
 	github.com/awesome-gocui/keybinding v1.0.0
 	github.com/cespare/xxhash v1.1.0
-	github.com/docker/cli v20.10.10+incompatible
+	github.com/docker/cli v20.10.12+incompatible
 	github.com/docker/distribution v2.7.1+incompatible // indirect
 	github.com/docker/docker v20.10.9+incompatible
 	github.com/docker/go-connections v0.4.0 // indirect
