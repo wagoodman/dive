@@ -5,7 +5,7 @@ go 1.17
 require (
 	github.com/Azure/go-ansiterm v0.0.0-20170929234023-d6e3b3328b78 // indirect
 	github.com/Microsoft/go-winio v0.5.1 // indirect
-	github.com/awesome-gocui/gocui v1.0.1
+	github.com/awesome-gocui/gocui v1.1.0
 	github.com/awesome-gocui/keybinding v1.0.0
 	github.com/cespare/xxhash v1.1.0
 	github.com/docker/cli v20.10.12+incompatible
