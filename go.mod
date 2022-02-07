@@ -30,7 +30,7 @@ require (
 	github.com/phayes/permbits v0.0.0-20190612203442-39d7c581d2ee
 	github.com/sergi/go-diff v1.2.0
 	github.com/sirupsen/logrus v1.8.1
-	github.com/spf13/afero v1.8.0
+	github.com/spf13/afero v1.8.1
 	github.com/spf13/cobra v1.3.0
 	github.com/spf13/viper v1.10.1
 	golang.org/x/net v0.0.0-20220107192237-5cfca573fb4d
