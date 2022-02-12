@@ -3,7 +3,6 @@ module github.com/wagoodman/dive
 go 1.17
 
 require (
-	github.com/Azure/go-ansiterm v0.0.0-20170929234023-d6e3b3328b78 // indirect
 	github.com/Microsoft/go-winio v0.5.1 // indirect
 	github.com/awesome-gocui/gocui v1.1.0
 	github.com/awesome-gocui/keybinding v1.0.0
@@ -17,7 +16,6 @@ require (
 	github.com/fatih/color v1.13.0
 	github.com/gdamore/tcell/v2 v2.4.0 // indirect
 	github.com/google/uuid v1.3.0
-	github.com/gorilla/mux v1.7.2 // indirect
 	github.com/logrusorgru/aurora v2.0.3+incompatible
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
 	github.com/lunixbochs/vtclean v1.0.0
@@ -39,11 +37,10 @@ require (
 	golang.org/x/text v0.3.7 // indirect
 	google.golang.org/genproto v0.0.0-20220211171837-173942840c17 // indirect
 	google.golang.org/grpc v1.44.0 // indirect
-	gotest.tools v2.2.0+incompatible // indirect
-	gotest.tools/v3 v3.0.3 // indirect
 )
 
 require (
+	github.com/containerd/containerd v1.5.9 // indirect
 	github.com/fsnotify/fsnotify v1.5.1 // indirect
 	github.com/gdamore/encoding v1.0.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
@@ -53,6 +50,7 @@ require (
 	github.com/magiconair/properties v1.8.5 // indirect
 	github.com/mattn/go-isatty v0.0.14 // indirect
 	github.com/mitchellh/mapstructure v1.4.3 // indirect
+	github.com/moby/term v0.0.0-20210619224110-3f7ff695adc6 // indirect
 	github.com/pelletier/go-toml v1.9.4 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/rivo/uniseg v0.2.0 // indirect
@@ -66,10 +64,10 @@ require (
 )
 
 // related to an invalid pseudo version in github.com/docker/distribution@v0.0.0-20181126153310-93e082742a009850ac46962150b2f652a822c5ff
-replace github.com/docker/distribution => github.com/docker/distribution v2.7.0-rc.0.0.20181024170156-93e082742a00+incompatible
+//replace github.com/docker/distribution => github.com/docker/distribution v2.7.0-rc.0.0.20181024170156-93e082742a00+incompatible
 
 // related to an invalid pseudo version in github.com/docker/distribution@v0.0.0-20181126153310-93e082742a009850ac46962150b2f652a822c5ff
-replace github.com/docker/docker => github.com/docker/engine v0.0.0-20190822205725-ed20165a37b4
+//replace github.com/docker/docker => github.com/docker/engine v0.0.0-20190822205725-ed20165a37b4
 
 // relates to https://github.com/golangci/golangci-lint/issues/581
 replace github.com/go-critic/go-critic => github.com/go-critic/go-critic v0.3.5-0.20190526074819-1df300866540
