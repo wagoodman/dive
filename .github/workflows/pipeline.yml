@@ -20,7 +20,7 @@ jobs:
         with:
           go-version: ${{ matrix.go-version }}
 
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v3
 
       - name: Cache go dependencies
         id: unit-cache-go-dependencies
@@ -44,7 +44,7 @@ jobs:
         with:
           go-version: '1.17.x'
 
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v3
 
       - name: Install tooling
         run: |
@@ -86,7 +86,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
 
-      - uses: actions/checkout@master
+      - uses: actions/checkout@v3
 
       - uses: actions/download-artifact@master
         with:
@@ -108,7 +108,7 @@ jobs:
     runs-on: macos-latest
     steps:
 
-      - uses: actions/checkout@master
+      - uses: actions/checkout@v3
 
       - uses: actions/download-artifact@master
         with:
@@ -124,7 +124,7 @@ jobs:
     runs-on: windows-latest
     steps:
 
-      - uses: actions/checkout@master
+      - uses: actions/checkout@v3
 
       - uses: actions/download-artifact@master
         with:
@@ -145,7 +145,7 @@ jobs:
         with:
           go-version: '1.17.x'
 
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v3
 
       - name: Install tooling
         run: make ci-install-ci-tools
