@@ -319,7 +319,7 @@ func (v *FileTree) toggleAttributes() error {
 		return err
 	}
 
-	// we need to render the changes to the status pane as well (not just this contoller/view)
+	// we need to render the changes to the status pane as well (not just this controller/view)
 	return v.notifyOnViewOptionChangeListeners()
 }
 
@@ -336,7 +336,7 @@ func (v *FileTree) toggleShowDiffType(diffType filetree.DiffType) error {
 		return err
 	}
 
-	// we need to render the changes to the status pane as well (not just this contoller/view)
+	// we need to render the changes to the status pane as well (not just this controller/view)
 	return v.notifyOnViewOptionChangeListeners()
 }
 
@@ -406,7 +406,7 @@ func (v *FileTree) Layout(g *gocui.Gui, minX, minY, maxX, maxY int) error {
 	logrus.Tracef("view.Layout(minX: %d, minY: %d, maxX: %d, maxY: %d) %s", minX, minY, maxX, maxY, v.Name())
 	attributeRowSize := 0
 
-	// make the layout responsive to the available realestate. Make more room for the main content by hiding auxillary
+	// make the layout responsive to the available realestate. Make more room for the main content by hiding auxiliary
 	// content when there is not enough room
 	if maxX-minX < 60 {
 		v.vm.ConstrainLayout()
