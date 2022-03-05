@@ -193,7 +193,7 @@ You can override the CI config path with the `--ci-config` option.
 
 Key Binding                                | Description
 -------------------------------------------|---------------------------------------------------------
-<kbd>Ctrl + C</kbd>                        | Exit
+<kbd>Ctrl + C</kbd> or or <kbd>Q</kbd>     | Exit
 <kbd>Tab</kbd>                             | Switch between the layer and filetree views
 <kbd>Ctrl + F</kbd>                        | Filter files
 <kbd>PageUp</kbd>                          | Scroll up a page
