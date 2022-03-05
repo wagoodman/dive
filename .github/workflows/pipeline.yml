@@ -16,15 +16,15 @@ jobs:
     runs-on: ${{ matrix.platform }}
     steps:
 
-      - uses: actions/setup-go@v3
+      - uses: actions/setup-go@f6164bd8c8acb4a71fb2791a8b6c4024ff038dab # v3
         with:
           go-version: ${{ matrix.go-version }}
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@b0e28b5ac45a892f91e7d036f8200cf5ed489415 # v3
 
       - name: Cache go dependencies
         id: unit-cache-go-dependencies
-        uses: actions/cache@v2.1.7
+        uses: actions/cache@937d24475381cd9c75ae6db12cb4e79714b926ed # v2.1.7
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-${{ matrix.go-version }}-${{ hashFiles('**/go.sum') }}
@@ -40,11 +40,11 @@ jobs:
   build-artifacts:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/setup-go@v3
+      - uses: actions/setup-go@f6164bd8c8acb4a71fb2791a8b6c4024ff038dab # v3
         with:
           go-version: '1.17.x'
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@b0e28b5ac45a892f91e7d036f8200cf5ed489415 # v3
 
       - name: Install tooling
         run: |
@@ -53,7 +53,7 @@ jobs:
 
       - name: Cache go dependencies
         id: package-cache-go-dependencies
-        uses: actions/cache@v2.1.7
+        uses: actions/cache@937d24475381cd9c75ae6db12cb4e79714b926ed # v2.1.7
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-prod-${{ hashFiles('**/go.sum') }}
@@ -75,7 +75,7 @@ jobs:
       - name: Test production image
         run: make ci-test-production-image
 
-      - uses: actions/upload-artifact@master
+      - uses: actions/upload-artifact@0c366cb4fc8897159c94880f94b55bc716ad6a66 # master
         with:
           name: artifacts
           path: dist
@@ -86,9 +86,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@b0e28b5ac45a892f91e7d036f8200cf5ed489415 # v3
 
-      - uses: actions/download-artifact@master
+      - uses: actions/download-artifact@2a5974104b6d5dbdb2f9468a3e54da3bdd241578 # master
         with:
           name: artifacts
           path: dist
@@ -108,9 +108,9 @@ jobs:
     runs-on: macos-latest
     steps:
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@b0e28b5ac45a892f91e7d036f8200cf5ed489415 # v3
 
-      - uses: actions/download-artifact@master
+      - uses: actions/download-artifact@2a5974104b6d5dbdb2f9468a3e54da3bdd241578 # master
         with:
           name: artifacts
           path: dist
@@ -124,9 +124,9 @@ jobs:
     runs-on: windows-latest
     steps:
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@b0e28b5ac45a892f91e7d036f8200cf5ed489415 # v3
 
-      - uses: actions/download-artifact@master
+      - uses: actions/download-artifact@2a5974104b6d5dbdb2f9468a3e54da3bdd241578 # master
         with:
           name: artifacts
           path: dist
@@ -141,18 +141,18 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/v')
     steps:
 
-      - uses: actions/setup-go@v3
+      - uses: actions/setup-go@f6164bd8c8acb4a71fb2791a8b6c4024ff038dab # v3
         with:
           go-version: '1.17.x'
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@b0e28b5ac45a892f91e7d036f8200cf5ed489415 # v3
 
       - name: Install tooling
         run: make ci-install-ci-tools
 
       - name: Cache go dependencies
         id: release-cache-go-dependencies
-        uses: actions/cache@v2.1.7
+        uses: actions/cache@937d24475381cd9c75ae6db12cb4e79714b926ed # v2.1.7
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-prod-${{ hashFiles('**/go.sum') }}
