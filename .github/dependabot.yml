@@ -5,6 +5,15 @@
 
 version: 2
 updates:
+  # Maintain dependencies for GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    open-pull-requests-limit: 20
+    schedule:
+      interval: "daily"
+    commit-message:
+      prefix: "gha:"
+
   - package-ecosystem: "gomod" # See documentation for possible values
     directory: "/" # Location of package manifests
     open-pull-requests-limit: 25
