@@ -24,7 +24,7 @@ jobs:
 
       - name: Cache go dependencies
         id: unit-cache-go-dependencies
-        uses: actions/cache@v1
+        uses: actions/cache@v2.1.7
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-${{ matrix.go-version }}-${{ hashFiles('**/go.sum') }}
@@ -53,7 +53,7 @@ jobs:
 
       - name: Cache go dependencies
         id: package-cache-go-dependencies
-        uses: actions/cache@v1
+        uses: actions/cache@v2.1.7
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-prod-${{ hashFiles('**/go.sum') }}
@@ -152,7 +152,7 @@ jobs:
 
       - name: Cache go dependencies
         id: release-cache-go-dependencies
-        uses: actions/cache@v1
+        uses: actions/cache@v2.1.7
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-prod-${{ hashFiles('**/go.sum') }}
