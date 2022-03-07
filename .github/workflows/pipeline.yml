@@ -75,7 +75,7 @@ jobs:
       - name: Test production image
         run: make ci-test-production-image
 
-      - uses: actions/upload-artifact@0c366cb4fc8897159c94880f94b55bc716ad6a66 # master
+      - uses: actions/upload-artifact@6673cd052c4cd6fcf4b4e6e60ea986c889389535 # master
         with:
           name: artifacts
           path: dist
