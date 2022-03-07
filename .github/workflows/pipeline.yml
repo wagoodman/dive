@@ -88,7 +88,7 @@ jobs:
 
       - uses: actions/checkout@b0e28b5ac45a892f91e7d036f8200cf5ed489415 # v3
 
-      - uses: actions/download-artifact@2a5974104b6d5dbdb2f9468a3e54da3bdd241578 # master
+      - uses: actions/download-artifact@fb598a63ae348fa914e94cd0ff38f362e927b741 # master
         with:
           name: artifacts
           path: dist
@@ -110,7 +110,7 @@ jobs:
 
       - uses: actions/checkout@b0e28b5ac45a892f91e7d036f8200cf5ed489415 # v3
 
-      - uses: actions/download-artifact@2a5974104b6d5dbdb2f9468a3e54da3bdd241578 # master
+      - uses: actions/download-artifact@fb598a63ae348fa914e94cd0ff38f362e927b741 # master
         with:
           name: artifacts
           path: dist
@@ -126,7 +126,7 @@ jobs:
 
       - uses: actions/checkout@b0e28b5ac45a892f91e7d036f8200cf5ed489415 # v3
 
-      - uses: actions/download-artifact@2a5974104b6d5dbdb2f9468a3e54da3bdd241578 # master
+      - uses: actions/download-artifact@fb598a63ae348fa914e94cd0ff38f362e927b741 # master
         with:
           name: artifacts
           path: dist
