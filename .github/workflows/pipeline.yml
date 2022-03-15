@@ -5,11 +5,12 @@ on:
     types: [ opened, reopened ]
 env:
   DOCKER_CLI_VERSION: "20.10.12"
+  GO_VERSION: "1.18.x"
 jobs:
   unit-test:
     strategy:
       matrix:
-        go-version: [1.17.x]
+        go-version: [${{ env.GO_VERSION }}]
         # todo: support windows
         platform: [ubuntu-latest, macos-latest]
         # platform: [ubuntu-latest, macos-latest, windows-latest]
@@ -42,7 +43,7 @@ jobs:
     steps:
       - uses: actions/setup-go@f6164bd8c8acb4a71fb2791a8b6c4024ff038dab # v3
         with:
-          go-version: '1.17.x'
+          go-version: ${{ env.GO_VERSION }}
 
       - uses: actions/checkout@b0e28b5ac45a892f91e7d036f8200cf5ed489415 # v3
 
@@ -143,7 +144,7 @@ jobs:
 
       - uses: actions/setup-go@f6164bd8c8acb4a71fb2791a8b6c4024ff038dab # v3
         with:
-          go-version: '1.17.x'
+          go-version: ${{ env.GO_VERSION }}
 
       - uses: actions/checkout@b0e28b5ac45a892f91e7d036f8200cf5ed489415 # v3
 
