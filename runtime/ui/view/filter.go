@@ -15,7 +15,6 @@ type FilterEditListener func(string) error
 // Filter holds the UI objects and data models for populating the bottom row. Specifically the pane that
 // allows the user to filter the file tree by path.
 type Filter struct {
-	name            string
 	gui             *gocui.Gui
 	view            *gocui.View
 	header          *gocui.View
@@ -34,7 +33,6 @@ func newFilterView(gui *gocui.Gui) (controller *Filter) {
 	controller.filterEditListeners = make([]FilterEditListener, 0)
 
 	// populate main fields
-	controller.name = "filter"
 	controller.gui = gui
 	controller.labelStr = "Path Filter: "
 	controller.hidden = true
@@ -49,11 +47,11 @@ func (v *Filter) AddFilterEditListener(listener ...FilterEditListener) {
 }
 
 func (v *Filter) Name() string {
-	return v.name
+	return "filter"
 }
 
 // Setup initializes the UI concerns within the context of a global [gocui] view object.
-func (v *Filter) Setup(view *gocui.View, header *gocui.View) error {
+func (v *Filter) Setup(view, header *gocui.View) error {
 	logrus.Tracef("view.Setup() %s", v.Name())
 
 	// set controller options
@@ -82,7 +80,7 @@ func (v *Filter) ToggleVisible() error {
 	v.hidden = !v.hidden
 
 	if !v.hidden {
-		_, err := v.gui.SetCurrentView(v.name)
+		_, err := v.gui.SetCurrentView(v.Name())
 		if err != nil {
 			logrus.Error("unable to toggle filter view: ", err)
 			return err

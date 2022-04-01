@@ -82,7 +82,7 @@ func (c *Controller) onFilterEdit(filter string) error {
 
 func (c *Controller) onLayerChange(selection viewmodel.LayerSelection) error {
 	// update the details
-	c.views.Details.SetCurrentLayer(selection.Layer)
+	c.views.LayerDetails.CurrentLayer = selection.Layer
 
 	// update the filetree
 	err := c.views.Tree.SetTree(selection.BottomTreeStart, selection.BottomTreeStop, selection.TopTreeStart, selection.TopTreeStop)
@@ -139,6 +139,54 @@ func (c *Controller) Render() error {
 		}
 	}
 	return nil
+}
+
+func (c *Controller) NextPane() (err error) {
+	v := c.gui.CurrentView()
+	if v == nil {
+		panic("Current view is nil")
+	}
+	if v.Name() == c.views.Layer.Name() {
+		_, err = c.gui.SetCurrentView(c.views.LayerDetails.Name())
+		c.views.Status.SetCurrentView(c.views.LayerDetails)
+	} else if v.Name() == c.views.LayerDetails.Name() {
+		_, err = c.gui.SetCurrentView(c.views.ImageDetails.Name())
+		c.views.Status.SetCurrentView(c.views.ImageDetails)
+	} else if v.Name() == c.views.ImageDetails.Name() {
+		_, err = c.gui.SetCurrentView(c.views.Layer.Name())
+		c.views.Status.SetCurrentView(c.views.Layer)
+	}
+
+	if err != nil {
+		logrus.Error("unable to toggle view: ", err)
+		return err
+	}
+
+	return c.UpdateAndRender()
+}
+
+func (c *Controller) PrevPane() (err error) {
+	v := c.gui.CurrentView()
+	if v == nil {
+		panic("Current view is nil")
+	}
+	if v.Name() == c.views.Layer.Name() {
+		_, err = c.gui.SetCurrentView(c.views.ImageDetails.Name())
+		c.views.Status.SetCurrentView(c.views.ImageDetails)
+	} else if v.Name() == c.views.LayerDetails.Name() {
+		_, err = c.gui.SetCurrentView(c.views.Layer.Name())
+		c.views.Status.SetCurrentView(c.views.Layer)
+	} else if v.Name() == c.views.ImageDetails.Name() {
+		_, err = c.gui.SetCurrentView(c.views.LayerDetails.Name())
+		c.views.Status.SetCurrentView(c.views.LayerDetails)
+	}
+
+	if err != nil {
+		logrus.Error("unable to toggle view: ", err)
+		return err
+	}
+
+	return c.UpdateAndRender()
 }
 
 // ToggleView switches between the file view and the layer view and re-renders the screen.

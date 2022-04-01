@@ -42,7 +42,7 @@ func newApp(gui *gocui.Gui, imageName string, analysis *image.AnalysisResult, ca
 		lm := layout.NewManager()
 		lm.Add(controller.views.Status, layout.LocationFooter)
 		lm.Add(controller.views.Filter, layout.LocationFooter)
-		lm.Add(compound.NewLayerDetailsCompoundLayout(controller.views.Layer, controller.views.Details), layout.LocationColumn)
+		lm.Add(compound.NewLayerDetailsCompoundLayout(controller.views.Layer, controller.views.LayerDetails, controller.views.ImageDetails), layout.LocationColumn)
 		lm.Add(controller.views.Tree, layout.LocationColumn)
 
 		// todo: access this more programmatically
@@ -75,6 +75,14 @@ func newApp(gui *gocui.Gui, imageName string, analysis *image.AnalysisResult, ca
 				ConfigKeys: []string{"keybinding.toggle-view"},
 				OnAction:   controller.ToggleView,
 				Display:    "Switch view",
+			},
+			{
+				Key:      gocui.KeyArrowRight,
+				OnAction: controller.NextPane,
+			},
+			{
+				Key:      gocui.KeyArrowLeft,
+				OnAction: controller.PrevPane,
 			},
 			{
 				ConfigKeys: []string{"keybinding.filter-files"},

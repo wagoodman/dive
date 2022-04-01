@@ -6,13 +6,29 @@ import (
 	"github.com/wagoodman/dive/dive/image"
 )
 
+type IView interface {
+	Setup(*gocui.View, *gocui.View) error
+	Name() string
+	IsVisible() bool
+}
+
 type Views struct {
-	Tree    *FileTree
-	Layer   *Layer
-	Status  *Status
-	Filter  *Filter
-	Details *Details
-	Debug   *Debug
+	Tree         *FileTree
+	Layer        *Layer
+	Status       *Status
+	Filter       *Filter
+	LayerDetails *LayerDetails
+	ImageDetails *ImageDetails
+	Debug        *Debug
+}
+
+var _ []IView = []IView{
+	&FileTree{},
+	&Layer{},
+	&Filter{},
+	&LayerDetails{},
+	&ImageDetails{},
+	&Debug{},
 }
 
 func NewViews(g *gocui.Gui, imageName string, analysis *image.AnalysisResult, cache filetree.Comparer) (*Views, error) {
@@ -34,17 +50,25 @@ func NewViews(g *gocui.Gui, imageName string, analysis *image.AnalysisResult, ca
 
 	Filter := newFilterView(g)
 
-	Details := newDetailsView(g, imageName, analysis.Efficiency, analysis.Inefficiencies, analysis.SizeBytes)
+	LayerDetails := &LayerDetails{gui: g}
+	ImageDetails := &ImageDetails{
+		gui:            g,
+		imageName:      imageName,
+		imageSize:      analysis.SizeBytes,
+		efficiency:     analysis.Efficiency,
+		inefficiencies: analysis.Inefficiencies,
+	}
 
 	Debug := newDebugView(g)
 
 	return &Views{
-		Tree:    Tree,
-		Layer:   Layer,
-		Status:  Status,
-		Filter:  Filter,
-		Details: Details,
-		Debug:   Debug,
+		Tree:         Tree,
+		Layer:        Layer,
+		Status:       Status,
+		Filter:       Filter,
+		ImageDetails: ImageDetails,
+		LayerDetails: LayerDetails,
+		Debug:        Debug,
 	}, nil
 }
 
@@ -54,6 +78,7 @@ func (views *Views) All() []Renderer {
 		views.Layer,
 		views.Status,
 		views.Filter,
-		views.Details,
+		views.LayerDetails,
+		views.ImageDetails,
 	}
 }
