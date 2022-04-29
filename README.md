@@ -122,7 +122,13 @@ Or download the latest Darwin build from the [releases page](https://github.com/
 
 **Windows**
 
-Download the [latest release](https://github.com/wagoodman/dive/releases/download/v0.9.2/dive_0.9.2_windows_amd64.zip).
+If you use [Chocolatey](https://chocolatey.org/):
+
+```bash
+choco install dive
+```
+
+Or you can download the [latest release](https://github.com/wagoodman/dive/releases).
 
 **Go tools**
 Requires Go version 1.10 or higher.
