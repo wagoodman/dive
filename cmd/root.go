@@ -205,7 +205,7 @@ func findInPath(pathTo string) string {
 
 	for _, file := range files {
 		filename := file.Name()
-		if path.Ext(filename) == ".yaml" {
+		if path.Ext(filename) == ".yaml" || path.Ext(filename) == ".yml" {
 			return path.Join(directory, filename)
 		}
 	}

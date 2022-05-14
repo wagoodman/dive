@@ -275,3 +275,5 @@ dive will search for configs in the following locations:
 - `$XDG_CONFIG_DIRS/dive/*.yaml`
 - `~/.config/dive/*.yaml`
 - `~/.dive.yaml`
+
+`.yml` can be used instead of `.yaml` if desired.
