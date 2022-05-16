@@ -21,7 +21,7 @@ require (
 	github.com/spf13/cobra v1.4.0
 	github.com/spf13/viper v1.11.0
 	github.com/wagoodman/dive v0.10.0
-	golang.org/x/net v0.0.0-20220513224357-95641704303c
+	golang.org/x/net v0.0.0-20220516155154-20f960328961
 )
 
 require (
