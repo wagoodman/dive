@@ -93,8 +93,9 @@ With valid `source` options as such:
 
 **Ubuntu/Debian**
 ```bash
-curl -OL https://github.com/wagoodman/dive/releases/download/v0.9.2/dive_0.9.2_linux_amd64.deb
-sudo apt install ./dive_0.9.2_linux_amd64.deb
+export DIVE_VERSION=$(wget -qO - "https://api.github.com/repos/wagoodman/dive/releases/latest" | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/')
+curl -OL https://github.com/wagoodman/dive/releases/download/v${DIVE_VERSION}/dive_${DIVE_VERSION}_linux_amd64.deb
+sudo apt install ./dive_${DIVE_VERSION}_linux_amd64.deb
 ```
 
 **RHEL/Centos**
