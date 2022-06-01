@@ -20,7 +20,7 @@ jobs:
   build:
     name: Codespell
     # Set the agent to run on
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     # Load all steps #
     steps:
