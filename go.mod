@@ -6,8 +6,8 @@ require (
 	github.com/awesome-gocui/gocui v1.1.0
 	github.com/awesome-gocui/keybinding v1.0.1-0.20190805183143-864552bd36b7
 	github.com/cespare/xxhash v1.1.0
-	github.com/docker/cli v20.10.16+incompatible
-	github.com/docker/docker v20.10.16+incompatible
+	github.com/docker/cli v20.10.17+incompatible
+	github.com/docker/docker v20.10.17+incompatible
 	github.com/dustin/go-humanize v1.0.0
 	github.com/fatih/color v1.13.0
 	github.com/google/uuid v1.3.0
@@ -21,7 +21,7 @@ require (
 	github.com/spf13/cobra v1.4.0
 	github.com/spf13/viper v1.12.0
 	github.com/wagoodman/dive v0.10.0
-	golang.org/x/net v0.0.0-20220531201128-c960675eff93
+	golang.org/x/net v0.0.0-20220607020251-c690dde0001d
 )
 
 require (
