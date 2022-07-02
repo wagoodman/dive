@@ -86,7 +86,7 @@ func (v *FileTree) Setup(view *gocui.View, header *gocui.View) error {
 	v.header.Wrap = false
 	v.header.Frame = false
 
-	var infos = []key.BindingInfo{
+	infos := []key.BindingInfo{
 		{
 			ConfigKeys: []string{"keybinding.toggle-collapse-dir"},
 			OnAction:   v.toggleCollapse,
@@ -118,8 +118,8 @@ func (v *FileTree) Setup(view *gocui.View, header *gocui.View) error {
 		{
 			ConfigKeys: []string{"keybinding.toggle-unchanged-files", "keybinding.toggle-unmodified-files"},
 			OnAction:   func() error { return v.toggleShowDiffType(filetree.Unmodified) },
-			IsSelected: func() bool { return !v.vm.HiddenDiffTypes[filetree.Unmodified] },
-			Display:    "Unmodified",
+			// make the layout responsive to the available realestate. Make more room for the main content by hiding auxiliary
+			Display: "Unmodified",
 		},
 		{
 			ConfigKeys: []string{"keybinding.toggle-filetree-attributes"},
@@ -406,8 +406,9 @@ func (v *FileTree) Layout(g *gocui.Gui, minX, minY, maxX, maxY int) error {
 	logrus.Tracef("view.Layout(minX: %d, minY: %d, maxX: %d, maxY: %d) %s", minX, minY, maxX, maxY, v.Name())
 	attributeRowSize := 0
 
-	// make the layout responsive to the available realestate. Make more room for the main content by hiding auxillary
-	// content when there is not enough room
+	// Make the layout responsive to the available realestate.
+	// Make more room for the main content by hiding auxiliary
+	// content when there is not enough room.
 	if maxX-minX < 60 {
 		v.vm.ConstrainLayout()
 	} else {
@@ -436,7 +437,7 @@ func (v *FileTree) Layout(g *gocui.Gui, minX, minY, maxX, maxY int) error {
 }
 
 func (v *FileTree) RequestedSize(available int) *int {
-	//var requestedWidth = int(float64(available) * (1.0 - v.requestedWidthRatio))
-	//return &requestedWidth
+	// var requestedWidth = int(float64(available) * (1.0 - v.requestedWidthRatio))
+	// return &requestedWidth
 	return nil
 }
