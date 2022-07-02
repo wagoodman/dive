@@ -7,7 +7,7 @@ jobs:
         type: string
     working_directory: /home/circleci/app
     docker:
-      - image: circleci/golang:<< parameters.version >>
+      - image: cimg/go:<< parameters.version >>
         environment:
           GO111MODULE: "on"
     steps:
@@ -30,7 +30,7 @@ jobs:
         type: string
     working_directory: /home/circleci/app
     docker:
-      - image: circleci/golang:<< parameters.version >>
+      - image: cimg/go:<< parameters.version >>
         environment:
           GO111MODULE: "on"
     steps:
