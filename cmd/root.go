@@ -86,6 +86,7 @@ func initConfig() {
 	// keybindings: filetree view
 	viper.SetDefault("keybinding.toggle-collapse-dir", "space")
 	viper.SetDefault("keybinding.toggle-collapse-all-dir", "ctrl+space")
+	viper.SetDefault("keybinding.toggle-sort-order", "ctrl+o")
 	viper.SetDefault("keybinding.toggle-filetree-attributes", "ctrl+b")
 	viper.SetDefault("keybinding.toggle-added-files", "ctrl+a")
 	viper.SetDefault("keybinding.toggle-removed-files", "ctrl+r")
