@@ -8,7 +8,7 @@ require (
 	github.com/cespare/xxhash v1.1.0
 	github.com/docker/cli v20.10.22+incompatible
 	github.com/docker/docker v20.10.22+incompatible
-	github.com/dustin/go-humanize v1.0.0
+	github.com/dustin/go-humanize v1.0.1
 	github.com/fatih/color v1.13.0
 	github.com/google/uuid v1.3.0
 	github.com/logrusorgru/aurora v2.0.3+incompatible
