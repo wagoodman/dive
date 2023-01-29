@@ -96,13 +96,11 @@ rpm -i dive_0.9.2_linux_amd64.rpm
 
 **Arch Linux**
 
-Available as [dive](https://aur.archlinux.org/packages/dive/) in the Arch User Repository (AUR).
+Available in the [community repository](https://archlinux.org/packages/community/x86_64/dive/) and can be installed via [pacman](https://wiki.archlinux.org/title/Pacman):
 
 ```bash
-yay -S dive
+pacman -S dive
 ```
-
-The above example assumes [`yay`](https://aur.archlinux.org/packages/yay/) as the tool for installing AUR packages.
 
 **Mac**
 
