@@ -3,12 +3,11 @@
 package podman
 
 import (
-	"io/ioutil"
 	"os"
 )
 
 func buildImageFromCli(buildArgs []string) (string, error) {
-	iidfile, err := ioutil.TempFile("/tmp", "dive.*.iid")
+	iidfile, err := os.CreateTemp("/tmp", "dive.*.iid")
 	if err != nil {
 		return "", err
 	}
@@ -20,7 +19,7 @@ func buildImageFromCli(buildArgs []string) (string, error) {
 		return "", err
 	}
 
-	imageId, err := ioutil.ReadFile(iidfile.Name())
+	imageId, err := os.ReadFile(iidfile.Name())
 	if err != nil {
 		return "", err
 	}

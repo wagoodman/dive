@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"github.com/wagoodman/dive/dive/image/docker"
 	"github.com/wagoodman/dive/runtime/ui/format"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -31,7 +30,7 @@ func testCaseDataFilePath(name string) string {
 
 func helperLoadBytes(t *testing.T) []byte {
 	path := testCaseDataFilePath(t.Name())
-	theBytes, err := ioutil.ReadFile(path)
+	theBytes, err := os.ReadFile(path)
 	if err != nil {
 		t.Fatalf("unable to load test data ('%s'): %+v", t.Name(), err)
 	}
@@ -44,7 +43,7 @@ func helperCaptureBytes(t *testing.T, data []byte) {
 	}
 
 	path := testCaseDataFilePath(t.Name())
-	err := ioutil.WriteFile(path, data, 0644)
+	err := os.WriteFile(path, data, 0644)
 
 	if err != nil {
 		t.Fatalf("unable to save test data ('%s'): %+v", t.Name(), err)
