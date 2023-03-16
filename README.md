@@ -3,6 +3,14 @@
 [![Pipeline Status](https://circleci.com/gh/wagoodman/dive.svg?style=svg)](https://circleci.com/gh/wagoodman/dive)
 [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg?style=flat)](https://www.paypal.me/wagoodman)
 
+---
+
+**ddive** is a fork of the fantastic [Alex Goodman's dive](https://github.com/wagoodman/dive) tool. 🤿 🐳
+
+The purpose of this fork is to maintain the tool and add some features that I needed.
+
+---
+
 **A tool for exploring a docker image, layer contents, and discovering ways to shrink the size of your Docker/OCI image.**
 
 
