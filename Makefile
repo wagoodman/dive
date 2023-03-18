@@ -4,6 +4,7 @@ BUILD_PATH = $(BUILD_DIR)/$(BIN)
 PWD := ${CURDIR}
 PRODUCTION_REGISTRY = docker.io
 TEST_IMAGE = busybox:latest
+IMAGE=andregri/ddive
 
 all: gofmt clean build
 
@@ -48,7 +49,7 @@ ci-test-production-image:
 		--rm \
 		-t \
 		-v //var/run/docker.sock://var/run/docker.sock \
-		'${PRODUCTION_REGISTRY}/wagoodman/dive:latest' \
+		'${PRODUCTION_REGISTRY}/${IMAGE}:latest' \
 			'${TEST_IMAGE}' \
 			--ci
 
