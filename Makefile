@@ -1,10 +1,10 @@
-BIN = dive
-BUILD_DIR = ./dist/dive_linux_amd64
-BUILD_PATH = $(BUILD_DIR)/$(BIN)
+PROJECT = ddive
+BUILD_DIR = ./dist/${PROJECT}_linux_amd64
+BUILD_PATH = $(BUILD_DIR)/$(PROJECT)
 PWD := ${CURDIR}
 PRODUCTION_REGISTRY = docker.io
 TEST_IMAGE = busybox:latest
-IMAGE=andregri/ddive
+IMAGE=andregri/${PROJECT}
 
 all: gofmt clean build
 
@@ -66,9 +66,9 @@ ci-test-deb-package-install:
 					tar -vxzf - docker/docker --strip-component=1 && \
 					mv docker /usr/local/bin/ &&\
 				docker version && \
-				apt install ./dist/dive_*_linux_amd64.deb -y && \
-				dive --version && \
-				dive '${TEST_IMAGE}' --ci \
+				apt install ./dist/${PROJECT}_*_linux_amd64.deb -y && \
+				${PROJECT} --version && \
+				${PROJECT} '${TEST_IMAGE}' --ci \
 			"
 
 ci-test-rpm-package-install:
@@ -82,56 +82,56 @@ ci-test-rpm-package-install:
 					tar -vxzf - docker/docker --strip-component=1 && \
 					mv docker /usr/local/bin/ &&\
 				docker version && \
-				dnf install ./dist/dive_*_linux_amd64.rpm -y && \
-				dive --version && \
-				dive '${TEST_IMAGE}' --ci \
+				dnf install ./dist/${PROJECT}_*_linux_amd64.rpm -y && \
+				${PROJECT} --version && \
+				${PROJECT} '${TEST_IMAGE}' --ci \
 			"
 
 ci-test-linux-run:
-	chmod 755 ./dist/dive_linux_amd64/dive && \
-	./dist/dive_linux_amd64/dive '${TEST_IMAGE}'  --ci && \
-    ./dist/dive_linux_amd64/dive --source docker-archive .data/test-kaniko-image.tar  --ci --ci-config .data/.dive-ci
+	chmod 755 ./dist/${PROJECT}_linux_amd64/${PROJECT} && \
+	./dist/${PROJECT}_linux_amd64/${PROJECT} '${TEST_IMAGE}'  --ci && \
+    ./dist/${PROJECT}_linux_amd64/${PROJECT} --source docker-archive .data/test-kaniko-image.tar  --ci --ci-config .data/.${PROJECT}-ci
 
 # we're not attempting to test docker, just our ability to run on these systems. This avoids setting up docker in CI.
 ci-test-mac-run:
-	chmod 755 ./dist/dive_darwin_amd64/dive && \
-	./dist/dive_darwin_amd64/dive --source docker-archive .data/test-docker-image.tar  --ci --ci-config .data/.dive-ci
+	chmod 755 ./dist/${PROJECT}_darwin_amd64/${PROJECT} && \
+	./dist/${PROJECT}_darwin_amd64/${PROJECT} --source docker-archive .data/test-docker-image.tar  --ci --ci-config .data/.${PROJECT}-ci
 
 # we're not attempting to test docker, just our ability to run on these systems. This avoids setting up docker in CI.
 ci-test-windows-run:
-	./dist/dive_windows_amd64/dive --source docker-archive .data/test-docker-image.tar  --ci --ci-config .data/.dive-ci
+	./dist/${PROJECT}_windows_amd64/${PROJECT} --source docker-archive .data/test-docker-image.tar  --ci --ci-config .data/.${PROJECT}-ci
 
 
 
 ## For development
 
 run: build
-	$(BUILD_PATH) build -t dive-example:latest -f .data/Dockerfile.example .
+	$(BUILD_PATH) build -t ${PROJECT}-example:latest -f .data/Dockerfile.example .
 
 run-large: build
 	$(BUILD_PATH) amir20/clashleaders:latest
 
 run-podman: build
-	podman build -t dive-example:latest -f .data/Dockerfile.example .
-	$(BUILD_PATH) localhost/dive-example:latest --engine podman
+	podman build -t ${PROJECT}-example:latest -f .data/Dockerfile.example .
+	$(BUILD_PATH) localhost/${PROJECT}-example:latest --engine podman
 
 run-podman-large: build
 	$(BUILD_PATH) docker.io/amir20/clashleaders:latest --engine podman
 
 run-ci: build
-	CI=true $(BUILD_PATH) dive-example:latest --ci-config .data/.dive-ci
+	CI=true $(BUILD_PATH) ${PROJECT}-example:latest --ci-config .data/.${PROJECT}-ci
 
 build: gofmt
 	go build -o $(BUILD_PATH)
 
 generate-test-data:
-	docker build -t dive-test:latest -f .data/Dockerfile.test-image . && docker image save -o .data/test-docker-image.tar dive-test:latest && echo 'Exported test data!'
+	docker build -t ${PROJECT}-test:latest -f .data/Dockerfile.test-image . && docker image save -o .data/test-docker-image.tar ${PROJECT}-test:latest && echo 'Exported test data!'
 
 test: gofmt
 	./.scripts/test-coverage.sh
 
 dev:
-	docker run -ti --rm -v $(PWD):/app -w /app -v dive-pkg:/go/pkg/ golang:1.13 bash
+	docker run -ti --rm -v $(PWD):/app -w /app -v ${PROJECT}-pkg:/go/pkg/ golang:1.13 bash
 
 clean:
 	rm -rf dist

@@ -69,7 +69,7 @@ jobs:
       - name: Build snapshot artifacts
         run: make ci-build-snapshot-packages
 
-      - run: docker images wagoodman/dive
+      - run: docker images andregri/ddive
 
       # todo: compare against known json output in shared volume
       - name: Test production image
