@@ -1,6 +1,6 @@
 module github.com/jauderho/dive
 
-go 1.19
+go 1.20
 
 require (
 	github.com/awesome-gocui/gocui v1.1.0
