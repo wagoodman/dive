@@ -33,6 +33,12 @@ func (l *Layer) ShortId() string {
 	return id
 }
 
+func (l *Layer) commandPreview() string {
+	// Layers using heredocs can be multiple lines; rendering relies on
+	// Layer.String to be a single line.
+	return strings.Replace(l.Command, "\n", "↵", -1)
+}
+
 func (l *Layer) String() string {
 	if l.Index == 0 {
 		return fmt.Sprintf(LayerFormat,
@@ -41,5 +47,5 @@ func (l *Layer) String() string {
 	}
 	return fmt.Sprintf(LayerFormat,
 		humanize.Bytes(l.Size),
-		strings.Split(l.Command, "\n")[0])
+		l.commandPreview())
 }
