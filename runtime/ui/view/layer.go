@@ -168,7 +168,8 @@ func (v *Layer) PageDown() error {
 	}
 
 	if step > 0 {
-		err := CursorStep(v.gui, v.body, step)
+		// err := CursorStep(v.gui, v.body, step)
+		err := error(nil)
 		if err == nil {
 			return v.SetCursor(v.vm.LayerIndex + step)
 		}
@@ -186,7 +187,8 @@ func (v *Layer) PageUp() error {
 	}
 
 	if step > 0 {
-		err := CursorStep(v.gui, v.body, -step)
+		// err := CursorStep(v.gui, v.body, -step)
+		err := error(nil)
 		if err == nil {
 			return v.SetCursor(v.vm.LayerIndex - step)
 		}
@@ -197,7 +199,7 @@ func (v *Layer) PageUp() error {
 // CursorDown moves the cursor down in the layer pane (selecting a higher layer).
 func (v *Layer) CursorDown() error {
 	if v.vm.LayerIndex < len(v.vm.Layers)-1 {
-		// err := CursorDown(v.gui, v.view)
+		// err := CursorDown(v.gui, v.body)
 		err := error(nil)
 		if err == nil {
 			return v.SetCursor(v.vm.LayerIndex + 1)
@@ -209,7 +211,7 @@ func (v *Layer) CursorDown() error {
 // CursorUp moves the cursor up in the layer pane (selecting a lower layer).
 func (v *Layer) CursorUp() error {
 	if v.vm.LayerIndex > 0 {
-		// err := CursorUp(v.gui, v.view)
+		// err := CursorUp(v.gui, v.body)
 		err := error(nil)
 		if err == nil {
 			return v.SetCursor(v.vm.LayerIndex - 1)
