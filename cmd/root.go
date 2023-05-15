@@ -2,7 +2,8 @@ package cmd
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
+	"io/fs"
 	"os"
 	"path"
 	"strings"
@@ -146,7 +147,7 @@ func initLogging() {
 		logFileObj, err = os.OpenFile(viper.GetString("log.path"), os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
 		log.SetOutput(logFileObj)
 	} else {
-		log.SetOutput(ioutil.Discard)
+		log.SetOutput(io.Discard)
 	}
 
 	if err != nil {
@@ -198,12 +199,20 @@ func getDefaultCfgFile() string {
 // if not found returns empty string
 func findInPath(pathTo string) string {
 	directory := path.Join(pathTo, "dive")
-	files, err := ioutil.ReadDir(directory)
+
+	entries, err := os.ReadDir(directory)
 	if err != nil {
 		return ""
 	}
-
-	for _, file := range files {
+	infos := make([]fs.FileInfo, 0, len(entries))
+	for _, entry := range entries {
+		info, err := entry.Info()
+		if err != nil {
+			return ""
+		}
+		infos = append(infos, info)
+	}
+	for _, file := range infos {
 		filename := file.Name()
 		if path.Ext(filename) == ".yaml" {
 			return path.Join(directory, filename)
