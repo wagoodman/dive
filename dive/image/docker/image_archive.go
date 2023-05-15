@@ -5,7 +5,6 @@ import (
 	"compress/gzip"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path"
 	"strings"
@@ -81,7 +80,7 @@ func NewImageArchive(tarFile io.ReadCloser) (*ImageArchive, error) {
 				img.layerMap[tree.Name] = tree
 
 			} else if strings.HasSuffix(name, ".json") || strings.HasPrefix(name, "sha256:") {
-				fileBuffer, err := ioutil.ReadAll(tarReader)
+				fileBuffer, err := io.ReadAll(tarReader)
 				if err != nil {
 					return img, err
 				}
