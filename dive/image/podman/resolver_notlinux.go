@@ -1,9 +1,10 @@
-// +build !linux
+//go:build !linux
 
 package podman
 
 import (
 	"fmt"
+
 	"github.com/wagoodman/dive/dive/image"
 )
 
