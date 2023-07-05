@@ -9,7 +9,7 @@ jobs:
   unit-test:
     strategy:
       matrix:
-        go-version: [1.14.x, 1.15.x]
+        go-version: [1.19.x]
         # todo: support windows
         platform: [ubuntu-latest, macos-latest]
         # platform: [ubuntu-latest, macos-latest, windows-latest]
@@ -42,7 +42,7 @@ jobs:
     steps:
       - uses: actions/setup-go@v1
         with:
-          go-version: '1.15.x'
+          go-version: '1.19.x'
 
       - uses: actions/checkout@v1
 
@@ -143,7 +143,7 @@ jobs:
 
       - uses: actions/setup-go@v1
         with:
-          go-version: '1.15.x'
+          go-version: '1.19.x'
 
       - uses: actions/checkout@v1
 

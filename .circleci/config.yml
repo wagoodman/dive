@@ -7,7 +7,7 @@ jobs:
         type: string
     working_directory: /home/circleci/app
     docker:
-      - image: circleci/golang:<< parameters.version >>
+      - image: cimg/go:<< parameters.version >>
         environment:
           GO111MODULE: "on"
     steps:
@@ -30,7 +30,7 @@ jobs:
         type: string
     working_directory: /home/circleci/app
     docker:
-      - image: circleci/golang:<< parameters.version >>
+      - image: cimg/go:<< parameters.version >>
         environment:
           GO111MODULE: "on"
     steps:
@@ -52,8 +52,8 @@ workflows:
   commit:
     jobs:
       - run-static-analyses:
-          version: "1.15"
+          version: "1.19"
       - run-tests:
-          version: "1.14"
+          version: "1.19"
       - run-tests:
-          version: "1.15"
+          version: "1.19"
