@@ -90,9 +90,11 @@ ci-test-rpm-package-install:
 			"
 
 ci-test-linux-run:
-	chmod 755 ./dist/dive_linux_amd64/dive && \
-	./dist/dive_linux_amd64/dive '${TEST_IMAGE}'  --ci && \
-    ./dist/dive_linux_amd64/dive --source docker-archive .data/test-kaniko-image.tar  --ci --ci-config .data/.dive-ci
+	ls -la ./dist
+        ls -la ./dist/dist/dive_linux_amd64_v1
+	chmod 755 ./dist/dive_linux_amd64_v1/dive && \
+	./dist/dive_linux_amd64_v1/dive '${TEST_IMAGE}'  --ci && \
+    ./dist/dive_linux_amd64_v1/dive --source docker-archive .data/test-kaniko-image.tar  --ci --ci-config .data/.dive-ci
 
 # we're not attempting to test docker, just our ability to run on these systems. This avoids setting up docker in CI.
 ci-test-mac-run:
