@@ -2,6 +2,8 @@ package image
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/dustin/go-humanize"
 	"github.com/wagoodman/dive/dive/filetree"
 )
@@ -39,5 +41,5 @@ func (l *Layer) String() string {
 	}
 	return fmt.Sprintf(LayerFormat,
 		humanize.Bytes(l.Size),
-		l.Command)
+		strings.Split(l.Command, "\n")[0])
 }

@@ -72,7 +72,7 @@ func (v *FileTree) Name() string {
 }
 
 // Setup initializes the UI concerns within the context of a global [gocui] view object.
-func (v *FileTree) Setup(view *gocui.View, header *gocui.View) error {
+func (v *FileTree) Setup(view, header *gocui.View) error {
 	logrus.Tracef("view.Setup() %s", v.Name())
 
 	// set controller options

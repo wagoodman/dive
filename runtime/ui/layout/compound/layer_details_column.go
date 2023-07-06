@@ -9,14 +9,16 @@ import (
 
 type LayerDetailsCompoundLayout struct {
 	layer               *view.Layer
-	details             *view.Details
+	layerDetails        *view.LayerDetails
+	imageDetails        *view.ImageDetails
 	constrainRealEstate bool
 }
 
-func NewLayerDetailsCompoundLayout(layer *view.Layer, details *view.Details) *LayerDetailsCompoundLayout {
+func NewLayerDetailsCompoundLayout(layer *view.Layer, layerDetails *view.LayerDetails, imageDetails *view.ImageDetails) *LayerDetailsCompoundLayout {
 	return &LayerDetailsCompoundLayout{
-		layer:   layer,
-		details: details,
+		layer:        layer,
+		layerDetails: layerDetails,
+		imageDetails: imageDetails,
 	}
 }
 
@@ -32,87 +34,65 @@ func (cl *LayerDetailsCompoundLayout) OnLayoutChange() error {
 		return err
 	}
 
-	err = cl.details.OnLayoutChange()
+	err = cl.layerDetails.OnLayoutChange()
 	if err != nil {
-		logrus.Error("unable to setup details controller onLayoutChange", err)
+		logrus.Error("unable to setup layer details controller onLayoutChange", err)
+		return err
+	}
+
+	err = cl.imageDetails.OnLayoutChange()
+	if err != nil {
+		logrus.Error("unable to setup image details controller onLayoutChange", err)
 		return err
 	}
 	return nil
 }
 
-func (cl *LayerDetailsCompoundLayout) Layout(g *gocui.Gui, minX, minY, maxX, maxY int) error {
-	logrus.Tracef("view.Layout(minX: %d, minY: %d, maxX: %d, maxY: %d) %s", minX, minY, maxX, maxY, cl.Name())
-
-	////////////////////////////////////////////////////////////////////////////////////
-	// Layers View
-
+func (cl *LayerDetailsCompoundLayout) layoutRow(g *gocui.Gui, minX, minY, maxX, maxY int, viewName string, setup func(*gocui.View, *gocui.View) error) error {
+	logrus.Tracef("layoutRow(g, minX: %d, minY: %d, maxX: %d, maxY: %d, viewName: %s, <setup func>)", minX, minY, maxX, maxY, viewName)
 	// header + border
-	layerHeaderHeight := 2
+	headerHeight := 2
 
-	layersHeight := cl.layer.LayerCount() + layerHeaderHeight + 1 // layers + header + base image layer row
-	maxLayerHeight := int(0.75 * float64(maxY))
-	if layersHeight > maxLayerHeight {
-		layersHeight = maxLayerHeight
-	}
-
+	// TODO: investigate overlap
 	// note: maxY needs to account for the (invisible) border, thus a +1
-	header, headerErr := g.SetView(cl.layer.Name()+"header", minX, minY, maxX, minY+layerHeaderHeight+1, 0)
+	headerView, headerErr := g.SetView(viewName+"Header", minX, minY, maxX, minY+headerHeight+1, 0)
 
 	// we are going to overlap the view over the (invisible) border (so minY will be one less than expected)
-	main, viewErr := g.SetView(cl.layer.Name(), minX, minY+layerHeaderHeight, maxX, minY+layerHeaderHeight+layersHeight, 0)
+	bodyView, bodyErr := g.SetView(viewName, minX, minY+headerHeight, maxX, maxY, 0)
 
-	if utils.IsNewView(viewErr, headerErr) {
-		err := cl.layer.Setup(main, header)
+	if utils.IsNewView(bodyErr, headerErr) {
+		err := setup(bodyView, headerView)
 		if err != nil {
-			logrus.Error("unable to setup layer layout", err)
+			logrus.Debug("unable to setup row layout for ", viewName, err)
 			return err
 		}
+	}
+	return nil
+}
 
-		if _, err = g.SetCurrentView(cl.layer.Name()); err != nil {
+func (cl *LayerDetailsCompoundLayout) Layout(g *gocui.Gui, minX, minY, maxX, maxY int) error {
+	logrus.Tracef("LayerDetailsCompountLayout.Layout(minX: %d, minY: %d, maxX: %d, maxY: %d) %s", minX, minY, maxX, maxY, cl.Name())
+
+	layouts := []view.IView{
+		cl.layer,
+		cl.layerDetails,
+		cl.imageDetails,
+	}
+
+	rowHeight := maxY / 3
+	for i := 0; i < 3; i++ {
+		if err := cl.layoutRow(g, minX, i*rowHeight, maxX, (i+1)*rowHeight, layouts[i].Name(), layouts[i].Setup); err != nil {
+			logrus.Debug("Laying out layers view errored!")
+			return err
+		}
+	}
+
+	if g.CurrentView() == nil {
+		if _, err := g.SetCurrentView(cl.layer.Name()); err != nil {
 			logrus.Error("unable to set view to layer", err)
 			return err
 		}
 	}
-
-	////////////////////////////////////////////////////////////////////////////////////
-	// Details
-	detailsMinY := minY + layersHeight
-
-	// header + border
-	detailsHeaderHeight := 2
-
-	v, _ := g.View(cl.details.Name())
-	if v != nil {
-		// the view exists already!
-
-		// don't show the details pane when there isn't enough room on the screen
-		if cl.constrainRealEstate {
-			// take note: deleting a view will invoke layout again, so ensure this call is protected from an infinite loop
-			err := g.DeleteView(cl.details.Name())
-			if err != nil {
-				return err
-			}
-			// take note: deleting a view will invoke layout again, so ensure this call is protected from an infinite loop
-			err = g.DeleteView(cl.details.Name() + "header")
-			if err != nil {
-				return err
-			}
-
-			return nil
-		}
-
-	}
-
-	header, headerErr = g.SetView(cl.details.Name()+"header", minX, detailsMinY, maxX, detailsMinY+detailsHeaderHeight, 0)
-	main, viewErr = g.SetView(cl.details.Name(), minX, detailsMinY+detailsHeaderHeight, maxX, maxY, 0)
-
-	if utils.IsNewView(viewErr, headerErr) {
-		err := cl.details.Setup(main, header)
-		if err != nil {
-			return err
-		}
-	}
-
 	return nil
 }
 
