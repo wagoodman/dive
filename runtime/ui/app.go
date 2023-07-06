@@ -139,9 +139,10 @@ func (a *app) quit() error {
 // handle ctrl+z
 func handle_ctrl_z(g *gocui.Gui, v *gocui.View) error {
 	gocui.Suspend()
-	syscall.Kill(syscall.Getpid(), syscall.SIGSTOP)
-	gocui.Resume()
-	return nil
+	if err := syscall.Kill(syscall.Getpid(), syscall.SIGSTOP); err != nil {
+		return err
+	}
+	return gocui.Resume()
 }
 
 // Run is the UI entrypoint.
