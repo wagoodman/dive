@@ -20,6 +20,9 @@ ci-static-analysis:
 	golangci-lint run
 
 ci-install-go-tools:
+	pwd
+	ls -la
+	mkdir -p ${HOME}/.local/bin
 	curl -sfL https://goreleaser.com/static/run > ${HOME}/.local/bin/goreleaser
 
 ci-install-ci-tools:
