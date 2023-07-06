@@ -14,7 +14,7 @@ builds:
     ldflags: -s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.buildTime={{.Date}}`.
 
 brews:
-  - github:
+  - tap:
       owner: wagoodman
       name: homebrew-dive
     homepage: "https://github.com/wagoodman/dive/"
