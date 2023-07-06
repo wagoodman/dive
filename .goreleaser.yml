@@ -14,7 +14,7 @@ builds:
     ldflags: -s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.buildTime={{.Date}}`.
 
 brews:
-  - github:
+  - repository:
       owner: wagoodman
       name: homebrew-dive
     homepage: "https://github.com/wagoodman/dive/"
@@ -37,7 +37,7 @@ nfpms:
 
 dockers:
   -
-    binaries:
+    ids:
       - dive
     dockerfile: Dockerfile
     # todo: on 1.0 remove 'v' prefix
