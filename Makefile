@@ -34,16 +34,16 @@ ci-docker-logout:
 	docker logout '${PRODUCTION_REGISTRY}'
 
 ci-publish-release:
-	goreleaser --rm-dist
+	goreleaser --clean
 
 ci-build-snapshot-packages:
 	goreleaser \
 		--snapshot \
 		--skip-publish \
-		--rm-dist
+		--clean
 
 ci-release:
-	goreleaser release --rm-dist
+	goreleaser release --clean
 
 # todo: add --pull=never when supported by host box
 ci-test-production-image:
