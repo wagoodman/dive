@@ -20,13 +20,11 @@ ci-static-analysis:
 	golangci-lint run
 
 ci-install-go-tools:
-	pwd
-	ls -la
 	mkdir -p ${HOME}/.local/bin
 	curl -sfL https://goreleaser.com/static/run > ${HOME}/.local/bin/goreleaser
 
 ci-install-ci-tools:
-	curl -sfL https://install.goreleaser.com/github.com/goreleaser/goreleaser.sh | sudo sh -s -- -b ${HOME}/.local/bin/ "v0.122.0"
+	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b ${HOME}/.local/bin/
 
 ci-docker-login:
 	echo '${DOCKER_PASSWORD}' | docker login -u '${DOCKER_USERNAME}' --password-stdin '${PRODUCTION_REGISTRY}'
