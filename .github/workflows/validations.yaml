@@ -2,8 +2,9 @@ name: "Validations"
 on:
   workflow_dispatch:
   push:
-    branches:
-      - main
+# TODO: re-enable this once we're done with testing
+#    branches:
+#      - main
   pull_request:
 
 
