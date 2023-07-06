@@ -6,11 +6,10 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/sirupsen/logrus"
-
 	"github.com/dustin/go-humanize"
 	"github.com/fatih/color"
 	"github.com/phayes/permbits"
+	"github.com/sirupsen/logrus"
 )
 
 const (

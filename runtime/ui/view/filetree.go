@@ -7,6 +7,7 @@ import (
 	"github.com/awesome-gocui/gocui"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
+
 	"github.com/wagoodman/dive/dive/filetree"
 	"github.com/wagoodman/dive/runtime/ui/format"
 	"github.com/wagoodman/dive/runtime/ui/key"
@@ -406,7 +407,7 @@ func (v *FileTree) Layout(g *gocui.Gui, minX, minY, maxX, maxY int) error {
 	logrus.Tracef("view.Layout(minX: %d, minY: %d, maxX: %d, maxY: %d) %s", minX, minY, maxX, maxY, v.Name())
 	attributeRowSize := 0
 
-	// make the layout responsive to the available realestate. Make more room for the main content by hiding auxillary
+	// make the layout responsive to the available realestate. Make more room for the main content by hiding auxiliary
 	// content when there is not enough room
 	if maxX-minX < 60 {
 		v.vm.ConstrainLayout()
@@ -436,7 +437,7 @@ func (v *FileTree) Layout(g *gocui.Gui, minX, minY, maxX, maxY int) error {
 }
 
 func (v *FileTree) RequestedSize(available int) *int {
-	//var requestedWidth = int(float64(available) * (1.0 - v.requestedWidthRatio))
-	//return &requestedWidth
+	// var requestedWidth = int(float64(available) * (1.0 - v.requestedWidthRatio))
+	// return &requestedWidth
 	return nil
 }

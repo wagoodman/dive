@@ -1,3 +1,4 @@
+//go:build linux || darwin
 // +build linux darwin
 
 package podman
@@ -5,6 +6,7 @@ package podman
 import (
 	"fmt"
 	"io"
+
 	"github.com/wagoodman/dive/dive/image"
 	"github.com/wagoodman/dive/dive/image/docker"
 )

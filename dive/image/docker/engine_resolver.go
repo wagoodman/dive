@@ -2,7 +2,6 @@ package docker
 
 import (
 	"fmt"
-	"github.com/wagoodman/dive/dive/image"
 	"io"
 	"net/http"
 	"os"
@@ -11,6 +10,8 @@ import (
 	"github.com/docker/cli/cli/connhelper"
 	"github.com/docker/docker/client"
 	"golang.org/x/net/context"
+
+	"github.com/wagoodman/dive/dive/image"
 )
 
 type engineResolver struct{}
@@ -20,7 +21,6 @@ func NewResolverFromEngine() *engineResolver {
 }
 
 func (r *engineResolver) Fetch(id string) (*image.Image, error) {
-
 	reader, err := r.fetchArchive(id)
 	if err != nil {
 		return nil, err

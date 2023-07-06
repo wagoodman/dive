@@ -51,7 +51,6 @@ func (lm *Manager) planAndLayoutHeaders(g *gocui.Gui, area Area) (Area, error) {
 
 			// restrict the available screen real estate
 			area.minY += height
-
 		}
 	}
 	return area, nil
@@ -141,7 +140,6 @@ func (lm *Manager) planAndLayoutColumns(g *gocui.Gui, area Area) (Area, error) {
 
 			// move left to right, scratching off real estate as it is taken
 			area.minX += width
-
 		}
 	}
 	return area, nil

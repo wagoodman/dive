@@ -1,0 +1,14 @@
+permit:
+  - BSD.*
+  - MIT.*
+  - Apache.*
+  - MPL.*
+  - ISC
+
+ignore-packages:
+  # at the current version there is no license, however, the MIT license was eventually added
+  # https://github.com/mattn/go-localereader/blob/2491eb6c1c75720122ef321ed7acc3a8d9de95b1/LICENSE
+  - github.com/mattn/go-localereader
+  # crypto/internal/boring is released under the openSSL license as a part of the Golang Standard Libary
+  - crypto/internal/boring
+

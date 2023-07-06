@@ -2,8 +2,6 @@ package viewmodel
 
 import (
 	"bytes"
-	"github.com/wagoodman/dive/dive/image/docker"
-	"github.com/wagoodman/dive/runtime/ui/format"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -11,7 +9,10 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/sergi/go-diff/diffmatchpatch"
+
 	"github.com/wagoodman/dive/dive/filetree"
+	"github.com/wagoodman/dive/dive/image/docker"
+	"github.com/wagoodman/dive/runtime/ui/format"
 )
 
 const allowTestDataCapture = false

@@ -46,7 +46,6 @@ func NewImageArchive(tarFile io.ReadCloser) (*ImageArchive, error) {
 
 		// some layer tars can be relative layer symlinks to other layer tars
 		if header.Typeflag == tar.TypeSymlink || header.Typeflag == tar.TypeReg {
-
 			if strings.HasSuffix(name, ".tar") {
 				currentLayer++
 				layerReader := tar.NewReader(tarReader)
@@ -57,7 +56,6 @@ func NewImageArchive(tarFile io.ReadCloser) (*ImageArchive, error) {
 
 				// add the layer to the image
 				img.layerMap[tree.Name] = tree
-
 			} else if strings.HasSuffix(name, ".tar.gz") || strings.HasSuffix(name, "tgz") {
 				currentLayer++
 
@@ -78,7 +76,6 @@ func NewImageArchive(tarFile io.ReadCloser) (*ImageArchive, error) {
 
 				// add the layer to the image
 				img.layerMap[tree.Name] = tree
-
 			} else if strings.HasSuffix(name, ".json") || strings.HasPrefix(name, "sha256:") {
 				fileBuffer, err := io.ReadAll(tarReader)
 				if err != nil {
@@ -206,5 +203,4 @@ func (img *ImageArchive) ToImage() (*image.Image, error) {
 		Trees:  trees,
 		Layers: layers,
 	}, nil
-
 }

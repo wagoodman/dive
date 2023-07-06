@@ -2,12 +2,14 @@ package view
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/awesome-gocui/gocui"
 	"github.com/sirupsen/logrus"
+
 	"github.com/wagoodman/dive/dive/image"
 	"github.com/wagoodman/dive/runtime/ui/format"
 	"github.com/wagoodman/dive/runtime/ui/key"
-	"strings"
 )
 
 type LayerDetails struct {

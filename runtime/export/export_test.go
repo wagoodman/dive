@@ -1,9 +1,11 @@
 package export
 
 import (
-	"github.com/sergi/go-diff/diffmatchpatch"
-	"github.com/wagoodman/dive/dive/image/docker"
 	"testing"
+
+	"github.com/sergi/go-diff/diffmatchpatch"
+
+	"github.com/wagoodman/dive/dive/image/docker"
 )
 
 func Test_Export(t *testing.T) {

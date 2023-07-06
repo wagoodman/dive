@@ -2,14 +2,16 @@ package view
 
 import (
 	"fmt"
+	"strconv"
+	"strings"
+
 	"github.com/awesome-gocui/gocui"
 	"github.com/dustin/go-humanize"
 	"github.com/sirupsen/logrus"
+
 	"github.com/wagoodman/dive/dive/filetree"
 	"github.com/wagoodman/dive/runtime/ui/format"
 	"github.com/wagoodman/dive/runtime/ui/key"
-	"strconv"
-	"strings"
 )
 
 type ImageDetails struct {

@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/dustin/go-humanize"
+
 	"github.com/wagoodman/dive/dive/filetree"
 )
 

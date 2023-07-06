@@ -2,6 +2,7 @@ package filetree
 
 import (
 	"fmt"
+
 	"github.com/sirupsen/logrus"
 )
 
@@ -52,8 +53,8 @@ func (cmp *Comparer) GetPathErrors(key TreeIndexKey) ([]PathError, error) {
 }
 
 func (cmp *Comparer) GetTree(key TreeIndexKey) (*FileTree, error) {
-	//func (cmp *Comparer) GetTree(bottomTreeStart, bottomTreeStop, topTreeStart, topTreeStop int) (*FileTree, []PathError, error) {
-	//key := TreeIndexKey{bottomTreeStart, bottomTreeStop, topTreeStart, topTreeStop}
+	// func (cmp *Comparer) GetTree(bottomTreeStart, bottomTreeStop, topTreeStart, topTreeStop int) (*FileTree, []PathError, error) {
+	// key := TreeIndexKey{bottomTreeStart, bottomTreeStop, topTreeStart, topTreeStop}
 
 	if value, exists := cmp.trees[key]; exists {
 		return value, nil
@@ -114,7 +115,6 @@ func (cmp *Comparer) NaturalIndexes() <-chan TreeIndexKey {
 		}
 	}()
 	return indexes
-
 }
 
 // case 2: aggregated compare (bottom tree is ENTIRELY fixed, top tree SIZE changes)
@@ -146,7 +146,6 @@ func (cmp *Comparer) AggregatedIndexes() <-chan TreeIndexKey {
 		}
 	}()
 	return indexes
-
 }
 
 func (cmp *Comparer) BuildCache() (errors []error) {

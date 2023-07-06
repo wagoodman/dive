@@ -277,7 +277,6 @@ func (tree *FileTree) AddPath(filepath string, data FileInfo) (*FileNode, []*Fil
 		if idx == len(nodeNames)-1 {
 			node.Data.FileInfo = data
 		}
-
 	}
 	return node, addedNodes, nil
 }

@@ -1,9 +1,10 @@
 package docker
 
 import (
-	"github.com/wagoodman/dive/dive/image"
 	"os"
 	"testing"
+
+	"github.com/wagoodman/dive/dive/image"
 )
 
 func TestLoadArchive(tarPath string) (*ImageArchive, error) {

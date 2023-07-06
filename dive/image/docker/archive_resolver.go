@@ -2,8 +2,9 @@ package docker
 
 import (
 	"fmt"
-	"github.com/wagoodman/dive/dive/image"
 	"os"
+
+	"github.com/wagoodman/dive/dive/image"
 )
 
 type archiveResolver struct{}

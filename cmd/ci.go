@@ -10,7 +10,6 @@ import (
 )
 
 func configureCi() (bool, *viper.Viper, error) {
-
 	isCiFromEnv, _ := strconv.ParseBool(os.Getenv("CI"))
 	isCi = isCi || isCiFromEnv
 

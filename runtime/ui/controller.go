@@ -1,13 +1,15 @@
 package ui
 
 import (
+	"regexp"
+
 	"github.com/awesome-gocui/gocui"
 	"github.com/sirupsen/logrus"
+
 	"github.com/wagoodman/dive/dive/filetree"
 	"github.com/wagoodman/dive/dive/image"
 	"github.com/wagoodman/dive/runtime/ui/view"
 	"github.com/wagoodman/dive/runtime/ui/viewmodel"
-	"regexp"
 )
 
 type Controller struct {
@@ -141,6 +143,7 @@ func (c *Controller) Render() error {
 	return nil
 }
 
+//nolint:dupl
 func (c *Controller) NextPane() (err error) {
 	v := c.gui.CurrentView()
 	if v == nil {
@@ -165,6 +168,7 @@ func (c *Controller) NextPane() (err error) {
 	return c.UpdateAndRender()
 }
 
+//nolint:dupl
 func (c *Controller) PrevPane() (err error) {
 	v := c.gui.CurrentView()
 	if v == nil {

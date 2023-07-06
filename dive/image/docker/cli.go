@@ -2,9 +2,10 @@ package docker
 
 import (
 	"fmt"
-	"github.com/wagoodman/dive/utils"
 	"os"
 	"os/exec"
+
+	"github.com/wagoodman/dive/utils"
 )
 
 // runDockerCmd runs a given Docker command in the current tty

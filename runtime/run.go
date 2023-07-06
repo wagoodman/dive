@@ -2,9 +2,13 @@ package runtime
 
 import (
 	"fmt"
+	"os"
+	"time"
+
 	"github.com/dustin/go-humanize"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
+
 	"github.com/wagoodman/dive/dive"
 	"github.com/wagoodman/dive/dive/filetree"
 	"github.com/wagoodman/dive/dive/image"
@@ -12,8 +16,6 @@ import (
 	"github.com/wagoodman/dive/runtime/export"
 	"github.com/wagoodman/dive/runtime/ui"
 	"github.com/wagoodman/dive/utils"
-	"os"
-	"time"
 )
 
 func run(enableUi bool, options Options, imageResolver image.Resolver, events eventChannel, filesystem afero.Fs) {
@@ -84,7 +86,6 @@ func run(enableUi bool, options Options, imageResolver image.Resolver, events ev
 		}
 
 		return
-
 	} else {
 		events.message(utils.TitleFormat("Building cache..."))
 		treeStack := filetree.NewComparer(analysis.RefTrees)

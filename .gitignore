@@ -1,6 +1,12 @@
 /.idea
 /bin
 /.tool-versions
+/.tmp
+/.image
+*.log
+/dist
+.cover
+coverage.txt
 
 # Binaries for programs and plugins
 *.exe
@@ -18,8 +24,3 @@
 /build
 /_vendor*
 /vendor
-/.image
-*.log
-/dist
-.cover
-coverage.txt
