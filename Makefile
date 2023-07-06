@@ -3,6 +3,7 @@ BUILD_DIR = ./dist/dive_linux_amd64
 BUILD_PATH = $(BUILD_DIR)/$(BIN)
 PWD := ${CURDIR}
 PRODUCTION_REGISTRY = docker.io
+SHELL = /bin/bash -o pipefail
 TEST_IMAGE = busybox:latest
 
 all: gofmt clean build
