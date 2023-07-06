@@ -22,6 +22,7 @@ ci-static-analysis:
 ci-install-go-tools:
 	mkdir -p ${HOME}/.local/bin
 	curl -sfL https://goreleaser.com/static/run > ${HOME}/.local/bin/goreleaser
+	chmod +x ${HOME}/.local/bin/goreleaser
 
 ci-install-ci-tools:
 	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b ${HOME}/.local/bin/
