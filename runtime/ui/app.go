@@ -2,6 +2,7 @@ package ui
 
 import (
 	"sync"
+	"syscall"
 
 	"github.com/wagoodman/dive/dive/image"
 	"github.com/wagoodman/dive/runtime/ui/key"
@@ -135,6 +136,15 @@ func (a *app) quit() error {
 	return gocui.ErrQuit
 }
 
+// handle ctrl+z
+func handle_ctrl_z(g *gocui.Gui, v *gocui.View) error {
+	gocui.Suspend()
+	if err := syscall.Kill(syscall.Getpid(), syscall.SIGSTOP); err != nil {
+		return err
+	}
+	return gocui.Resume()
+}
+
 // Run is the UI entrypoint.
 func Run(imageName string, analysis *image.AnalysisResult, treeStack filetree.Comparer) error {
 	var err error
@@ -147,6 +157,11 @@ func Run(imageName string, analysis *image.AnalysisResult, treeStack filetree.Co
 
 	_, err = newApp(g, imageName, analysis, treeStack)
 	if err != nil {
+		return err
+	}
+
+	key, mod := gocui.MustParse("Ctrl+Z")
+	if err := g.SetKeybinding("", key, mod, handle_ctrl_z); err != nil {
 		return err
 	}
 
