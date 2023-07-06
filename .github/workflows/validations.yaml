@@ -29,9 +29,11 @@ jobs:
     name: "Unit tests"
     strategy:
       matrix:
-        # todo: support windows
-        platform: [ubuntu-latest, macos-latest]
-        # platform: [ubuntu-latest, macos-latest, windows-latest]
+        platform:
+         - ubuntu-latest
+#         - macos-latest # todo: mac runners are expensive minute-wise
+#         - windows-latest # todo: support windows
+
     runs-on: ${{ matrix.platform }}
     steps:
 
