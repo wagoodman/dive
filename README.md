@@ -93,13 +93,15 @@ With valid `source` options as such:
 
 **Ubuntu/Debian**
 ```bash
-curl -OL https://github.com/wagoodman/dive/releases/download/v0.9.2/dive_0.9.2_linux_amd64.deb
-sudo apt install ./dive_0.9.2_linux_amd64.deb
+export DIVE_VERSION=$(curl -sL "https://api.github.com/repos/wagoodman/dive/releases/latest" | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/')
+curl -OL https://github.com/wagoodman/dive/releases/download/v${DIVE_VERSION}/dive_${DIVE_VERSION}_linux_amd64.deb
+sudo apt install ./dive_${DIVE_VERSION}_linux_amd64.deb
 ```
 
 **RHEL/Centos**
 ```bash
-curl -OL https://github.com/wagoodman/dive/releases/download/v0.9.2/dive_0.9.2_linux_amd64.rpm
+export DIVE_VERSION=$(curl -sL "https://api.github.com/repos/wagoodman/dive/releases/latest" | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/')
+curl -OL https://github.com/wagoodman/dive/releases/download/v${DIVE_VERSION}/dive_${DIVE_VERSION}_linux_amd64.rpm
 rpm -i dive_0.9.2_linux_amd64.rpm
 ```
 
@@ -125,11 +127,11 @@ If you use [MacPorts](https://www.macports.org):
 sudo port install dive
 ```
 
-Or download the latest Darwin build from the [releases page](https://github.com/wagoodman/dive/releases/download/v0.9.2/dive_0.9.2_darwin_amd64.tar.gz).
+Or download the latest Darwin build from the [releases page](https://github.com/wagoodman/dive/releases/latest).
 
 **Windows**
 
-Download the [latest release](https://github.com/wagoodman/dive/releases/download/v0.9.2/dive_0.9.2_windows_amd64.zip).
+Download the [latest release](https://github.com/wagoodman/dive/releases/latest).
 
 **Go tools**
 Requires Go version 1.10 or higher.
