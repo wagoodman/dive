@@ -66,7 +66,7 @@ jobs:
 
 
   Acceptance-Linux:
-    needs: [ build-artifacts ]
+    needs: [ Build-Snapshot-Artifacts ]
     runs-on: ubuntu-latest
     steps:
 
@@ -89,7 +89,7 @@ jobs:
 
 
   Acceptance-Mac:
-    needs: [ build-artifacts ]
+    needs: [ Build-Snapshot-Artifacts ]
     runs-on: macos-latest
     steps:
 
@@ -106,7 +106,7 @@ jobs:
 
 
   Acceptance-Windows:
-    needs: [ build-artifacts ]
+    needs: [ Build-Snapshot-Artifacts ]
     runs-on: windows-latest
     steps:
 
