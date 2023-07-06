@@ -20,10 +20,10 @@ ci-static-analysis:
 	golangci-lint run
 
 ci-install-go-tools:
-	curl -sfL https://goreleaser.com/static/run > /usr/local/bin/goreleaser
+	echo ${PATH}
+	curl -sfL https://goreleaser.com/static/run > ${HOME}/bin/goreleaser
 
 ci-install-ci-tools:
-	echo ${PATH}
 	curl -sfL https://install.goreleaser.com/github.com/goreleaser/goreleaser.sh | sudo sh -s -- -b ${HOME}/bin/ "v0.122.0"
 
 ci-docker-login:
