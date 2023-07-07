@@ -16,7 +16,7 @@ GLOW_CMD = $(TEMP_DIR)/glow
 # Tool versions #################################
 GOLANG_CI_VERSION = v1.52.2
 GOBOUNCER_VERSION = v0.4.0
-GORELEASER_VERSION = v1.17.0
+GORELEASER_VERSION = v1.19.1
 GOSIMPORTS_VERSION = v0.3.8
 CHRONICLE_VERSION = v0.6.0
 GLOW_VERSION := v1.5.0
@@ -253,12 +253,12 @@ build: $(SNAPSHOT_DIR) ## Build release snapshot binaries and packages
 $(SNAPSHOT_DIR): ## Build snapshot release binaries and packages
 	$(call title,Building snapshot artifacts)
 
-	# create a config with the dist dir overridden
-	echo "dist: $(SNAPSHOT_DIR)" > $(TEMP_DIR)/goreleaser.yaml
-	cat .goreleaser.yaml >> $(TEMP_DIR)/goreleaser.yaml
+	@# create a config with the dist dir overridden
+	@echo "dist: $(SNAPSHOT_DIR)" > $(TEMP_DIR)/goreleaser.yaml
+	@cat .goreleaser.yaml >> $(TEMP_DIR)/goreleaser.yaml
 
-	# build release snapshots
-	bash -c "\
+	@# build release snapshots
+	@bash -c "\
 		VERSION=$(VERSION:v%=%) \
 		$(SNAPSHOT_CMD) --config $(TEMP_DIR)/goreleaser.yaml \
 	  "

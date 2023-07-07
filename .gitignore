@@ -1,10 +1,21 @@
+# misc
+/.image
+*.log
+
+# IDEs
 /.idea
+/.vscode
+
+# tooling
 /bin
 /.tool-versions
 /.tmp
-/.image
-*.log
+
+# builds
 /dist
+/snapshot
+
+# testing
 .cover
 coverage.txt
 

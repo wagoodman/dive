@@ -1,5 +1,13 @@
 release:
-  prerelease: false
+  # If set to auto, will mark the release as not ready for production in case there is an indicator for this in the
+  # tag e.g. v1.0.0-rc1 .If set to true, will mark the release as not ready for production.
+  prerelease: auto
+
+  # If set to true, will not auto-publish the release. This is done to allow us to review the changelog before publishing.
+  draft: false
+
+env:
+  - DOCKER_CLI_VERSION=23.0.6
 
 builds:
   - binary: dive
@@ -11,6 +19,7 @@ builds:
       - linux
     goarch:
       - amd64
+      - arm64
     ldflags: -s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.buildTime={{.Date}}`.
 
 brews:
@@ -18,7 +27,7 @@ brews:
       owner: wagoodman
       name: homebrew-dive
     homepage: "https://github.com/wagoodman/dive/"
-    description: "A tool for exploring each layer in a docker image"
+    description: "A tool for exploring layers in a docker image"
 
 archives:
   - format: tar.gz
@@ -30,7 +39,7 @@ nfpms:
   - license: MIT
     maintainer: Alex Goodman
     homepage: https://github.com/wagoodman/dive/
-    description: "A tool for exploring each layer in a docker image"
+    description: "A tool for exploring layers in a docker image"
     formats:
       - rpm
       - deb
