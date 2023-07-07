@@ -72,6 +72,12 @@ jobs:
           path: snapshot
           key: snapshot-build-${{ github.run_id }}
 
+      # ... however the cache trick doesn't work on windows :(
+      - uses: actions/upload-artifact@v3
+        with:
+          name: windows-artifacts
+          path: snapshot/dive_windows_amd64_v1/dive.exe
+
 
   Acceptance-Linux:
     name: "Acceptance tests (Linux)"
@@ -123,11 +129,9 @@ jobs:
 
       - uses: actions/checkout@master
 
-      - name: Download snapshot build
-        uses: actions/cache/restore@v3
+      - uses: actions/download-artifact@v3
         with:
-          path: snapshot
-          key: snapshot-build-${{ github.run_id }}
+          name: windows-artifacts
 
       - name: Test windows run
         run: make ci-test-windows-run

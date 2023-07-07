@@ -228,22 +228,22 @@ ci-test-rpm-package-install:
 
 .PHONY: ci-test-linux-run
 ci-test-linux-run:
-	ls -la ./snapshot
-	ls -la ./snapshot/dive_linux_amd64_v1
-	chmod 755 ./snapshot/dive_linux_amd64_v1/dive && \
-	./snapshot/dive_linux_amd64_v1/dive '${TEST_IMAGE}'  --ci && \
-    ./snapshot/dive_linux_amd64_v1/dive --source docker-archive .data/test-kaniko-image.tar  --ci --ci-config .data/.dive-ci
+	ls -la $(SNAPSHOT_DIR)
+	ls -la $(SNAPSHOT_DIR)/dive_linux_amd64_v1
+	chmod 755 $(SNAPSHOT_DIR)/dive_linux_amd64_v1/dive && \
+	$(SNAPSHOT_DIR)/dive_linux_amd64_v1/dive '${TEST_IMAGE}'  --ci && \
+    $(SNAPSHOT_DIR)/dive_linux_amd64_v1/dive --source docker-archive .data/test-kaniko-image.tar  --ci --ci-config .data/.dive-ci
 
 # we're not attempting to test docker, just our ability to run on these systems. This avoids setting up docker in CI.
 .PHONY: ci-test-mac-run
 ci-test-mac-run:
-	chmod 755 ./snapshot/dive_darwin_amd64_v1/dive && \
-	./snapshot/dive_darwin_amd64_v1/dive --source docker-archive .data/test-docker-image.tar  --ci --ci-config .data/.dive-ci
+	chmod 755 $(SNAPSHOT_DIR)/dive_darwin_amd64_v1/dive && \
+	$(SNAPSHOT_DIR)/dive_darwin_amd64_v1/dive --source docker-archive .data/test-docker-image.tar  --ci --ci-config .data/.dive-ci
 
 # we're not attempting to test docker, just our ability to run on these systems. This avoids setting up docker in CI.
 .PHONY: ci-test-windows-run
 ci-test-windows-run:
-	./snapshot/dive_windows_amd64_v1/dive.exe --source docker-archive .data/test-docker-image.tar  --ci --ci-config .data/.dive-ci
+	dive.exe --source docker-archive .data/test-docker-image.tar  --ci --ci-config .data/.dive-ci
 
 
 ## Build-related targets #################################
