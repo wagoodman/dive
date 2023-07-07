@@ -23,6 +23,7 @@ brews:
   - repository:
       owner: wagoodman
       name: homebrew-dive
+      token: "{{.Env.TAP_GITHUB_TOKEN}}"
     homepage: "https://github.com/wagoodman/dive/"
     description: "A tool for exploring layers in a docker image"
 

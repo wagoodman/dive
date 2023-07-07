@@ -34,7 +34,7 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           # This check name is defined as the github action job name (in .github/workflows/validations.yaml)
-          checkName: "Unit tests"
+          checkName: "Unit tests (ubuntu-latest)"
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
       - name: Check acceptance test results (linux)
@@ -76,39 +76,41 @@ jobs:
 
           false
 
-# TODO: uncomment this when we have a release process tested and ready to go
-#  release:
-#    needs: [quality-gate]
-#    runs-on: ubuntu-latest
-#    permissions:
-#      # for tagging
-#      contents: write
-#    steps:
-#
-#      - uses: actions/checkout@v3
-#        with:
-#          fetch-depth: 0
-#
-#      - name: Bootstrap environment
-#        uses: ./.github/actions/bootstrap
-#
-#      - name: Tag release
-#        run: |
-#          git tag ${{ github.event.inputs.version }}
-#          git push origin --tags
-#        env:
-#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-#
-#      - name: Login to Docker Hub
-#        uses: docker/login-action@v2
-#        with:
-#          username: ${{ secrets.DOCKER_USERNAME }}
-#          password: ${{ secrets.DOCKER_PASSWORD }}
-#
-#      - name: Build & publish release artifacts
-#        run: make ci-release
-#        env:
-#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-#
-#      - name: Smoke test published image
-#        run: make ci-test-docker-image
+  release:
+    needs: [quality-gate]
+    runs-on: ubuntu-latest
+    permissions:
+      # for tagging
+      contents: write
+    steps:
+
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Bootstrap environment
+        uses: ./.github/actions/bootstrap
+
+      - name: Tag release
+        run: |
+          git tag ${{ github.event.inputs.version }}
+          git push origin --tags
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build & publish release artifacts
+        run: make ci-release
+        env:
+          # for creating the release (requires write access to content)
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # for updating brew formula in wagoodman/homebrew-dive
+          TAP_GITHUB_TOKEN: ${{ secrets.TAP_GITHUB_TOKEN }}
+
+      - name: Smoke test published image
+        run: make ci-test-docker-image
