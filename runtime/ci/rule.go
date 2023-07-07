@@ -2,13 +2,13 @@ package ci
 
 import (
 	"fmt"
-	"github.com/wagoodman/dive/dive/image"
 	"strconv"
-
-	"github.com/spf13/viper"
 
 	"github.com/dustin/go-humanize"
 	"github.com/logrusorgru/aurora"
+	"github.com/spf13/viper"
+
+	"github.com/wagoodman/dive/dive/image"
 )
 
 const (

@@ -2,6 +2,7 @@ package runtime
 
 import (
 	"github.com/spf13/viper"
+
 	"github.com/wagoodman/dive/dive"
 )
 

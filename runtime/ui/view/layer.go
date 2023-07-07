@@ -6,6 +6,7 @@ import (
 	"github.com/awesome-gocui/gocui"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
+
 	"github.com/wagoodman/dive/dive/image"
 	"github.com/wagoodman/dive/runtime/ui/format"
 	"github.com/wagoodman/dive/runtime/ui/key"
@@ -319,7 +320,6 @@ func (v *Layer) Render() error {
 		// update contents
 		v.body.Clear()
 		for idx, layer := range v.vm.Layers {
-
 			var layerStr string
 			if v.constrainedRealEstate {
 				layerStr = fmt.Sprintf("%-4d", layer.Index)
@@ -339,7 +339,6 @@ func (v *Layer) Render() error {
 				logrus.Debug("unable to write to buffer: ", err)
 				return err
 			}
-
 		}
 		return nil
 	})

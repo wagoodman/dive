@@ -1,8 +1,9 @@
 package layout
 
 import (
-	"github.com/awesome-gocui/gocui"
 	"testing"
+
+	"github.com/awesome-gocui/gocui"
 )
 
 type testElement struct {

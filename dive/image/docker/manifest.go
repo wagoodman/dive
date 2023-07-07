@@ -2,6 +2,7 @@ package docker
 
 import (
 	"encoding/json"
+
 	"github.com/sirupsen/logrus"
 )
 

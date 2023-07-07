@@ -2,6 +2,7 @@ package export
 
 import (
 	"encoding/json"
+
 	diveImage "github.com/wagoodman/dive/dive/image"
 )
 

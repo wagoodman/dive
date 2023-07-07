@@ -2,6 +2,7 @@ package view
 
 import (
 	"github.com/awesome-gocui/gocui"
+
 	"github.com/wagoodman/dive/dive/filetree"
 	"github.com/wagoodman/dive/dive/image"
 )

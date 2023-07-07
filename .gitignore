@@ -1,6 +1,25 @@
+# misc
+/.image
+*.log
+CHANGELOG.md
+VERSION
+
+# IDEs
 /.idea
+/.vscode
+
+# tooling
 /bin
 /.tool-versions
+/.tmp
+
+# builds
+/dist
+/snapshot
+
+# testing
+.cover
+coverage.txt
 
 # Binaries for programs and plugins
 *.exe
@@ -18,8 +37,3 @@
 /build
 /_vendor*
 /vendor
-/.image
-*.log
-/dist
-.cover
-coverage.txt

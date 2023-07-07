@@ -2,16 +2,15 @@ package ui
 
 import (
 	"sync"
-	"syscall"
 
+	"github.com/awesome-gocui/gocui"
+	"github.com/sirupsen/logrus"
+
+	"github.com/wagoodman/dive/dive/filetree"
 	"github.com/wagoodman/dive/dive/image"
 	"github.com/wagoodman/dive/runtime/ui/key"
 	"github.com/wagoodman/dive/runtime/ui/layout"
 	"github.com/wagoodman/dive/runtime/ui/layout/compound"
-
-	"github.com/awesome-gocui/gocui"
-	"github.com/sirupsen/logrus"
-	"github.com/wagoodman/dive/dive/filetree"
 )
 
 const debug = false
@@ -51,7 +50,7 @@ func newApp(gui *gocui.Gui, imageName string, analysis *image.AnalysisResult, ca
 			lm.Add(controller.views.Debug, layout.LocationColumn)
 		}
 		gui.Cursor = false
-		//g.Mouse = true
+		// g.Mouse = true
 		gui.SetManagerFunc(lm.Layout)
 
 		// var profileObj = profile.Start(profile.CPUProfile, profile.ProfilePath("."), profile.NoShutdownHook)
@@ -105,7 +104,6 @@ func newApp(gui *gocui.Gui, imageName string, analysis *image.AnalysisResult, ca
 		if err != nil {
 			return
 		}
-
 	})
 
 	return appSingleton, err
@@ -129,20 +127,10 @@ func newApp(gui *gocui.Gui, imageName string, analysis *image.AnalysisResult, ca
 
 // quit is the gocui callback invoked when the user hits Ctrl+C
 func (a *app) quit() error {
-
 	// profileObj.Stop()
 	// onExit()
 
 	return gocui.ErrQuit
-}
-
-// handle ctrl+z
-func handle_ctrl_z(g *gocui.Gui, v *gocui.View) error {
-	gocui.Suspend()
-	if err := syscall.Kill(syscall.Getpid(), syscall.SIGSTOP); err != nil {
-		return err
-	}
-	return gocui.Resume()
 }
 
 // Run is the UI entrypoint.

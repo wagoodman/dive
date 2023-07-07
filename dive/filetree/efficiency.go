@@ -85,7 +85,6 @@ func Efficiency(trees []*FileTree) (float64, EfficiencySlice) {
 					return err
 				}
 			}
-
 		} else {
 			sizeBytes = node.Data.FileInfo.Size
 		}

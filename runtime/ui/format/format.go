@@ -2,23 +2,24 @@ package format
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/fatih/color"
 	"github.com/lunixbochs/vtclean"
-	"strings"
 )
 
 const (
-	//selectedLeftBracketStr = " "
-	//selectedRightBracketStr = " "
-	//selectedFillStr = " "
+	// selectedLeftBracketStr = " "
+	// selectedRightBracketStr = " "
+	// selectedFillStr = " "
 	//
 	//leftBracketStr = "▏"
 	//rightBracketStr = "▕"
 	//fillStr = "─"
 
-	//selectedLeftBracketStr = " "
-	//selectedRightBracketStr = " "
-	//selectedFillStr = "━"
+	// selectedLeftBracketStr = " "
+	// selectedRightBracketStr = " "
+	// selectedFillStr = "━"
 	//
 	//leftBracketStr = "▏"
 	//rightBracketStr = "▕"
@@ -33,7 +34,7 @@ const (
 	fillStr         = "─"
 
 	selectStr = " ● "
-	//selectStr = " "
+	// selectStr = " "
 )
 
 var (
@@ -74,8 +75,8 @@ func RenderHeader(title string, width int, selected bool) string {
 			repeatCount = 0
 		}
 		return fmt.Sprintf("%s%s%s%s\n", selectedLeftBracketStr, body, selectedRightBracketStr, strings.Repeat(selectedFillStr, repeatCount))
-		//return fmt.Sprintf("%s%s%s%s\n", Selected(selectedLeftBracketStr), body, Selected(selectedRightBracketStr), Selected(strings.Repeat(selectedFillStr, width-bodyLen-2)))
-		//return fmt.Sprintf("%s%s%s%s\n", Selected(selectedLeftBracketStr), body, Selected(selectedRightBracketStr), strings.Repeat(selectedFillStr, width-bodyLen-2))
+		// return fmt.Sprintf("%s%s%s%s\n", Selected(selectedLeftBracketStr), body, Selected(selectedRightBracketStr), Selected(strings.Repeat(selectedFillStr, width-bodyLen-2)))
+		// return fmt.Sprintf("%s%s%s%s\n", Selected(selectedLeftBracketStr), body, Selected(selectedRightBracketStr), strings.Repeat(selectedFillStr, width-bodyLen-2))
 	}
 	body := Header(fmt.Sprintf(" %s ", title))
 	bodyLen := len(vtclean.Clean(body, false))

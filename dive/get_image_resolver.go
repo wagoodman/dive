@@ -2,11 +2,12 @@ package dive
 
 import (
 	"fmt"
+	"net/url"
+	"strings"
+
 	"github.com/wagoodman/dive/dive/image"
 	"github.com/wagoodman/dive/dive/image/docker"
 	"github.com/wagoodman/dive/dive/image/podman"
-	"net/url"
-	"strings"
 )
 
 const (
@@ -56,7 +57,6 @@ func DeriveImageSource(image string) (ImageSource, string) {
 		return SourceDockerArchive, imageSource
 	case "docker-tar":
 		return SourceDockerArchive, imageSource
-
 	}
 	return SourceUnknown, ""
 }

@@ -2,19 +2,19 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/sirupsen/logrus"
-	"github.com/spf13/viper"
-	"github.com/wagoodman/dive/dive"
 	"os"
 
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
+
+	"github.com/wagoodman/dive/dive"
 	"github.com/wagoodman/dive/runtime"
 )
 
 // doAnalyzeCmd takes a docker image tag, digest, or id and displays the
 // image analysis to the screen
 func doAnalyzeCmd(cmd *cobra.Command, args []string) {
-
 	if len(args) == 0 {
 		printVersionFlag, err := cmd.PersistentFlags().GetBool("version")
 		if err == nil && printVersionFlag {

@@ -2,6 +2,7 @@ package view
 
 import (
 	"errors"
+
 	"github.com/awesome-gocui/gocui"
 )
 

@@ -1,0 +1,114 @@
+name: "Release"
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: tag the latest commit on main with the given version (prefixed with v)
+        required: true
+
+jobs:
+  quality-gate:
+    environment: release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Check if tag already exists
+        # note: this will fail if the tag already exists
+        run: |
+          [[ "${{ github.event.inputs.version }}" == v* ]] || (echo "version '${{ github.event.inputs.version }}' does not have a 'v' prefix" && exit 1)
+          git tag ${{ github.event.inputs.version }}
+
+      - name: Check static analysis results
+        uses: fountainhead/action-wait-for-check@v1.1.0
+        id: static-analysis
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          # This check name is defined as the github action job name (in .github/workflows/validations.yaml)
+          checkName: "Static analysis"
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+
+      - name: Check unit test results
+        uses: fountainhead/action-wait-for-check@v1.1.0
+        id: unit
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          # This check name is defined as the github action job name (in .github/workflows/validations.yaml)
+          checkName: "Unit tests"
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+
+      - name: Check acceptance test results (linux)
+        uses: fountainhead/action-wait-for-check@v1.1.0
+        id: acceptance-linux
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          # This check name is defined as the github action job name (in .github/workflows/validations.yaml)
+          checkName: "Acceptance tests (Linux)"
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+
+      - name: Check acceptance test results (mac)
+        uses: fountainhead/action-wait-for-check@v1.1.0
+        id: acceptance-mac
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          # This check name is defined as the github action job name (in .github/workflows/validations.yaml)
+          checkName: "Acceptance tests (Mac)"
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+
+      - name: Check acceptance test results (windows)
+        uses: fountainhead/action-wait-for-check@v1.1.0
+        id: acceptance-windows
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          # This check name is defined as the github action job name (in .github/workflows/validations.yaml)
+          checkName: "Acceptance tests (Windows)"
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+
+
+      - name: Quality gate
+        if: steps.static-analysis.outputs.conclusion != 'success' || steps.unit.outputs.conclusion != 'success' || steps.acceptance-linux.outputs.conclusion != 'success' || steps.acceptance-mac.outputs.conclusion != 'success' || steps.acceptance-windows.outputs.conclusion != 'success'
+        run: |
+          echo "Static Analysis Status: ${{ steps.static-analysis.conclusion }}"
+          echo "Unit Test Status: ${{ steps.unit.outputs.conclusion }}"
+          echo "Acceptance Test (Linux) Status: ${{ steps.acceptance-linux.outputs.conclusion }}"
+          echo "Acceptance Test (Mac) Status: ${{ steps.acceptance-mac.outputs.conclusion }}"
+          echo "Acceptance Test (Windows) Status: ${{ steps.acceptance-windows.outputs.conclusion }}"
+
+          false
+
+# TODO: uncomment this when we have a release process tested and ready to go
+#  release:
+#    needs: [quality-gate]
+#    runs-on: ubuntu-latest
+#    permissions:
+#      # for tagging
+#      contents: write
+#    steps:
+#
+#      - uses: actions/checkout@v3
+#        with:
+#          fetch-depth: 0
+#
+#      - name: Bootstrap environment
+#        uses: ./.github/actions/bootstrap
+#
+#      - name: Tag release
+#        run: |
+#          git tag ${{ github.event.inputs.version }}
+#          git push origin --tags
+#        env:
+#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#
+#      - name: Login to Docker Hub
+#        uses: docker/login-action@v2
+#        with:
+#          username: ${{ secrets.DOCKER_USERNAME }}
+#          password: ${{ secrets.DOCKER_PASSWORD }}
+#
+#      - name: Build & publish release artifacts
+#        run: make ci-release
+#        env:
+#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#
+#      - name: Smoke test published image
+#        run: make ci-test-docker-image

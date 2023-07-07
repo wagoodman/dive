@@ -1,9 +1,11 @@
+//go:build !linux && !darwin
 // +build !linux,!darwin
 
 package podman
 
 import (
 	"fmt"
+
 	"github.com/wagoodman/dive/dive/image"
 )
 
