@@ -1,6 +1,8 @@
 # misc
 /.image
 *.log
+CHANGELOG.md
+VERSION
 
 # IDEs
 /.idea
