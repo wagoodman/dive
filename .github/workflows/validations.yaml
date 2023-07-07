@@ -5,7 +5,7 @@ on:
 # TODO: re-enable this once we're done with testing
 #    branches:
 #      - main
-  pull_request:
+#  pull_request:
 
 
 jobs:
