@@ -3,7 +3,6 @@ package filetree
 import (
 	"archive/tar"
 	"fmt"
-	"sort"
 	"strings"
 
 	"github.com/dustin/go-humanize"
@@ -27,6 +26,7 @@ var diffTypeColor = map[DiffType]*color.Color{
 type FileNode struct {
 	Tree     *FileTree
 	Parent   *FileNode
+	Size     int64 // memoized total size of file or directory
 	Name     string
 	Data     NodeData
 	Children map[string]*FileNode
@@ -39,6 +39,7 @@ func NewNode(parent *FileNode, name string, data FileInfo) (node *FileNode) {
 	node.Name = name
 	node.Data = *NewNodeData()
 	node.Data.FileInfo = *data.Copy()
+	node.Size = -1 // signal lazy load later
 
 	node.Children = make(map[string]*FileNode)
 	node.Parent = parent
@@ -149,41 +150,49 @@ func (node *FileNode) MetadataString() string {
 	group := node.Data.FileInfo.Gid
 	userGroup := fmt.Sprintf("%d:%d", user, group)
 
-	var sizeBytes int64
-
-	if node.IsLeaf() {
-		sizeBytes = node.Data.FileInfo.Size
-	} else {
-		sizer := func(curNode *FileNode) error {
-			// don't include file sizes of children that have been removed (unless the node in question is a removed dir,
-			// then show the accumulated size of removed files)
-			if curNode.Data.DiffType != Removed || node.Data.DiffType == Removed {
-				sizeBytes += curNode.Data.FileInfo.Size
-			}
-			return nil
-		}
-
-		err := node.VisitDepthChildFirst(sizer, nil)
-		if err != nil {
-			logrus.Errorf("unable to propagate node for metadata: %+v", err)
-		}
-	}
+	// don't include file sizes of children that have been removed (unless the node in question is a removed dir,
+	// then show the accumulated size of removed files)
+	sizeBytes := node.GetSize()
 
 	size := humanize.Bytes(uint64(sizeBytes))
 
 	return diffTypeColor[node.Data.DiffType].Sprint(fmt.Sprintf(AttributeFormat, dir, fileMode, userGroup, size))
 }
 
-// VisitDepthChildFirst iterates a tree depth-first (starting at this FileNode), evaluating the deepest depths first (visit on bubble up)
-func (node *FileNode) VisitDepthChildFirst(visitor Visitor, evaluator VisitEvaluator) error {
-	var keys []string
-	for key := range node.Children {
-		keys = append(keys, key)
+func (node *FileNode) GetSize() int64 {
+	if 0 <= node.Size {
+		return node.Size
 	}
-	sort.Strings(keys)
+	var sizeBytes int64
+
+	if node.IsLeaf() {
+		sizeBytes = node.Data.FileInfo.Size
+	} else {
+		sizer := func(curNode *FileNode) error {
+
+			if curNode.Data.DiffType != Removed || node.Data.DiffType == Removed {
+				sizeBytes += curNode.Data.FileInfo.Size
+			}
+			return nil
+		}
+		err := node.VisitDepthChildFirst(sizer, nil, nil)
+		if err != nil {
+			logrus.Errorf("unable to propagate node for metadata: %+v", err)
+		}
+	}
+	node.Size = sizeBytes
+	return node.Size
+}
+
+// VisitDepthChildFirst iterates a tree depth-first (starting at this FileNode), evaluating the deepest depths first (visit on bubble up)
+func (node *FileNode) VisitDepthChildFirst(visitor Visitor, evaluator VisitEvaluator, sorter OrderStrategy) error {
+	if sorter == nil {
+		sorter = GetSortOrderStrategy(ByName)
+	}
+	keys := sorter.orderKeys(node.Children)
 	for _, name := range keys {
 		child := node.Children[name]
-		err := child.VisitDepthChildFirst(visitor, evaluator)
+		err := child.VisitDepthChildFirst(visitor, evaluator, sorter)
 		if err != nil {
 			return err
 		}
@@ -199,7 +208,7 @@ func (node *FileNode) VisitDepthChildFirst(visitor Visitor, evaluator VisitEvalu
 }
 
 // VisitDepthParentFirst iterates a tree depth-first (starting at this FileNode), evaluating the shallowest depths first (visit while sinking down)
-func (node *FileNode) VisitDepthParentFirst(visitor Visitor, evaluator VisitEvaluator) error {
+func (node *FileNode) VisitDepthParentFirst(visitor Visitor, evaluator VisitEvaluator, sorter OrderStrategy) error {
 	var err error
 
 	doVisit := evaluator != nil && evaluator(node) || evaluator == nil
@@ -216,14 +225,13 @@ func (node *FileNode) VisitDepthParentFirst(visitor Visitor, evaluator VisitEval
 		}
 	}
 
-	var keys []string
-	for key := range node.Children {
-		keys = append(keys, key)
+	if sorter == nil {
+		sorter = GetSortOrderStrategy(ByName)
 	}
-	sort.Strings(keys)
+	keys := sorter.orderKeys(node.Children)
 	for _, name := range keys {
 		child := node.Children[name]
-		err = child.VisitDepthParentFirst(visitor, evaluator)
+		err = child.VisitDepthParentFirst(visitor, evaluator, sorter)
 		if err != nil {
 			return err
 		}

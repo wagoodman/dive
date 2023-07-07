@@ -3,7 +3,6 @@ package filetree
 import (
 	"fmt"
 	"path"
-	"sort"
 	"strings"
 
 	"github.com/google/uuid"
@@ -24,11 +23,12 @@ const (
 
 // FileTree represents a set of files, directories, and their relations.
 type FileTree struct {
-	Root     *FileNode
-	Size     int
-	FileSize uint64
-	Name     string
-	Id       uuid.UUID
+	Root      *FileNode
+	Size      int
+	FileSize  uint64
+	Name      string
+	Id        uuid.UUID
+	SortOrder SortOrder
 }
 
 // NewFileTree creates an empty FileTree
@@ -39,6 +39,7 @@ func NewFileTree() (tree *FileTree) {
 	tree.Root.Tree = tree
 	tree.Root.Children = make(map[string]*FileNode)
 	tree.Id = uuid.New()
+	tree.SortOrder = ByName
 	return tree
 }
 
@@ -67,12 +68,8 @@ func (tree *FileTree) renderStringTreeBetween(startRow, stopRow int, showAttribu
 		currentParams, paramsToVisit = paramsToVisit[0], paramsToVisit[1:]
 
 		// take note of the next nodes to visit later
-		var keys []string
-		for key := range currentParams.node.Children {
-			keys = append(keys, key)
-		}
-		// we should always visit nodes in order
-		sort.Strings(keys)
+		sorter := GetSortOrderStrategy(tree.SortOrder)
+		keys := sorter.orderKeys(currentParams.node.Children)
 
 		var childParams = make([]renderParams, 0)
 		for idx, name := range keys {
@@ -174,6 +171,7 @@ func (tree *FileTree) Copy() *FileTree {
 	newTree.Size = tree.Size
 	newTree.FileSize = tree.FileSize
 	newTree.Root = tree.Root.Copy(newTree.Root)
+	newTree.SortOrder = tree.SortOrder
 
 	// update the tree pointers
 	err := newTree.VisitDepthChildFirst(func(node *FileNode) error {
@@ -196,12 +194,14 @@ type VisitEvaluator func(*FileNode) bool
 
 // VisitDepthChildFirst iterates the given tree depth-first, evaluating the deepest depths first (visit on bubble up)
 func (tree *FileTree) VisitDepthChildFirst(visitor Visitor, evaluator VisitEvaluator) error {
-	return tree.Root.VisitDepthChildFirst(visitor, evaluator)
+	sorter := GetSortOrderStrategy(tree.SortOrder)
+	return tree.Root.VisitDepthChildFirst(visitor, evaluator, sorter)
 }
 
 // VisitDepthParentFirst iterates the given tree depth-first, evaluating the shallowest depths first (visit while sinking down)
 func (tree *FileTree) VisitDepthParentFirst(visitor Visitor, evaluator VisitEvaluator) error {
-	return tree.Root.VisitDepthParentFirst(visitor, evaluator)
+	sorter := GetSortOrderStrategy(tree.SortOrder)
+	return tree.Root.VisitDepthParentFirst(visitor, evaluator, sorter)
 }
 
 // Stack takes two trees and combines them together. This is done by "stacking" the given tree on top of the owning tree.
