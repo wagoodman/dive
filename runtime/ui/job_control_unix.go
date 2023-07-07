@@ -4,8 +4,9 @@
 package ui
 
 import (
-	"github.com/awesome-gocui/gocui"
 	"syscall"
+
+	"github.com/awesome-gocui/gocui"
 )
 
 // handle ctrl+z

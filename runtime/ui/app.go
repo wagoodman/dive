@@ -1,9 +1,10 @@
 package ui
 
 import (
+	"sync"
+
 	"github.com/awesome-gocui/gocui"
 	"github.com/sirupsen/logrus"
-	"sync"
 
 	"github.com/wagoodman/dive/dive/filetree"
 	"github.com/wagoodman/dive/dive/image"
