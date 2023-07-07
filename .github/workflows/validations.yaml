@@ -58,6 +58,12 @@ jobs:
       - name: Build snapshot artifacts
         run: make snapshot
 
+      - run: docker images wagoodman/dive
+
+      # todo: compare against known json output in shared volume
+      - name: Test production image
+        run: make ci-test-docker-image
+
       # why not use actions/upload-artifact? It is very slow (3 minutes to upload ~600MB of data, vs 10 seconds with this approach).
       # see https://github.com/actions/upload-artifact/issues/199 for more info
       - name: Upload snapshot artifacts
@@ -68,6 +74,7 @@ jobs:
 
 
   Acceptance-Linux:
+    name: "Acceptance tests (Linux)"
     needs: [ Build-Snapshot-Artifacts ]
     runs-on: ubuntu-latest
     steps:
@@ -91,6 +98,7 @@ jobs:
 
 
   Acceptance-Mac:
+    name: "Acceptance tests (Mac)"
     needs: [ Build-Snapshot-Artifacts ]
     runs-on: macos-latest
     steps:
@@ -108,6 +116,7 @@ jobs:
 
 
   Acceptance-Windows:
+    name: "Acceptance tests (Windows)"
     needs: [ Build-Snapshot-Artifacts ]
     runs-on: windows-latest
     steps:

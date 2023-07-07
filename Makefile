@@ -5,21 +5,22 @@ PRODUCTION_REGISTRY = docker.io
 SHELL = /bin/bash -o pipefail
 TEST_IMAGE = busybox:latest
 
-# Command templates #################################
-LINT_CMD = $(TEMP_DIR)/golangci-lint run --tests=false --timeout=2m --config .golangci.yaml
-GOIMPORTS_CMD = $(TEMP_DIR)/gosimports -local github.com/wagoodman
-RELEASE_CMD = $(TEMP_DIR)/goreleaser release --clean
-SNAPSHOT_CMD = $(RELEASE_CMD) --skip-publish --snapshot --skip-sign
-CHRONICLE_CMD = $(TEMP_DIR)/chronicle
-GLOW_CMD = $(TEMP_DIR)/glow
-
 # Tool versions #################################
 GOLANG_CI_VERSION = v1.52.2
 GOBOUNCER_VERSION = v0.4.0
 GORELEASER_VERSION = v1.19.1
 GOSIMPORTS_VERSION = v0.3.8
 CHRONICLE_VERSION = v0.6.0
-GLOW_VERSION := v1.5.0
+GLOW_VERSION = v1.5.0
+DOCKER_CLI_VERSION = 23.0.6
+
+# Command templates #################################
+LINT_CMD = $(TEMP_DIR)/golangci-lint run --tests=false --timeout=2m --config .golangci.yaml
+GOIMPORTS_CMD = $(TEMP_DIR)/gosimports -local github.com/wagoodman
+RELEASE_CMD = DOCKER_CLI_VERSION=$(DOCKER_CLI_VERSION) $(TEMP_DIR)/goreleaser release --clean
+SNAPSHOT_CMD = $(RELEASE_CMD) --skip-publish --snapshot --skip-sign
+CHRONICLE_CMD = $(TEMP_DIR)/chronicle
+GLOW_CMD = $(TEMP_DIR)/glow
 
 # Formatting variables #################################
 BOLD := $(shell tput -T linux bold)
@@ -184,7 +185,7 @@ ci-test-docker-image:
 	docker run \
 		--rm \
 		-t \
-		-v //var/run/docker.sock://var/run/docker.sock \
+		-v /var/run/docker.sock:/var/run/docker.sock \
 		'${PRODUCTION_REGISTRY}/wagoodman/dive:latest' \
 			'${TEST_IMAGE}' \
 			--ci
@@ -192,9 +193,9 @@ ci-test-docker-image:
 .PHONY: ci-test-deb-package-install
 ci-test-deb-package-install:
 	docker run \
-		-v //var/run/docker.sock://var/run/docker.sock \
-		-v /${PWD}://src \
-		-w //src \
+		-v /var/run/docker.sock:/var/run/docker.sock \
+		-v /${PWD}:/src \
+		-w /src \
 		ubuntu:latest \
 			/bin/bash -x -c "\
 				apt update && \
@@ -211,9 +212,9 @@ ci-test-deb-package-install:
 .PHONY: ci-test-deb-package-install
 ci-test-rpm-package-install:
 	docker run \
-		-v //var/run/docker.sock://var/run/docker.sock \
-		-v /${PWD}://src \
-		-w //src \
+		-v /var/run/docker.sock:/var/run/docker.sock \
+		-v /${PWD}:/src \
+		-w /src \
 		fedora:latest \
 			/bin/bash -x -c "\
 				curl -L 'https://download.docker.com/linux/static/stable/x86_64/docker-${DOCKER_CLI_VERSION}.tgz' | \
@@ -242,7 +243,7 @@ ci-test-mac-run:
 # we're not attempting to test docker, just our ability to run on these systems. This avoids setting up docker in CI.
 .PHONY: ci-test-windows-run
 ci-test-windows-run:
-	./snapshot/dive_windows_amd64_v1/dive --source docker-archive .data/test-docker-image.tar  --ci --ci-config .data/.dive-ci
+	./snapshot/dive_windows_amd64_v1/dive.exe --source docker-archive .data/test-docker-image.tar  --ci --ci-config .data/.dive-ci
 
 
 ## Build-related targets #################################

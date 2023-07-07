@@ -6,9 +6,6 @@ release:
   # If set to true, will not auto-publish the release. This is done to allow us to review the changelog before publishing.
   draft: false
 
-env:
-  - DOCKER_CLI_VERSION=23.0.6
-
 builds:
   - binary: dive
     env:
