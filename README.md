@@ -131,6 +131,8 @@ sudo port install dive
 
 Or download the latest Darwin build from the [releases page](https://github.com/wagoodman/dive/releases/latest).
 
+*Note*: If using Docker Desktop for MacOS, dive requires the default Docker socket to be available at `/var/run/docker.sock`. You can enable it at `Settings > Advanced > Allow the default Docker socket to be used`.
+
 **Windows**
 
 Download the [latest release](https://github.com/wagoodman/dive/releases/latest).
