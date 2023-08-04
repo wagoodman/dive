@@ -315,7 +315,7 @@ clean-changelog:
 	rm -f $(CHANGELOG) VERSION
 
 
-## Halp! #################################
+## Help! #################################
 
 .PHONY: help
 help:
