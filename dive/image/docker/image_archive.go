@@ -258,8 +258,13 @@ func extractInner(reader *tar.Reader, p string) error {
 
 		switch header.Typeflag {
 		case tar.TypeReg:
-			if name == target {
-				out, err := os.Create(filepath.Base(target))
+			if strings.HasPrefix(name, target) {
+				err := os.MkdirAll(filepath.Dir(name), 0755)
+				if err != nil {
+					return err
+				}
+
+				out, err := os.Create(name)
 				if err != nil {
 					return err
 				}
@@ -268,13 +273,11 @@ func extractInner(reader *tar.Reader, p string) error {
 				if err != nil {
 					return err
 				}
-
-				return nil
 			}
 		default:
 			continue
 		}
 	}
 
-	return fmt.Errorf("failed to extract path %s (not found)", target)
+	return nil
 }
