@@ -93,6 +93,7 @@ func initConfig() {
 	viper.SetDefault("keybinding.toggle-modified-files", "ctrl+m")
 	viper.SetDefault("keybinding.toggle-unmodified-files", "ctrl+u")
 	viper.SetDefault("keybinding.toggle-wrap-tree", "ctrl+p")
+	viper.SetDefault("keybinding.extract-file", "ctrl+e")
 	viper.SetDefault("keybinding.page-up", "pgup")
 	viper.SetDefault("keybinding.page-down", "pgdn")
 

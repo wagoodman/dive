@@ -162,6 +162,11 @@ func (vm *FileTreeViewModel) CursorDown() bool {
 }
 
 // CursorLeft moves the cursor up until we reach the Parent Node or top of the tree
+func (vm *FileTreeViewModel) CurrentNode(filterRegex *regexp.Regexp) *filetree.FileNode {
+	return vm.getAbsPositionNode(filterRegex)
+}
+
+// CursorLeft moves the cursor up until we reach the Parent Node or top of the tree
 func (vm *FileTreeViewModel) CursorLeft(filterRegex *regexp.Regexp) error {
 	var visitor func(*filetree.FileNode) error
 	var evaluator func(*filetree.FileNode) bool

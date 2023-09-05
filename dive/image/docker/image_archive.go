@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"path"
+	"path/filepath"
 	"strings"
 
 	"github.com/wagoodman/dive/dive/filetree"
@@ -203,4 +204,77 @@ func (img *ImageArchive) ToImage() (*image.Image, error) {
 		Trees:  trees,
 		Layers: layers,
 	}, nil
+}
+
+func ExtractFromImage(tarFile io.ReadCloser, l string, p string) error {
+	tarReader := tar.NewReader(tarFile)
+
+	for {
+		header, err := tarReader.Next()
+
+		if err == io.EOF {
+			break
+		}
+
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+
+		name := header.Name
+
+		switch header.Typeflag {
+		case tar.TypeReg:
+			if name == l {
+				err = extractInner(tar.NewReader(tarReader), p)
+				if err != nil {
+					return err
+				}
+				return nil
+			}
+		default:
+			continue
+		}
+	}
+
+	return nil
+}
+
+func extractInner(reader *tar.Reader, p string) error {
+	target := strings.TrimPrefix(p, "/")
+	for {
+		header, err := reader.Next()
+
+		if err == io.EOF {
+			break
+		}
+
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+
+		name := header.Name
+
+		switch header.Typeflag {
+		case tar.TypeReg:
+			if name == target {
+				out, err := os.Create(filepath.Base(target))
+				if err != nil {
+					return err
+				}
+
+				_, err = io.Copy(out, reader)
+				if err != nil {
+					return err
+				}
+
+				return nil
+			}
+		default:
+			continue
+		}
+	}
+
+	return fmt.Errorf("failed to extract path %s (not found)", target)
 }

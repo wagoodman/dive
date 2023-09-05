@@ -42,6 +42,10 @@ func (r *engineResolver) Build(args []string) (*image.Image, error) {
 	return r.Fetch(id)
 }
 
+func (r *engineResolver) Extract(id string, l string, p string) error {
+	return fmt.Errorf("not implemented")
+}
+
 func (r *engineResolver) fetchArchive(id string) (io.ReadCloser, error) {
 	var err error
 	var dockerClient *client.Client
