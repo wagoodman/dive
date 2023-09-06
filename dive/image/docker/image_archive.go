@@ -242,6 +242,7 @@ func ExtractFromImage(tarFile io.ReadCloser, l string, p string) error {
 
 func extractInner(reader *tar.Reader, p string) error {
 	target := strings.TrimPrefix(p, "/")
+
 	for {
 		header, err := reader.Next()
 
