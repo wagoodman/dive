@@ -113,18 +113,12 @@ func (v *LayerDetails) IsVisible() bool {
 
 // CursorUp moves the cursor up in the details pane
 func (v *LayerDetails) CursorUp() error {
-	if err := CursorUp(v.gui, v.body); err != nil {
-		logrus.Debug("Couldn't move the cursor up")
-	}
-	return nil
+	return CursorUp(v.body, 1)
 }
 
 // CursorDown moves the cursor up in the details pane
 func (v *LayerDetails) CursorDown() error {
-	if err := CursorDown(v.gui, v.body); err != nil {
-		logrus.Debug("Couldn't move the cursor down")
-	}
-	return nil
+	return CursorDown(v.body, 1)
 }
 
 // KeyHelp indicates all the possible actions a user can take while the current pane is selected (currently does nothing).

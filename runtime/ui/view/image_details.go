@@ -136,32 +136,20 @@ func (v *ImageDetails) IsVisible() bool {
 
 func (v *ImageDetails) PageUp() error {
 	_, height := v.body.Size()
-	if err := CursorStep(v.gui, v.body, -height); err != nil {
-		logrus.Debugf("Couldn't move the cursor up by %d steps", height)
-	}
-	return nil
+	return CursorUp(v.body, uint(height))
 }
 
 func (v *ImageDetails) PageDown() error {
 	_, height := v.body.Size()
-	if err := CursorStep(v.gui, v.body, height); err != nil {
-		logrus.Debugf("Couldn't move the cursor down by %d steps", height)
-	}
-	return nil
+	return CursorDown(v.body, uint(height))
 }
 
 func (v *ImageDetails) CursorUp() error {
-	if err := CursorUp(v.gui, v.body); err != nil {
-		logrus.Debug("Couldn't move the cursor up")
-	}
-	return nil
+	return CursorUp(v.body, 1)
 }
 
 func (v *ImageDetails) CursorDown() error {
-	if err := CursorDown(v.gui, v.body); err != nil {
-		logrus.Debug("Couldn't move the cursor down")
-	}
-	return nil
+	return CursorDown(v.body, 1)
 }
 
 // KeyHelp indicates all the possible actions a user can take while the current pane is selected (currently does nothing).
