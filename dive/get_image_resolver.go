@@ -2,7 +2,6 @@ package dive
 
 import (
 	"fmt"
-	"net/url"
 	"strings"
 
 	"github.com/wagoodman/dive/dive/image"
@@ -41,14 +40,13 @@ func ParseImageSource(r string) ImageSource {
 }
 
 func DeriveImageSource(image string) (ImageSource, string) {
-	u, err := url.Parse(image)
-	if err != nil {
+	s := strings.SplitN(image, "://", 2)
+	if len(s) < 2 {
 		return SourceUnknown, ""
 	}
+	scheme, imageSource := s[0], s[1]
 
-	imageSource := strings.TrimPrefix(image, u.Scheme+"://")
-
-	switch u.Scheme {
+	switch scheme {
 	case SourceDockerEngine.String():
 		return SourceDockerEngine, imageSource
 	case SourcePodmanEngine.String():
