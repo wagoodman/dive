@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/docker/cli/cli/connhelper"
 	"github.com/docker/docker/client"
@@ -91,6 +92,10 @@ func (r *engineResolver) fetchArchive(id string) (io.ReadCloser, error) {
 		if err != nil {
 			return nil, err
 		}
+
+		// Small pause to allow the docker daemon to catch up
+		// otherwise you get an incomplete archive
+		time.Sleep(1 * time.Second)
 	}
 
 	readCloser, err := dockerClient.ImageSave(ctx, []string{id})

@@ -2,6 +2,7 @@ package docker
 
 import (
 	"archive/tar"
+	"bytes"
 	"compress/gzip"
 	"fmt"
 	"io"
@@ -76,6 +77,49 @@ func NewImageArchive(tarFile io.ReadCloser) (*ImageArchive, error) {
 
 				// add the layer to the image
 				img.layerMap[tree.Name] = tree
+			} else if strings.HasPrefix(name, "blobs/sha256/") {
+				fileBuffer, err := io.ReadAll(tarReader)
+				if err != nil {
+					return img, err
+				}
+
+				// if the first two bytes of a string are \x1F\x8B then it's tar.gz file
+				if strings.HasPrefix(string(fileBuffer), "\x1F\x8B") {
+					// Process tar.gz file
+					currentLayer++
+
+					// Add gzip reader
+					gz, err := gzip.NewReader(bytes.NewReader(fileBuffer))
+					if err != nil {
+						return img, err
+					}
+
+					// Add tar reader
+					layerReader := tar.NewReader(gz)
+
+					// Process layer
+					tree, err := processLayerTar(name, layerReader)
+					if err != nil {
+						return img, err
+					}
+
+					// add the layer to the image
+					img.layerMap[tree.Name] = tree
+				} else if strings.HasPrefix(string(fileBuffer), "\x75\x73\x74\x61\x72") {
+					// Process tar file
+					currentLayer++
+					layerReader := tar.NewReader(bytes.NewReader(fileBuffer))
+					tree, err := processLayerTar(name, layerReader)
+					if err != nil {
+						return img, err
+					}
+
+					// add the layer to the image
+					img.layerMap[tree.Name] = tree
+				} else {
+					// json file
+					jsonFiles[name] = fileBuffer
+				}
 			} else if strings.HasSuffix(name, ".json") || strings.HasPrefix(name, "sha256:") {
 				fileBuffer, err := io.ReadAll(tarReader)
 				if err != nil {
