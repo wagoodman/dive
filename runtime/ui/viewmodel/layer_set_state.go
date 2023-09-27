@@ -17,16 +17,16 @@ type LayerSetState struct {
 	CompareStartIndex int
 
 	constrainedRealEstate bool
-	viewStartIndex int
-	viewHeight     int
+	viewStartIndex        int
+	viewHeight            int
 
 	Buffer bytes.Buffer
 }
 
 func NewLayerSetState(layers []*image.Layer, compareMode LayerCompareMode) *LayerSetState {
 	return &LayerSetState{
-		Layers:      layers,
-		CompareMode: compareMode,
+		Layers:         layers,
+		CompareMode:    compareMode,
 		LayerIndex:     0,
 		viewStartIndex: 0,
 	}
@@ -53,7 +53,6 @@ func (vm *LayerSetState) ResetCursor() {
 	vm.LayerIndex = 0
 	vm.viewStartIndex = 0
 }
-
 
 // PageUp moves to previous page putting the cursor on top
 func (vm *LayerSetState) PageUp() bool {
@@ -86,7 +85,7 @@ func (vm *LayerSetState) PageDown() bool {
 		nextPageEndIndex = len(vm.Layers) - 1
 		vm.LayerIndex = nextPageEndIndex
 		nextPageStartIndex = nextPageEndIndex - vm.viewHeight + 1
-		if (nextPageStartIndex < 0) {
+		if nextPageStartIndex < 0 {
 			return false
 		}
 	}
@@ -96,7 +95,7 @@ func (vm *LayerSetState) PageDown() bool {
 	if vm.LayerIndex < nextPageStartIndex {
 		vm.LayerIndex = nextPageStartIndex
 	}
-	
+
 	return true
 }
 
@@ -114,11 +113,11 @@ func (vm *LayerSetState) CursorUp() bool {
 
 // doCursorDown performs the internal view's adjustments on cursor down. Note: this is independent of the gocui buffer.
 func (vm *LayerSetState) CursorDown() bool {
-	if vm.LayerIndex >= len(vm.Layers) - 1 {
+	if vm.LayerIndex >= len(vm.Layers)-1 {
 		return false
 	}
 	vm.LayerIndex++
-	if vm.LayerIndex >= vm.viewStartIndex + vm.viewHeight {
+	if vm.LayerIndex >= vm.viewStartIndex+vm.viewHeight {
 		vm.viewStartIndex++
 	}
 	return true
@@ -157,7 +156,7 @@ func (vm *LayerSetState) Render() error {
 		if idx < vm.viewStartIndex {
 			continue
 		}
-		if idx > vm.viewStartIndex + vm.viewHeight {
+		if idx > vm.viewStartIndex+vm.viewHeight {
 			break
 		}
 		var layerStr string
