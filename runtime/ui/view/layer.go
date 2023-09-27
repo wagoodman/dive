@@ -141,7 +141,12 @@ func (v *Layer) Setup(body *gocui.View, header *gocui.View) error {
 	}
 	v.helpKeys = helpKeys
 
-	return v.Render()
+	_, height := v.body.Size()
+	v.vm.Setup(0, height)
+	_ = v.Update()
+	_ = v.Render()
+
+	return nil
 }
 
 // height obtains the height of the current pane (taking into account the lost space due to the header).
@@ -161,62 +166,48 @@ func (v *Layer) IsVisible() bool {
 
 // PageDown moves to next page putting the cursor on top
 func (v *Layer) PageDown() error {
-	step := int(v.height()) + 1
-	targetLayerIndex := v.vm.LayerIndex + step
-
-	if targetLayerIndex > len(v.vm.Layers) {
-		step -= targetLayerIndex - (len(v.vm.Layers) - 1)
-	}
-
-	if step > 0 {
-		// err := CursorStep(v.gui, v.body, step)
-		err := error(nil)
-		if err == nil {
-			return v.SetCursor(v.vm.LayerIndex + step)
+	if v.vm.PageDown() {
+		err := v.notifyLayerChangeListeners()
+		if err != nil {
+			return err
 		}
+		return v.Render()
 	}
 	return nil
 }
 
 // PageUp moves to previous page putting the cursor on top
 func (v *Layer) PageUp() error {
-	step := int(v.height()) + 1
-	targetLayerIndex := v.vm.LayerIndex - step
-
-	if targetLayerIndex < 0 {
-		step += targetLayerIndex
-	}
-
-	if step > 0 {
-		// err := CursorStep(v.gui, v.body, -step)
-		err := error(nil)
-		if err == nil {
-			return v.SetCursor(v.vm.LayerIndex - step)
+	if v.vm.PageUp() {
+		err := v.notifyLayerChangeListeners()
+		if err != nil {
+			return err
 		}
+		return v.Render()
 	}
 	return nil
 }
 
 // CursorDown moves the cursor down in the layer pane (selecting a higher layer).
 func (v *Layer) CursorDown() error {
-	if v.vm.LayerIndex < len(v.vm.Layers)-1 {
-		// err := CursorDown(v.gui, v.body)
-		err := error(nil)
-		if err == nil {
-			return v.SetCursor(v.vm.LayerIndex + 1)
+	if v.vm.CursorDown() {
+		err := v.notifyLayerChangeListeners()
+		if err != nil {
+			return err
 		}
+		return v.Render()
 	}
 	return nil
 }
 
 // CursorUp moves the cursor up in the layer pane (selecting a lower layer).
 func (v *Layer) CursorUp() error {
-	if v.vm.LayerIndex > 0 {
-		// err := CursorUp(v.gui, v.body)
-		err := error(nil)
-		if err == nil {
-			return v.SetCursor(v.vm.LayerIndex - 1)
+	if v.vm.CursorUp() {
+		err := v.notifyLayerChangeListeners()
+		if err != nil {
+			return err
 		}
+		return v.Render()
 	}
 	return nil
 }
@@ -241,21 +232,6 @@ func (v *Layer) CurrentLayer() *image.Layer {
 func (v *Layer) setCompareMode(compareMode viewmodel.LayerCompareMode) error {
 	v.vm.CompareMode = compareMode
 	return v.notifyLayerChangeListeners()
-}
-
-// renderCompareBar returns the formatted string for the given layer.
-func (v *Layer) renderCompareBar(layerIdx int) string {
-	bottomTreeStart, bottomTreeStop, topTreeStart, topTreeStop := v.vm.GetCompareIndexes()
-	result := "  "
-
-	if layerIdx >= bottomTreeStart && layerIdx <= bottomTreeStop {
-		result = format.CompareBottom("  ")
-	}
-	if layerIdx >= topTreeStart && layerIdx <= topTreeStop {
-		result = format.CompareTop("  ")
-	}
-
-	return result
 }
 
 func (v *Layer) ConstrainLayout() {
@@ -293,7 +269,7 @@ func (v *Layer) Render() error {
 	logrus.Tracef("view.Render() %s", v.Name())
 
 	// indicate when selected
-	title := "Layers"
+	title := fmt.Sprintf("Layers (%d / %d)", v.vm.LayerIndex+1, len(v.vm.Layers))
 	isSelected := v.gui.CurrentView() == v.body
 
 	v.gui.Update(func(g *gocui.Gui) error {
@@ -319,28 +295,14 @@ func (v *Layer) Render() error {
 
 		// update contents
 		v.body.Clear()
-		for idx, layer := range v.vm.Layers {
-			var layerStr string
-			if v.constrainedRealEstate {
-				layerStr = fmt.Sprintf("%-4d", layer.Index)
-			} else {
-				layerStr = layer.String()
-			}
-
-			compareBar := v.renderCompareBar(idx)
-
-			if idx == v.vm.LayerIndex {
-				_, err = fmt.Fprintln(v.body, compareBar+" "+format.Selected(layerStr))
-			} else {
-				_, err = fmt.Fprintln(v.body, compareBar+" "+layerStr)
-			}
-
-			if err != nil {
-				logrus.Debug("unable to write to buffer: ", err)
-				return err
-			}
+		v.vm.Update(v.constrainedRealEstate)
+		err = v.vm.Render()
+		if err != nil {
+			return err
 		}
-		return nil
+		_, err = fmt.Fprint(v.body, v.vm.Buffer.String())
+
+		return err
 	})
 	return nil
 }
