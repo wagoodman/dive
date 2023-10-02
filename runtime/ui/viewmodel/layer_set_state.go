@@ -65,7 +65,7 @@ func (vm *LayerSetState) PageUp() bool {
 		vm.LayerIndex = 0
 		prevPageEndIndex = vm.viewHeight
 		if prevPageEndIndex >= len(vm.Layers) {
-			return false
+			return true
 		}
 	}
 
