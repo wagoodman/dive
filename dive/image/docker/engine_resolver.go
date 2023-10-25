@@ -20,6 +20,11 @@ func NewResolverFromEngine() *engineResolver {
 	return &engineResolver{}
 }
 
+// Name returns the name of the resolver to display to the user.
+func (r *engineResolver) Name() string {
+	return "docker-engine"
+}
+
 func (r *engineResolver) Fetch(id string) (*image.Image, error) {
 	reader, err := r.fetchArchive(id)
 	if err != nil {
