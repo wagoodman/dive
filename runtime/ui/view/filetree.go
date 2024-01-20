@@ -305,7 +305,18 @@ func (v *FileTree) toggleSortOrder() error {
 
 func (v *FileTree) toggleWrapTree() error {
 	v.view.Wrap = !v.view.Wrap
-	return nil
+
+	err := v.Update()
+	if err != nil {
+		return err
+	}
+	err = v.Render()
+	if err != nil {
+		return err
+	}
+
+	// we need to render the changes to the status pane as well (not just this contoller/view)
+	return v.notifyOnViewOptionChangeListeners()
 }
 
 func (v *FileTree) notifyOnViewOptionChangeListeners() error {
