@@ -220,6 +220,8 @@ Key Binding                                | Description
 <kbd>Ctrl + F</kbd>                        | Filter files
 <kbd>PageUp</kbd>                          | Scroll up a page
 <kbd>PageDown</kbd>                        | Scroll down a page
+<kbd>Up</kbd> or <kbd>K</kbd>              | Move up one line within a page
+<kbd>Down</kbd> or <kbd>J</kbd>            | Move down one line within a page
 <kbd>Ctrl + A</kbd>                        | Layer view: see aggregated image modifications
 <kbd>Ctrl + L</kbd>                        | Layer view: see current layer modifications
 <kbd>Space</kbd>                           | Filetree view: collapse/uncollapse a directory
@@ -252,6 +254,8 @@ keybinding:
   quit: ctrl+c
   toggle-view: tab
   filter-files: ctrl+f, ctrl+slash
+  up: up,k
+  down: down,j
 
   # Layer view specific bindings
   compare-all: ctrl+a
