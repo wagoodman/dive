@@ -97,6 +97,8 @@ func initConfig() {
 	viper.SetDefault("keybinding.page-down", "pgdn")
 	viper.SetDefault("keybinding.up", "up,k")
 	viper.SetDefault("keybinding.down", "down,j")
+	viper.SetDefault("keybinding.left", "left,h")
+	viper.SetDefault("keybinding.right", "right,l")
 
 	viper.SetDefault("diff.hide", "")
 

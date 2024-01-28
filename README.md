@@ -256,6 +256,8 @@ keybinding:
   filter-files: ctrl+f, ctrl+slash
   up: up,k
   down: down,j
+  left: left,h
+  right: right,l
 
   # Layer view specific bindings
   compare-all: ctrl+a

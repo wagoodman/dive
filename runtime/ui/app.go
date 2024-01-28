@@ -77,11 +77,11 @@ func newApp(gui *gocui.Gui, imageName string, analysis *image.AnalysisResult, ca
 				Display:    "Switch view",
 			},
 			{
-				Key:      gocui.KeyArrowRight,
+				ConfigKeys: []string{"keybinding.right"},
 				OnAction: controller.NextPane,
 			},
 			{
-				Key:      gocui.KeyArrowLeft,
+				ConfigKeys: []string{"keybinding.left"},
 				OnAction: controller.PrevPane,
 			},
 			{
