@@ -218,6 +218,7 @@ Key Binding                                | Description
 <kbd>Ctrl + C</kbd> or <kbd>Q</kbd>        | Exit
 <kbd>Tab</kbd>                             | Switch between the layer and filetree views
 <kbd>Ctrl + F</kbd>                        | Filter files
+<kbd>ESC</kbd>                             | Close filter files
 <kbd>PageUp</kbd> or <kbd>U</kbd>          | Scroll up a page
 <kbd>PageDown</kbd> or <kbd>D</kbd>        | Scroll down a page
 <kbd>Up</kbd> or <kbd>K</kbd>              | Move up one line within a page
@@ -254,6 +255,7 @@ keybinding:
   quit: ctrl+c
   toggle-view: tab
   filter-files: ctrl+f, ctrl+slash
+  close-filter-files: esc
   up: up,k
   down: down,j
   left: left,h

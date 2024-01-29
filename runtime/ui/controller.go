@@ -212,6 +212,15 @@ func (c *Controller) ToggleView() (err error) {
 	return c.UpdateAndRender()
 }
 
+func (c *Controller) CloseFilterView() error {
+	// filter view needs to be visible
+	if c.views.Filter.IsVisible() {
+		// toggle filter view
+		return c.ToggleFilterView()
+	}
+	return nil
+}
+
 func (c *Controller) ToggleFilterView() error {
 	// delete all user input from the tree view
 	err := c.views.Filter.ToggleVisible()

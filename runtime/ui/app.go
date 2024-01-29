@@ -90,6 +90,10 @@ func newApp(gui *gocui.Gui, imageName string, analysis *image.AnalysisResult, ca
 				IsSelected: controller.views.Filter.IsVisible,
 				Display:    "Filter",
 			},
+			{
+				ConfigKeys: []string{"keybinding.close-filter-files"},
+				OnAction:   controller.CloseFilterView,
+			},
 		}
 
 		globalHelpKeys, err = key.GenerateBindings(gui, "", infos)

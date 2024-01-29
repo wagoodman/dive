@@ -80,6 +80,7 @@ func initConfig() {
 	viper.SetDefault("keybinding.quit", "ctrl+c,q")
 	viper.SetDefault("keybinding.toggle-view", "tab")
 	viper.SetDefault("keybinding.filter-files", "ctrl+f, ctrl+slash")
+	viper.SetDefault("keybinding.close-filter-files", "esc")
 	// keybindings: layer view
 	viper.SetDefault("keybinding.compare-all", "ctrl+a")
 	viper.SetDefault("keybinding.compare-layer", "ctrl+l")
