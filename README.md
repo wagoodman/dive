@@ -143,7 +143,25 @@ Or download the latest Darwin build from the [releases page](https://github.com/
 
 **Windows**
 
-Download the [latest release](https://github.com/wagoodman/dive/releases/latest).
+If you use [Chocolatey](https://chocolatey.org)
+
+```powershell
+choco install dive
+```
+
+If you use [scoop](https://scoop.sh/)
+
+```powershell
+scoop install main/dive
+```
+
+If you use [winget](https://learn.microsoft.com/en-gb/windows/package-manager/):
+
+```powershell
+winget install --id wagoodman.dive
+```
+
+Or download the latest Windows build from the [releases page](https://github.com/wagoodman/dive/releases/latest).
 
 **Go tools**
 Requires Go version 1.10 or higher.
