@@ -13,6 +13,11 @@ func NewResolverFromArchive() *archiveResolver {
 	return &archiveResolver{}
 }
 
+// Name returns the name of the resolver to display to the user.
+func (r *archiveResolver) Name() string {
+	return "docker-archive"
+}
+
 func (r *archiveResolver) Fetch(path string) (*image.Image, error) {
 	reader, err := os.Open(path)
 	if err != nil {
