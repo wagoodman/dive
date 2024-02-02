@@ -159,13 +159,13 @@ func (v *FileTree) Setup(view, header *gocui.View) error {
 		},
 		{
 			ConfigKeys: []string{"keybinding.left"},
-			Modifier: gocui.ModNone,
-			OnAction: v.CursorLeft,
+			Modifier:   gocui.ModNone,
+			OnAction:   v.CursorLeft,
 		},
 		{
 			ConfigKeys: []string{"keybinding.right"},
-			Modifier: gocui.ModNone,
-			OnAction: v.CursorRight,
+			Modifier:   gocui.ModNone,
+			OnAction:   v.CursorRight,
 		},
 	}
 

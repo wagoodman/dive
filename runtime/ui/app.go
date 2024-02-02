@@ -78,11 +78,11 @@ func newApp(gui *gocui.Gui, imageName string, analysis *image.AnalysisResult, ca
 			},
 			{
 				ConfigKeys: []string{"keybinding.right"},
-				OnAction: controller.NextPane,
+				OnAction:   controller.NextPane,
 			},
 			{
 				ConfigKeys: []string{"keybinding.left"},
-				OnAction: controller.PrevPane,
+				OnAction:   controller.PrevPane,
 			},
 			{
 				ConfigKeys: []string{"keybinding.filter-files"},
