@@ -118,7 +118,7 @@ bootstrap: bootstrap-go bootstrap-tools ## Download and install all go dependenc
 #	CI=true $(BUILD_PATH) dive-example:latest --ci-config .data/.dive-ci
 #
 #dev:
-#	docker run -ti --rm -v $(PWD):/app -w /app -v dive-pkg:/go/pkg/ golang:1.13 bash
+#	docker run -ti --rm -v $(PWD):/app -w /app -v dive-pkg:/go/pkg/ golang:1.21 bash
 #
 #build: gofmt
 #	go build -o $(BUILD_PATH)
