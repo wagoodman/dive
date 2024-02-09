@@ -95,6 +95,8 @@ func initConfig() {
 	viper.SetDefault("keybinding.toggle-wrap-tree", "ctrl+p")
 	viper.SetDefault("keybinding.page-up", "pgup")
 	viper.SetDefault("keybinding.page-down", "pgdn")
+	viper.SetDefault("keybinding.up", "up,k")
+	viper.SetDefault("keybinding.down", "down,j")
 
 	viper.SetDefault("diff.hide", "")
 

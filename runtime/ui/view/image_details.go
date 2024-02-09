@@ -44,14 +44,14 @@ func (v *ImageDetails) Setup(body, header *gocui.View) error {
 
 	var infos = []key.BindingInfo{
 		{
-			Key:      gocui.KeyArrowDown,
-			Modifier: gocui.ModNone,
-			OnAction: v.CursorDown,
+			ConfigKeys: []string{"keybinding.down"},
+			Modifier:   gocui.ModNone,
+			OnAction:   v.CursorDown,
 		},
 		{
-			Key:      gocui.KeyArrowUp,
-			Modifier: gocui.ModNone,
-			OnAction: v.CursorUp,
+			ConfigKeys: []string{"keybinding.up"},
+			Modifier:   gocui.ModNone,
+			OnAction:   v.CursorUp,
 		},
 		{
 			ConfigKeys: []string{"keybinding.page-up"},
