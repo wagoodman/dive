@@ -116,14 +116,14 @@ func (v *Layer) Setup(body *gocui.View, header *gocui.View) error {
 			Display:    "Show aggregated changes",
 		},
 		{
-			Key:      gocui.KeyArrowDown,
-			Modifier: gocui.ModNone,
-			OnAction: v.CursorDown,
+			ConfigKeys: []string{"keybinding.down"},
+			Modifier:   gocui.ModNone,
+			OnAction:   v.CursorDown,
 		},
 		{
-			Key:      gocui.KeyArrowUp,
-			Modifier: gocui.ModNone,
-			OnAction: v.CursorUp,
+			ConfigKeys: []string{"keybinding.up"},
+			Modifier:   gocui.ModNone,
+			OnAction:   v.CursorUp,
 		},
 		{
 			ConfigKeys: []string{"keybinding.page-up"},
