@@ -101,27 +101,25 @@ func NewImageArchive(tarFile io.ReadCloser) (*ImageArchive, error) {
 					return img, err
 				}
 
-				// Only try reading a TAR if file is "big enough"
-				if n == cap(buffer) {
-					var unwrappedReader io.Reader
-					unwrappedReader, err = gzip.NewReader(io.MultiReader(bytes.NewReader(buffer[:n]), tarReader))
-					if err != nil {
-						// Not a gzipped entry
-						unwrappedReader = io.MultiReader(bytes.NewReader(buffer[:n]), tarReader)
-					}
-
-					// Try reading a TAR
-					layerReader := tar.NewReader(unwrappedReader)
-					tree, err := processLayerTar(name, layerReader)
-					if err == nil {
-						currentLayer++
-						// add the layer to the image
-						img.layerMap[tree.Name] = tree
-						continue
-					}
+				// Try reading a GZIP
+				var unwrappedReader io.Reader
+				unwrappedReader, err = gzip.NewReader(io.MultiReader(bytes.NewReader(buffer[:n]), tarReader))
+				if err != nil {
+					// Not a gzipped entry
+					unwrappedReader = io.MultiReader(bytes.NewReader(buffer[:n]), tarReader)
 				}
 
-				// Not a TAR (or smaller than our buffer), might be a JSON file
+				// Try reading a TAR
+				layerReader := tar.NewReader(unwrappedReader)
+				tree, err := processLayerTar(name, layerReader)
+				if err == nil {
+					currentLayer++
+					// add the layer to the image
+					img.layerMap[tree.Name] = tree
+					continue
+				}
+
+				// Not a TAR or GZIP, might be a JSON file
 				decoder := json.NewDecoder(bytes.NewReader(buffer[:n]))
 				token, err := decoder.Token()
 				if _, ok := token.(json.Delim); err == nil && ok {
