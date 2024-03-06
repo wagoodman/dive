@@ -33,7 +33,7 @@ type FileTree struct {
 	requestedWidthRatio float64
 }
 
-// newFileTreeView creates a new view object attached the the global [gocui] screen object.
+// newFileTreeView creates a new view object attached the global [gocui] screen object.
 func newFileTreeView(gui *gocui.Gui, tree *filetree.FileTree, refTrees []*filetree.FileTree, cache filetree.Comparer) (controller *FileTree, err error) {
 	controller = new(FileTree)
 	controller.listeners = make([]ViewOptionChangeListener, 0)

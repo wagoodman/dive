@@ -27,7 +27,7 @@ type Filter struct {
 	filterEditListeners []FilterEditListener
 }
 
-// newFilterView creates a new view object attached the the global [gocui] screen object.
+// newFilterView creates a new view object attached the global [gocui] screen object.
 func newFilterView(gui *gocui.Gui) (controller *Filter) {
 	controller = new(Filter)
 
