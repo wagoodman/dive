@@ -2,7 +2,9 @@ package docker
 
 import (
 	"archive/tar"
+	"bytes"
 	"compress/gzip"
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -46,6 +48,7 @@ func NewImageArchive(tarFile io.ReadCloser) (*ImageArchive, error) {
 
 		// some layer tars can be relative layer symlinks to other layer tars
 		if header.Typeflag == tar.TypeSymlink || header.Typeflag == tar.TypeReg {
+			// For the Docker image format, use file name conventions
 			if strings.HasSuffix(name, ".tar") {
 				currentLayer++
 				layerReader := tar.NewReader(tarReader)
@@ -82,6 +85,55 @@ func NewImageArchive(tarFile io.ReadCloser) (*ImageArchive, error) {
 					return img, err
 				}
 				jsonFiles[name] = fileBuffer
+			} else if strings.HasPrefix(name, "blobs/") {
+				// For the OCI-compatible image format (used since Docker 25), use mime sniffing
+				// but limit this to only the blobs/ (containing the config, and the layers)
+
+				// The idea here is that we try various formats in turn, and those tries should
+				// never consume more bytes than this buffer contains so we can start again.
+
+				// 512 bytes ought to be enough (as that's the size of a TAR entry header),
+				// but play it safe with 1024 bytes. This should also include very small layers
+				// (unless they've also been gzipped, but Docker does not appear to do it)
+				buffer := make([]byte, 1024)
+				n, err := io.ReadFull(tarReader, buffer)
+				if err != nil && err != io.ErrUnexpectedEOF {
+					return img, err
+				}
+
+				// Only try reading a TAR if file is "big enough"
+				if n == cap(buffer) {
+					var unwrappedReader io.Reader
+					unwrappedReader, err = gzip.NewReader(io.MultiReader(bytes.NewReader(buffer[:n]), tarReader))
+					if err != nil {
+						// Not a gzipped entry
+						unwrappedReader = io.MultiReader(bytes.NewReader(buffer[:n]), tarReader)
+					}
+
+					// Try reading a TAR
+					layerReader := tar.NewReader(unwrappedReader)
+					tree, err := processLayerTar(name, layerReader)
+					if err == nil {
+						currentLayer++
+						// add the layer to the image
+						img.layerMap[tree.Name] = tree
+						continue
+					}
+				}
+
+				// Not a TAR (or smaller than our buffer), might be a JSON file
+				decoder := json.NewDecoder(bytes.NewReader(buffer[:n]))
+				token, err := decoder.Token()
+				if _, ok := token.(json.Delim); err == nil && ok {
+					// Looks like a JSON object (or array)
+					// XXX: should we add a header.Size check too?
+					fileBuffer, err := io.ReadAll(io.MultiReader(bytes.NewReader(buffer[:n]), tarReader))
+					if err != nil {
+						return img, err
+					}
+					jsonFiles[name] = fileBuffer
+				}
+				// Ignore every other unknown file type
 			}
 		}
 	}
