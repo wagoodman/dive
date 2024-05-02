@@ -102,7 +102,7 @@ func (v *Layer) Setup(body *gocui.View, header *gocui.View) error {
 	v.header.Wrap = false
 	v.header.Frame = false
 
-	var infos = []key.BindingInfo{
+	infos := []key.BindingInfo{
 		{
 			ConfigKeys: []string{"keybinding.compare-layer"},
 			OnAction:   func() error { return v.setCompareMode(viewmodel.CompareSingleLayer) },
@@ -149,11 +149,6 @@ func (v *Layer) Setup(body *gocui.View, header *gocui.View) error {
 	return nil
 }
 
-// height obtains the height of the current pane (taking into account the lost space due to the header).
-func (v *Layer) height() uint {
-	_, height := v.body.Size()
-	return uint(height - 1)
-}
 
 func (v *Layer) CompareMode() viewmodel.LayerCompareMode {
 	return v.vm.CompareMode
@@ -295,7 +290,10 @@ func (v *Layer) Render() error {
 
 		// update contents
 		v.body.Clear()
-		v.vm.Update(v.constrainedRealEstate)
+		err = v.vm.Update(v.constrainedRealEstate)
+		if err != nil {
+			return err
+		}
 		err = v.vm.Render()
 		if err != nil {
 			return err

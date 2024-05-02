@@ -38,10 +38,6 @@ func (vm *LayerSetState) Setup(lowerBound, height int) {
 	vm.viewHeight = height
 }
 
-// height returns the current height and considers the header
-func (vm *LayerSetState) height() int {
-	return vm.viewHeight - 1
-}
 
 // IsVisible indicates if the layer view pane is currently initialized
 func (vm *LayerSetState) IsVisible() bool {
