@@ -8,7 +8,10 @@
 **A tool for exploring a docker image, layer contents, and discovering ways to shrink the size of your Docker/OCI image.**
 
 
-![Image](.data/demo.gif)
+<!--![Image](.data/demo.gif)-->
+
+[![dive overview video](https://img.youtube.com/vi/PTon4TsP9GA/maxresdefault.jpg)](https://www.youtube.com/watch?v=PTon4TsP9GA)
+
 
 To analyze a Docker image simply run dive with an image tag/id/digest:
 ```bash
