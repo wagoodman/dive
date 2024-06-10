@@ -72,7 +72,7 @@ func (cl *LayerDetailsCompoundLayout) layoutRow(g *gocui.Gui, minX, minY, maxX, 
 }
 
 func (cl *LayerDetailsCompoundLayout) Layout(g *gocui.Gui, minX, minY, maxX, maxY int) error {
-	logrus.Tracef("LayerDetailsCompountLayout.Layout(minX: %d, minY: %d, maxX: %d, maxY: %d) %s", minX, minY, maxX, maxY, cl.Name())
+	logrus.Tracef("LayerDetailsCompoundLayout.Layout(minX: %d, minY: %d, maxX: %d, maxY: %d) %s", minX, minY, maxX, maxY, cl.Name())
 
 	layouts := []view.IView{
 		cl.layer,

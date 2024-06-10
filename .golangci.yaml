@@ -67,7 +67,7 @@ linters-settings:
 #    - prealloc     # following this rule isn't consistently a good idea, as it sometimes forces unnecessary allocations that result in less idiomatic code
 #    - scopelint    # deprecated
 #    - testpackage
-#    - wsl          # this doens't have an auto-fixer yet and is pretty noisy (https://github.com/bombsimon/wsl/issues/90)
+#    - wsl          # this doesn't have an auto-fixer yet and is pretty noisy (https://github.com/bombsimon/wsl/issues/90)
 #    - varcheck     # deprecated (since v1.49.0) due to: The owner seems to have abandoned the linter.  Replaced by unused.
 #    - deadcode     # deprecated (since v1.49.0) due to: The owner seems to have abandoned the linter.  Replaced by unused.
 #    - structcheck  # deprecated (since v1.49.0) due to: The owner seems to have abandoned the linter.  Replaced by unused.

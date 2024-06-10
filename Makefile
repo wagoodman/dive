@@ -315,9 +315,8 @@ clean-changelog:
 	rm -f $(CHANGELOG) VERSION
 
 
-## Halp! #################################
+## Help! #################################
 
 .PHONY: help
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "$(BOLD)$(CYAN)%-25s$(RESET)%s\n", $$1, $$2}'
-

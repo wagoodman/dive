@@ -21,13 +21,13 @@ func TestMergeDiffTypes(t *testing.T) {
 	b := Unmodified
 	merged := a.merge(b)
 	if merged != Unmodified {
-		t.Errorf("Expected Unchaged (0) but got %v", merged)
+		t.Errorf("Expected Unchanged (0) but got %v", merged)
 	}
 	a = Modified
 	b = Unmodified
 	merged = a.merge(b)
 	if merged != Modified {
-		t.Errorf("Expected Unchaged (0) but got %v", merged)
+		t.Errorf("Expected Unchanged (0) but got %v", merged)
 	}
 }
 

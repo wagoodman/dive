@@ -335,7 +335,7 @@ func (v *FileTree) toggleAttributes() error {
 		return err
 	}
 
-	// we need to render the changes to the status pane as well (not just this contoller/view)
+	// we need to render the changes to the status pane as well (not just this controller/view)
 	return v.notifyOnViewOptionChangeListeners()
 }
 
@@ -352,7 +352,7 @@ func (v *FileTree) toggleShowDiffType(diffType filetree.DiffType) error {
 		return err
 	}
 
-	// we need to render the changes to the status pane as well (not just this contoller/view)
+	// we need to render the changes to the status pane as well (not just this controller/view)
 	return v.notifyOnViewOptionChangeListeners()
 }
 
