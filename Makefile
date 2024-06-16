@@ -6,13 +6,13 @@ SHELL = /bin/bash -o pipefail
 TEST_IMAGE = busybox:latest
 
 # Tool versions #################################
-GOLANG_CI_VERSION = v1.52.2
+GOLANG_CI_VERSION = v1.59.1
 GOBOUNCER_VERSION = v0.4.0
-GORELEASER_VERSION = v1.19.1
+GORELEASER_VERSION = v2.0.1
 GOSIMPORTS_VERSION = v0.3.8
-CHRONICLE_VERSION = v0.6.0
-GLOW_VERSION = v1.5.0
-DOCKER_CLI_VERSION = 23.0.6
+CHRONICLE_VERSION = v0.8.0
+GLOW_VERSION = v1.5.1
+DOCKER_CLI_VERSION = 26.1.4
 
 # Command templates #################################
 LINT_CMD = $(TEMP_DIR)/golangci-lint run --tests=false --timeout=2m --config .golangci.yaml
