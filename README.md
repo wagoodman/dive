@@ -164,6 +164,13 @@ On non-NixOS (Linux, Mac)
 nix-env -iA nixpkgs.dive
 ```
 
+**X-CMD**
+
+[x-cmd](https://www.x-cmd.com/) is a **toolbox for Posix Shell**, offering a lightweight package manager built using shell and awk.
+```sh
+x env use dive
+```
+
 **Docker**
 ```bash
 docker pull wagoodman/dive
