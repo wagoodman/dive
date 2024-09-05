@@ -109,6 +109,8 @@ sudo snap install dive
 sudo snap connect dive:docker-executables docker:docker-executables
 sudo snap connect dive:docker-daemon docker:docker-daemon
 ```
+>[!Caution]
+>Snap method is not recommended for those have their docker installed through apt-get. Since it might ruin your existing docker deamon.
 
 **RHEL/Centos**
 ```bash
