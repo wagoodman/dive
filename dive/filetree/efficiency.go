@@ -12,6 +12,15 @@ type EfficiencyData struct {
 	Nodes             []*FileNode
 	CumulativeSize    int64
 	minDiscoveredSize int64
+	Layers            []int
+}
+
+func (ed EfficiencyData) FirstLayer() int {
+	return ed.Layers[0]
+}
+
+func (ed EfficiencyData) SubsequentLayers() []int {
+	return ed.Layers[1:]
 }
 
 // EfficiencySlice represents an ordered set of EfficiencyData data structures.
@@ -42,14 +51,21 @@ func Efficiency(trees []*FileTree) (float64, EfficiencySlice) {
 
 	visitor := func(node *FileNode) error {
 		path := node.Path()
+		first := false
 		if _, ok := efficiencyMap[path]; !ok {
 			efficiencyMap[path] = &EfficiencyData{
 				Path:              path,
 				Nodes:             make([]*FileNode, 0),
 				minDiscoveredSize: -1,
+				Layers:            []int{currentTree},
 			}
+			first = true
 		}
 		data := efficiencyMap[path]
+
+		if !first {
+			data.Layers = append(data.Layers, currentTree)
+		}
 
 		// this node may have had children that were deleted, however, we won't explicitly list out every child, only
 		// the top-most parent with the cumulative size. These operations will need to be done on the full (stacked)
