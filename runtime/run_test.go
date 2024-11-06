@@ -20,6 +20,10 @@ func (r *defaultResolver) Name() string {
 	return "default-resolver"
 }
 
+func (r *defaultResolver) Extract(id string, l string, p string) error {
+	return nil
+}
+
 func (r *defaultResolver) Fetch(id string) (*image.Image, error) {
 	archive, err := docker.TestLoadArchive("../.data/test-docker-image.tar")
 	if err != nil {
@@ -38,6 +42,10 @@ func (r *failedBuildResolver) Name() string {
 	return "failed-build-resolver"
 }
 
+func (r *failedBuildResolver) Extract(id string, l string, p string) error {
+	return fmt.Errorf("some extract failure")
+}
+
 func (r *failedBuildResolver) Fetch(id string) (*image.Image, error) {
 	archive, err := docker.TestLoadArchive("../.data/test-docker-image.tar")
 	if err != nil {
@@ -54,6 +62,10 @@ type failedFetchResolver struct{}
 
 func (r *failedFetchResolver) Name() string {
 	return "failed-fetch-resolver"
+}
+
+func (r *failedFetchResolver) Extract(id string, l string, p string) error {
+	return fmt.Errorf("some extract failure")
 }
 
 func (r *failedFetchResolver) Fetch(id string) (*image.Image, error) {

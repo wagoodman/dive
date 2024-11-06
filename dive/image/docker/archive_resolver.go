@@ -35,3 +35,7 @@ func (r *archiveResolver) Fetch(path string) (*image.Image, error) {
 func (r *archiveResolver) Build(args []string) (*image.Image, error) {
 	return nil, fmt.Errorf("build option not supported for docker archive resolver")
 }
+
+func (r *archiveResolver) Extract(id string, l string, p string) error {
+	return fmt.Errorf("not implemented")
+}

@@ -41,6 +41,21 @@ func (r *resolver) Fetch(id string) (*image.Image, error) {
 	return nil, fmt.Errorf("unable to resolve image '%s': %+v", id, err)
 }
 
+func (r *resolver) Extract(id string, l string, p string) error {
+	// todo: add podman fetch attempt via varlink first...
+
+	err, reader := streamPodmanCmd("image", "save", id)
+	if err != nil {
+		return err
+	}
+
+	if err := docker.ExtractFromImage(io.NopCloser(reader), l, p); err == nil {
+		return nil
+	}
+
+	return fmt.Errorf("unable to extract from image '%s': %+v", id, err)
+}
+
 func (r *resolver) resolveFromDockerArchive(id string) (*image.Image, error) {
 	err, reader := streamPodmanCmd("image", "save", id)
 	if err != nil {

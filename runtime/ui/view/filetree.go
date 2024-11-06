@@ -17,6 +17,8 @@ import (
 
 type ViewOptionChangeListener func() error
 
+type ViewExtractListener func(string) error
+
 // FileTree holds the UI objects and data models for populating the right pane. Specifically the pane that
 // shows selected layer or aggregate file ASCII tree.
 type FileTree struct {
@@ -29,6 +31,7 @@ type FileTree struct {
 
 	filterRegex         *regexp.Regexp
 	listeners           []ViewOptionChangeListener
+	extractListeners    []ViewExtractListener
 	helpKeys            []*key.Binding
 	requestedWidthRatio float64
 }
@@ -58,6 +61,10 @@ func newFileTreeView(gui *gocui.Gui, tree *filetree.FileTree, refTrees []*filetr
 
 func (v *FileTree) AddViewOptionChangeListener(listener ...ViewOptionChangeListener) {
 	v.listeners = append(v.listeners, listener...)
+}
+
+func (v *FileTree) AddViewExtractListener(listener ...ViewExtractListener) {
+	v.extractListeners = append(v.extractListeners, listener...)
 }
 
 func (v *FileTree) SetTitle(title string) {
@@ -102,6 +109,11 @@ func (v *FileTree) Setup(view, header *gocui.View) error {
 			ConfigKeys: []string{"keybinding.toggle-sort-order"},
 			OnAction:   v.toggleSortOrder,
 			Display:    "Toggle sort order",
+		},
+		{
+			ConfigKeys: []string{"keybinding.extract-file"},
+			OnAction:   v.extractFile,
+			Display:    "Extract File",
 		},
 		{
 			ConfigKeys: []string{"keybinding.toggle-added-files"},
@@ -301,6 +313,18 @@ func (v *FileTree) toggleSortOrder() error {
 	v.resetCursor()
 	_ = v.Update()
 	return v.Render()
+}
+
+func (v *FileTree) extractFile() error {
+	node := v.vm.CurrentNode(v.filterRegex)
+	for _, listener := range v.extractListeners {
+		err := listener(node.Path())
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (v *FileTree) toggleWrapTree() error {
