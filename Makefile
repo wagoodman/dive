@@ -282,7 +282,7 @@ $(CHANGELOG):
 release:  ## Cut a new release
 	@.github/scripts/trigger-release.sh
 
-.PHONY: release
+.PHONY: ci-release
 ci-release: ci-check clean-dist $(CHANGELOG)
 	$(call title,Publishing release artifacts)
 
