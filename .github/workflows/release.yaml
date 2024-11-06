@@ -11,7 +11,7 @@ jobs:
     environment: release
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Check if tag already exists
         # note: this will fail if the tag already exists
@@ -84,7 +84,7 @@ jobs:
       contents: write
     steps:
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 

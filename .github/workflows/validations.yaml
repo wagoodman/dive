@@ -13,7 +13,7 @@ jobs:
     name: "Static analysis"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Bootstrap environment
         uses: ./.github/actions/bootstrap
@@ -35,7 +35,7 @@ jobs:
     runs-on: ${{ matrix.platform }}
     steps:
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Bootstrap environment
         uses: ./.github/actions/bootstrap
@@ -48,7 +48,7 @@ jobs:
     name: "Build snapshot artifacts"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Bootstrap environment
         uses: ./.github/actions/bootstrap
