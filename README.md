@@ -167,7 +167,7 @@ Or download the latest Windows build from the [releases page](https://github.com
 Requires Go version 1.10 or higher.
 
 ```bash
-go get github.com/wagoodman/dive
+go install github.com/wagoodman/dive@latest
 ```
 *Note*: installing in this way you will not see a proper version when running `dive -v`.
 
