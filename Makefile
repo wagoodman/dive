@@ -6,19 +6,19 @@ SHELL = /bin/bash -o pipefail
 TEST_IMAGE = busybox:latest
 
 # Tool versions #################################
-GOLANG_CI_VERSION = v1.52.2
+GOLANG_CI_VERSION = v1.61.0
 GOBOUNCER_VERSION = v0.4.0
-GORELEASER_VERSION = v1.19.1
+GORELEASER_VERSION = v1.26.2
 GOSIMPORTS_VERSION = v0.3.8
-CHRONICLE_VERSION = v0.6.0
-GLOW_VERSION = v1.5.0
+CHRONICLE_VERSION = v0.8.0
+GLOW_VERSION = v1.5.1
 DOCKER_CLI_VERSION = 23.0.6
 
 # Command templates #################################
 LINT_CMD = $(TEMP_DIR)/golangci-lint run --tests=false --timeout=2m --config .golangci.yaml
 GOIMPORTS_CMD = $(TEMP_DIR)/gosimports -local github.com/wagoodman
 RELEASE_CMD = DOCKER_CLI_VERSION=$(DOCKER_CLI_VERSION) $(TEMP_DIR)/goreleaser release --clean
-SNAPSHOT_CMD = $(RELEASE_CMD) --skip-publish --snapshot --skip-sign
+SNAPSHOT_CMD = $(RELEASE_CMD) --skip=publish --skip=sign --snapshot
 CHRONICLE_CMD = $(TEMP_DIR)/chronicle
 GLOW_CMD = $(TEMP_DIR)/glow
 

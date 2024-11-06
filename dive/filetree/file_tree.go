@@ -269,7 +269,7 @@ func (tree *FileTree) AddPath(filepath string, data FileInfo) (*FileNode, []*Fil
 
 			if node == nil {
 				// the child could not be added
-				return node, addedNodes, fmt.Errorf(fmt.Sprintf("could not add child node: '%s' (path:'%s')", name, filepath))
+				return node, addedNodes, fmt.Errorf("could not add child node: '%s' (path:'%s')", name, filepath)
 			}
 		}
 

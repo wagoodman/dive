@@ -79,7 +79,7 @@ func (v *LayerDetails) Render() error {
 		var lines = make([]string, 0)
 
 		tags := "(none)"
-		if v.CurrentLayer.Names != nil && len(v.CurrentLayer.Names) > 0 {
+		if len(v.CurrentLayer.Names) > 0 {
 			tags = strings.Join(v.CurrentLayer.Names, ", ")
 		}
 		lines = append(lines, []string{
