@@ -19,6 +19,7 @@ builds:
     goarch:
       - amd64
       - arm64
+      - ppc64le
     ldflags: -s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.buildTime={{.Date}}`.
 
 brews:
