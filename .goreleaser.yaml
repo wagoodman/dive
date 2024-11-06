@@ -21,10 +21,10 @@ builds:
 
 brews:
   - repository:
-      owner: wagoodman
+      owner: joschi
       name: homebrew-dive
       token: "{{.Env.TAP_GITHUB_TOKEN}}"
-    homepage: "https://github.com/wagoodman/dive/"
+    homepage: "https://github.com/joschi/dive/"
     description: "A tool for exploring layers in a docker image"
 
 archives:
@@ -35,23 +35,23 @@ archives:
 
 nfpms:
   - license: MIT
-    maintainer: Alex Goodman
-    homepage: https://github.com/wagoodman/dive/
+    maintainer: Jochen Schalanda
+    homepage: https://github.com/joschi/dive/
     description: "A tool for exploring layers in a docker image"
     formats:
       - rpm
       - deb
 
 dockers:
-  -
-    ids:
+  - ids:
       - dive
     dockerfile: Dockerfile
-    # todo: on 1.0 remove 'v' prefix
     image_templates:
-      - "wagoodman/dive:latest"
-      - "wagoodman/dive:{{ .Tag }}"
-      - "wagoodman/dive:v{{ .Major }}"
-      - "wagoodman/dive:v{{ .Major }}.{{ .Minor }}"
+      - '{{ envOrDefault "REGISTRY" "docker.io" }}/joschi/dive:{{ .Version }}'
     build_flag_templates:
       - "--build-arg=DOCKER_CLI_VERSION={{.Env.DOCKER_CLI_VERSION}}"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.title={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+      - "--label=org.opencontainers.image.source={{.GitURL}}"
