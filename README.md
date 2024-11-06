@@ -110,6 +110,12 @@ sudo snap connect dive:docker-executables docker:docker-executables
 sudo snap connect dive:docker-daemon docker:docker-daemon
 ```
 
+> [!CAUTION]
+> The Snap method is not recommended if you installed Docker via `apt-get`, since it might break your existing Docker daemon.
+> 
+> See also: https://github.com/wagoodman/dive/issues/546
+
+
 **RHEL/Centos**
 ```bash
 DIVE_VERSION=$(curl -sL "https://api.github.com/repos/wagoodman/dive/releases/latest" | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/')
