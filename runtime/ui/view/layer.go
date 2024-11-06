@@ -221,6 +221,14 @@ func (v *Layer) CursorUp() error {
 	return nil
 }
 
+// SetOrigin updates the origin of the layer view pane.
+func (v *Layer) SetOrigin(x, y int) error {
+	if err := v.body.SetOrigin(x, y); err != nil {
+		return err
+	}
+	return nil
+}
+
 // SetCursor resets the cursor and orients the file tree view based on the given layer index.
 func (v *Layer) SetCursor(layer int) error {
 	v.vm.LayerIndex = layer
@@ -340,6 +348,15 @@ func (v *Layer) Render() error {
 				return err
 			}
 		}
+
+		// Adjust origin, if necessary
+		maxBodyDisplayHeight := int(v.height())
+		if v.vm.LayerIndex > maxBodyDisplayHeight {
+			if err := v.SetOrigin(0, v.vm.LayerIndex-maxBodyDisplayHeight); err != nil {
+				return err
+			}
+		}
+
 		return nil
 	})
 	return nil
