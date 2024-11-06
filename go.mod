@@ -6,7 +6,7 @@ require (
 	github.com/awesome-gocui/gocui v1.1.0
 	github.com/awesome-gocui/keybinding v1.0.1-0.20211011072933-86029037a63f
 	github.com/cespare/xxhash/v2 v2.3.0
-	github.com/docker/cli v0.0.0-20190906153656-016a3232168d
+	github.com/docker/cli v27.3.1+incompatible
 	github.com/docker/docker v27.3.1+incompatible
 	github.com/dustin/go-humanize v1.0.1
 	github.com/fatih/color v1.18.0
@@ -72,6 +72,5 @@ require (
 	golang.org/x/text v0.19.0 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	gotest.tools v2.2.0+incompatible // indirect
 	gotest.tools/v3 v3.5.0 // indirect
 )
