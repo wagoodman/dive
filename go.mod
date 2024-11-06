@@ -7,7 +7,7 @@ require (
 	github.com/awesome-gocui/keybinding v1.0.1-0.20211011072933-86029037a63f
 	github.com/cespare/xxhash/v2 v2.3.0
 	github.com/docker/cli v0.0.0-20190906153656-016a3232168d
-	github.com/docker/docker v24.0.7+incompatible
+	github.com/docker/docker v24.0.9+incompatible
 	github.com/dustin/go-humanize v1.0.1
 	github.com/fatih/color v1.18.0
 	github.com/google/uuid v1.6.0
