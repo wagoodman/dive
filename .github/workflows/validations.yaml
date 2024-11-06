@@ -87,6 +87,12 @@ jobs:
   Acceptance-Linux:
     name: "Acceptance tests (Linux)"
     needs: [ Build-Snapshot-Artifacts ]
+    strategy:
+      matrix:
+        make-target:
+          - "linux-run"
+          - "deb-package-install"
+          - "rpm-package-install"
     runs-on: ubuntu-latest
     steps:
 
@@ -98,14 +104,8 @@ jobs:
           path: snapshot
           key: snapshot-build-${{ github.run_id }}
 
-      - name: Test linux run
-        run: make ci-test-linux-run
-
-      - name: Test DEB package installation
-        run: make ci-test-deb-package-install
-
-      - name: Test RPM package installation
-        run: make ci-test-rpm-package-install
+      - name: Test linux ${{ matrix.make-target }}
+        run: make ci-test-${{ matrix.make-target }}
 
 
   Acceptance-Mac:
