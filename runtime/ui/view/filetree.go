@@ -160,24 +160,24 @@ func (v *FileTree) Setup(view, header *gocui.View) error {
 			OnAction:   v.PageDown,
 		},
 		{
-			Key:      gocui.KeyArrowDown,
-			Modifier: gocui.ModNone,
-			OnAction: v.CursorDown,
+			ConfigKeys: []string{"keybinding.down"},
+			Modifier:   gocui.ModNone,
+			OnAction:   v.CursorDown,
 		},
 		{
-			Key:      gocui.KeyArrowUp,
-			Modifier: gocui.ModNone,
-			OnAction: v.CursorUp,
+			ConfigKeys: []string{"keybinding.up"},
+			Modifier:   gocui.ModNone,
+			OnAction:   v.CursorUp,
 		},
 		{
-			Key:      gocui.KeyArrowLeft,
-			Modifier: gocui.ModNone,
-			OnAction: v.CursorLeft,
+			ConfigKeys: []string{"keybinding.left"},
+			Modifier:   gocui.ModNone,
+			OnAction:   v.CursorLeft,
 		},
 		{
-			Key:      gocui.KeyArrowRight,
-			Modifier: gocui.ModNone,
-			OnAction: v.CursorRight,
+			ConfigKeys: []string{"keybinding.right"},
+			Modifier:   gocui.ModNone,
+			OnAction:   v.CursorRight,
 		},
 	}
 

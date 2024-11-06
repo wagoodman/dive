@@ -77,18 +77,22 @@ func newApp(gui *gocui.Gui, imageName string, resolver image.Resolver, analysis 
 				Display:    "Switch view",
 			},
 			{
-				Key:      gocui.KeyArrowRight,
-				OnAction: controller.NextPane,
+				ConfigKeys: []string{"keybinding.right"},
+				OnAction:   controller.NextPane,
 			},
 			{
-				Key:      gocui.KeyArrowLeft,
-				OnAction: controller.PrevPane,
+				ConfigKeys: []string{"keybinding.left"},
+				OnAction:   controller.PrevPane,
 			},
 			{
 				ConfigKeys: []string{"keybinding.filter-files"},
 				OnAction:   controller.ToggleFilterView,
 				IsSelected: controller.views.Filter.IsVisible,
 				Display:    "Filter",
+			},
+			{
+				ConfigKeys: []string{"keybinding.close-filter-files"},
+				OnAction:   controller.CloseFilterView,
 			},
 		}
 

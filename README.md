@@ -252,8 +252,11 @@ Key Binding                                | Description
 <kbd>Ctrl + C</kbd> or <kbd>Q</kbd>        | Exit
 <kbd>Tab</kbd>                             | Switch between the layer and filetree views
 <kbd>Ctrl + F</kbd>                        | Filter files
-<kbd>PageUp</kbd>                          | Scroll up a page
-<kbd>PageDown</kbd>                        | Scroll down a page
+<kbd>ESC</kbd>                             | Close filter files
+<kbd>PageUp</kbd> or <kbd>U</kbd>          | Scroll up a page
+<kbd>PageDown</kbd> or <kbd>D</kbd>        | Scroll down a page
+<kbd>Up</kbd> or <kbd>K</kbd>              | Move up one line within a page
+<kbd>Down</kbd> or <kbd>J</kbd>            | Move down one line within a page
 <kbd>Ctrl + A</kbd>                        | Layer view: see aggregated image modifications
 <kbd>Ctrl + L</kbd>                        | Layer view: see current layer modifications
 <kbd>Space</kbd>                           | Filetree view: collapse/uncollapse a directory
@@ -263,8 +266,8 @@ Key Binding                                | Description
 <kbd>Ctrl + M</kbd>                        | Filetree view: show/hide modified files
 <kbd>Ctrl + U</kbd>                        | Filetree view: show/hide unmodified files
 <kbd>Ctrl + B</kbd>                        | Filetree view: show/hide file attributes
-<kbd>PageUp</kbd>                          | Filetree view: scroll up a page
-<kbd>PageDown</kbd>                        | Filetree view: scroll down a page
+<kbd>PageUp</kbd> or <kbd>U</kbd>          | Filetree view: scroll up a page
+<kbd>PageDown</kbd> or <kbd>D</kbd>        | Filetree view: scroll down a page
 
 ## UI Configuration
 
@@ -286,6 +289,11 @@ keybinding:
   quit: ctrl+c
   toggle-view: tab
   filter-files: ctrl+f, ctrl+slash
+  close-filter-files: esc
+  up: up,k
+  down: down,j
+  left: left,h
+  right: right,l
 
   # Layer view specific bindings
   compare-all: ctrl+a
@@ -299,8 +307,8 @@ keybinding:
   toggle-modified-files: ctrl+m
   toggle-unmodified-files: ctrl+u
   toggle-filetree-attributes: ctrl+b
-  page-up: pgup
-  page-down: pgdn
+  page-up: pgup,u
+  page-down: pgdn,d
 
 diff:
   # You can change the default files shown in the filetree (right pane). All diff types are shown by default.
