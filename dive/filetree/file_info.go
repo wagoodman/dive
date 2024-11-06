@@ -5,7 +5,7 @@ import (
 	"io"
 	"os"
 
-	"github.com/cespare/xxhash"
+	"github.com/cespare/xxhash/v2"
 	"github.com/sirupsen/logrus"
 )
 
