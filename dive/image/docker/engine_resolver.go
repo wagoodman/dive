@@ -20,6 +20,11 @@ func NewResolverFromEngine() *engineResolver {
 	return &engineResolver{}
 }
 
+// Name returns the name of the resolver to display to the user.
+func (r *engineResolver) Name() string {
+	return "docker-engine"
+}
+
 func (r *engineResolver) Fetch(id string) (*image.Image, error) {
 	reader, err := r.fetchArchive(id)
 	if err != nil {
@@ -85,10 +90,15 @@ func (r *engineResolver) fetchArchive(id string) (io.ReadCloser, error) {
 	}
 	_, _, err = dockerClient.ImageInspectWithRaw(ctx, id)
 	if err != nil {
-		// don't use the API, the CLI has more informative output
-		fmt.Println("Handler not available locally. Trying to pull '" + id + "'...")
-		err = runDockerCmd("pull", id)
-		if err != nil {
+		// check if the error is due to the image not existing locally
+		if client.IsErrNotFound(err) {
+			fmt.Println("The image is not available locally. Trying to pull '" + id + "'...")
+			err = runDockerCmd("pull", id)
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			// Some other error occurred, return it
 			return nil, err
 		}
 	}

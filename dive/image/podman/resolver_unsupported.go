@@ -15,6 +15,10 @@ func NewResolverFromEngine() *resolver {
 	return &resolver{}
 }
 
+// Name returns the name of the resolver to display to the user.
+func (r *resolver) Name() string {
+	return "podman"
+}
 func (r *resolver) Build(args []string) (*image.Image, error) {
 	return nil, fmt.Errorf("unsupported platform")
 }
