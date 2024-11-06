@@ -8,7 +8,7 @@ TEST_IMAGE = busybox:latest
 # Tool versions #################################
 GOLANG_CI_VERSION = v1.61.0
 GOBOUNCER_VERSION = v0.4.0
-GORELEASER_VERSION = v1.26.2
+GORELEASER_VERSION = v2.4.4
 GOSIMPORTS_VERSION = v0.3.8
 CHRONICLE_VERSION = v0.8.0
 GLOW_VERSION = v1.5.1
@@ -86,7 +86,7 @@ bootstrap-tools: $(TEMP_DIR)
 	curl -sSfL https://raw.githubusercontent.com/anchore/chronicle/main/install.sh | sh -s -- -b $(TEMP_DIR)/ $(CHRONICLE_VERSION)
 	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(TEMP_DIR)/ $(GOLANG_CI_VERSION)
 	curl -sSfL https://raw.githubusercontent.com/wagoodman/go-bouncer/master/bouncer.sh | sh -s -- -b $(TEMP_DIR)/ $(GOBOUNCER_VERSION)
-	GOBIN="$(realpath $(TEMP_DIR))" go install github.com/goreleaser/goreleaser@$(GORELEASER_VERSION)
+	GOBIN="$(realpath $(TEMP_DIR))" go install github.com/goreleaser/goreleaser/v2@$(GORELEASER_VERSION)
 	GOBIN="$(realpath $(TEMP_DIR))" go install github.com/rinchsan/gosimports/cmd/gosimports@$(GOSIMPORTS_VERSION)
 	GOBIN="$(realpath $(TEMP_DIR))" go install github.com/charmbracelet/glow@$(GLOW_VERSION)
 
