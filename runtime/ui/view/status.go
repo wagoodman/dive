@@ -25,7 +25,7 @@ type Status struct {
 	helpKeys []*key.Binding
 }
 
-// newStatusView creates a new view object attached the the global [gocui] screen object.
+// newStatusView creates a new view object attached the global [gocui] screen object.
 func newStatusView(gui *gocui.Gui) (controller *Status) {
 	controller = new(Status)
 

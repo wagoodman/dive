@@ -28,7 +28,7 @@ type Layer struct {
 	helpKeys []*key.Binding
 }
 
-// newLayerView creates a new view object attached the the global [gocui] screen object.
+// newLayerView creates a new view object attached the global [gocui] screen object.
 func newLayerView(gui *gocui.Gui, layers []*image.Layer) (controller *Layer, err error) {
 	controller = new(Layer)
 

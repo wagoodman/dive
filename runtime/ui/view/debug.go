@@ -20,7 +20,7 @@ type Debug struct {
 	selectedView Helper
 }
 
-// newDebugView creates a new view object attached the the global [gocui] screen object.
+// newDebugView creates a new view object attached the global [gocui] screen object.
 func newDebugView(gui *gocui.Gui) (controller *Debug) {
 	controller = new(Debug)
 
