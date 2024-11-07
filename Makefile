@@ -16,7 +16,7 @@ DOCKER_CLI_VERSION = 27.3.1
 
 # Command templates #################################
 LINT_CMD = $(TEMP_DIR)/golangci-lint run --tests=false --timeout=2m --config .golangci.yaml
-GOIMPORTS_CMD = $(TEMP_DIR)/gosimports -local github.com/wagoodman
+GOIMPORTS_CMD = $(TEMP_DIR)/gosimports -local github.com/joschi
 RELEASE_CMD = DOCKER_CLI_VERSION=$(DOCKER_CLI_VERSION) $(TEMP_DIR)/goreleaser release --clean
 SNAPSHOT_CMD = $(RELEASE_CMD) --skip=publish --skip=sign --snapshot
 CHRONICLE_CMD = $(TEMP_DIR)/chronicle
@@ -186,7 +186,7 @@ ci-test-docker-image:
 		--rm \
 		-t \
 		-v /var/run/docker.sock:/var/run/docker.sock \
-		'${PRODUCTION_REGISTRY}/wagoodman/dive:latest' \
+		'${PRODUCTION_REGISTRY}/joschi/dive:latest' \
 			'${TEST_IMAGE}' \
 			--ci
 

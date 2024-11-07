@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/wagoodman/dive/dive/image"
-	"github.com/wagoodman/dive/dive/image/docker"
+	"github.com/joschi/dive/dive/image"
+	"github.com/joschi/dive/dive/image/docker"
 )
 
 type resolver struct{}

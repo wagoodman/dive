@@ -1,11 +1,11 @@
 # dive
-[![GitHub release](https://img.shields.io/github/release/wagoodman/dive.svg)](https://github.com/wagoodman/dive/releases/latest)
-[![Validations](https://github.com/wagoodman/dive/actions/workflows/validations.yaml/badge.svg)](https://github.com/wagoodman/dive/actions/workflows/validations.yaml)
-[![Go Report Card](https://goreportcard.com/badge/github.com/wagoodman/dive)](https://goreportcard.com/report/github.com/wagoodman/dive)
-[![License: MIT](https://img.shields.io/badge/License-MIT%202.0-blue.svg)](https://github.com/wagoodman/dive/blob/main/LICENSE)
+[![GitHub release](https://img.shields.io/github/release/joschi/dive.svg)](https://github.com/joschi/dive/releases/latest)
+[![Validations](https://github.com/joschi/dive/actions/workflows/validations.yaml/badge.svg)](https://github.com/joschi/dive/actions/workflows/validations.yaml)
+[![Go Report Card](https://goreportcard.com/badge/github.com/joschi/dive)](https://goreportcard.com/report/github.com/joschi/dive)
+[![License: MIT](https://img.shields.io/badge/License-MIT%202.0-blue.svg)](https://github.com/joschi/dive/blob/main/LICENSE)
 [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg?style=flat)](https://www.paypal.me/wagoodman)
 
-**A tool for exploring a docker image, layer contents, and discovering ways to shrink the size of your Docker/OCI image.**
+**A tool for exploring a Docker image, layer contents, and discovering ways to shrink the size of your Docker/OCI image.**
 
 
 ![Image](.data/demo.gif)
@@ -15,9 +15,9 @@ To analyze a Docker image simply run dive with an image tag/id/digest:
 dive <your-image-tag>
 ```
 
-or you can dive with docker command directly
+or you can dive with Docker directly:
 ```
-alias dive="docker run -ti --rm  -v /var/run/docker.sock:/var/run/docker.sock wagoodman/dive"
+alias dive="docker run -ti --rm  -v /var/run/docker.sock:/var/run/docker.sock ghcr.io/joschi/dive"
 dive <your-image-tag>
 
 # for example
@@ -29,7 +29,7 @@ or if you want to build your image then jump straight into analyzing it:
 dive build -t <some-tag> .
 ```
 
-Building on Macbook (supporting only the Docker container engine)
+Building on macOS (supporting only the Docker container engine):
 
 ```bash
 docker run --rm -it \
@@ -37,7 +37,7 @@ docker run --rm -it \
       -v  "$(pwd)":"$(pwd)" \
       -w "$(pwd)" \
       -v "$HOME/.dive.yaml":"$HOME/.dive.yaml" \
-      wagoodman/dive:latest build -t <some-tag> .
+      ghcr.io/joschi/dive:latest build -t <some-tag> .
 ```
 
 Additionally you can run this in your CI pipeline to ensure you're keeping wasted space to a minimum (this skips the UI):
@@ -97,8 +97,8 @@ With valid `source` options as such:
 
 Using debs:
 ```bash
-DIVE_VERSION=$(curl -sL "https://api.github.com/repos/wagoodman/dive/releases/latest" | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/')
-curl -fOL "https://github.com/wagoodman/dive/releases/download/v${DIVE_VERSION}/dive_${DIVE_VERSION}_linux_amd64.deb"
+DIVE_VERSION=$(curl -sL "https://api.github.com/repos/joschi/dive/releases/latest" | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/')
+curl -fOL "https://github.com/joschi/dive/releases/download/v${DIVE_VERSION}/dive_${DIVE_VERSION}_linux_amd64.deb"
 sudo apt install ./dive_${DIVE_VERSION}_linux_amd64.deb
 ```
 
@@ -113,13 +113,13 @@ sudo snap connect dive:docker-daemon docker:docker-daemon
 > [!CAUTION]
 > The Snap method is not recommended if you installed Docker via `apt-get`, since it might break your existing Docker daemon.
 > 
-> See also: https://github.com/wagoodman/dive/issues/546
+> See also: https://github.com/joschi/dive/issues/546
 
 
 **RHEL/Centos**
 ```bash
-DIVE_VERSION=$(curl -sL "https://api.github.com/repos/wagoodman/dive/releases/latest" | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/')
-curl -fOL "https://github.com/wagoodman/dive/releases/download/v${DIVE_VERSION}/dive_${DIVE_VERSION}_linux_amd64.rpm"
+DIVE_VERSION=$(curl -sL "https://api.github.com/repos/joschi/dive/releases/latest" | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/')
+curl -fOL "https://github.com/joschi/dive/releases/download/v${DIVE_VERSION}/dive_${DIVE_VERSION}_linux_amd64.rpm"
 rpm -i dive_${DIVE_VERSION}_linux_amd64.rpm
 ```
 
@@ -145,7 +145,7 @@ If you use [MacPorts](https://www.macports.org):
 sudo port install dive
 ```
 
-Or download the latest Darwin build from the [releases page](https://github.com/wagoodman/dive/releases/latest).
+Or download the latest Darwin build from the [releases page](https://github.com/joschi/dive/releases/latest).
 
 **Windows**
 
@@ -167,13 +167,13 @@ If you use [winget](https://learn.microsoft.com/en-gb/windows/package-manager/):
 winget install --id wagoodman.dive
 ```
 
-Or download the latest Windows build from the [releases page](https://github.com/wagoodman/dive/releases/latest).
+Or download the latest Windows build from the [releases page](https://github.com/joschi/dive/releases/latest).
 
 **Go tools**
 Requires Go version 1.10 or higher.
 
 ```bash
-go install github.com/wagoodman/dive@latest
+go install github.com/joschi/dive@latest
 ```
 *Note*: installing in this way you will not see a proper version when running `dive -v`.
 
@@ -190,27 +190,21 @@ nix-env -iA nixpkgs.dive
 
 **Docker**
 ```bash
-docker pull wagoodman/dive
+docker pull ghcr.io/joschi/dive
 ```
 
-or
-
-```bash
-docker pull quay.io/wagoodman/dive
-```
-
-When running you'll need to include the docker socket file:
+When running you'll need to include the Docker socket file:
 ```bash
 docker run --rm -it \
     -v /var/run/docker.sock:/var/run/docker.sock \
-    wagoodman/dive:latest <dive arguments...>
+    ghcr.io/joschi/dive:latest <dive arguments...>
 ```
 
 Docker for Windows (showing PowerShell compatible line breaks; collapse to a single line for Command Prompt compatibility)
 ```bash
 docker run --rm -it `
     -v /var/run/docker.sock:/var/run/docker.sock `
-    wagoodman/dive:latest <dive arguments...>
+    ghcr.io/joschi/dive:latest <dive arguments...>
 ```
 
 **Note:** depending on the version of docker you are running locally you may need to specify the docker API version as an environment variable:
@@ -222,7 +216,7 @@ or if you are running with a docker image:
 docker run --rm -it \
     -v /var/run/docker.sock:/var/run/docker.sock \
     -e DOCKER_API_VERSION=1.37 \
-    wagoodman/dive:latest <dive arguments...>
+    ghcr.io/joschi/dive:latest <dive arguments...>
 ```
 
 ## CI Integration

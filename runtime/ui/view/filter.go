@@ -7,8 +7,8 @@ import (
 	"github.com/awesome-gocui/gocui"
 	"github.com/sirupsen/logrus"
 
-	"github.com/wagoodman/dive/runtime/ui/format"
-	"github.com/wagoodman/dive/utils"
+	"github.com/joschi/dive/runtime/ui/format"
+	"github.com/joschi/dive/utils"
 )
 
 type FilterEditListener func(string) error

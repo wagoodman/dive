@@ -7,9 +7,9 @@ import (
 	"github.com/awesome-gocui/gocui"
 	"github.com/sirupsen/logrus"
 
-	"github.com/wagoodman/dive/runtime/ui/format"
-	"github.com/wagoodman/dive/runtime/ui/key"
-	"github.com/wagoodman/dive/utils"
+	"github.com/joschi/dive/runtime/ui/format"
+	"github.com/joschi/dive/runtime/ui/key"
+	"github.com/joschi/dive/utils"
 )
 
 // Status holds the UI objects and data models for populating the bottom-most pane. Specifically the panel

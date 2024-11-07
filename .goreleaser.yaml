@@ -50,6 +50,7 @@ dockers:
       - dive
     dockerfile: Dockerfile
     image_templates:
+      - '{{ envOrDefault "REGISTRY" "docker.io" }}/joschi/dive:latest'
       - '{{ envOrDefault "REGISTRY" "docker.io" }}/joschi/dive:{{ .Version }}'
     build_flag_templates:
       - "--build-arg=DOCKER_CLI_VERSION={{.Env.DOCKER_CLI_VERSION}}"

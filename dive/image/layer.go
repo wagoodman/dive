@@ -6,7 +6,7 @@ import (
 
 	"github.com/dustin/go-humanize"
 
-	"github.com/wagoodman/dive/dive/filetree"
+	"github.com/joschi/dive/dive/filetree"
 )
 
 const (

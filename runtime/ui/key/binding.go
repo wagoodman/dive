@@ -8,7 +8,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 
-	"github.com/wagoodman/dive/runtime/ui/format"
+	"github.com/joschi/dive/runtime/ui/format"
 )
 
 type BindingInfo struct {

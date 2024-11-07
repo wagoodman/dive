@@ -5,7 +5,7 @@ import (
 
 	"github.com/sergi/go-diff/diffmatchpatch"
 
-	"github.com/wagoodman/dive/dive/image/docker"
+	"github.com/joschi/dive/dive/image/docker"
 )
 
 func Test_Export(t *testing.T) {

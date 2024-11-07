@@ -1,7 +1,7 @@
 package image
 
 import (
-	"github.com/wagoodman/dive/dive/filetree"
+	"github.com/joschi/dive/dive/filetree"
 )
 
 type Analyzer interface {

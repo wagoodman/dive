@@ -14,7 +14,7 @@ import (
 	"github.com/docker/docker/client"
 	"golang.org/x/net/context"
 
-	"github.com/wagoodman/dive/dive/image"
+	"github.com/joschi/dive/dive/image"
 )
 
 type engineResolver struct{}
