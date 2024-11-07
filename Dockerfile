@@ -9,6 +9,4 @@ COPY dive /usr/local/bin/
 FROM scratch
 COPY --from=base / /
 
-RUN mkdir -p /root/.docker
-
 ENTRYPOINT ["/usr/local/bin/dive"]

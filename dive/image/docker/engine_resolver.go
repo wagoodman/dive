@@ -144,11 +144,7 @@ func determineDockerHost() (string, error) {
 
 	currentContext := os.Getenv("DOCKER_CONTEXT")
 	if currentContext == "" {
-		dockerConfigDir := cliconfig.Dir()
-		if _, err := os.Stat(dockerConfigDir); err != nil {
-			return "", err
-		}
-		cf, err := cliconfig.Load(dockerConfigDir)
+		cf, err := cliconfig.Load(cliconfig.Dir())
 		if err != nil {
 			return "", err
 		}
