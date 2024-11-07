@@ -186,7 +186,7 @@ ci-test-docker-image:
 		--rm \
 		-t \
 		-v /var/run/docker.sock:/var/run/docker.sock \
-		'${PRODUCTION_REGISTRY}/joschi/dive:latest' \
+		'${PRODUCTION_REGISTRY}/joschi/dive:latest-amd64' \
 			'${TEST_IMAGE}' \
 			--ci
 

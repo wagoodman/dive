@@ -46,12 +46,14 @@ nfpms:
       - deb
 
 dockers:
-  - ids:
+  - id: docker-amd64
+    ids:
       - dive
-    dockerfile: Dockerfile
+    use: buildx
+    goarch: amd64
     image_templates:
-      - '{{ envOrDefault "REGISTRY" "docker.io" }}/joschi/dive:latest'
-      - '{{ envOrDefault "REGISTRY" "docker.io" }}/joschi/dive:{{ .Version }}'
+      - '{{ envOrDefault "REGISTRY" "docker.io" }}/joschi/dive:latest-amd64'
+      - '{{ envOrDefault "REGISTRY" "docker.io" }}/joschi/dive:{{ .Version }}-amd64'
     build_flag_templates:
       - "--build-arg=DOCKER_CLI_VERSION={{.Env.DOCKER_CLI_VERSION}}"
       - "--label=org.opencontainers.image.created={{.Date}}"
@@ -59,3 +61,29 @@ dockers:
       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
       - "--label=org.opencontainers.image.version={{.Version}}"
       - "--label=org.opencontainers.image.source={{.GitURL}}"
+      - "--platform=linux/amd64"
+  - id: docker-arm64
+    ids:
+      - dive
+    use: buildx
+    goarch: arm64
+    image_templates:
+      - '{{ envOrDefault "REGISTRY" "docker.io" }}/joschi/dive:latest-arm64'
+      - '{{ envOrDefault "REGISTRY" "docker.io" }}/joschi/dive:{{ .Version }}-arm64'
+    build_flag_templates:
+      - "--build-arg=DOCKER_CLI_VERSION={{.Env.DOCKER_CLI_VERSION}}"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.title={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+      - "--label=org.opencontainers.image.source={{.GitURL}}"
+      - "--platform=linux/arm64/v8"
+docker_manifests:
+  - name_template: '{{ envOrDefault "REGISTRY" "docker.io" }}/joschi/dive:latest'
+    image_templates:
+      - '{{ envOrDefault "REGISTRY" "docker.io" }}/joschi/dive:latest-amd64'
+      - '{{ envOrDefault "REGISTRY" "docker.io" }}/joschi/dive:latest-arm64'
+  - name_template: '{{ envOrDefault "REGISTRY" "docker.io" }}/joschi/dive:{{ .Version }}'
+    image_templates:
+      - '{{ envOrDefault "REGISTRY" "docker.io" }}/joschi/dive:{{ .Version }}-amd64'
+      - '{{ envOrDefault "REGISTRY" "docker.io" }}/joschi/dive:{{ .Version }}-arm64'

@@ -7,6 +7,6 @@ RUN wget -O- https://download.docker.com/linux/static/stable/$(uname -m)/docker-
 COPY dive /usr/local/bin/
 
 FROM scratch
-COPY --from=base / /
+COPY --from=base /usr/local/bin /usr/local/bin
 
 ENTRYPOINT ["/usr/local/bin/dive"]
