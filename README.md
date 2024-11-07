@@ -113,7 +113,7 @@ sudo snap connect dive:docker-daemon docker:docker-daemon
 > [!CAUTION]
 > The Snap method is not recommended if you installed Docker via `apt-get`, since it might break your existing Docker daemon.
 > 
-> See also: https://github.com/joschi/dive/issues/546
+> See also: https://github.com/wagoodman/dive/issues/546
 
 
 **RHEL/Centos**
@@ -136,7 +136,8 @@ pacman -S dive
 If you use [Homebrew](https://brew.sh):
 
 ```bash
-brew install dive
+brew tap joschi/dive
+brew install joschi/dive/dive
 ```
 
 If you use [MacPorts](https://www.macports.org):
