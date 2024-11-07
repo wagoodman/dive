@@ -1,7 +1,7 @@
 BIN = dive
 TEMP_DIR = ./.tmp
 PWD := ${CURDIR}
-PRODUCTION_REGISTRY = docker.io
+REGISTRY ?= docker.io
 SHELL = /bin/bash -o pipefail
 TEST_IMAGE = busybox:latest
 
@@ -186,7 +186,7 @@ ci-test-docker-image:
 		--rm \
 		-t \
 		-v /var/run/docker.sock:/var/run/docker.sock \
-		'${PRODUCTION_REGISTRY}/joschi/dive:latest-amd64' \
+		'${REGISTRY}/joschi/dive:latest-amd64' \
 			'${TEST_IMAGE}' \
 			--ci
 
