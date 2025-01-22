@@ -1,0 +1,6 @@
+# auto-generated, DO NOT MODIFY.
+# The authoritative copy of this file lives at:
+# https://salsa.debian.org/go-team/infra/pkg-go-tools/blob/master/config/gitlabciyml.go
+---
+include:
+  - https://salsa.debian.org/go-team/infra/pkg-go-tools/-/raw/master/pipeline/test-archive.yml
