@@ -1,5 +1,7 @@
 #!/usr/bin/make -f
 
+export DH_GOLANG_BUILDPKG=github.com/wagoodman/dive
+
 %:
 	dh $@ --builddirectory=_build --buildsystem=golang --with=golang
 

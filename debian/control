@@ -24,9 +24,9 @@ Build-Depends: debhelper-compat (= 13),
 Standards-Version: 4.6.0
 Vcs-Browser: https://salsa.debian.org/go-team/packages/dive
 Vcs-Git: https://salsa.debian.org/go-team/packages/dive.git
-Homepage: https://github.com/tonymet/dive
+Homepage: https://github.com/wagoodman/dive
 Rules-Requires-Root: no
-XS-Go-Import-Path: github.com/tonymet/dive
+XS-Go-Import-Path: github.com/wagoodman/dive
 
 Package: dive
 Architecture: any

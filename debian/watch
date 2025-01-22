@@ -1,4 +1,4 @@
 version=4
 opts="filenamemangle=s%(?:.*?)?v?(\d[\d.]*)\.tar\.gz%@PACKAGE@-$1.tar.gz%,\
       uversionmangle=s/(\d)[_\.\-\+]?(RC|rc|pre|dev|beta|alpha)[.]?(\d*)$/$1~$2$3/" \
-  https://github.com/tonymet/dive/tags .*/v?(\d\S*)\.tar\.gz debian
+  https://github.com/wagoodman/dive/tags .*/v?(\d\S*)\.tar\.gz debian

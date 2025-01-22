@@ -1,10 +1,10 @@
 Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: dive
 Upstream-Contact: TODO
-Source: https://github.com/tonymet/dive
+Source: https://github.com/wagoodman/dive
 
 Files: *
-Copyright: 2020 Tony Metzidis
+Copyright: 2018 Alex Goodman
 License: Expat
 
 Files: debian/*
