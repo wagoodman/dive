@@ -90,6 +90,7 @@ With valid `source` options as such:
 - `docker`: Docker engine (the default option)
 - `docker-archive`: A Docker Tar Archive from disk
 - `podman`: Podman engine (linux only)
+- `nerdctl`: Nerdctl engine
 
 ## Installation
 
@@ -246,7 +247,7 @@ Key Binding                                | Description
 
 No configuration is necessary, however, you can create a config file and override values:
 ```yaml
-# supported options are "docker" and "podman"
+# supported options are "docker", "podman" and "nerdctl"
 container-engine: docker
 # continue with analysis even if there are errors parsing the image archive
 ignore-errors: false
