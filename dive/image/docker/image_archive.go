@@ -11,6 +11,8 @@ import (
 	"path"
 	"strings"
 
+	"github.com/klauspost/compress/zstd"
+
 	"github.com/wagoodman/dive/dive/filetree"
 	"github.com/wagoodman/dive/dive/image"
 )
@@ -79,6 +81,26 @@ func NewImageArchive(tarFile io.ReadCloser) (*ImageArchive, error) {
 
 				// add the layer to the image
 				img.layerMap[tree.Name] = tree
+			} else if strings.HasSuffix(name, ".tar.zst") || strings.HasSuffix(name, ".zst") {
+				currentLayer++
+
+				// Add zstd reader
+				zst, err := zstd.NewReader(tarReader)
+				if err != nil {
+					return img, err
+				}
+
+				// Add tar reader
+				layerReader := tar.NewReader(zst)
+
+				// Process layer
+				tree, err := processLayerTar(name, layerReader)
+				if err != nil {
+					return img, err
+				}
+
+				// add the layer to the image
+				img.layerMap[tree.Name] = tree
 			} else if strings.HasSuffix(name, ".json") || strings.HasPrefix(name, "sha256:") {
 				fileBuffer, err := io.ReadAll(tarReader)
 				if err != nil {
@@ -89,36 +111,47 @@ func NewImageArchive(tarFile io.ReadCloser) (*ImageArchive, error) {
 				// For the OCI-compatible image format (used since Docker 25), use mime sniffing
 				// but limit this to only the blobs/ (containing the config, and the layers)
 
-				// The idea here is that we try various formats in turn, and those tries should
-				// never consume more bytes than this buffer contains so we can start again.
+				// The idea here is that we read the first few bytes of the file to determine if
+				// it's encrypted with gzip or zstd. If it is, we'll decompress it first.
 
-				// 512 bytes ought to be enough (as that's the size of a TAR entry header),
-				// but play it safe with 1024 bytes. This should also include very small layers
-				// (unless they've also been gzipped, but Docker does not appear to do it)
+				// There is one edge case to consider: if the tar file's first file's name begins
+				// with 0x1f8b or 0x28b52ffd, the file will be erronously decompressed. This is
+				// very unlikely: filenames usually are not binary, but it's worth mentioning.
+
 				buffer := make([]byte, 1024)
 				n, err := io.ReadFull(tarReader, buffer)
+
 				if err != nil && err != io.ErrUnexpectedEOF {
 					return img, err
 				}
 
-				// Only try reading a TAR if file is "big enough"
-				if n == cap(buffer) {
-					var unwrappedReader io.Reader
+				var unwrappedReader io.Reader
+
+				if n >= 2 && buffer[0] == 0x1f && buffer[1] == 0x8b {
+					// This is a gzipped file
 					unwrappedReader, err = gzip.NewReader(io.MultiReader(bytes.NewReader(buffer[:n]), tarReader))
 					if err != nil {
-						// Not a gzipped entry
-						unwrappedReader = io.MultiReader(bytes.NewReader(buffer[:n]), tarReader)
+						return img, err
 					}
+				} else if n >= 4 && buffer[0] == 0x28 && buffer[1] == 0xb5 && buffer[2] == 0x2f && buffer[3] == 0xfd {
+					// This is a zstd file
+					unwrappedReader, err = zstd.NewReader(io.MultiReader(bytes.NewReader(buffer[:n]), tarReader))
+					if err != nil {
+						return img, err
+					}
+				} else {
+					// This is not a compressed file
+					unwrappedReader = io.MultiReader(bytes.NewReader(buffer[:n]), tarReader)
+				}
 
-					// Try reading a TAR
-					layerReader := tar.NewReader(unwrappedReader)
-					tree, err := processLayerTar(name, layerReader)
-					if err == nil {
-						currentLayer++
-						// add the layer to the image
-						img.layerMap[tree.Name] = tree
-						continue
-					}
+				// Try reading a TAR
+				layerReader := tar.NewReader(unwrappedReader)
+				tree, err := processLayerTar(name, layerReader)
+				if err == nil {
+					currentLayer++
+					// add the layer to the image
+					img.layerMap[tree.Name] = tree
+					continue
 				}
 
 				// Not a TAR (or smaller than our buffer), might be a JSON file

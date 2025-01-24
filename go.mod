@@ -11,6 +11,7 @@ require (
 	github.com/dustin/go-humanize v1.0.0
 	github.com/fatih/color v1.7.0
 	github.com/google/uuid v1.1.1
+	github.com/klauspost/compress v1.17.6
 	github.com/logrusorgru/aurora v0.0.0-20190803045625-94edacc10f9b
 	github.com/lunixbochs/vtclean v1.0.0
 	github.com/mitchellh/go-homedir v1.1.0
