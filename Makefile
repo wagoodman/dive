@@ -125,7 +125,34 @@ bootstrap: bootstrap-go bootstrap-tools ## Download and install all go dependenc
 
 .PHONY: generate-test-data
 generate-test-data:
-	docker build -t dive-test:latest -f .data/Dockerfile.test-image . && docker image save -o .data/test-docker-image.tar dive-test:latest && echo 'Exported test data!'
+	docker build -t dive-test:latest -f .data/Dockerfile.test-image . && \
+	docker image save -o .data/test-docker-image.tar dive-test:latest && \
+	echo 'Exported test data!'
+
+.PHONY: generate-compressed-test-images
+generate-compressed-test-images:
+	for alg in uncompressed gzip estargz zstd; do \
+		for exporter in docker image; do \
+			docker buildx build \
+				-f .data/Dockerfile.minimal \
+				--tag test-dive-$${exporter}:$${alg} \
+				--output type=$${exporter},force-compression=true,compression=$${alg} . ; \
+		done ; \
+	done && \
+	echo 'Exported test data!'
+
+.PHONY: generate-compressed-test-data
+generate-compressed-test-data:
+	for alg in uncompressed gzip estargz zstd; \
+	do \
+		docker buildx build \
+			-f .data/Dockerfile.minimal \
+			--output type=tar,dest=.data/test-$${alg}-image.tar,force-compression=true,compression=$${alg} . ; \
+		docker buildx build \
+			-f .data/Dockerfile.minimal \
+			--output type=oci,dest=.data/test-oci-$${alg}-image.tar,force-compression=true,compression=$${alg} . ; \
+	done && \
+	echo 'Exported test data!'
 
 
 ## Static analysis targets #################################
@@ -227,12 +254,18 @@ ci-test-rpm-package-install:
 			"
 
 .PHONY: ci-test-linux-run
-ci-test-linux-run:
+ci-test-linux-run: generate-compressed-test-images
 	ls -la $(SNAPSHOT_DIR)
 	ls -la $(SNAPSHOT_DIR)/dive_linux_amd64_v1
 	chmod 755 $(SNAPSHOT_DIR)/dive_linux_amd64_v1/dive && \
-	$(SNAPSHOT_DIR)/dive_linux_amd64_v1/dive '${TEST_IMAGE}'  --ci && \
-    $(SNAPSHOT_DIR)/dive_linux_amd64_v1/dive --source docker-archive .data/test-kaniko-image.tar  --ci --ci-config .data/.dive-ci
+	$(SNAPSHOT_DIR)/dive_linux_amd64_v1/dive '${TEST_IMAGE}' --ci && \
+	$(SNAPSHOT_DIR)/dive_linux_amd64_v1/dive --source docker-archive .data/test-kaniko-image.tar --ci --ci-config .data/.dive-ci
+	for alg in uncompressed gzip estargz zstd; do \
+		for exporter in docker image; do \
+			$(SNAPSHOT_DIR)/dive_linux_amd64_v1/dive "test-dive-$${exporter}:$${alg}" --ci ; \
+		done && \
+		$(SNAPSHOT_DIR)/dive_linux_amd64_v1/dive --source docker-archive .data/test-oci-$${alg}-image.tar --ci --ci-config .data/.dive-ci; \
+	done
 
 # we're not attempting to test docker, just our ability to run on these systems. This avoids setting up docker in CI.
 .PHONY: ci-test-mac-run

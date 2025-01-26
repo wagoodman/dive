@@ -12,6 +12,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/klauspost/compress/zstd"
+
 	"github.com/joschi/dive/dive/filetree"
 	"github.com/joschi/dive/dive/image"
 )
@@ -101,16 +103,38 @@ func NewImageArchive(tarFile io.ReadCloser) (*ImageArchive, error) {
 					return img, err
 				}
 
-				// Try reading a GZIP
-				var unwrappedReader io.Reader
-				unwrappedReader, err = gzip.NewReader(io.MultiReader(bytes.NewReader(buffer[:n]), tarReader))
-				if err != nil {
-					// Not a gzipped entry
-					unwrappedReader = io.MultiReader(bytes.NewReader(buffer[:n]), tarReader)
+				originalReader := func() io.Reader {
+					return io.MultiReader(bytes.NewReader(buffer[:n]), tarReader)
 				}
 
-				// Try reading a TAR
-				layerReader := tar.NewReader(unwrappedReader)
+				// Try reading a gzip/estargz compressed layer
+				gzipReader, err := gzip.NewReader(originalReader())
+				if err == nil {
+					layerReader := tar.NewReader(gzipReader)
+					tree, err := processLayerTar(name, layerReader)
+					if err == nil {
+						currentLayer++
+						// add the layer to the image
+						img.layerMap[tree.Name] = tree
+						continue
+					}
+				}
+
+				// Try reading a zstd compressed layer
+				zstdReader, err := zstd.NewReader(originalReader())
+				if err == nil {
+					layerReader := tar.NewReader(zstdReader)
+					tree, err := processLayerTar(name, layerReader)
+					if err == nil {
+						currentLayer++
+						// add the layer to the image
+						img.layerMap[tree.Name] = tree
+						continue
+					}
+				}
+
+				// Try reading a plain tar layer
+				layerReader := tar.NewReader(originalReader())
 				tree, err := processLayerTar(name, layerReader)
 				if err == nil {
 					currentLayer++
@@ -119,13 +143,13 @@ func NewImageArchive(tarFile io.ReadCloser) (*ImageArchive, error) {
 					continue
 				}
 
-				// Not a TAR or GZIP, might be a JSON file
+				// Not a TAR/GZIP/ZSTD, might be a JSON file
 				decoder := json.NewDecoder(bytes.NewReader(buffer[:n]))
 				token, err := decoder.Token()
 				if _, ok := token.(json.Delim); err == nil && ok {
 					// Looks like a JSON object (or array)
 					// XXX: should we add a header.Size check too?
-					fileBuffer, err := io.ReadAll(io.MultiReader(bytes.NewReader(buffer[:n]), tarReader))
+					fileBuffer, err := io.ReadAll(originalReader())
 					if err != nil {
 						return img, err
 					}
@@ -137,11 +161,31 @@ func NewImageArchive(tarFile io.ReadCloser) (*ImageArchive, error) {
 	}
 
 	manifestContent, exists := jsonFiles["manifest.json"]
-	if !exists {
-		return img, fmt.Errorf("could not find image manifest")
-	}
+	if exists {
+		img.manifest = newManifest(manifestContent)
+	} else {
+		// manifest.json is not part of the OCI spec, docker includes it for compatibility
+		// Provide compatibility by finding the config and using our layerMap
+		var configPath string
+		for path, content := range jsonFiles {
+			if isConfig(content) {
+				configPath = path
+				break
+			}
+		}
+		if len(configPath) == 0 {
+			return img, fmt.Errorf("could not find image manifest")
+		}
 
-	img.manifest = newManifest(manifestContent)
+		var layerPaths []string
+		for k := range img.layerMap {
+			layerPaths = append(layerPaths, k)
+		}
+		img.manifest = manifest{
+			ConfigPath:    configPath,
+			LayerTarPaths: layerPaths,
+		}
+	}
 
 	configContent, exists := jsonFiles[img.manifest.ConfigPath]
 	if !exists {
