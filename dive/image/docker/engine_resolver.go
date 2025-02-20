@@ -107,7 +107,7 @@ func (r *engineResolver) fetchArchive(id string) (io.ReadCloser, error) {
 	if err != nil {
 		return nil, err
 	}
-	_, _, err = dockerClient.ImageInspectWithRaw(ctx, id)
+	_, err = dockerClient.ImageInspect(ctx, id)
 	if err != nil {
 		// check if the error is due to the image not existing locally
 		if client.IsErrNotFound(err) {

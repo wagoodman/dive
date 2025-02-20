@@ -12,7 +12,7 @@ GORELEASER_VERSION = v2.4.4
 GOSIMPORTS_VERSION = v0.3.8
 CHRONICLE_VERSION = v0.8.0
 GLOW_VERSION = v1.5.1
-DOCKER_CLI_VERSION = 27.3.1
+DOCKER_CLI_VERSION = 28.0.0
 
 # Command templates #################################
 LINT_CMD = $(TEMP_DIR)/golangci-lint run --tests=false --timeout=2m --config .golangci.yaml
