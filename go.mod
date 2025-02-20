@@ -1,6 +1,6 @@
 module github.com/joschi/dive
 
-go 1.23
+go 1.24
 
 require (
 	github.com/awesome-gocui/gocui v1.1.0
