@@ -5,8 +5,8 @@ import (
 
 	"github.com/sirupsen/logrus"
 
-	"github.com/joschi/dive/dive/filetree"
-	diveImage "github.com/joschi/dive/dive/image"
+	"github.com/wagoodman/dive/dive/filetree"
+	diveImage "github.com/wagoodman/dive/dive/image"
 )
 
 type export struct {

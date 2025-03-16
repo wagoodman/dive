@@ -24,10 +24,10 @@ builds:
 
 brews:
   - repository:
-      owner: joschi
+      owner: wagoodman
       name: homebrew-dive
       token: "{{.Env.TAP_GITHUB_TOKEN}}"
-    homepage: "https://github.com/joschi/dive/"
+    homepage: "https://github.com/wagoodman/dive/"
     description: "A tool for exploring layers in a docker image"
 
 archives:
@@ -38,8 +38,8 @@ archives:
 
 nfpms:
   - license: MIT
-    maintainer: Jochen Schalanda
-    homepage: https://github.com/joschi/dive/
+    maintainer: Alex Goodman
+    homepage: https://github.com/wagoodman/dive/
     description: "A tool for exploring layers in a docker image"
     formats:
       - rpm
@@ -52,8 +52,8 @@ dockers:
     use: buildx
     goarch: amd64
     image_templates:
-      - '{{ envOrDefault "REGISTRY" "docker.io" }}/joschi/dive:latest-amd64'
-      - '{{ envOrDefault "REGISTRY" "docker.io" }}/joschi/dive:{{ .Version }}-amd64'
+      - '{{ envOrDefault "REGISTRY" "docker.io" }}/wagoodman/dive:latest-amd64'
+      - '{{ envOrDefault "REGISTRY" "docker.io" }}/wagoodman/dive:{{ .Version }}-amd64'
     build_flag_templates:
       - "--build-arg=DOCKER_CLI_VERSION={{.Env.DOCKER_CLI_VERSION}}"
       - "--label=org.opencontainers.image.created={{.Date}}"
@@ -68,8 +68,8 @@ dockers:
     use: buildx
     goarch: arm64
     image_templates:
-      - '{{ envOrDefault "REGISTRY" "docker.io" }}/joschi/dive:latest-arm64'
-      - '{{ envOrDefault "REGISTRY" "docker.io" }}/joschi/dive:{{ .Version }}-arm64'
+      - '{{ envOrDefault "REGISTRY" "docker.io" }}/wagoodman/dive:latest-arm64'
+      - '{{ envOrDefault "REGISTRY" "docker.io" }}/wagoodman/dive:{{ .Version }}-arm64'
     build_flag_templates:
       - "--build-arg=DOCKER_CLI_VERSION={{.Env.DOCKER_CLI_VERSION}}"
       - "--label=org.opencontainers.image.created={{.Date}}"
@@ -79,11 +79,11 @@ dockers:
       - "--label=org.opencontainers.image.source={{.GitURL}}"
       - "--platform=linux/arm64/v8"
 docker_manifests:
-  - name_template: '{{ envOrDefault "REGISTRY" "docker.io" }}/joschi/dive:latest'
+  - name_template: '{{ envOrDefault "REGISTRY" "docker.io" }}/wagoodman/dive:latest'
     image_templates:
-      - '{{ envOrDefault "REGISTRY" "docker.io" }}/joschi/dive:latest-amd64'
-      - '{{ envOrDefault "REGISTRY" "docker.io" }}/joschi/dive:latest-arm64'
-  - name_template: '{{ envOrDefault "REGISTRY" "docker.io" }}/joschi/dive:{{ .Version }}'
+      - '{{ envOrDefault "REGISTRY" "docker.io" }}/wagoodman/dive:latest-amd64'
+      - '{{ envOrDefault "REGISTRY" "docker.io" }}/wagoodman/dive:latest-arm64'
+  - name_template: '{{ envOrDefault "REGISTRY" "docker.io" }}/wagoodman/dive:{{ .Version }}'
     image_templates:
-      - '{{ envOrDefault "REGISTRY" "docker.io" }}/joschi/dive:{{ .Version }}-amd64'
-      - '{{ envOrDefault "REGISTRY" "docker.io" }}/joschi/dive:{{ .Version }}-arm64'
+      - '{{ envOrDefault "REGISTRY" "docker.io" }}/wagoodman/dive:{{ .Version }}-amd64'
+      - '{{ envOrDefault "REGISTRY" "docker.io" }}/wagoodman/dive:{{ .Version }}-arm64'

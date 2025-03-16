@@ -9,9 +9,9 @@ import (
 	"github.com/spf13/afero"
 	"github.com/spf13/viper"
 
-	"github.com/joschi/dive/dive"
-	"github.com/joschi/dive/dive/image"
-	"github.com/joschi/dive/dive/image/docker"
+	"github.com/wagoodman/dive/dive"
+	"github.com/wagoodman/dive/dive/image"
+	"github.com/wagoodman/dive/dive/image/docker"
 )
 
 type defaultResolver struct{}

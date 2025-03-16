@@ -1,4 +1,4 @@
-module github.com/joschi/dive
+module github.com/wagoodman/dive
 
 go 1.24
 

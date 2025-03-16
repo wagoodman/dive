@@ -6,11 +6,11 @@ import (
 	"github.com/awesome-gocui/gocui"
 	"github.com/sirupsen/logrus"
 
-	"github.com/joschi/dive/dive/filetree"
-	"github.com/joschi/dive/dive/image"
-	"github.com/joschi/dive/runtime/ui/key"
-	"github.com/joschi/dive/runtime/ui/layout"
-	"github.com/joschi/dive/runtime/ui/layout/compound"
+	"github.com/wagoodman/dive/dive/filetree"
+	"github.com/wagoodman/dive/dive/image"
+	"github.com/wagoodman/dive/runtime/ui/key"
+	"github.com/wagoodman/dive/runtime/ui/layout"
+	"github.com/wagoodman/dive/runtime/ui/layout/compound"
 )
 
 const debug = false

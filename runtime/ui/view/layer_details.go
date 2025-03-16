@@ -8,9 +8,9 @@ import (
 	"github.com/dustin/go-humanize"
 	"github.com/sirupsen/logrus"
 
-	"github.com/joschi/dive/dive/image"
-	"github.com/joschi/dive/runtime/ui/format"
-	"github.com/joschi/dive/runtime/ui/key"
+	"github.com/wagoodman/dive/dive/image"
+	"github.com/wagoodman/dive/runtime/ui/format"
+	"github.com/wagoodman/dive/runtime/ui/key"
 )
 
 type LayerDetails struct {

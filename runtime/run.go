@@ -9,13 +9,13 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 
-	"github.com/joschi/dive/dive"
-	"github.com/joschi/dive/dive/filetree"
-	"github.com/joschi/dive/dive/image"
-	"github.com/joschi/dive/runtime/ci"
-	"github.com/joschi/dive/runtime/export"
-	"github.com/joschi/dive/runtime/ui"
-	"github.com/joschi/dive/utils"
+	"github.com/wagoodman/dive/dive"
+	"github.com/wagoodman/dive/dive/filetree"
+	"github.com/wagoodman/dive/dive/image"
+	"github.com/wagoodman/dive/runtime/ci"
+	"github.com/wagoodman/dive/runtime/export"
+	"github.com/wagoodman/dive/runtime/ui"
+	"github.com/wagoodman/dive/utils"
 )
 
 func run(enableUi bool, options Options, imageResolver image.Resolver, events eventChannel, filesystem afero.Fs) {

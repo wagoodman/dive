@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/joschi/dive/dive/image"
+	"github.com/wagoodman/dive/dive/image"
 )
 
 type archiveResolver struct{}

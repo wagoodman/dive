@@ -119,7 +119,7 @@ jobs:
         env:
           # for creating the release (requires write access to content)
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # for updating brew formula in joschi/homebrew-dive
+          # for updating brew formula in wagoodman/homebrew-dive
           TAP_GITHUB_TOKEN: ${{ secrets.TAP_GITHUB_TOKEN }}
 
       - name: Smoke test published image

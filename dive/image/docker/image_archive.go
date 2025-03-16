@@ -14,8 +14,8 @@ import (
 
 	"github.com/klauspost/compress/zstd"
 
-	"github.com/joschi/dive/dive/filetree"
-	"github.com/joschi/dive/dive/image"
+	"github.com/wagoodman/dive/dive/filetree"
+	"github.com/wagoodman/dive/dive/image"
 )
 
 type ImageArchive struct {

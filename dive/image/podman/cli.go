@@ -9,7 +9,7 @@ import (
 	"os"
 	"os/exec"
 
-	"github.com/joschi/dive/utils"
+	"github.com/wagoodman/dive/utils"
 )
 
 // runPodmanCmd runs a given Podman command in the current tty

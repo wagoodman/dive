@@ -1,8 +1,8 @@
 # dive
-[![GitHub release](https://img.shields.io/github/release/joschi/dive.svg)](https://github.com/joschi/dive/releases/latest)
-[![Validations](https://github.com/joschi/dive/actions/workflows/validations.yaml/badge.svg)](https://github.com/joschi/dive/actions/workflows/validations.yaml)
-[![Go Report Card](https://goreportcard.com/badge/github.com/joschi/dive)](https://goreportcard.com/report/github.com/joschi/dive)
-[![License: MIT](https://img.shields.io/badge/License-MIT%202.0-blue.svg)](https://github.com/joschi/dive/blob/main/LICENSE)
+[![GitHub release](https://img.shields.io/github/release/wagoodman/dive.svg)](https://github.com/wagoodman/dive/releases/latest)
+[![Validations](https://github.com/wagoodman/dive/actions/workflows/validations.yaml/badge.svg)](https://github.com/wagoodman/dive/actions/workflows/validations.yaml)
+[![Go Report Card](https://goreportcard.com/badge/github.com/wagoodman/dive)](https://goreportcard.com/report/github.com/wagoodman/dive)
+[![License: MIT](https://img.shields.io/badge/License-MIT%202.0-blue.svg)](https://github.com/wagoodman/dive/blob/main/LICENSE)
 [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg?style=flat)](https://www.paypal.me/wagoodman)
 
 **A tool for exploring a Docker image, layer contents, and discovering ways to shrink the size of your Docker/OCI image.**
@@ -17,7 +17,7 @@ dive <your-image-tag>
 
 or you can dive with Docker directly:
 ```
-alias dive="docker run -ti --rm  -v /var/run/docker.sock:/var/run/docker.sock ghcr.io/joschi/dive"
+alias dive="docker run -ti --rm  -v /var/run/docker.sock:/var/run/docker.sock ghcr.io/wagoodman/dive"
 dive <your-image-tag>
 
 # for example
@@ -37,7 +37,7 @@ docker run --rm -it \
       -v  "$(pwd)":"$(pwd)" \
       -w "$(pwd)" \
       -v "$HOME/.dive.yaml":"$HOME/.dive.yaml" \
-      ghcr.io/joschi/dive:latest build -t <some-tag> .
+      ghcr.io/wagoodman/dive:latest build -t <some-tag> .
 ```
 
 Additionally you can run this in your CI pipeline to ensure you're keeping wasted space to a minimum (this skips the UI):
@@ -97,8 +97,8 @@ With valid `source` options as such:
 
 Using debs:
 ```bash
-DIVE_VERSION=$(curl -sL "https://api.github.com/repos/joschi/dive/releases/latest" | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/')
-curl -fOL "https://github.com/joschi/dive/releases/download/v${DIVE_VERSION}/dive_${DIVE_VERSION}_linux_amd64.deb"
+DIVE_VERSION=$(curl -sL "https://api.github.com/repos/wagoodman/dive/releases/latest" | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/')
+curl -fOL "https://github.com/wagoodman/dive/releases/download/v${DIVE_VERSION}/dive_${DIVE_VERSION}_linux_amd64.deb"
 sudo apt install ./dive_${DIVE_VERSION}_linux_amd64.deb
 ```
 
@@ -118,8 +118,8 @@ sudo snap connect dive:docker-daemon docker:docker-daemon
 
 **RHEL/Centos**
 ```bash
-DIVE_VERSION=$(curl -sL "https://api.github.com/repos/joschi/dive/releases/latest" | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/')
-curl -fOL "https://github.com/joschi/dive/releases/download/v${DIVE_VERSION}/dive_${DIVE_VERSION}_linux_amd64.rpm"
+DIVE_VERSION=$(curl -sL "https://api.github.com/repos/wagoodman/dive/releases/latest" | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/')
+curl -fOL "https://github.com/wagoodman/dive/releases/download/v${DIVE_VERSION}/dive_${DIVE_VERSION}_linux_amd64.rpm"
 rpm -i dive_${DIVE_VERSION}_linux_amd64.rpm
 ```
 
@@ -136,8 +136,8 @@ pacman -S dive
 If you use [Homebrew](https://brew.sh):
 
 ```bash
-brew tap joschi/dive
-brew install joschi/dive/dive
+brew tap wagoodman/dive
+brew install wagoodman/dive/dive
 ```
 
 If you use [MacPorts](https://www.macports.org):
@@ -146,7 +146,7 @@ If you use [MacPorts](https://www.macports.org):
 sudo port install dive
 ```
 
-Or download the latest Darwin build from the [releases page](https://github.com/joschi/dive/releases/latest).
+Or download the latest Darwin build from the [releases page](https://github.com/wagoodman/dive/releases/latest).
 
 **Windows**
 
@@ -168,13 +168,13 @@ If you use [winget](https://learn.microsoft.com/en-gb/windows/package-manager/):
 winget install --id wagoodman.dive
 ```
 
-Or download the latest Windows build from the [releases page](https://github.com/joschi/dive/releases/latest).
+Or download the latest Windows build from the [releases page](https://github.com/wagoodman/dive/releases/latest).
 
 **Go tools**
 Requires Go version 1.10 or higher.
 
 ```bash
-go install github.com/joschi/dive@latest
+go install github.com/wagoodman/dive@latest
 ```
 *Note*: installing in this way you will not see a proper version when running `dive -v`.
 
@@ -191,21 +191,21 @@ nix-env -iA nixpkgs.dive
 
 **Docker**
 ```bash
-docker pull ghcr.io/joschi/dive
+docker pull ghcr.io/wagoodman/dive
 ```
 
 When running you'll need to include the Docker socket file:
 ```bash
 docker run --rm -it \
     -v /var/run/docker.sock:/var/run/docker.sock \
-    ghcr.io/joschi/dive:latest <dive arguments...>
+    ghcr.io/wagoodman/dive:latest <dive arguments...>
 ```
 
 Docker for Windows (showing PowerShell compatible line breaks; collapse to a single line for Command Prompt compatibility)
 ```bash
 docker run --rm -it `
     -v /var/run/docker.sock:/var/run/docker.sock `
-    ghcr.io/joschi/dive:latest <dive arguments...>
+    ghcr.io/wagoodman/dive:latest <dive arguments...>
 ```
 
 **Note:** depending on the version of docker you are running locally you may need to specify the docker API version as an environment variable:
@@ -217,7 +217,7 @@ or if you are running with a docker image:
 docker run --rm -it \
     -v /var/run/docker.sock:/var/run/docker.sock \
     -e DOCKER_API_VERSION=1.37 \
-    ghcr.io/joschi/dive:latest <dive arguments...>
+    ghcr.io/wagoodman/dive:latest <dive arguments...>
 ```
 
 ## CI Integration

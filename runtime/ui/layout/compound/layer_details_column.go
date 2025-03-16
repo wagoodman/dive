@@ -4,8 +4,8 @@ import (
 	"github.com/awesome-gocui/gocui"
 	"github.com/sirupsen/logrus"
 
-	"github.com/joschi/dive/runtime/ui/view"
-	"github.com/joschi/dive/utils"
+	"github.com/wagoodman/dive/runtime/ui/view"
+	"github.com/wagoodman/dive/utils"
 )
 
 type LayerDetailsCompoundLayout struct {

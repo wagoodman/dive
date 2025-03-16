@@ -8,11 +8,11 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 
-	"github.com/joschi/dive/dive/filetree"
-	"github.com/joschi/dive/runtime/ui/format"
-	"github.com/joschi/dive/runtime/ui/key"
-	"github.com/joschi/dive/runtime/ui/viewmodel"
-	"github.com/joschi/dive/utils"
+	"github.com/wagoodman/dive/dive/filetree"
+	"github.com/wagoodman/dive/runtime/ui/format"
+	"github.com/wagoodman/dive/runtime/ui/key"
+	"github.com/wagoodman/dive/runtime/ui/viewmodel"
+	"github.com/wagoodman/dive/utils"
 )
 
 type ViewOptionChangeListener func() error
