@@ -33,7 +33,7 @@ func GenerateBindings(gui *gocui.Gui, influence string, infos []BindingInfo) ([]
 		var err error
 		var binding *Binding
 
-		if info.ConfigKeys != nil && len(info.ConfigKeys) > 0 {
+		if len(info.ConfigKeys) > 0 {
 			binding, err = NewBindingFromConfig(gui, influence, info.ConfigKeys, info.Display, info.OnAction)
 		} else {
 			binding, err = NewBinding(gui, influence, info.Key, info.Modifier, info.Display, info.OnAction)

@@ -25,7 +25,7 @@ drwxr-xr-x         0:0        0 B  │   │   │   └── nested
 -rw-r--r--         0:0     6.4 kB  │   │   └── somefile3.txt
 -rwxr-xr-x         0:0     6.4 kB  │   └── saved.txt
 -rw-rw-r--         0:0     6.4 kB  ├── somefile.txt
-drwxrwxrwx         0:0     6.4 kB  ├── tmp
+drwxrwxrwt         0:0     6.4 kB  ├── tmp
 -rw-r--r--         0:0     6.4 kB  │   └── saved.again1.txt
 drwxr-xr-x         0:0        0 B  ├── usr
 drwxr-xr-x         1:1        0 B  │   └── sbin

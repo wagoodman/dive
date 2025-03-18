@@ -3,6 +3,9 @@ package export
 import (
 	"encoding/json"
 
+	"github.com/sirupsen/logrus"
+
+	"github.com/wagoodman/dive/dive/filetree"
 	diveImage "github.com/wagoodman/dive/dive/image"
 )
 
@@ -11,6 +14,7 @@ type export struct {
 	Image image   `json:"image"`
 }
 
+// NewExport exports the analysis to a JSON
 func NewExport(analysis *diveImage.AnalysisResult) *export {
 	data := export{
 		Layer: make([]layer, len(analysis.Layers)),
@@ -24,12 +28,22 @@ func NewExport(analysis *diveImage.AnalysisResult) *export {
 
 	// export layers in order
 	for idx, curLayer := range analysis.Layers {
+		layerFileList := make([]filetree.FileInfo, 0)
+		visitor := func(node *filetree.FileNode) error {
+			layerFileList = append(layerFileList, node.Data.FileInfo)
+			return nil
+		}
+		err := curLayer.Tree.VisitDepthChildFirst(visitor, nil)
+		if err != nil {
+			logrus.Errorf("Unable to propagate layer tree: %+v", err)
+		}
 		data.Layer[idx] = layer{
 			Index:     curLayer.Index,
 			ID:        curLayer.Id,
 			DigestID:  curLayer.Digest,
 			SizeBytes: curLayer.Size,
 			Command:   curLayer.Command,
+			FileList:  layerFileList,
 		}
 	}
 

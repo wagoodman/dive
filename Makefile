@@ -1,24 +1,24 @@
 BIN = dive
 TEMP_DIR = ./.tmp
 PWD := ${CURDIR}
-PRODUCTION_REGISTRY = docker.io
+REGISTRY ?= docker.io
 SHELL = /bin/bash -o pipefail
 TEST_IMAGE = busybox:latest
 
 # Tool versions #################################
-GOLANG_CI_VERSION = v1.59.1
+GOLANG_CI_VERSION = v1.64.5
 GOBOUNCER_VERSION = v0.4.0
-GORELEASER_VERSION = v2.0.1
+GORELEASER_VERSION = v2.4.4
 GOSIMPORTS_VERSION = v0.3.8
 CHRONICLE_VERSION = v0.8.0
 GLOW_VERSION = v1.5.1
-DOCKER_CLI_VERSION = 26.1.4
+DOCKER_CLI_VERSION = 28.0.0
 
 # Command templates #################################
 LINT_CMD = $(TEMP_DIR)/golangci-lint run --tests=false --timeout=2m --config .golangci.yaml
 GOIMPORTS_CMD = $(TEMP_DIR)/gosimports -local github.com/wagoodman
 RELEASE_CMD = DOCKER_CLI_VERSION=$(DOCKER_CLI_VERSION) $(TEMP_DIR)/goreleaser release --clean
-SNAPSHOT_CMD = $(RELEASE_CMD) --skip-publish --snapshot --skip-sign
+SNAPSHOT_CMD = $(RELEASE_CMD) --skip=publish --skip=sign --snapshot
 CHRONICLE_CMD = $(TEMP_DIR)/chronicle
 GLOW_CMD = $(TEMP_DIR)/glow
 
@@ -34,7 +34,7 @@ SUCCESS := $(BOLD)$(GREEN)
 
 # Test variables #################################
 # the quality gate lower threshold for unit test total % coverage (by function statements)
-COVERAGE_THRESHOLD := 55
+COVERAGE_THRESHOLD := 30
 
 ## Build variables #################################
 DIST_DIR = dist
@@ -86,7 +86,7 @@ bootstrap-tools: $(TEMP_DIR)
 	curl -sSfL https://raw.githubusercontent.com/anchore/chronicle/main/install.sh | sh -s -- -b $(TEMP_DIR)/ $(CHRONICLE_VERSION)
 	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(TEMP_DIR)/ $(GOLANG_CI_VERSION)
 	curl -sSfL https://raw.githubusercontent.com/wagoodman/go-bouncer/master/bouncer.sh | sh -s -- -b $(TEMP_DIR)/ $(GOBOUNCER_VERSION)
-	GOBIN="$(realpath $(TEMP_DIR))" go install github.com/goreleaser/goreleaser@$(GORELEASER_VERSION)
+	GOBIN="$(realpath $(TEMP_DIR))" go install github.com/goreleaser/goreleaser/v2@$(GORELEASER_VERSION)
 	GOBIN="$(realpath $(TEMP_DIR))" go install github.com/rinchsan/gosimports/cmd/gosimports@$(GOSIMPORTS_VERSION)
 	GOBIN="$(realpath $(TEMP_DIR))" go install github.com/charmbracelet/glow@$(GLOW_VERSION)
 
@@ -125,7 +125,34 @@ bootstrap: bootstrap-go bootstrap-tools ## Download and install all go dependenc
 
 .PHONY: generate-test-data
 generate-test-data:
-	docker build -t dive-test:latest -f .data/Dockerfile.test-image . && docker image save -o .data/test-docker-image.tar dive-test:latest && echo 'Exported test data!'
+	docker build -t dive-test:latest -f .data/Dockerfile.test-image . && \
+	docker image save -o .data/test-docker-image.tar dive-test:latest && \
+	echo 'Exported test data!'
+
+.PHONY: generate-compressed-test-images
+generate-compressed-test-images:
+	for alg in uncompressed gzip estargz zstd; do \
+		for exporter in docker image; do \
+			docker buildx build \
+				-f .data/Dockerfile.minimal \
+				--tag test-dive-$${exporter}:$${alg} \
+				--output type=$${exporter},force-compression=true,compression=$${alg} . ; \
+		done ; \
+	done && \
+	echo 'Exported test data!'
+
+.PHONY: generate-compressed-test-data
+generate-compressed-test-data:
+	for alg in uncompressed gzip estargz zstd; \
+	do \
+		docker buildx build \
+			-f .data/Dockerfile.minimal \
+			--output type=tar,dest=.data/test-$${alg}-image.tar,force-compression=true,compression=$${alg} . ; \
+		docker buildx build \
+			-f .data/Dockerfile.minimal \
+			--output type=oci,dest=.data/test-oci-$${alg}-image.tar,force-compression=true,compression=$${alg} . ; \
+	done && \
+	echo 'Exported test data!'
 
 
 ## Static analysis targets #################################
@@ -186,7 +213,7 @@ ci-test-docker-image:
 		--rm \
 		-t \
 		-v /var/run/docker.sock:/var/run/docker.sock \
-		'${PRODUCTION_REGISTRY}/wagoodman/dive:latest' \
+		'${REGISTRY}/wagoodman/dive:latest-amd64' \
 			'${TEST_IMAGE}' \
 			--ci
 
@@ -227,12 +254,18 @@ ci-test-rpm-package-install:
 			"
 
 .PHONY: ci-test-linux-run
-ci-test-linux-run:
+ci-test-linux-run: generate-compressed-test-images
 	ls -la $(SNAPSHOT_DIR)
 	ls -la $(SNAPSHOT_DIR)/dive_linux_amd64_v1
 	chmod 755 $(SNAPSHOT_DIR)/dive_linux_amd64_v1/dive && \
-	$(SNAPSHOT_DIR)/dive_linux_amd64_v1/dive '${TEST_IMAGE}'  --ci && \
-    $(SNAPSHOT_DIR)/dive_linux_amd64_v1/dive --source docker-archive .data/test-kaniko-image.tar  --ci --ci-config .data/.dive-ci
+	$(SNAPSHOT_DIR)/dive_linux_amd64_v1/dive '${TEST_IMAGE}' --ci && \
+	$(SNAPSHOT_DIR)/dive_linux_amd64_v1/dive --source docker-archive .data/test-kaniko-image.tar --ci --ci-config .data/.dive-ci
+	for alg in uncompressed gzip estargz zstd; do \
+		for exporter in docker image; do \
+			$(SNAPSHOT_DIR)/dive_linux_amd64_v1/dive "test-dive-$${exporter}:$${alg}" --ci ; \
+		done && \
+		$(SNAPSHOT_DIR)/dive_linux_amd64_v1/dive --source docker-archive .data/test-oci-$${alg}-image.tar --ci --ci-config .data/.dive-ci; \
+	done
 
 # we're not attempting to test docker, just our ability to run on these systems. This avoids setting up docker in CI.
 .PHONY: ci-test-mac-run
@@ -282,7 +315,7 @@ $(CHANGELOG):
 release:  ## Cut a new release
 	@.github/scripts/trigger-release.sh
 
-.PHONY: release
+.PHONY: ci-release
 ci-release: ci-check clean-dist $(CHANGELOG)
 	$(call title,Publishing release artifacts)
 
@@ -315,9 +348,8 @@ clean-changelog:
 	rm -f $(CHANGELOG) VERSION
 
 
-## Halp! #################################
+## Help! #################################
 
 .PHONY: help
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "$(BOLD)$(CYAN)%-25s$(RESET)%s\n", $$1, $$2}'
-

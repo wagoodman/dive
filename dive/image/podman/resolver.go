@@ -17,6 +17,11 @@ func NewResolverFromEngine() *resolver {
 	return &resolver{}
 }
 
+// Name returns the name of the resolver to display to the user.
+func (r *resolver) Name() string {
+	return "podman"
+}
+
 func (r *resolver) Build(args []string) (*image.Image, error) {
 	id, err := buildImageFromCli(args)
 	if err != nil {
@@ -34,6 +39,21 @@ func (r *resolver) Fetch(id string) (*image.Image, error) {
 	}
 
 	return nil, fmt.Errorf("unable to resolve image '%s': %+v", id, err)
+}
+
+func (r *resolver) Extract(id string, l string, p string) error {
+	// todo: add podman fetch attempt via varlink first...
+
+	err, reader := streamPodmanCmd("image", "save", id)
+	if err != nil {
+		return err
+	}
+
+	if err := docker.ExtractFromImage(io.NopCloser(reader), l, p); err == nil {
+		return nil
+	}
+
+	return fmt.Errorf("unable to extract from image '%s': %+v", id, err)
 }
 
 func (r *resolver) resolveFromDockerArchive(id string) (*image.Image, error) {

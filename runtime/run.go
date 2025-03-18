@@ -35,7 +35,7 @@ func run(enableUi bool, options Options, imageResolver image.Resolver, events ev
 		}
 	} else {
 		events.message(utils.TitleFormat("Image Source: ") + options.Source.String() + "://" + options.Image)
-		events.message(utils.TitleFormat("Fetching image...") + " (this can take a while for large images)")
+		events.message(utils.TitleFormat("Extracting image from "+imageResolver.Name()+"...") + " (this can take a while for large images)")
 		img, err = imageResolver.Fetch(options.Image)
 		if err != nil {
 			events.exitWithErrorMessage("cannot fetch image", err)
@@ -108,7 +108,7 @@ func run(enableUi bool, options Options, imageResolver image.Resolver, events ev
 			// enough sleep will prevent this behavior (todo: remove this hack)
 			time.Sleep(100 * time.Millisecond)
 
-			err = ui.Run(options.Image, analysis, treeStack)
+			err = ui.Run(options.Image, imageResolver, analysis, treeStack)
 			if err != nil {
 				events.exitWithError(err)
 				return

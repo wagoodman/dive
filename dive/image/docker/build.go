@@ -10,6 +10,7 @@ func buildImageFromCli(buildArgs []string) (string, error) {
 		return "", err
 	}
 	defer os.Remove(iidfile.Name())
+	defer iidfile.Close()
 
 	allArgs := append([]string{"--iidfile", iidfile.Name()}, buildArgs...)
 	err = runDockerCmd("build", allArgs...)

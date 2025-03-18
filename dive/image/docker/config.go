@@ -44,3 +44,12 @@ func newConfig(configBytes []byte) config {
 
 	return imageConfig
 }
+
+func isConfig(configBytes []byte) bool {
+	var imageConfig config
+	err := json.Unmarshal(configBytes, &imageConfig)
+	if err != nil {
+		return false
+	}
+	return imageConfig.RootFs.Type == "layers"
+}
