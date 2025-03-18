@@ -80,6 +80,7 @@ func initConfig() {
 	viper.SetDefault("keybinding.quit", "ctrl+c,q")
 	viper.SetDefault("keybinding.toggle-view", "tab")
 	viper.SetDefault("keybinding.filter-files", "ctrl+f, ctrl+slash")
+	viper.SetDefault("keybinding.close-filter-files", "esc")
 	// keybindings: layer view
 	viper.SetDefault("keybinding.compare-all", "ctrl+a")
 	viper.SetDefault("keybinding.compare-layer", "ctrl+l")
@@ -93,8 +94,13 @@ func initConfig() {
 	viper.SetDefault("keybinding.toggle-modified-files", "ctrl+m")
 	viper.SetDefault("keybinding.toggle-unmodified-files", "ctrl+u")
 	viper.SetDefault("keybinding.toggle-wrap-tree", "ctrl+p")
-	viper.SetDefault("keybinding.page-up", "pgup")
-	viper.SetDefault("keybinding.page-down", "pgdn")
+	viper.SetDefault("keybinding.extract-file", "ctrl+e")
+	viper.SetDefault("keybinding.page-up", "pgup,u")
+	viper.SetDefault("keybinding.page-down", "pgdn,d")
+	viper.SetDefault("keybinding.up", "up,k")
+	viper.SetDefault("keybinding.down", "down,j")
+	viper.SetDefault("keybinding.left", "left,h")
+	viper.SetDefault("keybinding.right", "right,l")
 
 	viper.SetDefault("diff.hide", "")
 

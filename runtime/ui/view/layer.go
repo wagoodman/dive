@@ -28,7 +28,7 @@ type Layer struct {
 	helpKeys []*key.Binding
 }
 
-// newLayerView creates a new view object attached the the global [gocui] screen object.
+// newLayerView creates a new view object attached the global [gocui] screen object.
 func newLayerView(gui *gocui.Gui, layers []*image.Layer) (controller *Layer, err error) {
 	controller = new(Layer)
 
@@ -116,14 +116,14 @@ func (v *Layer) Setup(body *gocui.View, header *gocui.View) error {
 			Display:    "Show aggregated changes",
 		},
 		{
-			Key:      gocui.KeyArrowDown,
-			Modifier: gocui.ModNone,
-			OnAction: v.CursorDown,
+			ConfigKeys: []string{"keybinding.down"},
+			Modifier:   gocui.ModNone,
+			OnAction:   v.CursorDown,
 		},
 		{
-			Key:      gocui.KeyArrowUp,
-			Modifier: gocui.ModNone,
-			OnAction: v.CursorUp,
+			ConfigKeys: []string{"keybinding.up"},
+			Modifier:   gocui.ModNone,
+			OnAction:   v.CursorUp,
 		},
 		{
 			ConfigKeys: []string{"keybinding.page-up"},
@@ -217,6 +217,14 @@ func (v *Layer) CursorUp() error {
 		if err == nil {
 			return v.SetCursor(v.vm.LayerIndex - 1)
 		}
+	}
+	return nil
+}
+
+// SetOrigin updates the origin of the layer view pane.
+func (v *Layer) SetOrigin(x, y int) error {
+	if err := v.body.SetOrigin(x, y); err != nil {
+		return err
 	}
 	return nil
 }
@@ -340,6 +348,15 @@ func (v *Layer) Render() error {
 				return err
 			}
 		}
+
+		// Adjust origin, if necessary
+		maxBodyDisplayHeight := int(v.height())
+		if v.vm.LayerIndex > maxBodyDisplayHeight {
+			if err := v.SetOrigin(0, v.vm.LayerIndex-maxBodyDisplayHeight); err != nil {
+				return err
+			}
+		}
+
 		return nil
 	})
 	return nil

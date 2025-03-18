@@ -38,7 +38,7 @@ type FileTreeViewModel struct {
 	Buffer bytes.Buffer
 }
 
-// NewFileTreeViewModel creates a new view object attached the the global [gocui] screen object.
+// NewFileTreeViewModel creates a new view object attached the global [gocui] screen object.
 func NewFileTreeViewModel(tree *filetree.FileTree, refTrees []*filetree.FileTree, cache filetree.Comparer) (treeViewModel *FileTreeViewModel, err error) {
 	treeViewModel = new(FileTreeViewModel)
 
@@ -159,6 +159,11 @@ func (vm *FileTreeViewModel) CursorDown() bool {
 		vm.bufferIndex = vm.height()
 	}
 	return true
+}
+
+// CursorLeft moves the cursor up until we reach the Parent Node or top of the tree
+func (vm *FileTreeViewModel) CurrentNode(filterRegex *regexp.Regexp) *filetree.FileNode {
+	return vm.getAbsPositionNode(filterRegex)
 }
 
 // CursorLeft moves the cursor up until we reach the Parent Node or top of the tree

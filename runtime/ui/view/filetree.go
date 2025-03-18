@@ -17,6 +17,8 @@ import (
 
 type ViewOptionChangeListener func() error
 
+type ViewExtractListener func(string) error
+
 // FileTree holds the UI objects and data models for populating the right pane. Specifically the pane that
 // shows selected layer or aggregate file ASCII tree.
 type FileTree struct {
@@ -29,11 +31,12 @@ type FileTree struct {
 
 	filterRegex         *regexp.Regexp
 	listeners           []ViewOptionChangeListener
+	extractListeners    []ViewExtractListener
 	helpKeys            []*key.Binding
 	requestedWidthRatio float64
 }
 
-// newFileTreeView creates a new view object attached the the global [gocui] screen object.
+// newFileTreeView creates a new view object attached the global [gocui] screen object.
 func newFileTreeView(gui *gocui.Gui, tree *filetree.FileTree, refTrees []*filetree.FileTree, cache filetree.Comparer) (controller *FileTree, err error) {
 	controller = new(FileTree)
 	controller.listeners = make([]ViewOptionChangeListener, 0)
@@ -58,6 +61,10 @@ func newFileTreeView(gui *gocui.Gui, tree *filetree.FileTree, refTrees []*filetr
 
 func (v *FileTree) AddViewOptionChangeListener(listener ...ViewOptionChangeListener) {
 	v.listeners = append(v.listeners, listener...)
+}
+
+func (v *FileTree) AddViewExtractListener(listener ...ViewExtractListener) {
+	v.extractListeners = append(v.extractListeners, listener...)
 }
 
 func (v *FileTree) SetTitle(title string) {
@@ -104,6 +111,11 @@ func (v *FileTree) Setup(view, header *gocui.View) error {
 			Display:    "Toggle sort order",
 		},
 		{
+			ConfigKeys: []string{"keybinding.extract-file"},
+			OnAction:   v.extractFile,
+			Display:    "Extract File",
+		},
+		{
 			ConfigKeys: []string{"keybinding.toggle-added-files"},
 			OnAction:   func() error { return v.toggleShowDiffType(filetree.Added) },
 			IsSelected: func() bool { return !v.vm.HiddenDiffTypes[filetree.Added] },
@@ -148,24 +160,24 @@ func (v *FileTree) Setup(view, header *gocui.View) error {
 			OnAction:   v.PageDown,
 		},
 		{
-			Key:      gocui.KeyArrowDown,
-			Modifier: gocui.ModNone,
-			OnAction: v.CursorDown,
+			ConfigKeys: []string{"keybinding.down"},
+			Modifier:   gocui.ModNone,
+			OnAction:   v.CursorDown,
 		},
 		{
-			Key:      gocui.KeyArrowUp,
-			Modifier: gocui.ModNone,
-			OnAction: v.CursorUp,
+			ConfigKeys: []string{"keybinding.up"},
+			Modifier:   gocui.ModNone,
+			OnAction:   v.CursorUp,
 		},
 		{
-			Key:      gocui.KeyArrowLeft,
-			Modifier: gocui.ModNone,
-			OnAction: v.CursorLeft,
+			ConfigKeys: []string{"keybinding.left"},
+			Modifier:   gocui.ModNone,
+			OnAction:   v.CursorLeft,
 		},
 		{
-			Key:      gocui.KeyArrowRight,
-			Modifier: gocui.ModNone,
-			OnAction: v.CursorRight,
+			ConfigKeys: []string{"keybinding.right"},
+			Modifier:   gocui.ModNone,
+			OnAction:   v.CursorRight,
 		},
 	}
 
@@ -303,9 +315,32 @@ func (v *FileTree) toggleSortOrder() error {
 	return v.Render()
 }
 
+func (v *FileTree) extractFile() error {
+	node := v.vm.CurrentNode(v.filterRegex)
+	for _, listener := range v.extractListeners {
+		err := listener(node.Path())
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func (v *FileTree) toggleWrapTree() error {
 	v.view.Wrap = !v.view.Wrap
-	return nil
+
+	err := v.Update()
+	if err != nil {
+		return err
+	}
+	err = v.Render()
+	if err != nil {
+		return err
+	}
+
+	// we need to render the changes to the status pane as well (not just this contoller/view)
+	return v.notifyOnViewOptionChangeListeners()
 }
 
 func (v *FileTree) notifyOnViewOptionChangeListeners() error {
@@ -335,7 +370,7 @@ func (v *FileTree) toggleAttributes() error {
 		return err
 	}
 
-	// we need to render the changes to the status pane as well (not just this contoller/view)
+	// we need to render the changes to the status pane as well (not just this controller/view)
 	return v.notifyOnViewOptionChangeListeners()
 }
 
@@ -352,7 +387,7 @@ func (v *FileTree) toggleShowDiffType(diffType filetree.DiffType) error {
 		return err
 	}
 
-	// we need to render the changes to the status pane as well (not just this contoller/view)
+	// we need to render the changes to the status pane as well (not just this controller/view)
 	return v.notifyOnViewOptionChangeListeners()
 }
 

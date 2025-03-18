@@ -16,6 +16,14 @@ import (
 
 type defaultResolver struct{}
 
+func (r *defaultResolver) Name() string {
+	return "default-resolver"
+}
+
+func (r *defaultResolver) Extract(id string, l string, p string) error {
+	return nil
+}
+
 func (r *defaultResolver) Fetch(id string) (*image.Image, error) {
 	archive, err := docker.TestLoadArchive("../.data/test-docker-image.tar")
 	if err != nil {
@@ -30,6 +38,14 @@ func (r *defaultResolver) Build(args []string) (*image.Image, error) {
 
 type failedBuildResolver struct{}
 
+func (r *failedBuildResolver) Name() string {
+	return "failed-build-resolver"
+}
+
+func (r *failedBuildResolver) Extract(id string, l string, p string) error {
+	return fmt.Errorf("some extract failure")
+}
+
 func (r *failedBuildResolver) Fetch(id string) (*image.Image, error) {
 	archive, err := docker.TestLoadArchive("../.data/test-docker-image.tar")
 	if err != nil {
@@ -43,6 +59,14 @@ func (r *failedBuildResolver) Build(args []string) (*image.Image, error) {
 }
 
 type failedFetchResolver struct{}
+
+func (r *failedFetchResolver) Name() string {
+	return "failed-fetch-resolver"
+}
+
+func (r *failedFetchResolver) Extract(id string, l string, p string) error {
+	return fmt.Errorf("some extract failure")
+}
 
 func (r *failedFetchResolver) Fetch(id string) (*image.Image, error) {
 	return nil, fmt.Errorf("some fetch failure")
@@ -108,7 +132,7 @@ func TestRun(t *testing.T) {
 			},
 			events: []testEvent{
 				{stdout: "Image Source: docker://dive-example", stderr: "", errorOnExit: false, errMessage: ""},
-				{stdout: "Fetching image... (this can take a while for large images)", stderr: "", errorOnExit: false, errMessage: ""},
+				{stdout: "Extracting image from default-resolver... (this can take a while for large images)", stderr: "", errorOnExit: false, errMessage: ""},
 				{stdout: "Analyzing image...", stderr: "", errorOnExit: false, errMessage: ""},
 				{stdout: "Building cache...", stderr: "", errorOnExit: false, errMessage: ""},
 			},
@@ -126,7 +150,7 @@ func TestRun(t *testing.T) {
 			},
 			events: []testEvent{
 				{stdout: "Image Source: docker://dive-example", stderr: "", errorOnExit: false, errMessage: ""},
-				{stdout: "Fetching image... (this can take a while for large images)", stderr: "", errorOnExit: false, errMessage: ""},
+				{stdout: "Extracting image from default-resolver... (this can take a while for large images)", stderr: "", errorOnExit: false, errMessage: ""},
 				{stdout: "Analyzing image...", stderr: "", errorOnExit: false, errMessage: ""},
 				{stdout: "Building cache...", stderr: "", errorOnExit: false, errMessage: ""},
 			},
@@ -159,7 +183,7 @@ func TestRun(t *testing.T) {
 			},
 			events: []testEvent{
 				{stdout: "Image Source: docker://dive-example", stderr: "", errorOnExit: false, errMessage: ""},
-				{stdout: "Fetching image... (this can take a while for large images)", stderr: "", errorOnExit: false, errMessage: ""},
+				{stdout: "Extracting image from failed-fetch-resolver... (this can take a while for large images)", stderr: "", errorOnExit: false, errMessage: ""},
 				{stdout: "", stderr: "cannot fetch image", errorOnExit: true, errMessage: "some fetch failure"},
 			},
 		},

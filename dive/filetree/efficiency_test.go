@@ -10,7 +10,7 @@ func checkError(t *testing.T, err error, message string) {
 	}
 }
 
-func TestEfficency(t *testing.T) {
+func TestEfficiency(t *testing.T) {
 	trees := make([]*FileTree, 3)
 	for idx := range trees {
 		trees[idx] = NewFileTree()
@@ -56,7 +56,7 @@ func TestEfficency(t *testing.T) {
 	}
 }
 
-func TestEfficency_ScratchImage(t *testing.T) {
+func TestEfficiency_ScratchImage(t *testing.T) {
 	trees := make([]*FileTree, 3)
 	for idx := range trees {
 		trees[idx] = NewFileTree()

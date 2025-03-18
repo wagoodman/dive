@@ -13,19 +13,23 @@ import (
 )
 
 type Controller struct {
-	gui   *gocui.Gui
-	views *view.Views
+	gui       *gocui.Gui
+	views     *view.Views
+	resolver  image.Resolver
+	imageName string
 }
 
-func NewCollection(g *gocui.Gui, imageName string, analysis *image.AnalysisResult, cache filetree.Comparer) (*Controller, error) {
+func NewCollection(g *gocui.Gui, imageName string, resolver image.Resolver, analysis *image.AnalysisResult, cache filetree.Comparer) (*Controller, error) {
 	views, err := view.NewViews(g, imageName, analysis, cache)
 	if err != nil {
 		return nil, err
 	}
 
 	controller := &Controller{
-		gui:   g,
-		views: views,
+		gui:       g,
+		views:     views,
+		resolver:  resolver,
+		imageName: imageName,
 	}
 
 	// layer view cursor down event should trigger an update in the file tree
@@ -33,6 +37,9 @@ func NewCollection(g *gocui.Gui, imageName string, analysis *image.AnalysisResul
 
 	// update the status pane when a filetree option is changed by the user
 	controller.views.Tree.AddViewOptionChangeListener(controller.onFileTreeViewOptionChange)
+
+	// update the status pane when a filetree option is changed by the user
+	controller.views.Tree.AddViewExtractListener(controller.onFileTreeViewExtract)
 
 	// update the tree view while the user types into the filter view
 	controller.views.Filter.AddFilterEditListener(controller.onFilterEdit)
@@ -51,6 +58,10 @@ func NewCollection(g *gocui.Gui, imageName string, analysis *image.AnalysisResul
 	}
 
 	return controller, nil
+}
+
+func (c *Controller) onFileTreeViewExtract(p string) error {
+	return c.resolver.Extract(c.imageName, c.views.LayerDetails.CurrentLayer.Id, p)
 }
 
 func (c *Controller) onFileTreeViewOptionChange() error {
@@ -210,6 +221,15 @@ func (c *Controller) ToggleView() (err error) {
 	}
 
 	return c.UpdateAndRender()
+}
+
+func (c *Controller) CloseFilterView() error {
+	// filter view needs to be visible
+	if c.views.Filter.IsVisible() {
+		// toggle filter view
+		return c.ToggleFilterView()
+	}
+	return nil
 }
 
 func (c *Controller) ToggleFilterView() error {

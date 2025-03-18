@@ -7,13 +7,12 @@ on:
   pull_request:
 
 jobs:
-
   Static-Analysis:
     # Note: changing this job name requires making the same update in the .github/workflows/release.yaml pipeline
     name: "Static analysis"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Bootstrap environment
         uses: ./.github/actions/bootstrap
@@ -21,21 +20,19 @@ jobs:
       - name: Run static analysis
         run: make static-analysis
 
-
   Unit-Test:
     # Note: changing this job name requires making the same update in the .github/workflows/release.yaml pipeline
     name: "Unit tests"
     strategy:
       matrix:
         platform:
-         - ubuntu-latest
-#         - macos-latest # todo: mac runners are expensive minute-wise
-#         - windows-latest # todo: support windows
+          - ubuntu-latest
+    #         - macos-latest # todo: mac runners are expensive minute-wise
+    #         - windows-latest # todo: support windows
 
     runs-on: ${{ matrix.platform }}
     steps:
-
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Bootstrap environment
         uses: ./.github/actions/bootstrap
@@ -43,15 +40,20 @@ jobs:
       - name: Run unit tests
         run: make unit
 
-
   Build-Snapshot-Artifacts:
     name: "Build snapshot artifacts"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Bootstrap environment
         uses: ./.github/actions/bootstrap
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
       - name: Build snapshot artifacts
         run: make snapshot
@@ -65,28 +67,26 @@ jobs:
       # why not use actions/upload-artifact? It is very slow (3 minutes to upload ~600MB of data, vs 10 seconds with this approach).
       # see https://github.com/actions/upload-artifact/issues/199 for more info
       - name: Upload snapshot artifacts
-        uses: actions/cache/save@v3
+        uses: actions/cache/save@v4
         with:
           path: snapshot
           key: snapshot-build-${{ github.run_id }}
 
       # ... however the cache trick doesn't work on windows :(
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: windows-artifacts
           path: snapshot/dive_windows_amd64_v1/dive.exe
 
-
   Acceptance-Linux:
     name: "Acceptance tests (Linux)"
-    needs: [ Build-Snapshot-Artifacts ]
+    needs: [Build-Snapshot-Artifacts]
     runs-on: ubuntu-latest
     steps:
-
       - uses: actions/checkout@master
 
       - name: Download snapshot build
-        uses: actions/cache/restore@v3
+        uses: actions/cache/restore@v4
         with:
           path: snapshot
           key: snapshot-build-${{ github.run_id }}
@@ -100,17 +100,15 @@ jobs:
       - name: Test RPM package installation
         run: make ci-test-rpm-package-install
 
-
   Acceptance-Mac:
     name: "Acceptance tests (Mac)"
-    needs: [ Build-Snapshot-Artifacts ]
+    needs: [Build-Snapshot-Artifacts]
     runs-on: macos-latest
     steps:
-
       - uses: actions/checkout@master
 
       - name: Download snapshot build
-        uses: actions/cache/restore@v3
+        uses: actions/cache/restore@v4
         with:
           path: snapshot
           key: snapshot-build-${{ github.run_id }}
@@ -118,16 +116,14 @@ jobs:
       - name: Test darwin run
         run: make ci-test-mac-run
 
-
   Acceptance-Windows:
     name: "Acceptance tests (Windows)"
-    needs: [ Build-Snapshot-Artifacts ]
+    needs: [Build-Snapshot-Artifacts]
     runs-on: windows-latest
     steps:
-
       - uses: actions/checkout@master
 
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: windows-artifacts
 

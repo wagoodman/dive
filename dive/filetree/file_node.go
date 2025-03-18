@@ -141,11 +141,33 @@ func (node *FileNode) MetadataString() string {
 		return ""
 	}
 
-	fileMode := permbits.FileMode(node.Data.FileInfo.Mode).String()
 	dir := "-"
 	if node.Data.FileInfo.IsDir {
 		dir = "d"
 	}
+
+	fm := permbits.FileMode(node.Data.FileInfo.Mode)
+	var fileMode strings.Builder
+	fileMode.Grow(9)
+	cond := func(c bool, x, y byte) byte {
+		if c {
+			return x
+		} else {
+			return y
+		}
+	}
+	fileMode.WriteByte(cond(fm.UserRead(), 'r', '-'))
+	fileMode.WriteByte(cond(fm.UserWrite(), 'w', '-'))
+	fileMode.WriteByte(cond(fm.UserExecute(), cond(fm.Setuid(), 's', 'x'), cond(fm.Setuid(), 'S', '-')))
+
+	fileMode.WriteByte(cond(fm.GroupRead(), 'r', '-'))
+	fileMode.WriteByte(cond(fm.GroupWrite(), 'w', '-'))
+	fileMode.WriteByte(cond(fm.GroupExecute(), cond(fm.Setgid(), 's', 'x'), cond(fm.Setgid(), 'S', '-')))
+
+	fileMode.WriteByte(cond(fm.OtherRead(), 'r', '-'))
+	fileMode.WriteByte(cond(fm.OtherWrite(), 'w', '-'))
+	fileMode.WriteByte(cond(fm.OtherExecute(), cond(fm.Sticky(), 't', 'x'), cond(fm.Sticky(), 'T', '-')))
+
 	user := node.Data.FileInfo.Uid
 	group := node.Data.FileInfo.Gid
 	userGroup := fmt.Sprintf("%d:%d", user, group)
@@ -156,7 +178,7 @@ func (node *FileNode) MetadataString() string {
 
 	size := humanize.Bytes(uint64(sizeBytes))
 
-	return diffTypeColor[node.Data.DiffType].Sprint(fmt.Sprintf(AttributeFormat, dir, fileMode, userGroup, size))
+	return diffTypeColor[node.Data.DiffType].Sprint(fmt.Sprintf(AttributeFormat, dir, fileMode.String(), userGroup, size))
 }
 
 func (node *FileNode) GetSize() int64 {

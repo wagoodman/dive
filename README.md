@@ -5,7 +5,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT%202.0-blue.svg)](https://github.com/wagoodman/dive/blob/main/LICENSE)
 [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg?style=flat)](https://www.paypal.me/wagoodman)
 
-**A tool for exploring a docker image, layer contents, and discovering ways to shrink the size of your Docker/OCI image.**
+**A tool for exploring a Docker image, layer contents, and discovering ways to shrink the size of your Docker/OCI image.**
 
 
 ![Image](.data/demo.gif)
@@ -15,9 +15,9 @@ To analyze a Docker image simply run dive with an image tag/id/digest:
 dive <your-image-tag>
 ```
 
-or you can dive with docker command directly
+or you can dive with Docker directly:
 ```
-alias dive="docker run -ti --rm  -v /var/run/docker.sock:/var/run/docker.sock wagoodman/dive"
+alias dive="docker run -ti --rm  -v /var/run/docker.sock:/var/run/docker.sock ghcr.io/wagoodman/dive"
 dive <your-image-tag>
 
 # for example
@@ -29,7 +29,7 @@ or if you want to build your image then jump straight into analyzing it:
 dive build -t <some-tag> .
 ```
 
-Building on Macbook (supporting only the Docker container engine)
+Building on macOS (supporting only the Docker container engine):
 
 ```bash
 docker run --rm -it \
@@ -37,7 +37,7 @@ docker run --rm -it \
       -v  "$(pwd)":"$(pwd)" \
       -w "$(pwd)" \
       -v "$HOME/.dive.yaml":"$HOME/.dive.yaml" \
-      wagoodman/dive:latest build -t <some-tag> .
+      ghcr.io/wagoodman/dive:latest build -t <some-tag> .
 ```
 
 Additionally you can run this in your CI pipeline to ensure you're keeping wasted space to a minimum (this skips the UI):
@@ -98,7 +98,7 @@ With valid `source` options as such:
 Using debs:
 ```bash
 DIVE_VERSION=$(curl -sL "https://api.github.com/repos/wagoodman/dive/releases/latest" | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/')
-curl -OL https://github.com/wagoodman/dive/releases/download/v${DIVE_VERSION}/dive_${DIVE_VERSION}_linux_amd64.deb
+curl -fOL "https://github.com/wagoodman/dive/releases/download/v${DIVE_VERSION}/dive_${DIVE_VERSION}_linux_amd64.deb"
 sudo apt install ./dive_${DIVE_VERSION}_linux_amd64.deb
 ```
 
@@ -110,10 +110,16 @@ sudo snap connect dive:docker-executables docker:docker-executables
 sudo snap connect dive:docker-daemon docker:docker-daemon
 ```
 
+> [!CAUTION]
+> The Snap method is not recommended if you installed Docker via `apt-get`, since it might break your existing Docker daemon.
+> 
+> See also: https://github.com/wagoodman/dive/issues/546
+
+
 **RHEL/Centos**
 ```bash
 DIVE_VERSION=$(curl -sL "https://api.github.com/repos/wagoodman/dive/releases/latest" | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/')
-curl -OL https://github.com/wagoodman/dive/releases/download/v${DIVE_VERSION}/dive_${DIVE_VERSION}_linux_amd64.rpm
+curl -fOL "https://github.com/wagoodman/dive/releases/download/v${DIVE_VERSION}/dive_${DIVE_VERSION}_linux_amd64.rpm"
 rpm -i dive_${DIVE_VERSION}_linux_amd64.rpm
 ```
 
@@ -130,7 +136,8 @@ pacman -S dive
 If you use [Homebrew](https://brew.sh):
 
 ```bash
-brew install dive
+brew tap wagoodman/dive
+brew install wagoodman/dive/dive
 ```
 
 If you use [MacPorts](https://www.macports.org):
@@ -143,13 +150,31 @@ Or download the latest Darwin build from the [releases page](https://github.com/
 
 **Windows**
 
-Download the [latest release](https://github.com/wagoodman/dive/releases/latest).
+If you use [Chocolatey](https://chocolatey.org)
+
+```powershell
+choco install dive
+```
+
+If you use [scoop](https://scoop.sh/)
+
+```powershell
+scoop install main/dive
+```
+
+If you use [winget](https://learn.microsoft.com/en-gb/windows/package-manager/):
+
+```powershell
+winget install --id wagoodman.dive
+```
+
+Or download the latest Windows build from the [releases page](https://github.com/wagoodman/dive/releases/latest).
 
 **Go tools**
 Requires Go version 1.10 or higher.
 
 ```bash
-go get github.com/wagoodman/dive
+go install github.com/wagoodman/dive@latest
 ```
 *Note*: installing in this way you will not see a proper version when running `dive -v`.
 
@@ -166,27 +191,21 @@ nix-env -iA nixpkgs.dive
 
 **Docker**
 ```bash
-docker pull wagoodman/dive
+docker pull ghcr.io/wagoodman/dive
 ```
 
-or
-
-```bash
-docker pull quay.io/wagoodman/dive
-```
-
-When running you'll need to include the docker socket file:
+When running you'll need to include the Docker socket file:
 ```bash
 docker run --rm -it \
     -v /var/run/docker.sock:/var/run/docker.sock \
-    wagoodman/dive:latest <dive arguments...>
+    ghcr.io/wagoodman/dive:latest <dive arguments...>
 ```
 
 Docker for Windows (showing PowerShell compatible line breaks; collapse to a single line for Command Prompt compatibility)
 ```bash
 docker run --rm -it `
     -v /var/run/docker.sock:/var/run/docker.sock `
-    wagoodman/dive:latest <dive arguments...>
+    ghcr.io/wagoodman/dive:latest <dive arguments...>
 ```
 
 **Note:** depending on the version of docker you are running locally you may need to specify the docker API version as an environment variable:
@@ -198,7 +217,7 @@ or if you are running with a docker image:
 docker run --rm -it \
     -v /var/run/docker.sock:/var/run/docker.sock \
     -e DOCKER_API_VERSION=1.37 \
-    wagoodman/dive:latest <dive arguments...>
+    ghcr.io/wagoodman/dive:latest <dive arguments...>
 ```
 
 ## CI Integration
@@ -228,8 +247,11 @@ Key Binding                                | Description
 <kbd>Ctrl + C</kbd> or <kbd>Q</kbd>        | Exit
 <kbd>Tab</kbd>                             | Switch between the layer and filetree views
 <kbd>Ctrl + F</kbd>                        | Filter files
-<kbd>PageUp</kbd>                          | Scroll up a page
-<kbd>PageDown</kbd>                        | Scroll down a page
+<kbd>ESC</kbd>                             | Close filter files
+<kbd>PageUp</kbd> or <kbd>U</kbd>          | Scroll up a page
+<kbd>PageDown</kbd> or <kbd>D</kbd>        | Scroll down a page
+<kbd>Up</kbd> or <kbd>K</kbd>              | Move up one line within a page
+<kbd>Down</kbd> or <kbd>J</kbd>            | Move down one line within a page
 <kbd>Ctrl + A</kbd>                        | Layer view: see aggregated image modifications
 <kbd>Ctrl + L</kbd>                        | Layer view: see current layer modifications
 <kbd>Space</kbd>                           | Filetree view: collapse/uncollapse a directory
@@ -239,8 +261,8 @@ Key Binding                                | Description
 <kbd>Ctrl + M</kbd>                        | Filetree view: show/hide modified files
 <kbd>Ctrl + U</kbd>                        | Filetree view: show/hide unmodified files
 <kbd>Ctrl + B</kbd>                        | Filetree view: show/hide file attributes
-<kbd>PageUp</kbd>                          | Filetree view: scroll up a page
-<kbd>PageDown</kbd>                        | Filetree view: scroll down a page
+<kbd>PageUp</kbd> or <kbd>U</kbd>          | Filetree view: scroll up a page
+<kbd>PageDown</kbd> or <kbd>D</kbd>        | Filetree view: scroll down a page
 
 ## UI Configuration
 
@@ -262,6 +284,11 @@ keybinding:
   quit: ctrl+c
   toggle-view: tab
   filter-files: ctrl+f, ctrl+slash
+  close-filter-files: esc
+  up: up,k
+  down: down,j
+  left: left,h
+  right: right,l
 
   # Layer view specific bindings
   compare-all: ctrl+a
@@ -275,8 +302,8 @@ keybinding:
   toggle-modified-files: ctrl+m
   toggle-unmodified-files: ctrl+u
   toggle-filetree-attributes: ctrl+b
-  page-up: pgup
-  page-down: pgdn
+  page-up: pgup,u
+  page-down: pgdn,d
 
 diff:
   # You can change the default files shown in the filetree (right pane). All diff types are shown by default.

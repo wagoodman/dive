@@ -1,3 +1,5 @@
+version: 2
+
 release:
   # If set to auto, will mark the release as not ready for production in case there is an indicator for this in the
   # tag e.g. v1.0.0-rc1 .If set to true, will mark the release as not ready for production.
@@ -17,6 +19,7 @@ builds:
     goarch:
       - amd64
       - arm64
+      - ppc64le
     ldflags: -s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.buildTime={{.Date}}`.
 
 brews:
@@ -43,15 +46,44 @@ nfpms:
       - deb
 
 dockers:
-  -
+  - id: docker-amd64
     ids:
       - dive
-    dockerfile: Dockerfile
-    # todo: on 1.0 remove 'v' prefix
+    use: buildx
+    goarch: amd64
     image_templates:
-      - "wagoodman/dive:latest"
-      - "wagoodman/dive:{{ .Tag }}"
-      - "wagoodman/dive:v{{ .Major }}"
-      - "wagoodman/dive:v{{ .Major }}.{{ .Minor }}"
+      - '{{ envOrDefault "REGISTRY" "docker.io" }}/wagoodman/dive:latest-amd64'
+      - '{{ envOrDefault "REGISTRY" "docker.io" }}/wagoodman/dive:{{ .Version }}-amd64'
     build_flag_templates:
       - "--build-arg=DOCKER_CLI_VERSION={{.Env.DOCKER_CLI_VERSION}}"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.title={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+      - "--label=org.opencontainers.image.source={{.GitURL}}"
+      - "--platform=linux/amd64"
+  - id: docker-arm64
+    ids:
+      - dive
+    use: buildx
+    goarch: arm64
+    image_templates:
+      - '{{ envOrDefault "REGISTRY" "docker.io" }}/wagoodman/dive:latest-arm64'
+      - '{{ envOrDefault "REGISTRY" "docker.io" }}/wagoodman/dive:{{ .Version }}-arm64'
+    build_flag_templates:
+      - "--build-arg=DOCKER_CLI_VERSION={{.Env.DOCKER_CLI_VERSION}}"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.title={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+      - "--label=org.opencontainers.image.source={{.GitURL}}"
+      - "--platform=linux/arm64/v8"
+docker_manifests:
+  - name_template: '{{ envOrDefault "REGISTRY" "docker.io" }}/wagoodman/dive:latest'
+    image_templates:
+      - '{{ envOrDefault "REGISTRY" "docker.io" }}/wagoodman/dive:latest-amd64'
+      - '{{ envOrDefault "REGISTRY" "docker.io" }}/wagoodman/dive:latest-arm64'
+  - name_template: '{{ envOrDefault "REGISTRY" "docker.io" }}/wagoodman/dive:{{ .Version }}'
+    image_templates:
+      - '{{ envOrDefault "REGISTRY" "docker.io" }}/wagoodman/dive:{{ .Version }}-amd64'
+      - '{{ envOrDefault "REGISTRY" "docker.io" }}/wagoodman/dive:{{ .Version }}-arm64'

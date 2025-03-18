@@ -55,7 +55,7 @@ func helperCheckDiff(t *testing.T, expected, actual []byte) {
 	if !bytes.Equal(expected, actual) {
 		dmp := diffmatchpatch.New()
 		diffs := dmp.DiffMain(string(expected), string(actual), true)
-		t.Errorf(dmp.DiffPrettyText(diffs))
+		t.Errorf("%s", dmp.DiffPrettyText(diffs))
 		t.Errorf("%s: bytes mismatch", t.Name())
 	}
 }

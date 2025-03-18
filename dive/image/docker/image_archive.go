@@ -9,7 +9,10 @@ import (
 	"io"
 	"os"
 	"path"
+	"path/filepath"
 	"strings"
+
+	"github.com/klauspost/compress/zstd"
 
 	"github.com/wagoodman/dive/dive/filetree"
 	"github.com/wagoodman/dive/dive/image"
@@ -93,25 +96,21 @@ func NewImageArchive(tarFile io.ReadCloser) (*ImageArchive, error) {
 				// never consume more bytes than this buffer contains so we can start again.
 
 				// 512 bytes ought to be enough (as that's the size of a TAR entry header),
-				// but play it safe with 1024 bytes. This should also include very small layers
-				// (unless they've also been gzipped, but Docker does not appear to do it)
+				// but play it safe with 1024 bytes. This should also include very small layers.
 				buffer := make([]byte, 1024)
 				n, err := io.ReadFull(tarReader, buffer)
 				if err != nil && err != io.ErrUnexpectedEOF {
 					return img, err
 				}
 
-				// Only try reading a TAR if file is "big enough"
-				if n == cap(buffer) {
-					var unwrappedReader io.Reader
-					unwrappedReader, err = gzip.NewReader(io.MultiReader(bytes.NewReader(buffer[:n]), tarReader))
-					if err != nil {
-						// Not a gzipped entry
-						unwrappedReader = io.MultiReader(bytes.NewReader(buffer[:n]), tarReader)
-					}
+				originalReader := func() io.Reader {
+					return io.MultiReader(bytes.NewReader(buffer[:n]), tarReader)
+				}
 
-					// Try reading a TAR
-					layerReader := tar.NewReader(unwrappedReader)
+				// Try reading a gzip/estargz compressed layer
+				gzipReader, err := gzip.NewReader(originalReader())
+				if err == nil {
+					layerReader := tar.NewReader(gzipReader)
 					tree, err := processLayerTar(name, layerReader)
 					if err == nil {
 						currentLayer++
@@ -121,13 +120,36 @@ func NewImageArchive(tarFile io.ReadCloser) (*ImageArchive, error) {
 					}
 				}
 
-				// Not a TAR (or smaller than our buffer), might be a JSON file
+				// Try reading a zstd compressed layer
+				zstdReader, err := zstd.NewReader(originalReader())
+				if err == nil {
+					layerReader := tar.NewReader(zstdReader)
+					tree, err := processLayerTar(name, layerReader)
+					if err == nil {
+						currentLayer++
+						// add the layer to the image
+						img.layerMap[tree.Name] = tree
+						continue
+					}
+				}
+
+				// Try reading a plain tar layer
+				layerReader := tar.NewReader(originalReader())
+				tree, err := processLayerTar(name, layerReader)
+				if err == nil {
+					currentLayer++
+					// add the layer to the image
+					img.layerMap[tree.Name] = tree
+					continue
+				}
+
+				// Not a TAR/GZIP/ZSTD, might be a JSON file
 				decoder := json.NewDecoder(bytes.NewReader(buffer[:n]))
 				token, err := decoder.Token()
 				if _, ok := token.(json.Delim); err == nil && ok {
 					// Looks like a JSON object (or array)
 					// XXX: should we add a header.Size check too?
-					fileBuffer, err := io.ReadAll(io.MultiReader(bytes.NewReader(buffer[:n]), tarReader))
+					fileBuffer, err := io.ReadAll(originalReader())
 					if err != nil {
 						return img, err
 					}
@@ -139,11 +161,31 @@ func NewImageArchive(tarFile io.ReadCloser) (*ImageArchive, error) {
 	}
 
 	manifestContent, exists := jsonFiles["manifest.json"]
-	if !exists {
-		return img, fmt.Errorf("could not find image manifest")
-	}
+	if exists {
+		img.manifest = newManifest(manifestContent)
+	} else {
+		// manifest.json is not part of the OCI spec, docker includes it for compatibility
+		// Provide compatibility by finding the config and using our layerMap
+		var configPath string
+		for path, content := range jsonFiles {
+			if isConfig(content) {
+				configPath = path
+				break
+			}
+		}
+		if len(configPath) == 0 {
+			return img, fmt.Errorf("could not find image manifest")
+		}
 
-	img.manifest = newManifest(manifestContent)
+		var layerPaths []string
+		for k := range img.layerMap {
+			layerPaths = append(layerPaths, k)
+		}
+		img.manifest = manifest{
+			ConfigPath:    configPath,
+			LayerTarPaths: layerPaths,
+		}
+	}
 
 	configContent, exists := jsonFiles[img.manifest.ConfigPath]
 	if !exists {
@@ -255,4 +297,81 @@ func (img *ImageArchive) ToImage() (*image.Image, error) {
 		Trees:  trees,
 		Layers: layers,
 	}, nil
+}
+
+func ExtractFromImage(tarFile io.ReadCloser, l string, p string) error {
+	tarReader := tar.NewReader(tarFile)
+
+	for {
+		header, err := tarReader.Next()
+
+		if err == io.EOF {
+			break
+		}
+
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+
+		name := header.Name
+
+		switch header.Typeflag {
+		case tar.TypeReg:
+			if name == l {
+				err = extractInner(tar.NewReader(tarReader), p)
+				if err != nil {
+					return err
+				}
+				return nil
+			}
+		default:
+			continue
+		}
+	}
+
+	return nil
+}
+
+func extractInner(reader *tar.Reader, p string) error {
+	target := strings.TrimPrefix(p, "/")
+
+	for {
+		header, err := reader.Next()
+
+		if err == io.EOF {
+			break
+		}
+
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+
+		name := header.Name
+
+		switch header.Typeflag {
+		case tar.TypeReg:
+			if strings.HasPrefix(name, target) {
+				err := os.MkdirAll(filepath.Dir(name), 0755)
+				if err != nil {
+					return err
+				}
+
+				out, err := os.Create(name)
+				if err != nil {
+					return err
+				}
+
+				_, err = io.Copy(out, reader)
+				if err != nil {
+					return err
+				}
+			}
+		default:
+			continue
+		}
+	}
+
+	return nil
 }
