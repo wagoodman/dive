@@ -219,6 +219,10 @@ docker run --rm -it \
     -e DOCKER_API_VERSION=1.37 \
     ghcr.io/wagoodman/dive:latest <dive arguments...>
 ```
+if you are using an alternative runtime (Colima etc) then you may need to specify the docker host as an environment variable in order to pull local images:
+```bash
+   export DOCKER_HOST=$(docker context inspect -f '{{ .Endpoints.docker.Host }}')
+```
 
 ## CI Integration
 
