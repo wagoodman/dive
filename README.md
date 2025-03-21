@@ -17,7 +17,7 @@ dive <your-image-tag>
 
 or you can dive with Docker directly:
 ```
-alias dive="docker run -ti --rm  -v /var/run/docker.sock:/var/run/docker.sock ghcr.io/wagoodman/dive"
+alias dive="docker run -ti --rm  -v /var/run/docker.sock:/var/run/docker.sock docker.io/wagoodman/dive"
 dive <your-image-tag>
 
 # for example
@@ -37,7 +37,7 @@ docker run --rm -it \
       -v  "$(pwd)":"$(pwd)" \
       -w "$(pwd)" \
       -v "$HOME/.dive.yaml":"$HOME/.dive.yaml" \
-      ghcr.io/wagoodman/dive:latest build -t <some-tag> .
+      docker.io/wagoodman/dive:latest build -t <some-tag> .
 ```
 
 Additionally you can run this in your CI pipeline to ensure you're keeping wasted space to a minimum (this skips the UI):
@@ -191,21 +191,21 @@ nix-env -iA nixpkgs.dive
 
 **Docker**
 ```bash
-docker pull ghcr.io/wagoodman/dive
+docker pull docker.io/wagoodman/dive
 ```
 
 When running you'll need to include the Docker socket file:
 ```bash
 docker run --rm -it \
     -v /var/run/docker.sock:/var/run/docker.sock \
-    ghcr.io/wagoodman/dive:latest <dive arguments...>
+    docker.io/wagoodman/dive:latest <dive arguments...>
 ```
 
 Docker for Windows (showing PowerShell compatible line breaks; collapse to a single line for Command Prompt compatibility)
 ```bash
 docker run --rm -it `
     -v /var/run/docker.sock:/var/run/docker.sock `
-    ghcr.io/wagoodman/dive:latest <dive arguments...>
+    docker.io/wagoodman/dive:latest <dive arguments...>
 ```
 
 **Note:** depending on the version of docker you are running locally you may need to specify the docker API version as an environment variable:
@@ -217,7 +217,7 @@ or if you are running with a docker image:
 docker run --rm -it \
     -v /var/run/docker.sock:/var/run/docker.sock \
     -e DOCKER_API_VERSION=1.37 \
-    ghcr.io/wagoodman/dive:latest <dive arguments...>
+    docker.io/wagoodman/dive:latest <dive arguments...>
 ```
 if you are using an alternative runtime (Colima etc) then you may need to specify the docker host as an environment variable in order to pull local images:
 ```bash
