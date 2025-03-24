@@ -59,7 +59,7 @@ dockers:
     use: buildx
     goarch: amd64
     image_templates:
-      - docker.io/wagoodman/dive:{{.Version}}-amd64
+      - docker.io/wagoodman/dive:v{{.Version}}-amd64
     build_flag_templates:
       - "--build-arg=DOCKER_CLI_VERSION={{.Env.DOCKER_CLI_VERSION}}"
       - "--platform=linux/amd64"
@@ -81,7 +81,7 @@ dockers:
     use: buildx
     goarch: arm64
     image_templates:
-      - docker.io/wagoodman/dive:{{.Version}}-arm64
+      - docker.io/wagoodman/dive:v{{.Version}}-arm64
     build_flag_templates:
       - "--build-arg=DOCKER_CLI_VERSION={{.Env.DOCKER_CLI_VERSION}}"
       - "--platform=linux/arm64/v8"
@@ -99,41 +99,41 @@ dockers:
   - id: ghcr-amd64
     <<: *dockerhub_amd64
     image_templates:
-      - ghcr.io/wagoodman/dive:{{.Version}}-amd64
+      - ghcr.io/wagoodman/dive:v{{.Version}}-amd64
 
   # ghcr.io arm64
   - id: ghcr-arm64
     <<: *dockerhub_arm64
     image_templates:
-      - ghcr.io/wagoodman/dive:{{.Version}}-arm64
+      - ghcr.io/wagoodman/dive:v{{.Version}}-arm64
 
 docker_manifests:
   # docker.io manifests
   - name_template: docker.io/wagoodman/dive:latest
     image_templates: &dockerhub_images
-      - docker.io/wagoodman/dive:{{.Version}}-amd64
-      - docker.io/wagoodman/dive:{{.Version}}-arm64
+      - docker.io/wagoodman/dive:v{{.Version}}-amd64
+      - docker.io/wagoodman/dive:v{{.Version}}-arm64
 
-  - name_template: docker.io/wagoodman/dive:{{.Major}}
+  - name_template: docker.io/wagoodman/dive:v{{.Major}}
     image_templates: *dockerhub_images
 
-  - name_template: docker.io/wagoodman/dive:{{.Major}}.{{.Minor}}
+  - name_template: docker.io/wagoodman/dive:v{{.Major}}.{{.Minor}}
     image_templates: *dockerhub_images
 
-  - name_template: docker.io/wagoodman/dive:{{.Version}}
+  - name_template: docker.io/wagoodman/dive:v{{.Version}}
     image_templates: *dockerhub_images
 
   # ghcr.io manifests
   - name_template: ghcr.io/wagoodman/dive:latest
     image_templates: &ghcr_images
-      - ghcr.io/wagoodman/dive:{{.Version}}-amd64
-      - ghcr.io/wagoodman/dive:{{.Version}}-arm64
+      - ghcr.io/wagoodman/dive:v{{.Version}}-amd64
+      - ghcr.io/wagoodman/dive:v{{.Version}}-arm64
 
-  - name_template: ghcr.io/wagoodman/dive:{{.Major}}
+  - name_template: ghcr.io/wagoodman/dive:v{{.Major}}
     image_templates: *ghcr_images
 
-  - name_template: ghcr.io/wagoodman/dive:{{.Major}}.{{.Minor}}
+  - name_template: ghcr.io/wagoodman/dive:v{{.Major}}.{{.Minor}}
     image_templates: *ghcr_images
 
-  - name_template: ghcr.io/wagoodman/dive:{{.Version}}
+  - name_template: ghcr.io/wagoodman/dive:v{{.Version}}
     image_templates: *ghcr_images
