@@ -83,9 +83,6 @@ jobs:
       contents: write
       # for pushing container images
       packages: write
-    env:
-      REGISTRY: ghcr.io
-      IMAGE_NAME: ${{ github.repository }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -93,12 +90,6 @@ jobs:
 
       - name: Bootstrap environment
         uses: ./.github/actions/bootstrap
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
 
       - name: Tag release
         run: |
@@ -110,7 +101,7 @@ jobs:
       - name: Login to container registry
         uses: docker/login-action@v3
         with:
-          registry: ${{ env.REGISTRY }}
+          registry: docker.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 

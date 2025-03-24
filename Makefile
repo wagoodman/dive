@@ -1,7 +1,6 @@
 BIN = dive
 TEMP_DIR = ./.tmp
 PWD := ${CURDIR}
-REGISTRY ?= docker.io
 SHELL = /bin/bash -o pipefail
 TEST_IMAGE = busybox:latest
 
@@ -213,7 +212,7 @@ ci-test-docker-image:
 		--rm \
 		-t \
 		-v /var/run/docker.sock:/var/run/docker.sock \
-		'${REGISTRY}/wagoodman/dive:latest-amd64' \
+		'docker.io/wagoodman/dive:latest-amd64' \
 			'${TEST_IMAGE}' \
 			--ci
 

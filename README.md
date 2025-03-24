@@ -192,6 +192,8 @@ nix-env -iA nixpkgs.dive
 **Docker**
 ```bash
 docker pull docker.io/wagoodman/dive
+# or alternatively
+docker pull ghcr.io/wagoodman/dive
 ```
 
 When running you'll need to include the Docker socket file:
