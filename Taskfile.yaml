@@ -1,0 +1,382 @@
+
+version: "3"
+vars:
+  OWNER: wagoodman
+  PROJECT: dive
+
+  # static file dirs
+  TOOL_DIR: .tool
+  TMP_DIR: .tmp
+
+  # TOOLS
+  BINNY: "{{ .TOOL_DIR }}/binny"
+  CHRONICLE: "{{ .TOOL_DIR }}/chronicle"
+  GORELEASER: "{{ .TOOL_DIR }}/goreleaser"
+  GOLANGCI_LINT: "{{ .TOOL_DIR }}/golangci-lint"
+  TASK: "{{ .TOOL_DIR }}/task"
+  BOUNCER: "{{ .TOOL_DIR }}/bouncer"
+  GLOW: "{{ .TOOL_DIR }}/glow"
+
+  # used for changelog generation
+  CHANGELOG: CHANGELOG.md
+  NEXT_VERSION: VERSION
+
+  # note: the snapshot dir must be a relative path starting with ./
+  SNAPSHOT_DIR: ./snapshot
+  SNAPSHOT_CMD: "{{ .GORELEASER }} release --config {{ .TMP_DIR }}/goreleaser.yaml --clean --snapshot --skip=publish --skip=sign"
+  BUILD_CMD:    "{{ .GORELEASER }} build   --config {{ .TMP_DIR }}/goreleaser.yaml --clean --snapshot --single-target"
+  RELEASE_CMD:  "{{ .GORELEASER }} release --clean --release-notes {{ .CHANGELOG }}"
+  VERSION:
+    sh: git describe --dirty --always --tags
+
+  # used for acceptance tests
+  TEST_IMAGE: busybox:latest
+  DOCKER_CLI_VERSION: 28.0.0
+
+env:
+  GNUMAKEFLAGS: '--no-print-directory'
+  DOCKER_CLI_VERSION: "{{ .DOCKER_CLI_VERSION }}"
+
+tasks:
+
+  ## High-level tasks #################################
+
+  default:
+    desc: Run all validation tasks
+    aliases:
+      - pr-validations
+      - validations
+    cmds:
+      - task: static-analysis
+      - task: test
+
+  static-analysis:
+    desc: Run all static analysis tasks
+    cmds:
+      - task: check-go-mod-tidy
+      - task: check-licenses
+      - task: lint
+
+  test:
+    desc: Run all levels of test
+    cmds:
+      - task: unit
+
+  ## Bootstrap tasks #################################
+
+  binny:
+    internal: true
+    # desc: Get the binny tool
+    generates:
+      - "{{ .BINNY }}"
+    status:
+      - "test -f {{ .BINNY }}"
+    cmd: "curl -sSfL https://raw.githubusercontent.com/anchore/binny/main/install.sh | sh -s -- -b .tool"
+    silent: true
+
+  tools:
+    desc: Install all tools needed for CI and local development
+    deps: [binny]
+    aliases:
+      - bootstrap
+    generates:
+      - ".binny.yaml"
+      - "{{ .TOOL_DIR }}/*"
+    status:
+      - "{{ .BINNY }} check -v"
+    cmd: "{{ .BINNY }} install -v"
+    silent: true
+
+  update-tools:
+    desc: Update pinned versions of all tools to their latest available versions
+    deps: [binny]
+    generates:
+      - ".binny.yaml"
+      - "{{ .TOOL_DIR }}/*"
+    cmd: "{{ .BINNY }} update -v"
+    silent: true
+
+  list-tools:
+    desc: List all tools needed for CI and local development
+    deps: [binny]
+    cmd: "{{ .BINNY }} list"
+    silent: true
+
+  list-tool-updates:
+    desc: List all tools that are not up to date relative to the binny config
+    deps: [binny]
+    cmd: "{{ .BINNY }} list --updates"
+    silent: true
+
+  tmpdir:
+    silent: true
+    generates:
+      - "{{ .TMP_DIR }}"
+    cmd: "mkdir -p {{ .TMP_DIR }}"
+
+  ## Static analysis tasks #################################
+
+  format:
+    desc: Auto-format all source code
+    deps: [tools]
+    cmds:
+      - gofmt -w -s .
+      - go mod tidy
+
+  lint-fix:
+    desc: Auto-format all source code + run golangci lint fixers
+    deps: [tools]
+    cmds:
+      - task: format
+      - "{{ .GOLANGCI_LINT }} run --tests=false --fix"
+
+  lint:
+    desc: Run gofmt + golangci lint checks
+    vars:
+      BAD_FMT_FILES:
+        sh: gofmt -l -s .
+      BAD_FILE_NAMES:
+        sh: "find . | grep -e ':' || true"
+    deps: [tools]
+    cmds:
+      # ensure there are no go fmt differences
+      - cmd: 'test -z "{{ .BAD_FMT_FILES }}" || (echo "files with gofmt issues: [{{ .BAD_FMT_FILES }}]"; exit 1)'
+        silent: true
+      # ensure there are no files with ":" in it (a known back case in the go ecosystem)
+      - cmd: 'test -z "{{ .BAD_FILE_NAMES }}" || (echo "files with bad names: [{{ .BAD_FILE_NAMES }}]"; exit 1)'
+        silent: true
+      # run linting
+      - "{{ .GOLANGCI_LINT }} run --tests=false"
+
+  check-licenses:
+    # desc: Ensure transitive dependencies are compliant with the current license policy
+    deps: [tools]
+    cmd: "{{ .BOUNCER }} check ./..."
+
+  check-go-mod-tidy:
+    # desc: Ensure go.mod and go.sum are up to date
+    cmds:
+      - cmd: |
+          if ! go mod tidy -diff; then
+            echo "go.mod and/or go.sum need updates. Please run 'go mod tidy'"
+            exit 1
+          fi
+    silent: true
+
+
+  ## Testing tasks #################################
+
+  unit:
+    desc: Run unit tests
+    deps:
+      - tmpdir
+    vars:
+      TEST_PKGS:
+        sh: "go list ./... | tr '\n' ' '"
+
+      # unit test coverage threshold (in % coverage)
+      COVERAGE_THRESHOLD: 30
+    cmds:
+      - "go test -coverprofile {{ .TMP_DIR }}/unit-coverage-details.txt {{ .TEST_PKGS }}"
+      - cmd: ".github/scripts/coverage.py {{ .COVERAGE_THRESHOLD }} {{ .TMP_DIR }}/unit-coverage-details.txt"
+        silent: true
+
+
+  ## Acceptance tests #################################
+
+  ci-test-linux:
+    cmds:
+      - task: ci-test-linux-run
+      - task: ci-test-docker-image
+      - task: ci-test-deb-package-install
+      - task: ci-test-rpm-package-install
+
+  ci-test-docker-image:
+    desc: Test using the docker image
+    cmds:
+      - |
+        docker run \
+          --rm \
+          -t \
+          -v /var/run/docker.sock:/var/run/docker.sock \
+          'docker.io/wagoodman/dive:latest' \
+            '{{ .TEST_IMAGE }}' \
+            --ci
+
+  ci-test-deb-package-install:
+    desc: Test debian package installation
+    cmds:
+      - |
+        docker run \
+          -v /var/run/docker.sock:/var/run/docker.sock \
+          -v /${PWD}:/src \
+          -w /src \
+          ubuntu:latest \
+            /bin/bash -x -c "\
+              apt update && \
+              apt install -y curl && \
+              curl -L 'https://download.docker.com/linux/static/stable/x86_64/docker-{{ .DOCKER_CLI_VERSION }}.tgz' | \
+                tar -vxzf - docker/docker --strip-component=1 && \
+                mv docker /usr/local/bin/ &&\
+              docker version && \
+              apt install ./snapshot/dive_*_linux_amd64.deb -y && \
+              dive --version && \
+              dive '{{ .TEST_IMAGE }}' --ci \
+            "
+
+  ci-test-rpm-package-install:
+    desc: Test RPM package installation
+    cmds:
+      - |
+        docker run \
+          -v /var/run/docker.sock:/var/run/docker.sock \
+          -v /${PWD}:/src \
+          -w /src \
+          fedora:latest \
+            /bin/bash -x -c "\
+              curl -L 'https://download.docker.com/linux/static/stable/x86_64/docker-{{ .DOCKER_CLI_VERSION }}.tgz' | \
+                tar -vxzf - docker/docker --strip-component=1 && \
+                mv docker /usr/local/bin/ &&\
+              docker version && \
+              dnf install ./snapshot/dive_*_linux_amd64.rpm -y && \
+              dive --version && \
+              dive '{{ .TEST_IMAGE }}' --ci \
+            "
+
+  generate-compressed-test-images:
+    desc: Generate compressed test images for testing
+    cmds:
+      - |
+        for alg in uncompressed gzip estargz zstd; do \
+          for exporter in docker image; do \
+            docker buildx build \
+              -f .data/Dockerfile.minimal \
+              --tag test-dive-${exporter}:${alg} \
+              --output type=${exporter},force-compression=true,compression=${alg} . ; \
+          done ; \
+        done && \
+        echo 'Exported test data!'
+
+  generate-compressed-test-data:
+    desc: Generate compressed test data for testing
+    cmds:
+      - |
+        for alg in uncompressed gzip estargz zstd; \
+        do \
+          docker buildx build \
+            -f .data/Dockerfile.minimal \
+            --output type=tar,dest=.data/test-${alg}-image.tar,force-compression=true,compression=${alg} . ; \
+          docker buildx build \
+            -f .data/Dockerfile.minimal \
+            --output type=oci,dest=.data/test-oci-${alg}-image.tar,force-compression=true,compression=${alg} . ; \
+        done && \
+        echo 'Exported test data!'
+
+  ci-test-linux-run:
+    desc: Test Linux binary execution (CI only)
+    deps: [ci-check, generate-compressed-test-images]
+    cmds:
+      - |
+        ls -la {{ .SNAPSHOT_DIR }}
+        ls -la {{ .SNAPSHOT_DIR }}/dive_linux_amd64_v1
+        chmod 755 {{ .SNAPSHOT_DIR }}/dive_linux_amd64_v1/dive && \
+        {{ .SNAPSHOT_DIR }}/dive_linux_amd64_v1/dive '{{ .TEST_IMAGE }}' --ci && \
+        {{ .SNAPSHOT_DIR }}/dive_linux_amd64_v1/dive --source docker-archive .data/test-kaniko-image.tar --ci --ci-config .data/.dive-ci
+      - |
+        for alg in uncompressed gzip estargz zstd; do \
+          for exporter in docker image; do \
+            {{ .SNAPSHOT_DIR }}/dive_linux_amd64_v1/dive "test-dive-${exporter}:${alg}" --ci ; \
+          done && \
+          {{ .SNAPSHOT_DIR }}/dive_linux_amd64_v1/dive --source docker-archive .data/test-oci-${alg}-image.tar --ci --ci-config .data/.dive-ci; \
+        done
+
+  ci-test-mac-run:
+    desc: Test macOS binary execution (CI only)
+    deps: [ci-check]
+    cmds:
+      - |
+        chmod 755 {{ .SNAPSHOT_DIR }}/dive_darwin_amd64_v1/dive && \
+        {{ .SNAPSHOT_DIR }}/dive_darwin_amd64_v1/dive --source docker-archive .data/test-docker-image.tar --ci --ci-config .data/.dive-ci
+
+
+  ## Build-related targets #################################
+
+  build:
+    desc: Build the project
+    deps: [tools, tmpdir]
+    generates:
+      - "{{ .PROJECT }}"
+    cmds:
+      - silent: true
+        cmd: |
+          echo "dist: {{ .SNAPSHOT_DIR }}" > {{ .TMP_DIR }}/goreleaser.yaml
+          cat .goreleaser.yaml >> {{ .TMP_DIR }}/goreleaser.yaml
+
+      - "{{ .BUILD_CMD }}"
+
+  snapshot:
+    desc: Create a snapshot release
+    aliases:
+      - build
+    deps: [tools, tmpdir]
+    sources:
+      - "**/*.go"
+    method: checksum
+    cmds:
+      - silent: true
+        cmd: |
+          echo "dist: {{ .SNAPSHOT_DIR }}" > {{ .TMP_DIR }}/goreleaser.yaml
+          cat .goreleaser.yaml >> {{ .TMP_DIR }}/goreleaser.yaml
+
+      - "{{ .SNAPSHOT_CMD }}"
+
+  changelog:
+    desc: Generate a changelog
+    deps: [tools]
+    generates:
+      - "{{ .CHANGELOG }}"
+      - "{{ .NEXT_VERSION }}"
+    cmds:
+      - "{{ .CHRONICLE }} -vv -n --version-file {{ .NEXT_VERSION }} > {{ .CHANGELOG }}"
+      - "{{ .GLOW }} -w 200 {{ .CHANGELOG }}"
+
+
+  ## Release targets #################################
+
+  release:
+    desc: Create a release
+    interactive: true
+    deps: [tools]
+    cmds:
+      - cmd: .github/scripts/trigger-release.sh
+        silent: true
+
+
+  ## CI-only targets #################################
+
+  ci-check:
+    preconditions:
+      - sh: test -n "$CI"
+        msg: "This step should ONLY be run in CI. Exiting..."
+    cmds:
+      - echo "Running in CI environment"
+    silent: true
+    internal: true
+
+  ci-release:
+    # desc: "[CI only] Create a release"
+    deps: [ci-check, tools]
+    cmds:
+      - "{{ .CHRONICLE }} -vvv > CHANGELOG.md"
+      - cmd: "cat CHANGELOG.md"
+        silent: true
+      - "{{ .RELEASE_CMD }}"
+
+
+  ## Cleanup targets #################################
+
+  clean-snapshot:
+    desc: Remove any snapshot builds
+    cmds:
+      - "rm -rf {{ .SNAPSHOT_DIR }}"
+      - "rm -rf {{ .TMP_DIR }}/goreleaser.yaml"

@@ -1,0 +1,64 @@
+tools:
+  # we want to use a pinned version of binny to manage the toolchain (so binny manages itself!)
+  - name: binny
+    version:
+      want: v0.9.0
+    method: github-release
+    with:
+      repo: anchore/binny
+
+  # used for linting
+  - name: golangci-lint
+    version:
+      want: v1.64.8
+    method: github-release
+    with:
+      repo: golangci/golangci-lint
+
+  # used for showing the changelog at release
+  - name: glow
+    version:
+      want: v2.1.0
+    method: github-release
+    with:
+      repo: charmbracelet/glow
+
+  # used to release all artifacts
+  - name: goreleaser
+    version:
+      want: v2.8.1
+    method: github-release
+    with:
+      repo: goreleaser/goreleaser
+
+  # used at release to generate the changelog
+  - name: chronicle
+    version:
+      want: v0.8.0
+    method: github-release
+    with:
+      repo: anchore/chronicle
+
+  # used during static analysis for license compliance
+  - name: bouncer
+    version:
+      want: v0.4.0
+    method: github-release
+    with:
+      repo: wagoodman/go-bouncer
+
+  # used for running all local and CI tasks
+  - name: task
+    version:
+      want: v3.42.1
+    method: github-release
+    with:
+      repo: go-task/task
+
+  # used for triggering a release
+  - name: gh
+    version:
+      want: v2.69.0
+    method: github-release
+    with:
+      repo: cli/cli
