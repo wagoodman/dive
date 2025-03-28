@@ -20,6 +20,7 @@ type Layer struct {
 	body                  *gocui.View
 	header                *gocui.View
 	vm                    *viewmodel.LayerSetState
+	kb                    key.Bindings
 	constrainedRealEstate bool
 
 	listeners []LayerChangeListener
@@ -28,7 +29,7 @@ type Layer struct {
 }
 
 // newLayerView creates a new view object attached the global [gocui] screen object.
-func newLayerView(gui *gocui.Gui, layers []*image.Layer) (controller *Layer, err error) {
+func newLayerView(gui *gocui.Gui, layers []*image.Layer, kb key.Bindings) (controller *Layer, err error) {
 	controller = new(Layer)
 
 	controller.listeners = make([]LayerChangeListener, 0)
@@ -36,6 +37,7 @@ func newLayerView(gui *gocui.Gui, layers []*image.Layer) (controller *Layer, err
 	// populate main fields
 	controller.name = "layer"
 	controller.gui = gui
+	controller.kb = kb
 
 	var compareMode viewmodel.LayerCompareMode
 
@@ -103,34 +105,34 @@ func (v *Layer) Setup(body *gocui.View, header *gocui.View) error {
 
 	var infos = []key.BindingInfo{
 		{
-			ConfigKeys: []string{"keybinding.compare-layer"},
+			Config:     v.kb.Layer.CompareLayer,
 			OnAction:   func() error { return v.setCompareMode(viewmodel.CompareSingleLayer) },
 			IsSelected: func() bool { return v.vm.CompareMode == viewmodel.CompareSingleLayer },
 			Display:    "Show layer changes",
 		},
 		{
-			ConfigKeys: []string{"keybinding.compare-all"},
+			Config:     v.kb.Layer.CompareAll,
 			OnAction:   func() error { return v.setCompareMode(viewmodel.CompareAllLayers) },
 			IsSelected: func() bool { return v.vm.CompareMode == viewmodel.CompareAllLayers },
 			Display:    "Show aggregated changes",
 		},
 		{
-			ConfigKeys: []string{"keybinding.down"},
-			Modifier:   gocui.ModNone,
-			OnAction:   v.CursorDown,
+			Config:   v.kb.Navigation.Down,
+			Modifier: gocui.ModNone,
+			OnAction: v.CursorDown,
 		},
 		{
-			ConfigKeys: []string{"keybinding.up"},
-			Modifier:   gocui.ModNone,
-			OnAction:   v.CursorUp,
+			Config:   v.kb.Navigation.Up,
+			Modifier: gocui.ModNone,
+			OnAction: v.CursorUp,
 		},
 		{
-			ConfigKeys: []string{"keybinding.page-up"},
-			OnAction:   v.PageUp,
+			Config:   v.kb.Navigation.PageUp,
+			OnAction: v.PageUp,
 		},
 		{
-			ConfigKeys: []string{"keybinding.page-down"},
-			OnAction:   v.PageDown,
+			Config:   v.kb.Navigation.PageDown,
+			OnAction: v.PageDown,
 		},
 	}
 

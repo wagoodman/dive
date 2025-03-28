@@ -18,6 +18,7 @@ type LayerDetails struct {
 	header       *gocui.View
 	body         *gocui.View
 	CurrentLayer *image.Layer
+	kb           key.Bindings
 }
 
 func (v *LayerDetails) Name() string {
@@ -40,14 +41,14 @@ func (v *LayerDetails) Setup(body, header *gocui.View) error {
 
 	var infos = []key.BindingInfo{
 		{
-			ConfigKeys: []string{"keybinding.down"},
-			Modifier:   gocui.ModNone,
-			OnAction:   v.CursorDown,
+			Config:   v.kb.Navigation.Down,
+			Modifier: gocui.ModNone,
+			OnAction: v.CursorDown,
 		},
 		{
-			ConfigKeys: []string{"keybinding.up"},
-			Modifier:   gocui.ModNone,
-			OnAction:   v.CursorUp,
+			Config:   v.kb.Navigation.Up,
+			Modifier: gocui.ModNone,
+			OnAction: v.CursorUp,
 		},
 	}
 

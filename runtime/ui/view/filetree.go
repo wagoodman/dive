@@ -28,6 +28,7 @@ type FileTree struct {
 	header *gocui.View
 	vm     *viewmodel.FileTreeViewModel
 	title  string
+	kb     key.Bindings
 
 	filterRegex         *regexp.Regexp
 	listeners           []ViewOptionChangeListener
@@ -37,13 +38,14 @@ type FileTree struct {
 }
 
 // newFileTreeView creates a new view object attached the global [gocui] screen object.
-func newFileTreeView(gui *gocui.Gui, tree *filetree.FileTree, refTrees []*filetree.FileTree, cache filetree.Comparer) (controller *FileTree, err error) {
+func newFileTreeView(gui *gocui.Gui, tree *filetree.FileTree, refTrees []*filetree.FileTree, cache filetree.Comparer, kb key.Bindings) (controller *FileTree, err error) {
 	controller = new(FileTree)
 	controller.listeners = make([]ViewOptionChangeListener, 0)
 
 	// populate main fields
 	controller.name = "filetree"
 	controller.gui = gui
+	controller.kb = kb
 	controller.vm, err = viewmodel.NewFileTreeViewModel(tree, refTrees, cache)
 	if err != nil {
 		return nil, err
@@ -96,88 +98,88 @@ func (v *FileTree) Setup(view, header *gocui.View) error {
 
 	var infos = []key.BindingInfo{
 		{
-			ConfigKeys: []string{"keybinding.toggle-collapse-dir"},
-			OnAction:   v.toggleCollapse,
-			Display:    "Collapse dir",
+			Config:   v.kb.Filetree.ToggleCollapseDir,
+			OnAction: v.toggleCollapse,
+			Display:  "Collapse dir",
 		},
 		{
-			ConfigKeys: []string{"keybinding.toggle-collapse-all-dir"},
-			OnAction:   v.toggleCollapseAll,
-			Display:    "Collapse all dir",
+			Config:   v.kb.Filetree.ToggleCollapseAllDir,
+			OnAction: v.toggleCollapseAll,
+			Display:  "Collapse all dir",
 		},
 		{
-			ConfigKeys: []string{"keybinding.toggle-sort-order"},
-			OnAction:   v.toggleSortOrder,
-			Display:    "Toggle sort order",
+			Config:   v.kb.Filetree.ToggleSortOrder,
+			OnAction: v.toggleSortOrder,
+			Display:  "Toggle sort order",
 		},
 		{
-			ConfigKeys: []string{"keybinding.extract-file"},
-			OnAction:   v.extractFile,
-			Display:    "Extract File",
+			Config:   v.kb.Filetree.ExtractFile,
+			OnAction: v.extractFile,
+			Display:  "Extract File",
 		},
 		{
-			ConfigKeys: []string{"keybinding.toggle-added-files"},
+			Config:     v.kb.Filetree.ToggleAddedFiles,
 			OnAction:   func() error { return v.toggleShowDiffType(filetree.Added) },
 			IsSelected: func() bool { return !v.vm.HiddenDiffTypes[filetree.Added] },
 			Display:    "Added",
 		},
 		{
-			ConfigKeys: []string{"keybinding.toggle-removed-files"},
+			Config:     v.kb.Filetree.ToggleRemovedFiles,
 			OnAction:   func() error { return v.toggleShowDiffType(filetree.Removed) },
 			IsSelected: func() bool { return !v.vm.HiddenDiffTypes[filetree.Removed] },
 			Display:    "Removed",
 		},
 		{
-			ConfigKeys: []string{"keybinding.toggle-modified-files"},
+			Config:     v.kb.Filetree.ToggleModifiedFiles,
 			OnAction:   func() error { return v.toggleShowDiffType(filetree.Modified) },
 			IsSelected: func() bool { return !v.vm.HiddenDiffTypes[filetree.Modified] },
 			Display:    "Modified",
 		},
 		{
-			ConfigKeys: []string{"keybinding.toggle-unchanged-files", "keybinding.toggle-unmodified-files"},
+			Config:     v.kb.Filetree.ToggleUnmodifiedFiles,
 			OnAction:   func() error { return v.toggleShowDiffType(filetree.Unmodified) },
 			IsSelected: func() bool { return !v.vm.HiddenDiffTypes[filetree.Unmodified] },
 			Display:    "Unmodified",
 		},
 		{
-			ConfigKeys: []string{"keybinding.toggle-filetree-attributes"},
+			Config:     v.kb.Filetree.ToggleTreeAttributes,
 			OnAction:   v.toggleAttributes,
 			IsSelected: func() bool { return v.vm.ShowAttributes },
 			Display:    "Attributes",
 		},
 		{
-			ConfigKeys: []string{"keybinding.toggle-wrap-tree"},
+			Config:     v.kb.Filetree.ToggleWrapTree,
 			OnAction:   v.toggleWrapTree,
 			IsSelected: func() bool { return v.view.Wrap },
 			Display:    "Wrap",
 		},
 		{
-			ConfigKeys: []string{"keybinding.page-up"},
-			OnAction:   v.PageUp,
+			Config:   v.kb.Navigation.PageUp,
+			OnAction: v.PageUp,
 		},
 		{
-			ConfigKeys: []string{"keybinding.page-down"},
-			OnAction:   v.PageDown,
+			Config:   v.kb.Navigation.PageDown,
+			OnAction: v.PageDown,
 		},
 		{
-			ConfigKeys: []string{"keybinding.down"},
-			Modifier:   gocui.ModNone,
-			OnAction:   v.CursorDown,
+			Config:   v.kb.Navigation.Down,
+			Modifier: gocui.ModNone,
+			OnAction: v.CursorDown,
 		},
 		{
-			ConfigKeys: []string{"keybinding.up"},
-			Modifier:   gocui.ModNone,
-			OnAction:   v.CursorUp,
+			Config:   v.kb.Navigation.Up,
+			Modifier: gocui.ModNone,
+			OnAction: v.CursorUp,
 		},
 		{
-			ConfigKeys: []string{"keybinding.left"},
-			Modifier:   gocui.ModNone,
-			OnAction:   v.CursorLeft,
+			Config:   v.kb.Navigation.Left,
+			Modifier: gocui.ModNone,
+			OnAction: v.CursorLeft,
 		},
 		{
-			ConfigKeys: []string{"keybinding.right"},
-			Modifier:   gocui.ModNone,
-			OnAction:   v.CursorRight,
+			Config:   v.kb.Navigation.Right,
+			Modifier: gocui.ModNone,
+			OnAction: v.CursorRight,
 		},
 	}
 

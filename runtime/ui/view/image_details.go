@@ -22,6 +22,7 @@ type ImageDetails struct {
 	imageSize      uint64
 	efficiency     float64
 	inefficiencies filetree.EfficiencySlice
+	kb             key.Bindings
 }
 
 func (v *ImageDetails) Name() string {
@@ -44,22 +45,22 @@ func (v *ImageDetails) Setup(body, header *gocui.View) error {
 
 	var infos = []key.BindingInfo{
 		{
-			ConfigKeys: []string{"keybinding.down"},
-			Modifier:   gocui.ModNone,
-			OnAction:   v.CursorDown,
+			Config:   v.kb.Navigation.Down,
+			Modifier: gocui.ModNone,
+			OnAction: v.CursorDown,
 		},
 		{
-			ConfigKeys: []string{"keybinding.up"},
-			Modifier:   gocui.ModNone,
-			OnAction:   v.CursorUp,
+			Config:   v.kb.Navigation.Up,
+			Modifier: gocui.ModNone,
+			OnAction: v.CursorUp,
 		},
 		{
-			ConfigKeys: []string{"keybinding.page-up"},
-			OnAction:   v.PageUp,
+			Config:   v.kb.Navigation.PageUp,
+			OnAction: v.PageUp,
 		},
 		{
-			ConfigKeys: []string{"keybinding.page-down"},
-			OnAction:   v.PageDown,
+			Config:   v.kb.Navigation.PageDown,
+			OnAction: v.PageDown,
 		},
 	}
 

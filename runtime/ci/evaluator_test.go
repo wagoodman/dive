@@ -33,7 +33,7 @@ func Test_Evaluator(t *testing.T) {
 		ciConfig.SetDefault("rules.highestWastedBytes", test.wastedBytes)
 		ciConfig.SetDefault("rules.highestUserWastedPercent", test.wastedPercent)
 
-		evaluator := NewCiEvaluator(ciConfig)
+		evaluator := NewEvaluator(ciConfig)
 
 		pass := evaluator.Evaluate(result)
 

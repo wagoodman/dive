@@ -77,7 +77,7 @@ func run(enableUi bool, options Options, imageResolver image.Resolver, events ev
 		events.message(fmt.Sprintf("  wastedBytes: %d bytes (%s)", analysis.WastedBytes, humanize.Bytes(analysis.WastedBytes)))
 		events.message(fmt.Sprintf("  userWastedPercent: %2.4f %%", analysis.WastedUserPercent*100))
 
-		evaluator := ci.NewCiEvaluator(options.CiConfig)
+		evaluator := ci.NewEvaluator(options.CiRules)
 		pass := evaluator.Evaluate(analysis)
 		events.message(evaluator.Report())
 
@@ -108,7 +108,7 @@ func run(enableUi bool, options Options, imageResolver image.Resolver, events ev
 			// enough sleep will prevent this behavior (todo: remove this hack)
 			time.Sleep(100 * time.Millisecond)
 
-			err = ui.Run(options.Image, imageResolver, analysis, treeStack)
+			err = ui.Run(options.Image, imageResolver, analysis, treeStack, options.KeyBindings)
 			if err != nil {
 				events.exitWithError(err)
 				return

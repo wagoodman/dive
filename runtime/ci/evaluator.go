@@ -8,14 +8,12 @@ import (
 
 	"github.com/dustin/go-humanize"
 	"github.com/logrusorgru/aurora/v4"
-	"github.com/spf13/viper"
-
 	"github.com/wagoodman/dive/dive/image"
 	"github.com/wagoodman/dive/utils"
 )
 
-type CiEvaluator struct {
-	Rules            []CiRule
+type Evaluator struct {
+	Rules            []Rule
 	Results          map[string]RuleResult
 	Tally            ResultTally
 	Pass             bool
@@ -31,20 +29,19 @@ type ResultTally struct {
 	Total int
 }
 
-func NewCiEvaluator(config *viper.Viper) *CiEvaluator {
-	return &CiEvaluator{
-		Rules:   loadCiRules(config),
+func NewEvaluator(rules []Rule) *Evaluator {
+	return &Evaluator{
+		Rules:   rules,
 		Results: make(map[string]RuleResult),
 		Pass:    true,
 	}
 }
 
-func (ci *CiEvaluator) isRuleEnabled(rule CiRule) bool {
+func (ci *Evaluator) isRuleEnabled(rule Rule) bool {
 	return rule.Configuration() != "disabled"
 }
 
-func (ci *CiEvaluator) Evaluate(analysis *image.AnalysisResult) bool {
-	canEvaluate := true
+func (ci *Evaluator) Evaluate(analysis *image.AnalysisResult) bool {
 	for _, rule := range ci.Rules {
 		if !ci.isRuleEnabled(rule) {
 			ci.Results[rule.Key()] = RuleResult{
@@ -54,25 +51,10 @@ func (ci *CiEvaluator) Evaluate(analysis *image.AnalysisResult) bool {
 			continue
 		}
 
-		err := rule.Validate()
-		if err != nil {
-			ci.Results[rule.Key()] = RuleResult{
-				status:  RuleMisconfigured,
-				message: err.Error(),
-			}
-			canEvaluate = false
-		} else {
-			ci.Results[rule.Key()] = RuleResult{
-				status:  RuleConfigured,
-				message: "test",
-			}
+		ci.Results[rule.Key()] = RuleResult{
+			status:  RuleConfigured,
+			message: "test",
 		}
-	}
-
-	if !canEvaluate {
-		ci.Pass = false
-		ci.Misconfigured = true
-		return ci.Pass
 	}
 
 	// capture inefficient files
@@ -131,7 +113,7 @@ func (ci *CiEvaluator) Evaluate(analysis *image.AnalysisResult) bool {
 	return ci.Pass
 }
 
-func (ci *CiEvaluator) Report() string {
+func (ci *Evaluator) Report() string {
 	var sb strings.Builder
 	fmt.Fprintln(&sb, utils.TitleFormat("Inefficient Files:"))
 

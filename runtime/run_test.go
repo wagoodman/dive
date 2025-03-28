@@ -127,7 +127,7 @@ func TestRun(t *testing.T) {
 				Image:      "dive-example",
 				Source:     dive.SourceDockerEngine,
 				ExportFile: "",
-				CiConfig:   nil,
+				CiRules:    nil,
 				BuildArgs:  nil,
 			},
 			events: []testEvent{
@@ -144,7 +144,7 @@ func TestRun(t *testing.T) {
 				Image:      "dive-example",
 				Source:     dive.SourceDockerEngine,
 				ExportFile: "",
-				CiConfig:   nil,
+				CiRules:    nil,
 				// note: empty slice is passed
 				BuildArgs: []string{},
 			},
@@ -162,7 +162,7 @@ func TestRun(t *testing.T) {
 				Image:      "dive-example",
 				Source:     dive.SourceDockerEngine,
 				ExportFile: "",
-				CiConfig:   nil,
+				CiRules:    nil,
 				BuildArgs:  []string{"an-option"},
 			},
 			events: []testEvent{
@@ -178,7 +178,7 @@ func TestRun(t *testing.T) {
 				Image:      "dive-example",
 				Source:     dive.SourceDockerEngine,
 				ExportFile: "",
-				CiConfig:   nil,
+				CiRules:    nil,
 				BuildArgs:  nil,
 			},
 			events: []testEvent{
@@ -194,7 +194,7 @@ func TestRun(t *testing.T) {
 				Image:      "doesn't-matter",
 				Source:     dive.SourceDockerEngine,
 				ExportFile: "",
-				CiConfig:   nil,
+				CiRules:    nil,
 				BuildArgs:  []string{"an-option"},
 			},
 			events: []testEvent{
@@ -209,7 +209,7 @@ func TestRun(t *testing.T) {
 				Image:      "doesn't-matter",
 				Source:     dive.SourceDockerEngine,
 				ExportFile: "",
-				CiConfig:   configureCi(),
+				CiRules:    configureCi(),
 				BuildArgs:  []string{"an-option"},
 			},
 			events: []testEvent{
@@ -229,7 +229,7 @@ func TestRun(t *testing.T) {
 				Image:      "doesn't-matter",
 				Source:     dive.SourceDockerEngine,
 				ExportFile: "",
-				CiConfig:   viper.New(),
+				CiRules:    viper.New(),
 				BuildArgs:  []string{"an-option"},
 			},
 			events: []testEvent{
@@ -249,7 +249,7 @@ func TestRun(t *testing.T) {
 				Image:      "doesn't-matter",
 				Source:     dive.SourceDockerEngine,
 				ExportFile: "some-file.json",
-				CiConfig:   configureCi(),
+				CiRules:    configureCi(),
 				BuildArgs:  []string{"an-option"},
 			},
 			events: []testEvent{

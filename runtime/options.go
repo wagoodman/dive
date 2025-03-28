@@ -1,17 +1,23 @@
 package runtime
 
 import (
-	"github.com/spf13/viper"
-
 	"github.com/wagoodman/dive/dive"
+	"github.com/wagoodman/dive/runtime/ci"
+	"github.com/wagoodman/dive/runtime/ui/key"
 )
 
 type Options struct {
+	// analysis
+	Image     string
+	Source    dive.ImageSource
+	BuildArgs []string
+
+	// gating
 	Ci           bool
-	Image        string
-	Source       dive.ImageSource
+	CiRules      []ci.Rule
 	IgnoreErrors bool
 	ExportFile   string
-	CiConfig     *viper.Viper
-	BuildArgs    []string
+
+	// ui
+	KeyBindings key.Bindings
 }

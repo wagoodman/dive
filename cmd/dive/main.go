@@ -1,3 +1,5 @@
+package main
+
 // Copyright © 2018 Alex Goodman
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -18,24 +20,36 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-package main
-
 import (
-	"github.com/wagoodman/dive/cmd"
+	"github.com/anchore/clio"
+	"github.com/wagoodman/dive/cmd/dive/cli"
 )
 
+// applicationName is the non-capitalized name of the application (do not change this)
+const (
+	applicationName = "dive"
+	notProvided     = "[not provided]"
+)
+
+// TODO: these need to be wired up to the build flags
+// all variables here are provided as build-time arguments, with clear default values
 var (
-	version   = "No version provided"
-	commit    = "No commit provided"
-	buildTime = "No build timestamp provided"
+	version        = notProvided
+	buildDate      = notProvided
+	gitCommit      = notProvided
+	gitDescription = notProvided
 )
 
 func main() {
-	cmd.SetVersion(&cmd.Version{
-		Version:   version,
-		Commit:    commit,
-		BuildTime: buildTime,
-	})
+	app := cli.Application(
+		clio.Identification{
+			Name:           applicationName,
+			Version:        version,
+			BuildDate:      buildDate,
+			GitCommit:      gitCommit,
+			GitDescription: gitDescription,
+		},
+	)
 
-	cmd.Execute()
+	app.Run()
 }
