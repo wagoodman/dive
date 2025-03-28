@@ -12,6 +12,9 @@ VERSION
 /bin
 /.tool-versions
 /.tmp
+/.tool
+/.mise.toml
+/.task
 
 # builds
 /dist
