@@ -6,7 +6,6 @@ RUN wget -O- https://download.docker.com/linux/static/stable/$(uname -m)/docker-
 
 COPY dive /usr/local/bin/
 
-FROM scratch
-COPY --from=base /usr/local/bin /usr/local/bin
-
+# though we could make this a multi-stage image and copy the binary to scratch, this image is small enough
+# and users are expecting to be able to exec into it
 ENTRYPOINT ["/usr/local/bin/dive"]
