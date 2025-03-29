@@ -91,19 +91,26 @@ jobs:
       - name: Bootstrap environment
         uses: ./.github/actions/bootstrap
 
+      - name: Login to Docker Hub
+        uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772  #v3.4.0
+        with:
+          registry: docker.io
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772  #v3.4.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Tag release
         run: |
           git tag ${{ github.event.inputs.version }}
           git push origin --tags
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Login to container registry
-        uses: docker/login-action@v3
-        with:
-          registry: docker.io
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build & publish release artifacts
         run: make ci-release
