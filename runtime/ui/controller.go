@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"github.com/wagoodman/dive/runtime/ui/key"
 	"regexp"
 
 	"github.com/awesome-gocui/gocui"
@@ -15,12 +16,16 @@ import (
 type Controller struct {
 	gui       *gocui.Gui
 	views     *view.Views
-	resolver  image.Resolver
+	content   ContentReader
 	imageName string
 }
 
-func NewCollection(g *gocui.Gui, imageName string, resolver image.Resolver, analysis *image.AnalysisResult, cache filetree.Comparer) (*Controller, error) {
-	views, err := view.NewViews(g, imageName, analysis, cache)
+type ContentReader interface {
+	Extract(id string, layer string, path string) error
+}
+
+func NewCollection(g *gocui.Gui, imageName string, content ContentReader, analysis *image.AnalysisResult, cache filetree.Comparer, kb key.Bindings) (*Controller, error) {
+	views, err := view.NewViews(g, imageName, analysis, cache, kb)
 	if err != nil {
 		return nil, err
 	}
@@ -28,7 +33,7 @@ func NewCollection(g *gocui.Gui, imageName string, resolver image.Resolver, anal
 	controller := &Controller{
 		gui:       g,
 		views:     views,
-		resolver:  resolver,
+		content:   content,
 		imageName: imageName,
 	}
 
@@ -61,7 +66,7 @@ func NewCollection(g *gocui.Gui, imageName string, resolver image.Resolver, anal
 }
 
 func (c *Controller) onFileTreeViewExtract(p string) error {
-	return c.resolver.Extract(c.imageName, c.views.LayerDetails.CurrentLayer.Id, p)
+	return c.content.Extract(c.imageName, c.views.LayerDetails.CurrentLayer.Id, p)
 }
 
 func (c *Controller) onFileTreeViewOptionChange() error {

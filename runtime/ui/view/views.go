@@ -2,9 +2,9 @@ package view
 
 import (
 	"github.com/awesome-gocui/gocui"
-
 	"github.com/wagoodman/dive/dive/filetree"
 	"github.com/wagoodman/dive/dive/image"
+	"github.com/wagoodman/dive/runtime/ui/key"
 )
 
 type IView interface {
@@ -32,14 +32,14 @@ var _ []IView = []IView{
 	&Debug{},
 }
 
-func NewViews(g *gocui.Gui, imageName string, analysis *image.AnalysisResult, cache filetree.Comparer) (*Views, error) {
-	Layer, err := newLayerView(g, analysis.Layers)
+func NewViews(g *gocui.Gui, imageName string, analysis *image.AnalysisResult, cache filetree.Comparer, kb key.Bindings) (*Views, error) {
+	Layer, err := newLayerView(g, analysis.Layers, kb)
 	if err != nil {
 		return nil, err
 	}
 
 	treeStack := analysis.RefTrees[0]
-	Tree, err := newFileTreeView(g, treeStack, analysis.RefTrees, cache)
+	Tree, err := newFileTreeView(g, treeStack, analysis.RefTrees, cache, kb)
 	if err != nil {
 		return nil, err
 	}
@@ -51,13 +51,14 @@ func NewViews(g *gocui.Gui, imageName string, analysis *image.AnalysisResult, ca
 
 	Filter := newFilterView(g)
 
-	LayerDetails := &LayerDetails{gui: g}
+	LayerDetails := &LayerDetails{gui: g, kb: kb}
 	ImageDetails := &ImageDetails{
 		gui:            g,
 		imageName:      imageName,
 		imageSize:      analysis.SizeBytes,
 		efficiency:     analysis.Efficiency,
 		inefficiencies: analysis.Inefficiencies,
+		kb:             kb,
 	}
 
 	Debug := newDebugView(g)

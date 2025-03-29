@@ -27,13 +27,13 @@ var (
 	appSingleton *app
 )
 
-func newApp(gui *gocui.Gui, imageName string, resolver image.Resolver, analysis *image.AnalysisResult, cache filetree.Comparer) (*app, error) {
+func newApp(gui *gocui.Gui, imageName string, resolver image.Resolver, analysis *image.AnalysisResult, cache filetree.Comparer, kb key.Bindings) (*app, error) {
 	var err error
 	once.Do(func() {
 		var controller *Controller
 		var globalHelpKeys []*key.Binding
 
-		controller, err = NewCollection(gui, imageName, resolver, analysis, cache)
+		controller, err = NewCollection(gui, imageName, resolver, analysis, cache, kb)
 		if err != nil {
 			return
 		}
@@ -67,32 +67,32 @@ func newApp(gui *gocui.Gui, imageName string, resolver image.Resolver, analysis 
 
 		var infos = []key.BindingInfo{
 			{
-				ConfigKeys: []string{"keybinding.quit"},
-				OnAction:   appSingleton.quit,
-				Display:    "Quit",
+				Config:   kb.Global.Quit,
+				OnAction: appSingleton.quit,
+				Display:  "Quit",
 			},
 			{
-				ConfigKeys: []string{"keybinding.toggle-view"},
-				OnAction:   controller.ToggleView,
-				Display:    "Switch view",
+				Config:   kb.Global.ToggleView,
+				OnAction: controller.ToggleView,
+				Display:  "Switch view",
 			},
 			{
-				ConfigKeys: []string{"keybinding.right"},
-				OnAction:   controller.NextPane,
+				Config:   kb.Navigation.Right,
+				OnAction: controller.NextPane,
 			},
 			{
-				ConfigKeys: []string{"keybinding.left"},
-				OnAction:   controller.PrevPane,
+				Config:   kb.Navigation.Left,
+				OnAction: controller.PrevPane,
 			},
 			{
-				ConfigKeys: []string{"keybinding.filter-files"},
+				Config:     kb.Global.FilterFiles,
 				OnAction:   controller.ToggleFilterView,
 				IsSelected: controller.views.Filter.IsVisible,
 				Display:    "Filter",
 			},
 			{
-				ConfigKeys: []string{"keybinding.close-filter-files"},
-				OnAction:   controller.CloseFilterView,
+				Config:   kb.Global.CloseFilterFiles,
+				OnAction: controller.CloseFilterView,
 			},
 		}
 
@@ -138,7 +138,7 @@ func (a *app) quit() error {
 }
 
 // Run is the UI entrypoint.
-func Run(imageName string, resolver image.Resolver, analysis *image.AnalysisResult, treeStack filetree.Comparer) error {
+func Run(imageName string, resolver image.Resolver, analysis *image.AnalysisResult, treeStack filetree.Comparer, keybindings key.Bindings) error {
 	var err error
 
 	g, err := gocui.NewGui(gocui.OutputNormal, true)
@@ -147,7 +147,7 @@ func Run(imageName string, resolver image.Resolver, analysis *image.AnalysisResu
 	}
 	defer g.Close()
 
-	_, err = newApp(g, imageName, resolver, analysis, treeStack)
+	_, err = newApp(g, imageName, resolver, analysis, treeStack, keybindings)
 	if err != nil {
 		return err
 	}
