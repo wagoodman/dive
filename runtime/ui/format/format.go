@@ -46,17 +46,25 @@ var (
 	StatusControlNormal   func(...interface{}) string
 	CompareTop            func(...interface{}) string
 	CompareBottom         func(...interface{}) string
+	reset                 = color.New(color.Reset).Sprint("")
 )
 
 func init() {
-	Selected = color.New(color.ReverseVideo, color.Bold).SprintFunc()
-	Header = color.New(color.Bold).SprintFunc()
-	StatusSelected = color.New(color.BgMagenta, color.FgWhite).SprintFunc()
-	StatusNormal = color.New(color.ReverseVideo).SprintFunc()
-	StatusControlSelected = color.New(color.BgMagenta, color.FgWhite, color.Bold).SprintFunc()
-	StatusControlNormal = color.New(color.ReverseVideo, color.Bold).SprintFunc()
-	CompareTop = color.New(color.BgMagenta).SprintFunc()
-	CompareBottom = color.New(color.BgGreen).SprintFunc()
+	wrapper := func(fn func(a ...any) string) func(a ...any) string {
+		return func(a ...any) string {
+			// for some reason not all color formatter functions are not applying RESET, we'll add it manually for now
+			return fn(a...) + reset
+		}
+	}
+
+	Selected = wrapper(color.New(color.ReverseVideo, color.Bold).SprintFunc())
+	Header = wrapper(color.New(color.Bold).SprintFunc())
+	StatusSelected = wrapper(color.New(color.BgMagenta, color.FgWhite).SprintFunc())
+	StatusNormal = wrapper(color.New(color.ReverseVideo).SprintFunc())
+	StatusControlSelected = wrapper(color.New(color.BgMagenta, color.FgWhite, color.Bold).SprintFunc())
+	StatusControlNormal = wrapper(color.New(color.ReverseVideo, color.Bold).SprintFunc())
+	CompareTop = wrapper(color.New(color.BgMagenta).SprintFunc())
+	CompareBottom = wrapper(color.New(color.BgGreen).SprintFunc())
 }
 
 func RenderNoHeader(width int, selected bool) string {
