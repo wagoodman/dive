@@ -12,7 +12,7 @@ import (
 
 	"github.com/wagoodman/dive/dive/filetree"
 	"github.com/wagoodman/dive/dive/image/docker"
-	"github.com/wagoodman/dive/runtime/ui/format"
+	"github.com/wagoodman/dive/runtime/ui/v1/format"
 )
 
 const allowTestDataCapture = false

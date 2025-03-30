@@ -3,7 +3,7 @@ package runtime
 import (
 	"github.com/wagoodman/dive/dive"
 	"github.com/wagoodman/dive/runtime/ci"
-	"github.com/wagoodman/dive/runtime/ui/key"
+	"github.com/wagoodman/dive/runtime/ui/v1/key"
 )
 
 type Options struct {

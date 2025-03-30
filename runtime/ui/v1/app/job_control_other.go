@@ -1,7 +1,7 @@
 //go:build windows
 // +build windows
 
-package ui
+package app
 
 import (
 	"github.com/awesome-gocui/gocui"

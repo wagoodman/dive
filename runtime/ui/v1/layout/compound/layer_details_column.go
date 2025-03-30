@@ -3,7 +3,7 @@ package compound
 import (
 	"github.com/awesome-gocui/gocui"
 	"github.com/sirupsen/logrus"
-	"github.com/wagoodman/dive/runtime/ui/view"
+	"github.com/wagoodman/dive/runtime/ui/v1/view"
 	"github.com/wagoodman/dive/utils"
 )
 
@@ -73,7 +73,7 @@ func (cl *LayerDetailsCompoundLayout) layoutRow(g *gocui.Gui, minX, minY, maxX, 
 func (cl *LayerDetailsCompoundLayout) Layout(g *gocui.Gui, minX, minY, maxX, maxY int) error {
 	logrus.Tracef("LayerDetailsCompoundLayout.Layout(minX: %d, minY: %d, maxX: %d, maxY: %d) %s", minX, minY, maxX, maxY, cl.Name())
 
-	layouts := []view.IView{
+	layouts := []view.View{
 		cl.layer,
 		cl.layerDetails,
 		cl.imageDetails,

@@ -2,6 +2,7 @@ package view
 
 import (
 	"fmt"
+	v1 "github.com/wagoodman/dive/runtime/ui/v1"
 	"regexp"
 
 	"github.com/awesome-gocui/gocui"
@@ -9,9 +10,9 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/wagoodman/dive/dive/filetree"
-	"github.com/wagoodman/dive/runtime/ui/format"
-	"github.com/wagoodman/dive/runtime/ui/key"
-	"github.com/wagoodman/dive/runtime/ui/viewmodel"
+	"github.com/wagoodman/dive/runtime/ui/v1/format"
+	"github.com/wagoodman/dive/runtime/ui/v1/key"
+	"github.com/wagoodman/dive/runtime/ui/v1/viewmodel"
 	"github.com/wagoodman/dive/utils"
 )
 
@@ -38,15 +39,15 @@ type FileTree struct {
 }
 
 // newFileTreeView creates a new view object attached the global [gocui] screen object.
-func newFileTreeView(gui *gocui.Gui, tree *filetree.FileTree, refTrees []*filetree.FileTree, cache filetree.Comparer, kb key.Bindings) (controller *FileTree, err error) {
-	controller = new(FileTree)
-	controller.listeners = make([]ViewOptionChangeListener, 0)
+func newFileTreeView(gui *gocui.Gui, cfg v1.Config, initial int) (v *FileTree, err error) {
+	v = new(FileTree)
+	v.listeners = make([]ViewOptionChangeListener, 0)
 
 	// populate main fields
-	controller.name = "filetree"
-	controller.gui = gui
-	controller.kb = kb
-	controller.vm, err = viewmodel.NewFileTreeViewModel(tree, refTrees, cache)
+	v.name = "filetree"
+	v.gui = gui
+	v.kb = cfg.KeyBindings
+	v.vm, err = viewmodel.NewFileTreeViewModel(cfg, initial)
 	if err != nil {
 		return nil, err
 	}
@@ -56,9 +57,9 @@ func newFileTreeView(gui *gocui.Gui, tree *filetree.FileTree, refTrees []*filetr
 		logrus.Errorf("invalid config value: 'filetree.pane-width' should be 0 < value < 1, given '%v'", requestedWidthRatio)
 		requestedWidthRatio = 0.5
 	}
-	controller.requestedWidthRatio = requestedWidthRatio
+	v.requestedWidthRatio = requestedWidthRatio
 
-	return controller, err
+	return v, err
 }
 
 func (v *FileTree) AddViewOptionChangeListener(listener ...ViewOptionChangeListener) {

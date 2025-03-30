@@ -1,57 +1,49 @@
-package ui
+package app
 
 import (
-	"github.com/wagoodman/dive/runtime/ui/key"
+	v1 "github.com/wagoodman/dive/runtime/ui/v1"
 	"regexp"
 
 	"github.com/awesome-gocui/gocui"
 	"github.com/sirupsen/logrus"
 
-	"github.com/wagoodman/dive/dive/filetree"
-	"github.com/wagoodman/dive/dive/image"
-	"github.com/wagoodman/dive/runtime/ui/view"
-	"github.com/wagoodman/dive/runtime/ui/viewmodel"
+	"github.com/wagoodman/dive/runtime/ui/v1/view"
+	"github.com/wagoodman/dive/runtime/ui/v1/viewmodel"
 )
 
-type Controller struct {
-	gui       *gocui.Gui
-	views     *view.Views
-	content   ContentReader
-	imageName string
+type controller struct {
+	gui    *gocui.Gui
+	views  *view.Views
+	config v1.Config
 }
 
-type ContentReader interface {
-	Extract(id string, layer string, path string) error
-}
-
-func NewCollection(g *gocui.Gui, imageName string, content ContentReader, analysis *image.AnalysisResult, cache filetree.Comparer, kb key.Bindings) (*Controller, error) {
-	views, err := view.NewViews(g, imageName, analysis, cache, kb)
+func newController(g *gocui.Gui, cfg v1.Config) (*controller, error) {
+	views, err := view.NewViews(g, cfg)
 	if err != nil {
 		return nil, err
 	}
 
-	controller := &Controller{
-		gui:       g,
-		views:     views,
-		content:   content,
-		imageName: imageName,
+	c := &controller{
+		gui:    g,
+		views:  views,
+		config: cfg,
 	}
 
 	// layer view cursor down event should trigger an update in the file tree
-	controller.views.Layer.AddLayerChangeListener(controller.onLayerChange)
+	c.views.Layer.AddLayerChangeListener(c.onLayerChange)
 
 	// update the status pane when a filetree option is changed by the user
-	controller.views.Tree.AddViewOptionChangeListener(controller.onFileTreeViewOptionChange)
+	c.views.Tree.AddViewOptionChangeListener(c.onFileTreeViewOptionChange)
 
 	// update the status pane when a filetree option is changed by the user
-	controller.views.Tree.AddViewExtractListener(controller.onFileTreeViewExtract)
+	c.views.Tree.AddViewExtractListener(c.onFileTreeViewExtract)
 
 	// update the tree view while the user types into the filter view
-	controller.views.Filter.AddFilterEditListener(controller.onFilterEdit)
+	c.views.Filter.AddFilterEditListener(c.onFilterEdit)
 
 	// propagate initial conditions to necessary views
-	err = controller.onLayerChange(viewmodel.LayerSelection{
-		Layer:           controller.views.Layer.CurrentLayer(),
+	err = c.onLayerChange(viewmodel.LayerSelection{
+		Layer:           c.views.Layer.CurrentLayer(),
 		BottomTreeStart: 0,
 		BottomTreeStop:  0,
 		TopTreeStart:    0,
@@ -62,14 +54,14 @@ func NewCollection(g *gocui.Gui, imageName string, content ContentReader, analys
 		return nil, err
 	}
 
-	return controller, nil
+	return c, nil
 }
 
-func (c *Controller) onFileTreeViewExtract(p string) error {
-	return c.content.Extract(c.imageName, c.views.LayerDetails.CurrentLayer.Id, p)
+func (c *controller) onFileTreeViewExtract(p string) error {
+	return c.config.Content.Extract(c.config.Image, c.views.LayerDetails.CurrentLayer.Id, p)
 }
 
-func (c *Controller) onFileTreeViewOptionChange() error {
+func (c *controller) onFileTreeViewOptionChange() error {
 	err := c.views.Status.Update()
 	if err != nil {
 		return err
@@ -77,7 +69,7 @@ func (c *Controller) onFileTreeViewOptionChange() error {
 	return c.views.Status.Render()
 }
 
-func (c *Controller) onFilterEdit(filter string) error {
+func (c *controller) onFilterEdit(filter string) error {
 	var filterRegex *regexp.Regexp
 	var err error
 
@@ -98,7 +90,7 @@ func (c *Controller) onFilterEdit(filter string) error {
 	return c.views.Tree.Render()
 }
 
-func (c *Controller) onLayerChange(selection viewmodel.LayerSelection) error {
+func (c *controller) onLayerChange(selection viewmodel.LayerSelection) error {
 	// update the details
 	c.views.LayerDetails.CurrentLayer = selection.Layer
 
@@ -118,7 +110,7 @@ func (c *Controller) onLayerChange(selection viewmodel.LayerSelection) error {
 	return c.UpdateAndRender()
 }
 
-func (c *Controller) UpdateAndRender() error {
+func (c *controller) UpdateAndRender() error {
 	err := c.Update()
 	if err != nil {
 		logrus.Debug("failed update: ", err)
@@ -135,11 +127,11 @@ func (c *Controller) UpdateAndRender() error {
 }
 
 // Update refreshes the state objects for future rendering.
-func (c *Controller) Update() error {
-	for _, controller := range c.views.All() {
-		err := controller.Update()
+func (c *controller) Update() error {
+	for _, v := range c.views.Renderers() {
+		err := v.Update()
 		if err != nil {
-			logrus.Debug("unable to update controller: ")
+			logrus.Debug("unable to update view: ")
 			return err
 		}
 	}
@@ -147,10 +139,10 @@ func (c *Controller) Update() error {
 }
 
 // Render flushes the state objects to the screen.
-func (c *Controller) Render() error {
-	for _, controller := range c.views.All() {
-		if controller.IsVisible() {
-			err := controller.Render()
+func (c *controller) Render() error {
+	for _, v := range c.views.Renderers() {
+		if v.IsVisible() {
+			err := v.Render()
 			if err != nil {
 				return err
 			}
@@ -160,7 +152,7 @@ func (c *Controller) Render() error {
 }
 
 //nolint:dupl
-func (c *Controller) NextPane() (err error) {
+func (c *controller) NextPane() (err error) {
 	v := c.gui.CurrentView()
 	if v == nil {
 		panic("Current view is nil")
@@ -185,7 +177,7 @@ func (c *Controller) NextPane() (err error) {
 }
 
 //nolint:dupl
-func (c *Controller) PrevPane() (err error) {
+func (c *controller) PrevPane() (err error) {
 	v := c.gui.CurrentView()
 	if v == nil {
 		panic("Current view is nil")
@@ -210,7 +202,7 @@ func (c *Controller) PrevPane() (err error) {
 }
 
 // ToggleView switches between the file view and the layer view and re-renders the screen.
-func (c *Controller) ToggleView() (err error) {
+func (c *controller) ToggleView() (err error) {
 	v := c.gui.CurrentView()
 	if v == nil || v.Name() == c.views.Layer.Name() {
 		_, err = c.gui.SetCurrentView(c.views.Tree.Name())
@@ -228,7 +220,7 @@ func (c *Controller) ToggleView() (err error) {
 	return c.UpdateAndRender()
 }
 
-func (c *Controller) CloseFilterView() error {
+func (c *controller) CloseFilterView() error {
 	// filter view needs to be visible
 	if c.views.Filter.IsVisible() {
 		// toggle filter view
@@ -237,7 +229,7 @@ func (c *Controller) CloseFilterView() error {
 	return nil
 }
 
-func (c *Controller) ToggleFilterView() error {
+func (c *controller) ToggleFilterView() error {
 	// delete all user input from the tree view
 	err := c.views.Filter.ToggleVisible()
 	if err != nil {

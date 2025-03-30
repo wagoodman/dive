@@ -3,7 +3,7 @@ package options
 import (
 	"fmt"
 	"github.com/anchore/clio"
-	"github.com/wagoodman/dive/runtime/ui/key"
+	"github.com/wagoodman/dive/runtime/ui/v1/key"
 	"reflect"
 )
 

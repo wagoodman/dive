@@ -7,9 +7,9 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/wagoodman/dive/dive/image"
-	"github.com/wagoodman/dive/runtime/ui/format"
-	"github.com/wagoodman/dive/runtime/ui/key"
-	"github.com/wagoodman/dive/runtime/ui/viewmodel"
+	"github.com/wagoodman/dive/runtime/ui/v1/format"
+	"github.com/wagoodman/dive/runtime/ui/v1/key"
+	"github.com/wagoodman/dive/runtime/ui/v1/viewmodel"
 )
 
 // Layer holds the UI objects and data models for populating the lower-left pane.

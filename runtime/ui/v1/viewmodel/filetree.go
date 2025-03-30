@@ -3,6 +3,7 @@ package viewmodel
 import (
 	"bytes"
 	"fmt"
+	v1 "github.com/wagoodman/dive/runtime/ui/v1"
 	"regexp"
 	"strings"
 
@@ -11,16 +12,16 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/wagoodman/dive/dive/filetree"
-	"github.com/wagoodman/dive/runtime/ui/format"
+	"github.com/wagoodman/dive/runtime/ui/v1/format"
 )
 
-// FileTreeViewModel holds the UI objects and data models for populating the right pane. Specifically the pane that
+// FileTreeViewModel holds the UI objects and data models for populating the right pane. Specifically, the pane that
 // shows selected layer or aggregate file ASCII tree.
 type FileTreeViewModel struct {
 	ModelTree *filetree.FileTree
 	ViewTree  *filetree.FileTree
 	RefTrees  []*filetree.FileTree
-	cache     filetree.Comparer
+	comparer  filetree.Comparer
 
 	constrainedRealEstate bool
 
@@ -39,16 +40,21 @@ type FileTreeViewModel struct {
 }
 
 // NewFileTreeViewModel creates a new view object attached the global [gocui] screen object.
-func NewFileTreeViewModel(tree *filetree.FileTree, refTrees []*filetree.FileTree, cache filetree.Comparer) (treeViewModel *FileTreeViewModel, err error) {
+func NewFileTreeViewModel(cfg v1.Config, initialLayer int) (treeViewModel *FileTreeViewModel, err error) {
 	treeViewModel = new(FileTreeViewModel)
+
+	comparer, err := cfg.TreeComparer()
+	if err != nil {
+		return nil, err
+	}
 
 	// populate main fields
 	treeViewModel.ShowAttributes = viper.GetBool("filetree.show-attributes")
 	treeViewModel.unconstrainedShowAttributes = treeViewModel.ShowAttributes
 	treeViewModel.CollapseAll = viper.GetBool("filetree.collapse-dir")
-	treeViewModel.ModelTree = tree
-	treeViewModel.RefTrees = refTrees
-	treeViewModel.cache = cache
+	treeViewModel.ModelTree = cfg.Analysis.RefTrees[initialLayer]
+	treeViewModel.RefTrees = cfg.Analysis.RefTrees
+	treeViewModel.comparer = comparer
 	treeViewModel.HiddenDiffTypes = make([]bool, 4)
 
 	hiddenTypes := viper.GetStringSlice("diff.hide")
@@ -106,7 +112,7 @@ func (vm *FileTreeViewModel) SetTreeByLayer(bottomTreeStart, bottomTreeStop, top
 	if topTreeStop > len(vm.RefTrees)-1 {
 		return fmt.Errorf("invalid layer index given: %d of %d", topTreeStop, len(vm.RefTrees)-1)
 	}
-	newTree, err := vm.cache.GetTree(filetree.NewTreeIndexKey(bottomTreeStart, bottomTreeStop, topTreeStart, topTreeStop))
+	newTree, err := vm.comparer.GetTree(filetree.NewTreeIndexKey(bottomTreeStart, bottomTreeStop, topTreeStart, topTreeStop))
 	if err != nil {
 		logrus.Errorf("unable to fetch layer tree from cache: %+v", err)
 		return err

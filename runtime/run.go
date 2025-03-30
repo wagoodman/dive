@@ -2,19 +2,17 @@ package runtime
 
 import (
 	"fmt"
-	"os"
-	"time"
-
 	"github.com/dustin/go-humanize"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
+	v1 "github.com/wagoodman/dive/runtime/ui/v1"
+	"github.com/wagoodman/dive/runtime/ui/v1/app"
+	"os"
 
 	"github.com/wagoodman/dive/dive"
-	"github.com/wagoodman/dive/dive/filetree"
 	"github.com/wagoodman/dive/dive/image"
 	"github.com/wagoodman/dive/runtime/ci"
 	"github.com/wagoodman/dive/runtime/export"
-	"github.com/wagoodman/dive/runtime/ui"
 	"github.com/wagoodman/dive/utils"
 )
 
@@ -86,33 +84,17 @@ func run(enableUi bool, options Options, imageResolver image.Resolver, events ev
 		}
 
 		return
-	} else {
-		events.message(utils.TitleFormat("Building cache..."))
-		treeStack := filetree.NewComparer(analysis.RefTrees)
-		errors := treeStack.BuildCache()
-		if errors != nil {
-			for _, err := range errors {
-				events.message("  " + err.Error())
-			}
-			if !options.IgnoreErrors {
-				events.exitWithError(fmt.Errorf("file tree has path errors (use '--ignore-errors' to attempt to continue)"))
-				return
-			}
-		}
-
-		if enableUi {
-			// it appears there is a race condition where termbox.Init() will
-			// block nearly indefinitely when running as the first process in
-			// a Docker container when started within ~25ms of container startup.
-			// I can't seem to determine the exact root cause, however, a large
-			// enough sleep will prevent this behavior (todo: remove this hack)
-			time.Sleep(100 * time.Millisecond)
-
-			err = ui.Run(options.Image, imageResolver, analysis, treeStack, options.KeyBindings)
-			if err != nil {
-				events.exitWithError(err)
-				return
-			}
+	} else if enableUi {
+		err = app.Run(v1.Config{
+			Image:        options.Image,
+			Content:      imageResolver,
+			Analysis:     analysis,
+			KeyBindings:  options.KeyBindings,
+			IgnoreErrors: options.IgnoreErrors,
+		})
+		if err != nil {
+			events.exitWithError(err)
+			return
 		}
 	}
 }
@@ -132,27 +114,27 @@ func Run(options Options) {
 
 	go run(true, options, imageResolver, events, afero.NewOsFs())
 
-	for event := range events {
-		if event.stdout != "" {
-			fmt.Println(event.stdout)
+	for e := range events {
+		if e.stdout != "" {
+			fmt.Println(e.stdout)
 		}
 
-		if event.stderr != "" {
-			_, err := fmt.Fprintln(os.Stderr, event.stderr)
+		if e.stderr != "" {
+			_, err := fmt.Fprintln(os.Stderr, e.stderr)
 			if err != nil {
 				fmt.Println("error: could not write to buffer:", err)
 			}
 		}
 
-		if event.err != nil {
-			logrus.Error(event.err)
-			_, err := fmt.Fprintln(os.Stderr, event.err.Error())
+		if e.err != nil {
+			logrus.Error(e.err)
+			_, err := fmt.Fprintln(os.Stderr, e.err.Error())
 			if err != nil {
 				fmt.Println("error: could not write to buffer:", err)
 			}
 		}
 
-		if event.errorOnExit {
+		if e.errorOnExit {
 			exitCode = 1
 		}
 	}

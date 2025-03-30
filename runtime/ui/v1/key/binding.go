@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/awesome-gocui/gocui"
 	"github.com/awesome-gocui/keybinding"
-	"github.com/wagoodman/dive/runtime/ui/format"
+	"github.com/wagoodman/dive/runtime/ui/v1/format"
 )
 
 type BindingInfo struct {
