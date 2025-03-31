@@ -2,6 +2,7 @@ package docker
 
 import (
 	"fmt"
+	"github.com/spf13/afero"
 	"io"
 	"net/http"
 	"os"
@@ -43,7 +44,7 @@ func (r *engineResolver) Fetch(id string) (*image.Image, error) {
 }
 
 func (r *engineResolver) Build(args []string) (*image.Image, error) {
-	id, err := buildImageFromCli(args)
+	id, err := buildImageFromCli(afero.NewOsFs(), args)
 	if err != nil {
 		return nil, err
 	}
