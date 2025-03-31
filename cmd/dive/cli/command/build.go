@@ -1,11 +1,10 @@
 package command
 
 import (
+	"github.com/spf13/cobra"
 	"github.com/wagoodman/dive/cmd/dive/cli/options"
 	"github.com/wagoodman/dive/dive"
 	"github.com/wagoodman/dive/runtime"
-
-	"github.com/spf13/cobra"
 
 	"github.com/anchore/clio"
 )
@@ -32,14 +31,13 @@ func Build(app clio.Application) *cobra.Command {
 
 func runBuild(opts *buildOptions, args []string) error {
 	runtime.Run(
-		runtime.Options{
-			Source:       dive.ParseImageSource(opts.Analysis.ContainerEngine),
-			BuildArgs:    args,
-			Ci:           opts.CI.Enabled,
-			CiRules:      opts.CI.Rules.List,
-			IgnoreErrors: opts.Analysis.IgnoreErrors,
-			ExportFile:   opts.Export.JsonPath,
-			KeyBindings:  opts.UI.Keybinding.Bindings,
+		runtime.Config{
+			Source:     dive.ParseImageSource(opts.Analysis.ContainerEngine),
+			BuildArgs:  args,
+			Ci:         opts.CI.Enabled,
+			CiRules:    opts.CI.Rules.List,
+			ExportFile: opts.Export.JsonPath,
+			UI:         opts.V1Preferences(),
 		},
 	)
 

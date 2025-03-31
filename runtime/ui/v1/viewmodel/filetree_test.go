@@ -2,17 +2,19 @@ package viewmodel
 
 import (
 	"bytes"
+	"github.com/fatih/color"
+	"github.com/stretchr/testify/require"
+	v1 "github.com/wagoodman/dive/runtime/ui/v1"
+	"github.com/wagoodman/dive/runtime/ui/v1/format"
 	"os"
 	"path/filepath"
 	"regexp"
 	"testing"
 
-	"github.com/fatih/color"
 	"github.com/sergi/go-diff/diffmatchpatch"
 
 	"github.com/wagoodman/dive/dive/filetree"
 	"github.com/wagoodman/dive/dive/image/docker"
-	"github.com/wagoodman/dive/runtime/ui/v1/format"
 )
 
 const allowTestDataCapture = false
@@ -30,6 +32,7 @@ func testCaseDataFilePath(name string) string {
 }
 
 func helperLoadBytes(t *testing.T) []byte {
+	t.Helper()
 	path := testCaseDataFilePath(t.Name())
 	theBytes, err := os.ReadFile(path)
 	if err != nil {
@@ -39,6 +42,8 @@ func helperLoadBytes(t *testing.T) []byte {
 }
 
 func helperCaptureBytes(t *testing.T, data []byte) {
+	// TODO: switch to https://github.com/gkampitakis/go-snaps
+	t.Helper()
 	if !allowTestDataCapture {
 		t.Fatalf("cannot capture data in test mode: %s", t.Name())
 	}
@@ -52,6 +57,7 @@ func helperCaptureBytes(t *testing.T, data []byte) {
 }
 
 func helperCheckDiff(t *testing.T, expected, actual []byte) {
+	t.Helper()
 	if !bytes.Equal(expected, actual) {
 		dmp := diffmatchpatch.New()
 		diffs := dmp.DiffMain(string(expected), string(actual), true)
@@ -61,6 +67,7 @@ func helperCheckDiff(t *testing.T, expected, actual []byte) {
 }
 
 func assertTestData(t *testing.T, actualBytes []byte) {
+	t.Helper()
 	path := testCaseDataFilePath(t.Name())
 	if !fileExists(path) {
 		if allowTestDataCapture {
@@ -74,31 +81,22 @@ func assertTestData(t *testing.T, actualBytes []byte) {
 }
 
 func initializeTestViewModel(t *testing.T) *FileTreeViewModel {
-	result := docker.TestAnalysisFromArchive(t, "../../../.data/test-docker-image.tar")
-
-	cache := filetree.NewComparer(result.RefTrees)
-	errors := cache.BuildCache()
-	if len(errors) > 0 {
-		t.Fatalf("%s: unable to build cache: %d errors", t.Name(), len(errors))
-	}
+	t.Helper()
+	result := docker.TestAnalysisFromArchive(t, "../../../../.data/test-docker-image.tar")
+	require.NotNil(t, result, "unable to load test data")
 
 	format.Selected = color.New(color.ReverseVideo, color.Bold).SprintFunc()
 
-	treeStack, failedPaths, err := filetree.StackTreeRange(result.RefTrees, 0, 0)
-	if len(failedPaths) > 0 {
-		t.Errorf("expected no filepath errors, got %d", len(failedPaths))
-	}
-	if err != nil {
-		t.Fatalf("%s: unable to stack trees: %v", t.Name(), err)
-	}
-	vm, err := NewFileTreeViewModel(treeStack, result.RefTrees, cache)
-	if err != nil {
-		t.Fatalf("%s: unable to create tree ViewModel: %+v", t.Name(), err)
-	}
+	vm, err := NewFileTreeViewModel(v1.Config{
+		Analysis:    *result,
+		Preferences: v1.DefaultPreferences(),
+	}, 0)
+	require.NoError(t, err, "unable to create viewmodel")
 	return vm
 }
 
 func runTestCase(t *testing.T, vm *FileTreeViewModel, width, height int, filterRegex *regexp.Regexp) {
+	t.Helper()
 	err := vm.Update(filterRegex, width, height)
 	if err != nil {
 		t.Errorf("failed to update viewmodel: %v", err)
@@ -159,15 +157,11 @@ func TestFileTreeDirCollapse(t *testing.T) {
 	err := vm.ToggleCollapse(nil)
 	checkError(t, err, "unable to collapse /bin")
 
-	moved := vm.CursorDown()
-	if !moved {
-		t.Error("unable to cursor down")
-	}
+	moved := vm.CursorDown() // select /dev
+	require.True(t, moved, "unable to cursor down")
 
-	moved = vm.CursorDown()
-	if !moved {
-		t.Error("unable to cursor down")
-	}
+	moved = vm.CursorDown() // select /etc
+	require.True(t, moved, "unable to cursor down")
 
 	// collapse /etc
 	err = vm.ToggleCollapse(nil)

@@ -39,14 +39,13 @@ the amount of wasted space and identifies the offending files from the image.`,
 func runRoot(opts *rootOptions) error {
 
 	runtime.Run(
-		runtime.Options{
-			Image:        opts.Analysis.Image,
-			Source:       opts.Analysis.Source,
-			Ci:           opts.CI.Enabled,
-			CiRules:      opts.CI.Rules.List,
-			IgnoreErrors: opts.Analysis.IgnoreErrors,
-			ExportFile:   opts.Export.JsonPath,
-			KeyBindings:  opts.UI.Keybinding.Bindings,
+		runtime.Config{
+			Image:      opts.Analysis.Image,
+			Source:     opts.Analysis.Source,
+			Ci:         opts.CI.Enabled,
+			CiRules:    opts.CI.Rules.List,
+			ExportFile: opts.Export.JsonPath,
+			UI:         opts.V1Preferences(),
 		},
 	)
 

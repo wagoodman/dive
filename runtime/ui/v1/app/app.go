@@ -1,6 +1,7 @@
 package app
 
 import (
+	"errors"
 	"github.com/awesome-gocui/gocui"
 	"github.com/sirupsen/logrus"
 	v1 "github.com/wagoodman/dive/runtime/ui/v1"
@@ -40,12 +41,12 @@ func Run(c v1.Config) error {
 		return err
 	}
 
-	key, mod := gocui.MustParse("Ctrl+Z")
-	if err := g.SetKeybinding("", key, mod, handle_ctrl_z); err != nil {
+	k, mod := gocui.MustParse("Ctrl+Z")
+	if err := g.SetKeybinding("", k, mod, handle_ctrl_z); err != nil {
 		return err
 	}
 
-	if err := g.MainLoop(); err != nil && err != gocui.ErrQuit {
+	if err := g.MainLoop(); err != nil && !errors.Is(err, gocui.ErrQuit) {
 		logrus.Error("main loop error: ", err)
 		return err
 	}
@@ -85,31 +86,31 @@ func newApp(gui *gocui.Gui, cfg v1.Config) (*app, error) {
 
 	var infos = []key.BindingInfo{
 		{
-			Config:   cfg.KeyBindings.Global.Quit,
+			Config:   cfg.Preferences.KeyBindings.Global.Quit,
 			OnAction: a.quit,
 			Display:  "Quit",
 		},
 		{
-			Config:   cfg.KeyBindings.Global.ToggleView,
+			Config:   cfg.Preferences.KeyBindings.Global.ToggleView,
 			OnAction: c.ToggleView,
 			Display:  "Switch view",
 		},
 		{
-			Config:   cfg.KeyBindings.Navigation.Right,
+			Config:   cfg.Preferences.KeyBindings.Navigation.Right,
 			OnAction: c.NextPane,
 		},
 		{
-			Config:   cfg.KeyBindings.Navigation.Left,
+			Config:   cfg.Preferences.KeyBindings.Navigation.Left,
 			OnAction: c.PrevPane,
 		},
 		{
-			Config:     cfg.KeyBindings.Global.FilterFiles,
+			Config:     cfg.Preferences.KeyBindings.Global.FilterFiles,
 			OnAction:   c.ToggleFilterView,
 			IsSelected: c.views.Filter.IsVisible,
 			Display:    "Filter",
 		},
 		{
-			Config:   cfg.KeyBindings.Global.CloseFilterFiles,
+			Config:   cfg.Preferences.KeyBindings.Global.CloseFilterFiles,
 			OnAction: c.CloseFilterView,
 		},
 	}

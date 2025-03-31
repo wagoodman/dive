@@ -9,8 +9,6 @@ import (
 
 	"github.com/lunixbochs/vtclean"
 	"github.com/sirupsen/logrus"
-	"github.com/spf13/viper"
-
 	"github.com/wagoodman/dive/dive/filetree"
 	"github.com/wagoodman/dive/runtime/ui/v1/format"
 )
@@ -49,15 +47,15 @@ func NewFileTreeViewModel(cfg v1.Config, initialLayer int) (treeViewModel *FileT
 	}
 
 	// populate main fields
-	treeViewModel.ShowAttributes = viper.GetBool("filetree.show-attributes")
+	treeViewModel.ShowAttributes = cfg.Preferences.ShowFiletreeAttributes
 	treeViewModel.unconstrainedShowAttributes = treeViewModel.ShowAttributes
-	treeViewModel.CollapseAll = viper.GetBool("filetree.collapse-dir")
+	treeViewModel.CollapseAll = cfg.Preferences.CollapseFiletreeDirectory
 	treeViewModel.ModelTree = cfg.Analysis.RefTrees[initialLayer]
 	treeViewModel.RefTrees = cfg.Analysis.RefTrees
 	treeViewModel.comparer = comparer
 	treeViewModel.HiddenDiffTypes = make([]bool, 4)
 
-	hiddenTypes := viper.GetStringSlice("diff.hide")
+	hiddenTypes := cfg.Preferences.FiletreeDiffHide
 	for _, hType := range hiddenTypes {
 		switch t := strings.ToLower(hType); t {
 		case "added":
@@ -326,7 +324,11 @@ func (vm *FileTreeViewModel) getAbsPositionNode(filterRegex *regexp.Regexp) (nod
 			match := filterRegex.Find([]byte(curNode.Path()))
 			regexMatch = match != nil
 		}
-		return !curNode.Parent.Data.ViewInfo.Collapsed && !curNode.Data.ViewInfo.Hidden && regexMatch
+		parentCollapsed := false
+		if curNode.Parent != nil {
+			parentCollapsed = curNode.Parent.Data.ViewInfo.Collapsed
+		}
+		return !parentCollapsed && !curNode.Data.ViewInfo.Hidden && regexMatch
 	}
 
 	err := vm.ModelTree.VisitDepthParentFirst(visitor, evaluator)

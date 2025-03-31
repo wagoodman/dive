@@ -58,7 +58,7 @@ func newController(g *gocui.Gui, cfg v1.Config) (*controller, error) {
 }
 
 func (c *controller) onFileTreeViewExtract(p string) error {
-	return c.config.Content.Extract(c.config.Image, c.views.LayerDetails.CurrentLayer.Id, p)
+	return c.config.Content.Extract(c.config.Analysis.Image, c.views.LayerDetails.CurrentLayer.Id, p)
 }
 
 func (c *controller) onFileTreeViewOptionChange() error {

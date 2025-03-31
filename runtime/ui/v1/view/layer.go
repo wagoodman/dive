@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/awesome-gocui/gocui"
 	"github.com/sirupsen/logrus"
-	"github.com/spf13/viper"
+	v1 "github.com/wagoodman/dive/runtime/ui/v1"
 
 	"github.com/wagoodman/dive/dive/image"
 	"github.com/wagoodman/dive/runtime/ui/v1/format"
@@ -29,7 +29,7 @@ type Layer struct {
 }
 
 // newLayerView creates a new view object attached the global [gocui] screen object.
-func newLayerView(gui *gocui.Gui, layers []*image.Layer, kb key.Bindings) (controller *Layer, err error) {
+func newLayerView(gui *gocui.Gui, cfg v1.Config) (controller *Layer, err error) {
 	controller = new(Layer)
 
 	controller.listeners = make([]LayerChangeListener, 0)
@@ -37,11 +37,11 @@ func newLayerView(gui *gocui.Gui, layers []*image.Layer, kb key.Bindings) (contr
 	// populate main fields
 	controller.name = "layer"
 	controller.gui = gui
-	controller.kb = kb
+	controller.kb = cfg.Preferences.KeyBindings
 
 	var compareMode viewmodel.LayerCompareMode
 
-	switch mode := viper.GetBool("layer.show-aggregated-changes"); mode {
+	switch mode := cfg.Preferences.ShowAggregatedLayerChanges; mode {
 	case true:
 		compareMode = viewmodel.CompareAllLayers
 	case false:
@@ -50,7 +50,7 @@ func newLayerView(gui *gocui.Gui, layers []*image.Layer, kb key.Bindings) (contr
 		return nil, fmt.Errorf("unknown layer.show-aggregated-changes value: %v", mode)
 	}
 
-	controller.vm = viewmodel.NewLayerSetState(layers, compareMode)
+	controller.vm = viewmodel.NewLayerSetState(cfg.Analysis.Layers, compareMode)
 
 	return controller, err
 }

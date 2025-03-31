@@ -18,38 +18,7 @@ type UIKeybindings struct {
 
 func DefaultUIKeybinding() UIKeybindings {
 	return UIKeybindings{
-		Bindings: key.Bindings{
-			Global: key.GlobalBindings{
-				Quit:             key.Config{Input: "ctrl+c"},
-				ToggleView:       key.Config{Input: "tab"},
-				FilterFiles:      key.Config{Input: "ctrl+f, ctrl+slash"},
-				CloseFilterFiles: key.Config{Input: "esc"},
-			},
-			Navigation: key.NavigationBindings{
-				Up:       key.Config{Input: "up,k"},
-				Down:     key.Config{Input: "down,j"},
-				Left:     key.Config{Input: "left,h"},
-				Right:    key.Config{Input: "right,l"},
-				PageUp:   key.Config{Input: "pgup,u"},
-				PageDown: key.Config{Input: "pgdn,d"},
-			},
-			Layer: key.LayerBindings{
-				CompareAll:   key.Config{Input: "ctrl+a"},
-				CompareLayer: key.Config{Input: "ctrl+l"},
-			},
-			Filetree: key.FiletreeBindings{
-				ToggleCollapseDir:     key.Config{Input: "space"},
-				ToggleCollapseAllDir:  key.Config{Input: "ctrl+space"},
-				ToggleAddedFiles:      key.Config{Input: "ctrl+a"},
-				ToggleRemovedFiles:    key.Config{Input: "ctrl+r"},
-				ToggleModifiedFiles:   key.Config{Input: "ctrl+m"},
-				ToggleUnmodifiedFiles: key.Config{Input: "ctrl+u"},
-				ToggleTreeAttributes:  key.Config{Input: "ctrl+b"},
-				ToggleWrapTree:        key.Config{Input: "ctrl+p"},
-				ToggleSortOrder:       key.Config{Input: "ctrl+o"},
-				ExtractFile:           key.Config{Input: "ctrl+e"},
-			},
-		},
+		Bindings: key.DefaultBindings(),
 	}
 }
 

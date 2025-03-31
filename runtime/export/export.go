@@ -2,9 +2,7 @@ package export
 
 import (
 	"encoding/json"
-
 	"github.com/sirupsen/logrus"
-
 	"github.com/wagoodman/dive/dive/filetree"
 	diveImage "github.com/wagoodman/dive/dive/image"
 )
@@ -15,11 +13,11 @@ type export struct {
 }
 
 // NewExport exports the analysis to a JSON
-func NewExport(analysis *diveImage.AnalysisResult) *export {
+func NewExport(analysis *diveImage.Analysis) *export {
 	data := export{
 		Layer: make([]layer, len(analysis.Layers)),
 		Image: image{
-			InefficientFiles: make([]fileReference, len(analysis.Inefficiencies)),
+			InefficientFiles: make([]FileReference, len(analysis.Inefficiencies)),
 			SizeBytes:        analysis.SizeBytes,
 			EfficiencyScore:  analysis.Efficiency,
 			InefficientBytes: analysis.WastedBytes,
@@ -51,7 +49,7 @@ func NewExport(analysis *diveImage.AnalysisResult) *export {
 	for idx := 0; idx < len(analysis.Inefficiencies); idx++ {
 		fileData := analysis.Inefficiencies[len(analysis.Inefficiencies)-1-idx]
 
-		data.Image.InefficientFiles[idx] = fileReference{
+		data.Image.InefficientFiles[idx] = FileReference{
 			References: len(fileData.Nodes),
 			SizeBytes:  uint64(fileData.CumulativeSize),
 			Path:       fileData.Path,

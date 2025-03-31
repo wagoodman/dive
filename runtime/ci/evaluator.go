@@ -29,6 +29,12 @@ type ResultTally struct {
 	Total int
 }
 
+type ReferenceFile struct {
+	References int    `json:"count"`
+	SizeBytes  uint64 `json:"sizeBytes"`
+	Path       string `json:"file"`
+}
+
 func NewEvaluator(rules []Rule) *Evaluator {
 	return &Evaluator{
 		Rules:   rules,
@@ -41,7 +47,7 @@ func (ci *Evaluator) isRuleEnabled(rule Rule) bool {
 	return rule.Configuration() != "disabled"
 }
 
-func (ci *Evaluator) Evaluate(analysis *image.AnalysisResult) bool {
+func (ci *Evaluator) Evaluate(analysis *image.Analysis) bool {
 	for _, rule := range ci.Rules {
 		if !ci.isRuleEnabled(rule) {
 			ci.Results[rule.Key()] = RuleResult{
@@ -144,11 +150,10 @@ func (ci *Evaluator) Report() string {
 
 	for _, rule := range rules {
 		result := ci.Results[rule]
-		name := strings.TrimPrefix(rule, "rules.")
 		if result.message != "" {
-			fmt.Fprintf(&sb, "  %s: %s: %s\n", result.status.String(), name, result.message)
+			fmt.Fprintf(&sb, "  %s: %s: %s\n", result.status.String(), rule, result.message)
 		} else {
-			fmt.Fprintf(&sb, "  %s: %s\n", result.status.String(), name)
+			fmt.Fprintf(&sb, "  %s: %s\n", result.status.String(), rule)
 		}
 	}
 

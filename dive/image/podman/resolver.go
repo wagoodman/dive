@@ -66,5 +66,5 @@ func (r *resolver) resolveFromDockerArchive(id string) (*image.Image, error) {
 	if err != nil {
 		return nil, err
 	}
-	return img.ToImage()
+	return img.ToImage(id)
 }

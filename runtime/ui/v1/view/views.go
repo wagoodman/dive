@@ -22,7 +22,7 @@ type Views struct {
 }
 
 func NewViews(g *gocui.Gui, cfg v1.Config) (*Views, error) {
-	layer, err := newLayerView(g, cfg.Analysis.Layers, cfg.KeyBindings)
+	layer, err := newLayerView(g, cfg)
 	if err != nil {
 		return nil, err
 	}
@@ -44,13 +44,13 @@ func NewViews(g *gocui.Gui, cfg v1.Config) (*Views, error) {
 		Filter: newFilterView(g),
 		ImageDetails: &ImageDetails{
 			gui:            g,
-			imageName:      cfg.Image,
+			imageName:      cfg.Analysis.Image,
 			imageSize:      cfg.Analysis.SizeBytes,
 			efficiency:     cfg.Analysis.Efficiency,
 			inefficiencies: cfg.Analysis.Inefficiencies,
-			kb:             cfg.KeyBindings,
+			kb:             cfg.Preferences.KeyBindings,
 		},
-		LayerDetails: &LayerDetails{gui: g, kb: cfg.KeyBindings},
+		LayerDetails: &LayerDetails{gui: g, kb: cfg.Preferences.KeyBindings},
 		Debug:        newDebugView(g),
 	}, nil
 }

@@ -3,6 +3,7 @@ package options
 import (
 	"github.com/anchore/clio"
 	log "github.com/sirupsen/logrus"
+	v1 "github.com/wagoodman/dive/runtime/ui/v1"
 )
 
 var _ interface {
@@ -18,10 +19,11 @@ type UIFiletree struct {
 }
 
 func DefaultUIFiletree() UIFiletree {
+	prefs := v1.DefaultPreferences()
 	return UIFiletree{
-		CollapseDir:    false,
-		PaneWidth:      0.5,
-		ShowAttributes: true,
+		CollapseDir:    prefs.CollapseFiletreeDirectory,
+		PaneWidth:      prefs.FiletreePaneWidth,
+		ShowAttributes: prefs.ShowFiletreeAttributes,
 	}
 }
 

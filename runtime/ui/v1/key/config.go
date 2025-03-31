@@ -87,3 +87,38 @@ type FiletreeBindings struct {
 	ToggleWrapTree        Config `yaml:"toggle-wrap-tree" mapstructure:"toggle-wrap-tree"`
 	ExtractFile           Config `yaml:"extract-file" mapstructure:"extract-file"`
 }
+
+func DefaultBindings() Bindings {
+	return Bindings{
+		Global: GlobalBindings{
+			Quit:             Config{Input: "ctrl+c"},
+			ToggleView:       Config{Input: "tab"},
+			FilterFiles:      Config{Input: "ctrl+f, ctrl+slash"},
+			CloseFilterFiles: Config{Input: "esc"},
+		},
+		Navigation: NavigationBindings{
+			Up:       Config{Input: "up,k"},
+			Down:     Config{Input: "down,j"},
+			Left:     Config{Input: "left,h"},
+			Right:    Config{Input: "right,l"},
+			PageUp:   Config{Input: "pgup,u"},
+			PageDown: Config{Input: "pgdn,d"},
+		},
+		Layer: LayerBindings{
+			CompareAll:   Config{Input: "ctrl+a"},
+			CompareLayer: Config{Input: "ctrl+l"},
+		},
+		Filetree: FiletreeBindings{
+			ToggleCollapseDir:     Config{Input: "space"},
+			ToggleCollapseAllDir:  Config{Input: "ctrl+space"},
+			ToggleAddedFiles:      Config{Input: "ctrl+a"},
+			ToggleRemovedFiles:    Config{Input: "ctrl+r"},
+			ToggleModifiedFiles:   Config{Input: "ctrl+m"},
+			ToggleUnmodifiedFiles: Config{Input: "ctrl+u"},
+			ToggleTreeAttributes:  Config{Input: "ctrl+b"},
+			ToggleWrapTree:        Config{Input: "ctrl+p"},
+			ToggleSortOrder:       Config{Input: "ctrl+o"},
+			ExtractFile:           Config{Input: "ctrl+e"},
+		},
+	}
+}

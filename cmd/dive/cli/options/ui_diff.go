@@ -3,6 +3,7 @@ package options
 import (
 	"github.com/anchore/clio"
 	log "github.com/sirupsen/logrus"
+	v1 "github.com/wagoodman/dive/runtime/ui/v1"
 )
 
 var _ interface {
@@ -16,8 +17,9 @@ type UIDiff struct {
 }
 
 func DefaultUIDiff() UIDiff {
+	prefs := v1.DefaultPreferences()
 	return UIDiff{
-		Hide: []string{}, // empty slice means show all
+		Hide: prefs.FiletreeDiffHide,
 	}
 }
 

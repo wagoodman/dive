@@ -5,11 +5,12 @@ import (
 )
 
 type Image struct {
-	Trees  []*filetree.FileTree
-	Layers []*Layer
+	Request string
+	Trees   []*filetree.FileTree
+	Layers  []*Layer
 }
 
-func (img *Image) Analyze() (*AnalysisResult, error) {
+func (img *Image) Analyze() (*Analysis, error) {
 	efficiency, inefficiencies := filetree.Efficiency(img.Trees)
 	var sizeBytes, userSizeBytes uint64
 
@@ -25,7 +26,8 @@ func (img *Image) Analyze() (*AnalysisResult, error) {
 		wastedBytes += uint64(file.CumulativeSize)
 	}
 
-	return &AnalysisResult{
+	return &Analysis{
+		Image:             img.Request,
 		Layers:            img.Layers,
 		RefTrees:          img.Trees,
 		Efficiency:        efficiency,

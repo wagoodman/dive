@@ -1,13 +1,15 @@
 package docker
 
 import (
+	"github.com/stretchr/testify/require"
 	"os"
 	"testing"
 
 	"github.com/wagoodman/dive/dive/image"
 )
 
-func TestLoadArchive(tarPath string) (*ImageArchive, error) {
+func TestLoadArchive(t testing.TB, tarPath string) (*ImageArchive, error) {
+	t.Helper()
 	f, err := os.Open(tarPath)
 	if err != nil {
 		return nil, err
@@ -17,20 +19,15 @@ func TestLoadArchive(tarPath string) (*ImageArchive, error) {
 	return NewImageArchive(f)
 }
 
-func TestAnalysisFromArchive(t *testing.T, path string) *image.AnalysisResult {
-	archive, err := TestLoadArchive(path)
-	if err != nil {
-		t.Fatalf("unable to fetch archive: %v", err)
-	}
+func TestAnalysisFromArchive(t testing.TB, path string) *image.Analysis {
+	t.Helper()
+	archive, err := TestLoadArchive(t, path)
+	require.NoError(t, err, "unable to load archive")
 
-	img, err := archive.ToImage()
-	if err != nil {
-		t.Fatalf("unable to convert to image: %v", err)
-	}
+	img, err := archive.ToImage(path)
+	require.NoError(t, err, "unable to convert archive to image")
 
 	result, err := img.Analyze()
-	if err != nil {
-		t.Fatalf("unable to analyze: %v", err)
-	}
+	require.NoError(t, err, "unable to analyze image")
 	return result
 }

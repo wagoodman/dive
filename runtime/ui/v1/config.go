@@ -10,15 +10,35 @@ import (
 )
 
 type Config struct {
-	Image        string
-	Content      ContentReader
-	Analysis     *image.AnalysisResult
-	KeyBindings  key.Bindings
-	IgnoreErrors bool
+	// required input
+	Analysis    image.Analysis
+	Content     ContentReader
+	Preferences Preferences
 
 	stack     filetree.Comparer
 	stackErrs error
 	do        *sync.Once
+}
+
+type Preferences struct {
+	KeyBindings                key.Bindings
+	IgnoreErrors               bool
+	ShowFiletreeAttributes     bool
+	ShowAggregatedLayerChanges bool
+	CollapseFiletreeDirectory  bool
+	FiletreePaneWidth          float64
+	FiletreeDiffHide           []string
+}
+
+func DefaultPreferences() Preferences {
+	return Preferences{
+		KeyBindings:                key.DefaultBindings(),
+		ShowFiletreeAttributes:     true,
+		ShowAggregatedLayerChanges: true,
+		CollapseFiletreeDirectory:  false, // don't start with collapsed directories
+		FiletreePaneWidth:          0.5,
+		FiletreeDiffHide:           []string{}, // empty slice means show all
+	}
 }
 
 func (c *Config) TreeComparer() (filetree.Comparer, error) {
@@ -29,7 +49,7 @@ func (c *Config) TreeComparer() (filetree.Comparer, error) {
 		treeStack := filetree.NewComparer(c.Analysis.RefTrees)
 		errs := treeStack.BuildCache()
 		if errs != nil {
-			if !c.IgnoreErrors {
+			if !c.Preferences.IgnoreErrors {
 				errs = append(errs, fmt.Errorf("file tree has path errors (use '--ignore-errors' to attempt to continue)"))
 				c.stackErrs = errors.Join(errs...)
 				return

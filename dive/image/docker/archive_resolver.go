@@ -29,7 +29,7 @@ func (r *archiveResolver) Fetch(path string) (*image.Image, error) {
 	if err != nil {
 		return nil, err
 	}
-	return img.ToImage()
+	return img.ToImage(path)
 }
 
 func (r *archiveResolver) Build(args []string) (*image.Image, error) {

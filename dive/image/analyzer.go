@@ -5,10 +5,11 @@ import (
 )
 
 type Analyzer interface {
-	Analyze() (*AnalysisResult, error)
+	Analyze() (*Analysis, error)
 }
 
-type AnalysisResult struct {
+type Analysis struct {
+	Image             string
 	Layers            []*Layer
 	RefTrees          []*filetree.FileTree
 	Efficiency        float64

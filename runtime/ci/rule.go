@@ -18,7 +18,7 @@ const (
 type Rule interface {
 	Key() string
 	Configuration() string
-	Evaluate(result *image.AnalysisResult) (RuleStatus, string)
+	Evaluate(result *image.Analysis) (RuleStatus, string)
 }
 
 type RuleStatus int

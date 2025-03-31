@@ -7,8 +7,6 @@ import (
 
 	"github.com/awesome-gocui/gocui"
 	"github.com/sirupsen/logrus"
-	"github.com/spf13/viper"
-
 	"github.com/wagoodman/dive/dive/filetree"
 	"github.com/wagoodman/dive/runtime/ui/v1/format"
 	"github.com/wagoodman/dive/runtime/ui/v1/key"
@@ -46,13 +44,13 @@ func newFileTreeView(gui *gocui.Gui, cfg v1.Config, initial int) (v *FileTree, e
 	// populate main fields
 	v.name = "filetree"
 	v.gui = gui
-	v.kb = cfg.KeyBindings
+	v.kb = cfg.Preferences.KeyBindings
 	v.vm, err = viewmodel.NewFileTreeViewModel(cfg, initial)
 	if err != nil {
 		return nil, err
 	}
 
-	requestedWidthRatio := viper.GetFloat64("filetree.pane-width")
+	requestedWidthRatio := cfg.Preferences.FiletreePaneWidth
 	if requestedWidthRatio >= 1 || requestedWidthRatio <= 0 {
 		logrus.Errorf("invalid config value: 'filetree.pane-width' should be 0 < value < 1, given '%v'", requestedWidthRatio)
 		requestedWidthRatio = 0.5
