@@ -30,8 +30,9 @@ the amount of wasted space and identifies the offending files from the image.`,
 			opts.Analysis.Image = args[0]
 			return nil
 		},
-		RunE: func(_ *cobra.Command, _ []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			return runtime.Run(
+				cmd.Context(),
 				runtime.Config{
 					Image:      opts.Analysis.Image,
 					Source:     opts.Analysis.Source,

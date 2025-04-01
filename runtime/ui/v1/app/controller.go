@@ -2,6 +2,7 @@ package app
 
 import (
 	v1 "github.com/wagoodman/dive/runtime/ui/v1"
+	"golang.org/x/net/context"
 	"regexp"
 
 	"github.com/awesome-gocui/gocui"
@@ -15,9 +16,10 @@ type controller struct {
 	gui    *gocui.Gui
 	views  *view.Views
 	config v1.Config
+	ctx    context.Context // TODO: storing context in the controller is not ideal
 }
 
-func newController(g *gocui.Gui, cfg v1.Config) (*controller, error) {
+func newController(ctx context.Context, g *gocui.Gui, cfg v1.Config) (*controller, error) {
 	views, err := view.NewViews(g, cfg)
 	if err != nil {
 		return nil, err
@@ -27,6 +29,7 @@ func newController(g *gocui.Gui, cfg v1.Config) (*controller, error) {
 		gui:    g,
 		views:  views,
 		config: cfg,
+		ctx:    ctx,
 	}
 
 	// layer view cursor down event should trigger an update in the file tree
@@ -58,7 +61,7 @@ func newController(g *gocui.Gui, cfg v1.Config) (*controller, error) {
 }
 
 func (c *controller) onFileTreeViewExtract(p string) error {
-	return c.config.Content.Extract(c.config.Analysis.Image, c.views.LayerDetails.CurrentLayer.Id, p)
+	return c.config.Content.Extract(c.ctx, c.config.Analysis.Image, c.views.LayerDetails.CurrentLayer.Id, p)
 }
 
 func (c *controller) onFileTreeViewOptionChange() error {

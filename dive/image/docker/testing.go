@@ -2,6 +2,7 @@ package docker
 
 import (
 	"github.com/stretchr/testify/require"
+	"golang.org/x/net/context"
 	"os"
 	"testing"
 
@@ -27,7 +28,7 @@ func TestAnalysisFromArchive(t testing.TB, path string) *image.Analysis {
 	img, err := archive.ToImage(path)
 	require.NoError(t, err, "unable to convert archive to image")
 
-	result, err := img.Analyze()
+	result, err := img.Analyze(context.Background())
 	require.NoError(t, err, "unable to analyze image")
 	return result
 }

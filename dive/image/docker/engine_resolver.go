@@ -29,7 +29,7 @@ func (r *engineResolver) Name() string {
 	return "docker-engine"
 }
 
-func (r *engineResolver) Fetch(id string) (*image.Image, error) {
+func (r *engineResolver) Fetch(ctx context.Context, id string) (*image.Image, error) {
 	reader, err := r.fetchArchive(id)
 	if err != nil {
 		return nil, err
@@ -43,15 +43,15 @@ func (r *engineResolver) Fetch(id string) (*image.Image, error) {
 	return img.ToImage(id)
 }
 
-func (r *engineResolver) Build(args []string) (*image.Image, error) {
+func (r *engineResolver) Build(ctx context.Context, args []string) (*image.Image, error) {
 	id, err := buildImageFromCli(afero.NewOsFs(), args)
 	if err != nil {
 		return nil, err
 	}
-	return r.Fetch(id)
+	return r.Fetch(ctx, id)
 }
 
-func (r *engineResolver) Extract(id string, l string, p string) error {
+func (r *engineResolver) Extract(ctx context.Context, id string, l string, p string) error {
 	reader, err := r.fetchArchive(id)
 	if err != nil {
 		return err

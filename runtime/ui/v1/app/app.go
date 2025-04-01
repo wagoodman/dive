@@ -8,6 +8,7 @@ import (
 	"github.com/wagoodman/dive/runtime/ui/v1/key"
 	"github.com/wagoodman/dive/runtime/ui/v1/layout"
 	"github.com/wagoodman/dive/runtime/ui/v1/layout/compound"
+	"golang.org/x/net/context"
 	"time"
 )
 
@@ -20,7 +21,7 @@ type app struct {
 }
 
 // Run is the UI entrypoint.
-func Run(c v1.Config) error {
+func Run(ctx context.Context, c v1.Config) error {
 	var err error
 
 	// it appears there is a race condition where termbox.Init() will
@@ -36,7 +37,7 @@ func Run(c v1.Config) error {
 	}
 	defer g.Close()
 
-	_, err = newApp(g, c)
+	_, err = newApp(ctx, g, c)
 	if err != nil {
 		return err
 	}
@@ -53,12 +54,12 @@ func Run(c v1.Config) error {
 	return nil
 }
 
-func newApp(gui *gocui.Gui, cfg v1.Config) (*app, error) {
+func newApp(ctx context.Context, gui *gocui.Gui, cfg v1.Config) (*app, error) {
 	var err error
 	var c *controller
 	var globalHelpKeys []*key.Binding
 
-	c, err = newController(gui, cfg)
+	c, err = newController(ctx, gui, cfg)
 	if err != nil {
 		return nil, err
 	}

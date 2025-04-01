@@ -2,6 +2,7 @@ package ci
 
 import (
 	"fmt"
+	"golang.org/x/net/context"
 	"sort"
 	"strconv"
 	"strings"
@@ -47,7 +48,7 @@ func (ci *Evaluator) isRuleEnabled(rule Rule) bool {
 	return rule.Configuration() != "disabled"
 }
 
-func (ci *Evaluator) Evaluate(analysis *image.Analysis) bool {
+func (ci *Evaluator) Evaluate(ctx context.Context, analysis *image.Analysis) bool {
 	for _, rule := range ci.Rules {
 		if !ci.isRuleEnabled(rule) {
 			ci.Results[rule.Key()] = RuleResult{

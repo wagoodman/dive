@@ -2,10 +2,11 @@ package image
 
 import (
 	"github.com/wagoodman/dive/dive/filetree"
+	"golang.org/x/net/context"
 )
 
 type Analyzer interface {
-	Analyze() (*Analysis, error)
+	Analyze(context.Context) (*Analysis, error)
 }
 
 type Analysis struct {

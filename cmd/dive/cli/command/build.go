@@ -23,8 +23,9 @@ func Build(app clio.Application) *cobra.Command {
 		Use:                "build [any valid `docker build` arguments]",
 		Short:              "Builds and analyzes a docker image from a Dockerfile (this is a thin wrapper for the `docker build` command).",
 		DisableFlagParsing: true,
-		RunE: func(_ *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, args []string) error {
 			return runtime.Run(
+				cmd.Context(),
 				runtime.Config{
 					Source:     dive.ParseImageSource(opts.Analysis.ContainerEngine),
 					BuildArgs:  args,

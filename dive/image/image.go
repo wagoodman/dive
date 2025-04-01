@@ -2,6 +2,7 @@ package image
 
 import (
 	"github.com/wagoodman/dive/dive/filetree"
+	"golang.org/x/net/context"
 )
 
 type Image struct {
@@ -10,7 +11,7 @@ type Image struct {
 	Layers  []*Layer
 }
 
-func (img *Image) Analyze() (*Analysis, error) {
+func (img *Image) Analyze(ctx context.Context) (*Analysis, error) {
 	efficiency, inefficiencies := filetree.Efficiency(img.Trees)
 	var sizeBytes, userSizeBytes uint64
 

@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/afero"
 	v1 "github.com/wagoodman/dive/runtime/ui/v1"
 	"github.com/wagoodman/dive/runtime/ui/v1/app"
+	"golang.org/x/net/context"
 	"os"
 
 	"github.com/wagoodman/dive/dive"
@@ -31,7 +32,7 @@ type Config struct {
 	UI v1.Preferences
 }
 
-func Run(cfg Config) error {
+func Run(ctx context.Context, cfg Config) error {
 	var events = make(eventChannel)
 
 	imageResolver, err := dive.GetImageResolver(cfg.Source)
@@ -39,7 +40,7 @@ func Run(cfg Config) error {
 		return errors.New("cannot determine image provider")
 	}
 
-	go run(true, cfg, imageResolver, events, afero.NewOsFs())
+	go run(ctx, true, cfg, imageResolver, events, afero.NewOsFs())
 
 	var retErr error
 	for e := range events {
@@ -62,7 +63,7 @@ func Run(cfg Config) error {
 	return retErr
 }
 
-func run(enableUI bool, cfg Config, imageResolver image.Resolver, events eventChannel, filesystem afero.Fs) {
+func run(ctx context.Context, enableUI bool, cfg Config, imageResolver image.Resolver, events eventChannel, filesystem afero.Fs) {
 	var img *image.Image
 	var err error
 	defer close(events)
@@ -72,7 +73,7 @@ func run(enableUI bool, cfg Config, imageResolver image.Resolver, events eventCh
 
 	if doBuild {
 		events.message(utils.TitleFormat("Building image..."))
-		img, err = imageResolver.Build(cfg.BuildArgs)
+		img, err = imageResolver.Build(ctx, cfg.BuildArgs)
 		if err != nil {
 			events.exitWithErrorMessage("cannot build image", err)
 			return
@@ -80,7 +81,7 @@ func run(enableUI bool, cfg Config, imageResolver image.Resolver, events eventCh
 	} else {
 		events.message(utils.TitleFormat("Image Source: ") + cfg.Source.String() + "://" + cfg.Image)
 		events.message(utils.TitleFormat("Extracting image from "+imageResolver.Name()+"...") + " (this can take a while for large images)")
-		img, err = imageResolver.Fetch(cfg.Image)
+		img, err = imageResolver.Fetch(ctx, cfg.Image)
 		if err != nil {
 			events.exitWithErrorMessage("cannot fetch image", err)
 			return
@@ -88,7 +89,7 @@ func run(enableUI bool, cfg Config, imageResolver image.Resolver, events eventCh
 	}
 
 	events.message(utils.TitleFormat("Analyzing image..."))
-	analysis, err := img.Analyze()
+	analysis, err := img.Analyze(ctx)
 	if err != nil {
 		events.exitWithErrorMessage("cannot analyze image", err)
 		return
@@ -126,7 +127,7 @@ func run(enableUI bool, cfg Config, imageResolver image.Resolver, events eventCh
 		events.message(fmt.Sprintf("  userWastedPercent: %2.4f %%", analysis.WastedUserPercent*100))
 
 		evaluator := ci.NewEvaluator(cfg.CiRules)
-		pass := evaluator.Evaluate(analysis)
+		pass := evaluator.Evaluate(ctx, analysis)
 		events.message(evaluator.Report())
 
 		if !pass {
@@ -137,11 +138,14 @@ func run(enableUI bool, cfg Config, imageResolver image.Resolver, events eventCh
 	}
 
 	if enableUI {
-		err = app.Run(v1.Config{
-			Content:     imageResolver,
-			Analysis:    *analysis,
-			Preferences: cfg.UI,
-		})
+		err = app.Run(
+			ctx,
+			v1.Config{
+				Content:     imageResolver,
+				Analysis:    *analysis,
+				Preferences: cfg.UI,
+			},
+		)
 		if err != nil {
 			events.exitWithError(err)
 		}
