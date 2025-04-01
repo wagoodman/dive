@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/anchore/go-logger"
 	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1/format"
-	key2 "github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1/key"
+	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1/key"
 	"github.com/wagoodman/dive/internal/log"
 	"strconv"
 	"strings"
@@ -24,7 +24,7 @@ type ImageDetails struct {
 	imageSize      uint64
 	efficiency     float64
 	inefficiencies filetree.EfficiencySlice
-	kb             key2.Bindings
+	kb             key.Bindings
 }
 
 func (v *ImageDetails) Name() string {
@@ -47,7 +47,7 @@ func (v *ImageDetails) Setup(body, header *gocui.View) error {
 	v.header.Highlight = false
 	v.header.Frame = false
 
-	var infos = []key2.BindingInfo{
+	var infos = []key.BindingInfo{
 		{
 			Config:   v.kb.Navigation.Down,
 			Modifier: gocui.ModNone,
@@ -68,7 +68,7 @@ func (v *ImageDetails) Setup(body, header *gocui.View) error {
 		},
 	}
 
-	_, err := key2.GenerateBindings(v.gui, v.Name(), infos)
+	_, err := key.GenerateBindings(v.gui, v.Name(), infos)
 	if err != nil {
 		return err
 	}

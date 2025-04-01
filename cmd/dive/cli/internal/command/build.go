@@ -1,6 +1,7 @@
 package command
 
 import (
+	"fmt"
 	"github.com/anchore/clio"
 	"github.com/spf13/cobra"
 	"github.com/wagoodman/dive/cmd/dive/cli/internal/command/runtime"
@@ -23,6 +24,9 @@ func Build(app clio.Application) *cobra.Command {
 		Short:              "Builds and analyzes a docker image from a Dockerfile (this is a thin wrapper for the `docker build` command).",
 		DisableFlagParsing: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if err := setUI(app, opts.Application); err != nil {
+				return fmt.Errorf("failed to set UI: %w", err)
+			}
 			return runtime.Run(
 				cmd.Context(),
 				runtime.Config{

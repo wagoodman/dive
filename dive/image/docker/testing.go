@@ -28,7 +28,7 @@ func TestAnalysisFromArchive(t testing.TB, path string) *image.Analysis {
 	img, err := archive.ToImage(path)
 	require.NoError(t, err, "unable to convert archive to image")
 
-	result, err := img.Analyze(context.Background())
+	result, err := image.Analyze(context.Background(), img)
 	require.NoError(t, err, "unable to analyze image")
 	return result
 }

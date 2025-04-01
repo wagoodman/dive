@@ -3,19 +3,19 @@ package compound
 import (
 	"fmt"
 	"github.com/awesome-gocui/gocui"
-	view2 "github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1/view"
+	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1/view"
 	"github.com/wagoodman/dive/internal/log"
 	"github.com/wagoodman/dive/internal/utils"
 )
 
 type LayerDetailsCompoundLayout struct {
-	layer               *view2.Layer
-	layerDetails        *view2.LayerDetails
-	imageDetails        *view2.ImageDetails
+	layer               *view.Layer
+	layerDetails        *view.LayerDetails
+	imageDetails        *view.ImageDetails
 	constrainRealEstate bool
 }
 
-func NewLayerDetailsCompoundLayout(layer *view2.Layer, layerDetails *view2.LayerDetails, imageDetails *view2.ImageDetails) *LayerDetailsCompoundLayout {
+func NewLayerDetailsCompoundLayout(layer *view.Layer, layerDetails *view.LayerDetails, imageDetails *view.ImageDetails) *LayerDetailsCompoundLayout {
 	return &LayerDetailsCompoundLayout{
 		layer:        layer,
 		layerDetails: layerDetails,
@@ -70,7 +70,7 @@ func (cl *LayerDetailsCompoundLayout) layoutRow(g *gocui.Gui, minX, minY, maxX, 
 func (cl *LayerDetailsCompoundLayout) Layout(g *gocui.Gui, minX, minY, maxX, maxY int) error {
 	log.WithFields("ui", cl.Name()).Tracef("layout(minX: %d, minY: %d, maxX: %d, maxY: %d)", minX, minY, maxX, maxY)
 
-	layouts := []view2.View{
+	layouts := []view.View{
 		cl.layer,
 		cl.layerDetails,
 		cl.imageDetails,

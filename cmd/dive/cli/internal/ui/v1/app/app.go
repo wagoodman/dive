@@ -5,7 +5,7 @@ import (
 	"github.com/awesome-gocui/gocui"
 	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1"
 	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1/key"
-	layout2 "github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1/layout"
+	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1/layout"
 	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1/layout/compound"
 	"golang.org/x/net/context"
 	"time"
@@ -16,7 +16,7 @@ const debug = false
 type app struct {
 	gui        *gocui.Gui
 	controller *controller
-	layout     *layout2.Manager
+	layout     *layout.Manager
 }
 
 // Run is the UI entrypoint.
@@ -63,15 +63,15 @@ func newApp(ctx context.Context, gui *gocui.Gui, cfg v1.Config) (*app, error) {
 	}
 
 	// note: order matters when adding elements to the layout
-	lm := layout2.NewManager()
-	lm.Add(c.views.Status, layout2.LocationFooter)
-	lm.Add(c.views.Filter, layout2.LocationFooter)
-	lm.Add(compound.NewLayerDetailsCompoundLayout(c.views.Layer, c.views.LayerDetails, c.views.ImageDetails), layout2.LocationColumn)
-	lm.Add(c.views.Tree, layout2.LocationColumn)
+	lm := layout.NewManager()
+	lm.Add(c.views.Status, layout.LocationFooter)
+	lm.Add(c.views.Filter, layout.LocationFooter)
+	lm.Add(compound.NewLayerDetailsCompoundLayout(c.views.Layer, c.views.LayerDetails, c.views.ImageDetails), layout.LocationColumn)
+	lm.Add(c.views.Tree, layout.LocationColumn)
 
 	// todo: access this more programmatically
 	if debug {
-		lm.Add(c.views.Debug, layout2.LocationColumn)
+		lm.Add(c.views.Debug, layout.LocationColumn)
 	}
 	gui.Cursor = false
 	// g.Mouse = true

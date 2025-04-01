@@ -6,8 +6,8 @@ import (
 	"github.com/awesome-gocui/gocui"
 	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1"
 	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1/format"
-	key2 "github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1/key"
-	viewmodel2 "github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1/viewmodel"
+	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1/key"
+	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1/viewmodel"
 	"github.com/wagoodman/dive/dive/image"
 	"github.com/wagoodman/dive/internal/log"
 )
@@ -19,14 +19,14 @@ type Layer struct {
 	gui                   *gocui.Gui
 	body                  *gocui.View
 	header                *gocui.View
-	vm                    *viewmodel2.LayerSetState
-	kb                    key2.Bindings
+	vm                    *viewmodel.LayerSetState
+	kb                    key.Bindings
 	logger                logger.Logger
 	constrainedRealEstate bool
 
 	listeners []LayerChangeListener
 
-	helpKeys []*key2.Binding
+	helpKeys []*key.Binding
 }
 
 // newLayerView creates a new view object attached the global [gocui] screen object.
@@ -41,18 +41,18 @@ func newLayerView(gui *gocui.Gui, cfg v1.Config) (c *Layer, err error) {
 	c.gui = gui
 	c.kb = cfg.Preferences.KeyBindings
 
-	var compareMode viewmodel2.LayerCompareMode
+	var compareMode viewmodel.LayerCompareMode
 
 	switch mode := cfg.Preferences.ShowAggregatedLayerChanges; mode {
 	case true:
-		compareMode = viewmodel2.CompareAllLayers
+		compareMode = viewmodel.CompareAllLayers
 	case false:
-		compareMode = viewmodel2.CompareSingleLayer
+		compareMode = viewmodel.CompareSingleLayer
 	default:
 		return nil, fmt.Errorf("unknown layer.show-aggregated-changes value: %v", mode)
 	}
 
-	c.vm = viewmodel2.NewLayerSetState(cfg.Analysis.Layers, compareMode)
+	c.vm = viewmodel.NewLayerSetState(cfg.Analysis.Layers, compareMode)
 
 	return c, err
 }
@@ -63,7 +63,7 @@ func (v *Layer) AddLayerChangeListener(listener ...LayerChangeListener) {
 
 func (v *Layer) notifyLayerChangeListeners() error {
 	bottomTreeStart, bottomTreeStop, topTreeStart, topTreeStop := v.vm.GetCompareIndexes()
-	selection := viewmodel2.LayerSelection{
+	selection := viewmodel.LayerSelection{
 		Layer:           v.CurrentLayer(),
 		BottomTreeStart: bottomTreeStart,
 		BottomTreeStop:  bottomTreeStop,
@@ -104,17 +104,17 @@ func (v *Layer) Setup(body *gocui.View, header *gocui.View) error {
 	v.header.Wrap = false
 	v.header.Frame = false
 
-	var infos = []key2.BindingInfo{
+	var infos = []key.BindingInfo{
 		{
 			Config:     v.kb.Layer.CompareLayer,
-			OnAction:   func() error { return v.setCompareMode(viewmodel2.CompareSingleLayer) },
-			IsSelected: func() bool { return v.vm.CompareMode == viewmodel2.CompareSingleLayer },
+			OnAction:   func() error { return v.setCompareMode(viewmodel.CompareSingleLayer) },
+			IsSelected: func() bool { return v.vm.CompareMode == viewmodel.CompareSingleLayer },
 			Display:    "Show layer changes",
 		},
 		{
 			Config:     v.kb.Layer.CompareAll,
-			OnAction:   func() error { return v.setCompareMode(viewmodel2.CompareAllLayers) },
-			IsSelected: func() bool { return v.vm.CompareMode == viewmodel2.CompareAllLayers },
+			OnAction:   func() error { return v.setCompareMode(viewmodel.CompareAllLayers) },
+			IsSelected: func() bool { return v.vm.CompareMode == viewmodel.CompareAllLayers },
 			Display:    "Show aggregated changes",
 		},
 		{
@@ -137,7 +137,7 @@ func (v *Layer) Setup(body *gocui.View, header *gocui.View) error {
 		},
 	}
 
-	helpKeys, err := key2.GenerateBindings(v.gui, v.name, infos)
+	helpKeys, err := key.GenerateBindings(v.gui, v.name, infos)
 	if err != nil {
 		return err
 	}
@@ -152,7 +152,7 @@ func (v *Layer) height() uint {
 	return uint(height - 1)
 }
 
-func (v *Layer) CompareMode() viewmodel2.LayerCompareMode {
+func (v *Layer) CompareMode() viewmodel.LayerCompareMode {
 	return v.vm.CompareMode
 }
 
@@ -248,7 +248,7 @@ func (v *Layer) CurrentLayer() *image.Layer {
 }
 
 // setCompareMode switches the layer comparison between a single-layer comparison to an aggregated comparison.
-func (v *Layer) setCompareMode(compareMode viewmodel2.LayerCompareMode) error {
+func (v *Layer) setCompareMode(compareMode viewmodel.LayerCompareMode) error {
 	v.vm.CompareMode = compareMode
 	return v.notifyLayerChangeListeners()
 }

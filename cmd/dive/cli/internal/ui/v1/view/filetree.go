@@ -5,7 +5,7 @@ import (
 	"github.com/anchore/go-logger"
 	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1"
 	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1/format"
-	key2 "github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1/key"
+	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1/key"
 	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1/viewmodel"
 	"github.com/wagoodman/dive/internal/log"
 	"github.com/wagoodman/dive/internal/utils"
@@ -19,7 +19,7 @@ type ViewOptionChangeListener func() error
 
 type ViewExtractListener func(string) error
 
-// FileTree holds the UI objects and data models for populating the right pane. Specifically the pane that
+// FileTree holds the UI objects and data models for populating the right pane. Specifically, the pane that
 // shows selected layer or aggregate file ASCII tree.
 type FileTree struct {
 	name   string
@@ -28,13 +28,13 @@ type FileTree struct {
 	header *gocui.View
 	vm     *viewmodel.FileTreeViewModel
 	title  string
-	kb     key2.Bindings
+	kb     key.Bindings
 	logger logger.Logger
 
 	filterRegex         *regexp.Regexp
 	listeners           []ViewOptionChangeListener
 	extractListeners    []ViewExtractListener
-	helpKeys            []*key2.Binding
+	helpKeys            []*key.Binding
 	requestedWidthRatio float64
 }
 
@@ -99,7 +99,7 @@ func (v *FileTree) Setup(view, header *gocui.View) error {
 	v.header.Wrap = false
 	v.header.Frame = false
 
-	var infos = []key2.BindingInfo{
+	var infos = []key.BindingInfo{
 		{
 			Config:   v.kb.Filetree.ToggleCollapseDir,
 			OnAction: v.toggleCollapse,
@@ -186,7 +186,7 @@ func (v *FileTree) Setup(view, header *gocui.View) error {
 		},
 	}
 
-	helpKeys, err := key2.GenerateBindings(v.gui, v.name, infos)
+	helpKeys, err := key.GenerateBindings(v.gui, v.name, infos)
 	if err != nil {
 		return err
 	}

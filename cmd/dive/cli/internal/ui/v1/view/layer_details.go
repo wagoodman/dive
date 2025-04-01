@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/anchore/go-logger"
 	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1/format"
-	key2 "github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1/key"
+	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1/key"
 	"github.com/wagoodman/dive/internal/log"
 	"strings"
 
@@ -18,7 +18,7 @@ type LayerDetails struct {
 	header       *gocui.View
 	body         *gocui.View
 	CurrentLayer *image.Layer
-	kb           key2.Bindings
+	kb           key.Bindings
 	logger       logger.Logger
 }
 
@@ -42,7 +42,7 @@ func (v *LayerDetails) Setup(body, header *gocui.View) error {
 	v.header.Highlight = false
 	v.header.Frame = false
 
-	var infos = []key2.BindingInfo{
+	var infos = []key.BindingInfo{
 		{
 			Config:   v.kb.Navigation.Down,
 			Modifier: gocui.ModNone,
@@ -55,7 +55,7 @@ func (v *LayerDetails) Setup(body, header *gocui.View) error {
 		},
 	}
 
-	_, err := key2.GenerateBindings(v.gui, v.Name(), infos)
+	_, err := key.GenerateBindings(v.gui, v.Name(), infos)
 	if err != nil {
 		return err
 	}

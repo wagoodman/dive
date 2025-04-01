@@ -13,6 +13,11 @@ import (
 	"github.com/wagoodman/dive/dive/image"
 )
 
+type Evaluation struct {
+	Report string
+	Pass   bool
+}
+
 type Evaluator struct {
 	Rules            []Rule
 	Results          map[string]RuleResult
@@ -36,19 +41,19 @@ type ReferenceFile struct {
 	Path       string `json:"file"`
 }
 
-func NewEvaluator(rules []Rule) *Evaluator {
-	return &Evaluator{
+func NewEvaluator(rules []Rule) Evaluator {
+	return Evaluator{
 		Rules:   rules,
 		Results: make(map[string]RuleResult),
 		Pass:    true,
 	}
 }
 
-func (ci *Evaluator) isRuleEnabled(rule Rule) bool {
+func (ci Evaluator) isRuleEnabled(rule Rule) bool {
 	return rule.Configuration() != "disabled"
 }
 
-func (ci *Evaluator) Evaluate(ctx context.Context, analysis *image.Analysis) bool {
+func (ci Evaluator) Evaluate(ctx context.Context, analysis *image.Analysis) Evaluation {
 	for _, rule := range ci.Rules {
 		if !ci.isRuleEnabled(rule) {
 			ci.Results[rule.Key()] = RuleResult{
@@ -117,25 +122,40 @@ func (ci *Evaluator) Evaluate(ctx context.Context, analysis *image.Analysis) boo
 		}
 	}
 
-	return ci.Pass
+	return Evaluation{
+		Report: ci.report(analysis),
+		Pass:   ci.Pass,
+	}
 }
 
-func (ci *Evaluator) Report() string {
+func (ci Evaluator) report(analysis *image.Analysis) string {
 	var sb strings.Builder
-	fmt.Fprintln(&sb, utils.TitleFormat("Inefficient Files:"))
 
-	template := "%5s  %12s  %-s\n"
-	fmt.Fprintf(&sb, template, "Count", "Wasted Space", "File Path")
-
-	if len(ci.InefficientFiles) == 0 {
-		fmt.Fprintln(&sb, "None")
+	var wastedByteStr, userWastedPercent string
+	if analysis.WastedBytes > 0 {
+		wastedByteStr = fmt.Sprintf("(%s)", humanize.Bytes(analysis.WastedBytes))
+		userWastedPercent = fmt.Sprintf("%.2f %%", analysis.WastedUserPercent*100)
 	} else {
+		userWastedPercent = "0 %"
+	}
+
+	fmt.Fprintln(&sb, utils.TitleFormat("Analysis:"))
+	fmt.Fprintf(&sb, "  efficiency:        %.2f %%\n", analysis.Efficiency*100)
+	fmt.Fprintf(&sb, "  wastedBytes:       %d bytes %s\n", analysis.WastedBytes, wastedByteStr)
+	fmt.Fprintf(&sb, "  userWastedPercent: %s\n", userWastedPercent)
+
+	fmt.Fprint(&sb, utils.TitleFormat("\nInefficient Files:"))
+	if len(analysis.Inefficiencies) == 0 {
+		fmt.Fprintln(&sb, " (None)")
+	} else {
+		template := "%5s  %12s  %-s\n"
+		fmt.Fprintf(&sb, template, "Count", "Wasted Space", "File Path")
 		for _, file := range ci.InefficientFiles {
 			fmt.Fprintf(&sb, template, strconv.Itoa(file.References), humanize.Bytes(file.SizeBytes), file.Path)
 		}
 	}
 
-	fmt.Fprintln(&sb, utils.TitleFormat("Results:"))
+	fmt.Fprintln(&sb, utils.TitleFormat("\nEvaluation:"))
 
 	status := "PASS"
 

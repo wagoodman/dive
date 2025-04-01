@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1"
 	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1/view"
-	viewmodel2 "github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1/viewmodel"
+	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1/viewmodel"
 	"golang.org/x/net/context"
 	"regexp"
 
@@ -44,7 +44,7 @@ func newController(ctx context.Context, g *gocui.Gui, cfg v1.Config) (*controlle
 	c.views.Filter.AddFilterEditListener(c.onFilterEdit)
 
 	// propagate initial conditions to necessary views
-	err = c.onLayerChange(viewmodel2.LayerSelection{
+	err = c.onLayerChange(viewmodel.LayerSelection{
 		Layer:           c.views.Layer.CurrentLayer(),
 		BottomTreeStart: 0,
 		BottomTreeStop:  0,
@@ -92,7 +92,7 @@ func (c *controller) onFilterEdit(filter string) error {
 	return c.views.Tree.Render()
 }
 
-func (c *controller) onLayerChange(selection viewmodel2.LayerSelection) error {
+func (c *controller) onLayerChange(selection viewmodel.LayerSelection) error {
 	// update the details
 	c.views.LayerDetails.CurrentLayer = selection.Layer
 
@@ -102,7 +102,7 @@ func (c *controller) onLayerChange(selection viewmodel2.LayerSelection) error {
 		return err
 	}
 
-	if c.views.Layer.CompareMode() == viewmodel2.CompareAllLayers {
+	if c.views.Layer.CompareMode() == viewmodel.CompareAllLayers {
 		c.views.Tree.SetTitle("Aggregated Layer Contents")
 	} else {
 		c.views.Tree.SetTitle("Current Layer Contents")
