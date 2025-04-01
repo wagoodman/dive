@@ -20,7 +20,7 @@ func DefaultApplication() Application {
 
 func (c Application) V1Preferences() v1.Preferences {
 	return v1.Preferences{
-		KeyBindings:                c.UI.Keybinding.Bindings,
+		KeyBindings:                c.UI.Keybinding.Config,
 		ShowFiletreeAttributes:     c.UI.Filetree.ShowAttributes,
 		ShowAggregatedLayerChanges: c.UI.Layer.ShowAggregatedChanges,
 		CollapseFiletreeDirectory:  c.UI.Filetree.CollapseDir,

@@ -3,12 +3,11 @@ package key
 import (
 	"fmt"
 	"github.com/awesome-gocui/keybinding"
-	"gopkg.in/yaml.v3"
 )
 
 type Config struct {
 	Input string
-	Keys  []keybinding.Key
+	Keys  []keybinding.Key `yaml:"-" mapstructure:"-"`
 }
 
 func (c *Config) Setup() error {
@@ -22,29 +21,6 @@ func (c *Config) Setup() error {
 	}
 	c.Keys = parsed
 	return nil
-}
-
-func (c *Config) UnmarshalText(text []byte) error {
-	c.Input = string(text)
-
-	return nil
-}
-
-func (c Config) MarshalText() ([]byte, error) {
-	return []byte(c.Input), nil
-}
-
-func (c *Config) UnmarshalYAML(value *yaml.Node) error {
-	var strValue string
-	if err := value.Decode(&strValue); err != nil {
-		return err
-	}
-
-	return c.UnmarshalText([]byte(strValue))
-}
-
-func (c Config) MarshalYAML() (interface{}, error) {
-	return c.Input, nil
 }
 
 type Bindings struct {
