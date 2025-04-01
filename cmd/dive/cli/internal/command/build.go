@@ -1,12 +1,11 @@
 package command
 
 import (
+	"github.com/anchore/clio"
 	"github.com/spf13/cobra"
+	"github.com/wagoodman/dive/cmd/dive/cli/internal/command/runtime"
 	"github.com/wagoodman/dive/cmd/dive/cli/internal/options"
 	"github.com/wagoodman/dive/dive"
-	"github.com/wagoodman/dive/runtime"
-
-	"github.com/anchore/clio"
 )
 
 type buildOptions struct {

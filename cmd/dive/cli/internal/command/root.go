@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"github.com/anchore/clio"
 	"github.com/spf13/cobra"
+	"github.com/wagoodman/dive/cmd/dive/cli/internal/command/runtime"
 	"github.com/wagoodman/dive/cmd/dive/cli/internal/options"
-	"github.com/wagoodman/dive/runtime"
 )
 
 type rootOptions struct {

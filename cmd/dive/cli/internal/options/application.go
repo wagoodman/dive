@@ -1,6 +1,8 @@
 package options
 
-import v1 "github.com/wagoodman/dive/runtime/ui/v1"
+import (
+	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1"
+)
 
 type Application struct {
 	Analysis Analysis `yaml:",inline" mapstructure:",squash"`

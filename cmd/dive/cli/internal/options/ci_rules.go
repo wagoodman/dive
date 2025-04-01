@@ -2,7 +2,7 @@ package options
 
 import (
 	"github.com/anchore/clio"
-	"github.com/wagoodman/dive/runtime/ci"
+	"github.com/wagoodman/dive/cmd/dive/cli/internal/command/runtime/ci"
 )
 
 type CIRules struct {
