@@ -9,7 +9,7 @@ import (
 )
 
 type rootOptions struct {
-	options.Application
+	options.Application `yaml:",inline" mapstructure:",squash"`
 
 	// reserved for future use of root-only flags
 }
@@ -31,23 +31,16 @@ the amount of wasted space and identifies the offending files from the image.`,
 			return nil
 		},
 		RunE: func(_ *cobra.Command, _ []string) error {
-			return runRoot(opts)
+			return runtime.Run(
+				runtime.Config{
+					Image:      opts.Analysis.Image,
+					Source:     opts.Analysis.Source,
+					Ci:         opts.CI.Enabled,
+					CiRules:    opts.CI.Rules.List,
+					ExportFile: opts.Export.JsonPath,
+					UI:         opts.V1Preferences(),
+				},
+			)
 		},
 	}, opts)
-}
-
-func runRoot(opts *rootOptions) error {
-
-	runtime.Run(
-		runtime.Config{
-			Image:      opts.Analysis.Image,
-			Source:     opts.Analysis.Source,
-			Ci:         opts.CI.Enabled,
-			CiRules:    opts.CI.Rules.List,
-			ExportFile: opts.Export.JsonPath,
-			UI:         opts.V1Preferences(),
-		},
-	)
-
-	return nil
 }

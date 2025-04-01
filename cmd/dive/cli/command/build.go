@@ -10,7 +10,7 @@ import (
 )
 
 type buildOptions struct {
-	options.Application
+	options.Application `yaml:",inline" mapstructure:",squash"`
 
 	// reserved for future use of build-only flags
 }
@@ -24,22 +24,16 @@ func Build(app clio.Application) *cobra.Command {
 		Short:              "Builds and analyzes a docker image from a Dockerfile (this is a thin wrapper for the `docker build` command).",
 		DisableFlagParsing: true,
 		RunE: func(_ *cobra.Command, args []string) error {
-			return runBuild(opts, args)
+			return runtime.Run(
+				runtime.Config{
+					Source:     dive.ParseImageSource(opts.Analysis.ContainerEngine),
+					BuildArgs:  args,
+					Ci:         opts.CI.Enabled,
+					CiRules:    opts.CI.Rules.List,
+					ExportFile: opts.Export.JsonPath,
+					UI:         opts.V1Preferences(),
+				},
+			)
 		},
 	}, opts)
-}
-
-func runBuild(opts *buildOptions, args []string) error {
-	runtime.Run(
-		runtime.Config{
-			Source:     dive.ParseImageSource(opts.Analysis.ContainerEngine),
-			BuildArgs:  args,
-			Ci:         opts.CI.Enabled,
-			CiRules:    opts.CI.Rules.List,
-			ExportFile: opts.Export.JsonPath,
-			UI:         opts.V1Preferences(),
-		},
-	)
-
-	return nil
 }

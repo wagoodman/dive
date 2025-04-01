@@ -1,0 +1,284 @@
+
+[Test_Config - 1]
+log:
+  # suppress all logging output (env: DIVE_LOG_QUIET)
+  quiet: false
+
+  # increase verbosity (-v = info, -vv = debug) (env: DIVE_LOG_VERBOSITY)
+  verbosity: 0
+
+  # explicitly set the logging level (available: [error warn info debug trace]) (env: DIVE_LOG_LEVEL)
+  level: 'warn'
+
+  # file path to write logs to (env: DIVE_LOG_FILE)
+  file: ''
+
+dev:
+  # capture resource profiling data (available: [cpu, mem]) (env: DIVE_DEV_PROFILE)
+  profile: ''
+
+# container engine to use for image analysis (supported options: 'docker' and 'podman') (env: DIVE_CONTAINER_ENGINE)
+container-engine: 'docker'
+
+# continue with analysis even if there are errors parsing the image archive (env: DIVE_IGNORE_ERRORS)
+ignore-errors: false
+
+# enable CI mode (env: DIVE_CI)
+ci: false
+
+# path to the CI config file (env: DIVE_CI_CONFIG)
+ci-config: '.dive-ci'
+
+rules:
+  # lowest allowable image efficiency (as a ratio between 0-1), otherwise CI validation will fail. (env: DIVE_RULES_LOWEST_EFFICIENCY_THRESHOLD)
+  lowest-efficiency-threshold: '0.9'
+
+  # highest allowable bytes wasted, otherwise CI validation will fail. (env: DIVE_RULES_HIGHEST_WASTED_BYTES)
+  highest-wasted-bytes: 'disabled'
+
+  # highest allowable percentage of bytes wasted (as a ratio between 0-1), otherwise CI validation will fail. (env: DIVE_RULES_HIGHEST_USER_WASTED_PERCENT)
+  highest-user-wasted-percent: '0.1'
+
+# Skip the interactive TUI and write the layer analysis statistics to a given file. (env: DIVE_JSON_PATH)
+json-path: ''
+
+keybinding:
+  quit:
+    # quit the application (global) (env: DIVE_KEYBINDING_QUIT_INPUT)
+    Input: 'ctrl+c'
+
+    Keys: []
+
+  toggle-view:
+    # toggle between different views (global) (env: DIVE_KEYBINDING_TOGGLE_VIEW_INPUT)
+    Input: 'tab'
+
+    Keys: []
+
+  filter-files:
+    # filter files by name (global) (env: DIVE_KEYBINDING_FILTER_FILES_INPUT)
+    Input: 'ctrl+f, ctrl+slash'
+
+    Keys: []
+
+  close-filter-files:
+    # close file filtering (global) (env: DIVE_KEYBINDING_CLOSE_FILTER_FILES_INPUT)
+    Input: 'esc'
+
+    Keys: []
+
+  up:
+    # move cursor up (global) (env: DIVE_KEYBINDING_UP_INPUT)
+    Input: 'up,k'
+
+    Keys: []
+
+  down:
+    # move cursor down (global) (env: DIVE_KEYBINDING_DOWN_INPUT)
+    Input: 'down,j'
+
+    Keys: []
+
+  left:
+    # move cursor left (global) (env: DIVE_KEYBINDING_LEFT_INPUT)
+    Input: 'left,h'
+
+    Keys: []
+
+  right:
+    # move cursor right (global) (env: DIVE_KEYBINDING_RIGHT_INPUT)
+    Input: 'right,l'
+
+    Keys: []
+
+  page-up:
+    # scroll page up (file view) (env: DIVE_KEYBINDING_PAGE_UP_INPUT)
+    Input: 'pgup,u'
+
+    Keys: []
+
+  page-down:
+    # scroll page down (file view) (env: DIVE_KEYBINDING_PAGE_DOWN_INPUT)
+    Input: 'pgdn,d'
+
+    Keys: []
+
+  compare-all:
+    # compare all layers (layer view) (env: DIVE_KEYBINDING_COMPARE_ALL_INPUT)
+    Input: 'ctrl+a'
+
+    Keys: []
+
+  compare-layer:
+    # compare specific layer (layer view) (env: DIVE_KEYBINDING_COMPARE_LAYER_INPUT)
+    Input: 'ctrl+l'
+
+    Keys: []
+
+  toggle-collapse-dir:
+    # toggle directory collapse (file view) (env: DIVE_KEYBINDING_TOGGLE_COLLAPSE_DIR_INPUT)
+    Input: 'space'
+
+    Keys: []
+
+  toggle-collapse-all-dir:
+    # toggle collapse all directories (file view) (env: DIVE_KEYBINDING_TOGGLE_COLLAPSE_ALL_DIR_INPUT)
+    Input: 'ctrl+space'
+
+    Keys: []
+
+  toggle-added-files:
+    # toggle visibility of added files (file view) (env: DIVE_KEYBINDING_TOGGLE_ADDED_FILES_INPUT)
+    Input: 'ctrl+a'
+
+    Keys: []
+
+  toggle-removed-files:
+    # toggle visibility of removed files (file view) (env: DIVE_KEYBINDING_TOGGLE_REMOVED_FILES_INPUT)
+    Input: 'ctrl+r'
+
+    Keys: []
+
+  toggle-modified-files:
+    # toggle visibility of modified files (file view) (env: DIVE_KEYBINDING_TOGGLE_MODIFIED_FILES_INPUT)
+    Input: 'ctrl+m'
+
+    Keys: []
+
+  toggle-unmodified-files:
+    # toggle visibility of unmodified files (file view) (env: DIVE_KEYBINDING_TOGGLE_UNMODIFIED_FILES_INPUT)
+    Input: 'ctrl+u'
+
+    Keys: []
+
+  toggle-filetree-attributes:
+    # toggle display of file attributes (file view) (env: DIVE_KEYBINDING_TOGGLE_FILETREE_ATTRIBUTES_INPUT)
+    Input: 'ctrl+b'
+
+    Keys: []
+
+  toggle-sort-order:
+    # toggle sort order (file view) (env: DIVE_KEYBINDING_TOGGLE_SORT_ORDER_INPUT)
+    Input: 'ctrl+o'
+
+    Keys: []
+
+  toggle-wrap-tree:
+    # (env: DIVE_KEYBINDING_TOGGLE_WRAP_TREE_INPUT)
+    Input: 'ctrl+p'
+
+    Keys: []
+
+  extract-file:
+    # extract file contents (file view) (env: DIVE_KEYBINDING_EXTRACT_FILE_INPUT)
+    Input: 'ctrl+e'
+
+    Keys: []
+
+diff:
+  # types of file differences to hide (added, removed, modified, unmodified) (env: DIVE_DIFF_HIDE)
+  hide: []
+
+filetree:
+  # collapse directories by default in the filetree (env: DIVE_FILETREE_COLLAPSE_DIR)
+  collapse-dir: false
+
+  # percentage of screen width for the filetree pane (must be >0 and <1) (env: DIVE_FILETREE_PANE_WIDTH)
+  pane-width: 0.5
+
+  # show file attributes in the filetree view (env: DIVE_FILETREE_SHOW_ATTRIBUTES)
+  show-attributes: true
+
+layer:
+  # show aggregated changes across all previous layers (env: DIVE_LAYER_SHOW_AGGREGATED_CHANGES)
+  show-aggregated-changes: false
+
+---
+
+[Test_Build_Dockerfile/implicit_dockerfile - 1]
+[1mBuilding image...[0m
+[1mAnalyzing image...[0m
+  efficiency: 99.9976 %
+  wastedBytes: 131 bytes (131 B)
+  userWastedPercent: 71.9780 %
+[1mInefficient Files:[0m
+Count  Wasted Space  File Path
+    3          80 B  /root/saved.txt
+    2          34 B  /root/example/somefile1.txt
+    2          17 B  /root/example/somefile3.txt
+    2           0 B  /root
+   10           0 B  /etc
+[1mResults:[0m
+  PASS: highestUserWastedPercent
+  PASS: highestWastedBytes
+  PASS: lowestEfficiency
+[32mResult:PASS [Total:3] [Passed:3] [Failed:0] [Warn:0] [Skipped:0][0m
+
+
+---
+
+[Test_Build_Dockerfile/explicit_file_flag - 1]
+[1mBuilding image...[0m
+[1mAnalyzing image...[0m
+  efficiency: 99.9976 %
+  wastedBytes: 131 bytes (131 B)
+  userWastedPercent: 71.9780 %
+[1mInefficient Files:[0m
+Count  Wasted Space  File Path
+    3          80 B  /root/saved.txt
+    2          34 B  /root/example/somefile1.txt
+    2          17 B  /root/example/somefile3.txt
+    2           0 B  /root
+   10           0 B  /etc
+[1mResults:[0m
+  PASS: highestUserWastedPercent
+  PASS: highestWastedBytes
+  PASS: lowestEfficiency
+[32mResult:PASS [Total:3] [Passed:3] [Failed:0] [Warn:0] [Skipped:0][0m
+
+
+---
+
+[Test_Build_Containerfile/implicit_containerfile - 1]
+[1mBuilding image...[0m
+[1mAnalyzing image...[0m
+  efficiency: 99.9976 %
+  wastedBytes: 131 bytes (131 B)
+  userWastedPercent: 71.9780 %
+[1mInefficient Files:[0m
+Count  Wasted Space  File Path
+    3          80 B  /root/saved.txt
+    2          34 B  /root/example/somefile1.txt
+    2          17 B  /root/example/somefile3.txt
+    2           0 B  /root
+   10           0 B  /etc
+[1mResults:[0m
+  PASS: highestUserWastedPercent
+  PASS: highestWastedBytes
+  PASS: lowestEfficiency
+[32mResult:PASS [Total:3] [Passed:3] [Failed:0] [Warn:0] [Skipped:0][0m
+
+
+---
+
+[Test_Build_Containerfile/explicit_file_flag - 1]
+[1mBuilding image...[0m
+[1mAnalyzing image...[0m
+  efficiency: 99.9976 %
+  wastedBytes: 131 bytes (131 B)
+  userWastedPercent: 71.9780 %
+[1mInefficient Files:[0m
+Count  Wasted Space  File Path
+    3          80 B  /root/saved.txt
+    2          34 B  /root/example/somefile1.txt
+    2          17 B  /root/example/somefile3.txt
+    2           0 B  /root
+   10           0 B  /etc
+[1mResults:[0m
+  PASS: highestUserWastedPercent
+  PASS: highestWastedBytes
+  PASS: lowestEfficiency
+[32mResult:PASS [Total:3] [Passed:3] [Failed:0] [Warn:0] [Skipped:0][0m
+
+
+---

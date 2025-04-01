@@ -1,9 +1,9 @@
 package runtime
 
 import (
+	"errors"
 	"fmt"
 	"github.com/dustin/go-humanize"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/afero"
 	v1 "github.com/wagoodman/dive/runtime/ui/v1"
 	"github.com/wagoodman/dive/runtime/ui/v1/app"
@@ -31,21 +31,17 @@ type Config struct {
 	UI v1.Preferences
 }
 
-func Run(cfg Config) {
-	var exitCode int
+func Run(cfg Config) error {
 	var events = make(eventChannel)
 
 	imageResolver, err := dive.GetImageResolver(cfg.Source)
 	if err != nil {
-		message := "cannot determine image provider"
-		logrus.Error(message)
-		logrus.Error(err)
-		fmt.Fprintf(os.Stderr, "%s: %+v\n", message, err)
-		os.Exit(1)
+		return errors.New("cannot determine image provider")
 	}
 
 	go run(true, cfg, imageResolver, events, afero.NewOsFs())
 
+	var retErr error
 	for e := range events {
 		if e.stdout != "" {
 			fmt.Println(e.stdout)
@@ -59,18 +55,11 @@ func Run(cfg Config) {
 		}
 
 		if e.err != nil {
-			logrus.Error(e.err)
-			_, err := fmt.Fprintln(os.Stderr, e.err.Error())
-			if err != nil {
-				fmt.Println("error: could not write to buffer:", err)
-			}
-		}
-
-		if e.errorOnExit {
-			exitCode = 1
+			retErr = errors.Join(retErr, e.err)
 		}
 	}
-	os.Exit(exitCode)
+
+	return retErr
 }
 
 func run(enableUI bool, cfg Config, imageResolver image.Resolver, events eventChannel, filesystem afero.Fs) {
