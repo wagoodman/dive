@@ -2,11 +2,11 @@ package view
 
 import (
 	"fmt"
+	"github.com/anchore/go-logger"
+	"github.com/wagoodman/dive/internal/log"
 	"strings"
 
 	"github.com/awesome-gocui/gocui"
-	"github.com/sirupsen/logrus"
-
 	"github.com/wagoodman/dive/runtime/ui/v1/format"
 	"github.com/wagoodman/dive/utils"
 )
@@ -16,9 +16,11 @@ type FilterEditListener func(string) error
 // Filter holds the UI objects and data models for populating the bottom row. Specifically the pane that
 // allows the user to filter the file tree by path.
 type Filter struct {
-	gui             *gocui.Gui
-	view            *gocui.View
-	header          *gocui.View
+	gui    *gocui.Gui
+	view   *gocui.View
+	header *gocui.View
+	logger logger.Logger
+
 	labelStr        string
 	maxLength       int
 	hidden          bool
@@ -28,19 +30,20 @@ type Filter struct {
 }
 
 // newFilterView creates a new view object attached the global [gocui] screen object.
-func newFilterView(gui *gocui.Gui) (controller *Filter) {
-	controller = new(Filter)
+func newFilterView(gui *gocui.Gui) *Filter {
+	c := new(Filter)
+	c.logger = log.Nested("ui", "filter")
 
-	controller.filterEditListeners = make([]FilterEditListener, 0)
+	c.filterEditListeners = make([]FilterEditListener, 0)
 
 	// populate main fields
-	controller.gui = gui
-	controller.labelStr = "Path Filter: "
-	controller.hidden = true
+	c.gui = gui
+	c.labelStr = "Path Filter: "
+	c.hidden = true
 
-	controller.requestedHeight = 1
+	c.requestedHeight = 1
 
-	return controller
+	return c
 }
 
 func (v *Filter) AddFilterEditListener(listener ...FilterEditListener) {
@@ -53,7 +56,7 @@ func (v *Filter) Name() string {
 
 // Setup initializes the UI concerns within the context of a global [gocui] view object.
 func (v *Filter) Setup(view, header *gocui.View) error {
-	logrus.Tracef("view.Setup() %s", v.Name())
+	log.Trace("Setup()")
 
 	// set controller options
 	v.view = view
@@ -83,8 +86,7 @@ func (v *Filter) ToggleVisible() error {
 	if !v.hidden {
 		_, err := v.gui.SetCurrentView(v.Name())
 		if err != nil {
-			logrus.Error("unable to toggle filter view: ", err)
-			return err
+			return fmt.Errorf("unable to toggle filter view: %w", err)
 		}
 		return nil
 	}
@@ -131,7 +133,7 @@ func (v *Filter) notifyFilterEditListeners() {
 		err := listener(currentValue)
 		if err != nil {
 			// note: cannot propagate error from here since this is from the main gogui thread
-			logrus.Errorf("notifyFilterEditListeners: %+v", err)
+			v.logger.WithFields("error", err).Debug("unable to notify filter edit listeners")
 		}
 	}
 }
@@ -143,13 +145,10 @@ func (v *Filter) Update() error {
 
 // Render flushes the state objects to the screen. Currently this is the users path filter input.
 func (v *Filter) Render() error {
-	logrus.Tracef("view.Render() %s", v.Name())
+	v.logger.Trace("render()")
 
 	v.gui.Update(func(g *gocui.Gui) error {
 		_, err := fmt.Fprintln(v.header, format.Header(v.labelStr))
-		if err != nil {
-			logrus.Error("unable to write to buffer: ", err)
-		}
 		return err
 	})
 	return nil
@@ -170,7 +169,7 @@ func (v *Filter) OnLayoutChange() error {
 }
 
 func (v *Filter) Layout(g *gocui.Gui, minX, minY, maxX, maxY int) error {
-	logrus.Tracef("view.Layout(minX: %d, minY: %d, maxX: %d, maxY: %d) %s", minX, minY, maxX, maxY, v.Name())
+	v.logger.Tracef("layout(minX: %d, minY: %d, maxX: %d, maxY: %d)", minX, minY, maxX, maxY)
 
 	label, labelErr := g.SetView(v.Name()+"label", minX, minY, len(v.labelStr), maxY, 0)
 	view, viewErr := g.SetView(v.Name(), minX+(len(v.labelStr)-1), minY, maxX, maxY, 0)
@@ -178,8 +177,7 @@ func (v *Filter) Layout(g *gocui.Gui, minX, minY, maxX, maxY int) error {
 	if utils.IsNewView(viewErr, labelErr) {
 		err := v.Setup(view, label)
 		if err != nil {
-			logrus.Error("unable to setup status controller", err)
-			return err
+			return fmt.Errorf("unable to setup filter controller: %w", err)
 		}
 	}
 	return nil

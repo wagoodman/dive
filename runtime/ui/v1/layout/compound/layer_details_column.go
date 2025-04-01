@@ -1,8 +1,9 @@
 package compound
 
 import (
+	"fmt"
 	"github.com/awesome-gocui/gocui"
-	"github.com/sirupsen/logrus"
+	"github.com/wagoodman/dive/internal/log"
 	"github.com/wagoodman/dive/runtime/ui/v1/view"
 	"github.com/wagoodman/dive/utils"
 )
@@ -30,26 +31,23 @@ func (cl *LayerDetailsCompoundLayout) Name() string {
 func (cl *LayerDetailsCompoundLayout) OnLayoutChange() error {
 	err := cl.layer.OnLayoutChange()
 	if err != nil {
-		logrus.Error("unable to setup layer controller onLayoutChange", err)
-		return err
+		return fmt.Errorf("unable to setup layer controller onLayoutChange: %w", err)
 	}
 
 	err = cl.layerDetails.OnLayoutChange()
 	if err != nil {
-		logrus.Error("unable to setup layer details controller onLayoutChange", err)
-		return err
+		return fmt.Errorf("unable to setup layer details controller onLayoutChange: %w", err)
 	}
 
 	err = cl.imageDetails.OnLayoutChange()
 	if err != nil {
-		logrus.Error("unable to setup image details controller onLayoutChange", err)
-		return err
+		return fmt.Errorf("unable to setup image details controller onLayoutChange: %w", err)
 	}
 	return nil
 }
 
 func (cl *LayerDetailsCompoundLayout) layoutRow(g *gocui.Gui, minX, minY, maxX, maxY int, viewName string, setup func(*gocui.View, *gocui.View) error) error {
-	logrus.Tracef("layoutRow(g, minX: %d, minY: %d, maxX: %d, maxY: %d, viewName: %s, <setup func>)", minX, minY, maxX, maxY, viewName)
+	log.WithFields("ui", cl.Name()).Tracef("layoutRow(g, minX: %d, minY: %d, maxX: %d, maxY: %d, viewName: %s, <setup func>)", minX, minY, maxX, maxY, viewName)
 	// header + border
 	headerHeight := 2
 
@@ -63,15 +61,14 @@ func (cl *LayerDetailsCompoundLayout) layoutRow(g *gocui.Gui, minX, minY, maxX, 
 	if utils.IsNewView(bodyErr, headerErr) {
 		err := setup(bodyView, headerView)
 		if err != nil {
-			logrus.Debug("unable to setup row layout for ", viewName, err)
-			return err
+			return fmt.Errorf("unable to setup row layout for %s: %w", viewName, err)
 		}
 	}
 	return nil
 }
 
 func (cl *LayerDetailsCompoundLayout) Layout(g *gocui.Gui, minX, minY, maxX, maxY int) error {
-	logrus.Tracef("LayerDetailsCompoundLayout.Layout(minX: %d, minY: %d, maxX: %d, maxY: %d) %s", minX, minY, maxX, maxY, cl.Name())
+	log.WithFields("ui", cl.Name()).Tracef("layout(minX: %d, minY: %d, maxX: %d, maxY: %d)", minX, minY, maxX, maxY)
 
 	layouts := []view.View{
 		cl.layer,
@@ -82,15 +79,13 @@ func (cl *LayerDetailsCompoundLayout) Layout(g *gocui.Gui, minX, minY, maxX, max
 	rowHeight := maxY / 3
 	for i := 0; i < 3; i++ {
 		if err := cl.layoutRow(g, minX, i*rowHeight, maxX, (i+1)*rowHeight, layouts[i].Name(), layouts[i].Setup); err != nil {
-			logrus.Debug("Laying out layers view errored!")
-			return err
+			return fmt.Errorf("unable to layout %q: %w", layouts[i].Name(), err)
 		}
 	}
 
 	if g.CurrentView() == nil {
 		if _, err := g.SetCurrentView(cl.layer.Name()); err != nil {
-			logrus.Error("unable to set view to layer", err)
-			return err
+			return fmt.Errorf("unable to set view to layer %q: %w", cl.layer.Name(), err)
 		}
 	}
 	return nil

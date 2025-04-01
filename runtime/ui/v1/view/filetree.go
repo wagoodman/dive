@@ -2,11 +2,12 @@ package view
 
 import (
 	"fmt"
+	"github.com/anchore/go-logger"
+	"github.com/wagoodman/dive/internal/log"
 	v1 "github.com/wagoodman/dive/runtime/ui/v1"
 	"regexp"
 
 	"github.com/awesome-gocui/gocui"
-	"github.com/sirupsen/logrus"
 	"github.com/wagoodman/dive/dive/filetree"
 	"github.com/wagoodman/dive/runtime/ui/v1/format"
 	"github.com/wagoodman/dive/runtime/ui/v1/key"
@@ -28,6 +29,7 @@ type FileTree struct {
 	vm     *viewmodel.FileTreeViewModel
 	title  string
 	kb     key.Bindings
+	logger logger.Logger
 
 	filterRegex         *regexp.Regexp
 	listeners           []ViewOptionChangeListener
@@ -39,6 +41,7 @@ type FileTree struct {
 // newFileTreeView creates a new view object attached the global [gocui] screen object.
 func newFileTreeView(gui *gocui.Gui, cfg v1.Config, initial int) (v *FileTree, err error) {
 	v = new(FileTree)
+	v.logger = log.Nested("ui", "filetree")
 	v.listeners = make([]ViewOptionChangeListener, 0)
 
 	// populate main fields
@@ -52,7 +55,8 @@ func newFileTreeView(gui *gocui.Gui, cfg v1.Config, initial int) (v *FileTree, e
 
 	requestedWidthRatio := cfg.Preferences.FiletreePaneWidth
 	if requestedWidthRatio >= 1 || requestedWidthRatio <= 0 {
-		logrus.Errorf("invalid config value: 'filetree.pane-width' should be 0 < value < 1, given '%v'", requestedWidthRatio)
+		v.logger.Warnf("invalid config value: 'filetree.pane-width' should be 0 < value < 1, given '%v'", requestedWidthRatio)
+
 		requestedWidthRatio = 0.5
 	}
 	v.requestedWidthRatio = requestedWidthRatio
@@ -82,7 +86,7 @@ func (v *FileTree) Name() string {
 
 // Setup initializes the UI concerns within the context of a global [gocui] view object.
 func (v *FileTree) Setup(view, header *gocui.View) error {
-	logrus.Tracef("view.Setup() %s", v.Name())
+	log.Trace("setup()")
 
 	// set controller options
 	v.view = view
@@ -348,8 +352,7 @@ func (v *FileTree) notifyOnViewOptionChangeListeners() error {
 	for _, listener := range v.listeners {
 		err := listener()
 		if err != nil {
-			logrus.Errorf("notifyOnViewOptionChangeListeners error: %+v", err)
-			return err
+			return fmt.Errorf("notifyOnViewOptionChangeListeners error: %w", err)
 		}
 	}
 	return nil
@@ -417,7 +420,7 @@ func (v *FileTree) Update() error {
 
 // Render flushes the state objects (file tree) to the pane.
 func (v *FileTree) Render() error {
-	logrus.Tracef("view.Render() %s", v.Name())
+	v.logger.Trace("render()")
 
 	title := v.title
 	isSelected := v.gui.CurrentView() == v.view
@@ -455,7 +458,7 @@ func (v *FileTree) KeyHelp() string {
 }
 
 func (v *FileTree) Layout(g *gocui.Gui, minX, minY, maxX, maxY int) error {
-	logrus.Tracef("view.Layout(minX: %d, minY: %d, maxX: %d, maxY: %d) %s", minX, minY, maxX, maxY, v.Name())
+	v.logger.Tracef("layout(minX: %d, minY: %d, maxX: %d, maxY: %d)", minX, minY, maxX, maxY)
 	attributeRowSize := 0
 
 	// make the layout responsive to the available realestate. Make more room for the main content by hiding auxiliary
@@ -480,8 +483,7 @@ func (v *FileTree) Layout(g *gocui.Gui, minX, minY, maxX, maxY int) error {
 	if utils.IsNewView(viewErr, headerErr) {
 		err := v.Setup(view, header)
 		if err != nil {
-			logrus.Error("unable to setup tree controller", err)
-			return err
+			return fmt.Errorf("unable to setup tree controller: %w", err)
 		}
 	}
 	return nil

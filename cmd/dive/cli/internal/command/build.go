@@ -2,7 +2,7 @@ package command
 
 import (
 	"github.com/spf13/cobra"
-	"github.com/wagoodman/dive/cmd/dive/cli/options"
+	"github.com/wagoodman/dive/cmd/dive/cli/internal/options"
 	"github.com/wagoodman/dive/dive"
 	"github.com/wagoodman/dive/runtime"
 

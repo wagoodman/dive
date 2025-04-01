@@ -1,8 +1,9 @@
 package layout
 
 import (
+	"fmt"
 	"github.com/awesome-gocui/gocui"
-	"github.com/sirupsen/logrus"
+	"github.com/wagoodman/dive/internal/log"
 )
 
 type Constraint func(int) int
@@ -45,7 +46,7 @@ func (lm *Manager) planAndLayoutHeaders(g *gocui.Gui, area Area) (Area, error) {
 			// layout the header within the allocated space
 			err := element.Layout(g, area.minX, area.minY, area.maxX, area.minY+height)
 			if err != nil {
-				logrus.Errorf("failed to layout '%s' header: %+v", element.Name(), err)
+				log.WithFields("element", element.Name(), "error", err).Error("failed to layout header")
 				return area, err
 			}
 
@@ -134,8 +135,7 @@ func (lm *Manager) planAndLayoutColumns(g *gocui.Gui, area Area) (Area, error) {
 			// layout the column within the allocated space
 			err := element.Layout(g, area.minX, area.minY, area.minX+width, area.maxY)
 			if err != nil {
-				logrus.Errorf("failed to layout '%s' column: %+v", element.Name(), err)
-				return area, err
+				return area, fmt.Errorf("failed to layout '%s' column: %w", element.Name(), err)
 			}
 
 			// move left to right, scratching off real estate as it is taken
@@ -164,8 +164,7 @@ func (lm *Manager) layoutFooters(g *gocui.Gui, area Area, footerHeights []int) e
 			// do the same vertically, thus a -1 is needed for a starting Y
 			err := element.Layout(g, area.minX, topY, area.maxX, bottomY)
 			if err != nil {
-				logrus.Errorf("failed to layout '%s' footer: %+v", element.Name(), err)
-				return err
+				return fmt.Errorf("failed to layout %q footer: %w", element.Name(), err)
 			}
 		}
 	}

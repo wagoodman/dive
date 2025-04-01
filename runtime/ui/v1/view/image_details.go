@@ -2,22 +2,24 @@ package view
 
 import (
 	"fmt"
+	"github.com/anchore/go-logger"
+	"github.com/wagoodman/dive/internal/log"
 	"strconv"
 	"strings"
 
 	"github.com/awesome-gocui/gocui"
 	"github.com/dustin/go-humanize"
-	"github.com/sirupsen/logrus"
-
 	"github.com/wagoodman/dive/dive/filetree"
 	"github.com/wagoodman/dive/runtime/ui/v1/format"
 	"github.com/wagoodman/dive/runtime/ui/v1/key"
 )
 
 type ImageDetails struct {
-	gui            *gocui.Gui
-	body           *gocui.View
-	header         *gocui.View
+	gui    *gocui.Gui
+	body   *gocui.View
+	header *gocui.View
+	logger logger.Logger
+
 	imageName      string
 	imageSize      uint64
 	efficiency     float64
@@ -30,7 +32,9 @@ func (v *ImageDetails) Name() string {
 }
 
 func (v *ImageDetails) Setup(body, header *gocui.View) error {
-	logrus.Tracef("ImageDetails setup()")
+	v.logger = log.Nested("ui", "imageDetails")
+	v.logger.Trace("Setup()")
+
 	v.body = body
 	v.body.Editable = false
 	v.body.Wrap = true
@@ -100,7 +104,7 @@ func (v *ImageDetails) Render() error {
 		v.header.Clear()
 		_, err := fmt.Fprintln(v.header, imageHeaderStr)
 		if err != nil {
-			logrus.Debug("unable to write to buffer: ", err)
+			log.WithFields("error", err).Debug("unable to write to buffer")
 		}
 
 		var lines = []string{
@@ -115,7 +119,7 @@ func (v *ImageDetails) Render() error {
 		v.body.Clear()
 		_, err = fmt.Fprintln(v.body, strings.Join(lines, "\n"))
 		if err != nil {
-			logrus.Debug("unable to write to buffer: ", err)
+			log.WithFields("error", err).Debug("unable to write to buffer")
 		}
 		return err
 	})
@@ -138,7 +142,7 @@ func (v *ImageDetails) IsVisible() bool {
 func (v *ImageDetails) PageUp() error {
 	_, height := v.body.Size()
 	if err := CursorStep(v.gui, v.body, -height); err != nil {
-		logrus.Debugf("Couldn't move the cursor up by %d steps", height)
+		v.logger.WithFields("error", err).Debugf("couldn't move the cursor up by %d steps", height)
 	}
 	return nil
 }
@@ -146,21 +150,21 @@ func (v *ImageDetails) PageUp() error {
 func (v *ImageDetails) PageDown() error {
 	_, height := v.body.Size()
 	if err := CursorStep(v.gui, v.body, height); err != nil {
-		logrus.Debugf("Couldn't move the cursor down by %d steps", height)
+		v.logger.WithFields("error", err).Debugf("couldn't move the cursor down by %d steps", height)
 	}
 	return nil
 }
 
 func (v *ImageDetails) CursorUp() error {
 	if err := CursorUp(v.gui, v.body); err != nil {
-		logrus.Debug("Couldn't move the cursor up")
+		v.logger.WithFields("error", err).Debug("couldn't move the cursor up")
 	}
 	return nil
 }
 
 func (v *ImageDetails) CursorDown() error {
 	if err := CursorDown(v.gui, v.body); err != nil {
-		logrus.Debug("Couldn't move the cursor down")
+		v.logger.WithFields("error", err).Debug("couldn't move the cursor down")
 	}
 	return nil
 }

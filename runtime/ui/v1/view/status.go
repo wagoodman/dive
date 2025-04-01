@@ -2,11 +2,11 @@ package view
 
 import (
 	"fmt"
+	"github.com/anchore/go-logger"
+	"github.com/wagoodman/dive/internal/log"
 	"strings"
 
 	"github.com/awesome-gocui/gocui"
-	"github.com/sirupsen/logrus"
-
 	"github.com/wagoodman/dive/runtime/ui/v1/format"
 	"github.com/wagoodman/dive/runtime/ui/v1/key"
 	"github.com/wagoodman/dive/utils"
@@ -15,9 +15,10 @@ import (
 // Status holds the UI objects and data models for populating the bottom-most pane. Specifically the panel
 // shows the user a set of possible actions to take in the window and currently selected pane.
 type Status struct {
-	name string
-	gui  *gocui.Gui
-	view *gocui.View
+	name   string
+	gui    *gocui.Gui
+	view   *gocui.View
+	logger logger.Logger
 
 	selectedView    Helper
 	requestedHeight int
@@ -26,16 +27,17 @@ type Status struct {
 }
 
 // newStatusView creates a new view object attached the global [gocui] screen object.
-func newStatusView(gui *gocui.Gui) (controller *Status) {
-	controller = new(Status)
+func newStatusView(gui *gocui.Gui) *Status {
+	c := new(Status)
 
 	// populate main fields
-	controller.name = "status"
-	controller.gui = gui
-	controller.helpKeys = make([]*key.Binding, 0)
-	controller.requestedHeight = 1
+	c.name = "status"
+	c.gui = gui
+	c.helpKeys = make([]*key.Binding, 0)
+	c.requestedHeight = 1
+	c.logger = log.Nested("ui", "status")
 
-	return controller
+	return c
 }
 
 func (v *Status) SetCurrentView(r Helper) {
@@ -52,7 +54,7 @@ func (v *Status) AddHelpKeys(keys ...*key.Binding) {
 
 // Setup initializes the UI concerns within the context of a global [gocui] view object.
 func (v *Status) Setup(view *gocui.View) error {
-	logrus.Tracef("view.Setup() %s", v.Name())
+	v.logger.Trace("setup()")
 
 	// set controller options
 	v.view = view
@@ -82,7 +84,7 @@ func (v *Status) OnLayoutChange() error {
 
 // Render flushes the state objects to the screen.
 func (v *Status) Render() error {
-	logrus.Tracef("view.Render() %s", v.Name())
+	v.logger.Trace("render()")
 
 	v.gui.Update(func(g *gocui.Gui) error {
 		v.view.Clear()
@@ -94,7 +96,7 @@ func (v *Status) Render() error {
 
 		_, err := fmt.Fprintln(v.view, v.KeyHelp()+selectedHelp+format.StatusNormal("▏"+strings.Repeat(" ", 1000)))
 		if err != nil {
-			logrus.Debug("unable to write to buffer: ", err)
+			v.logger.WithFields("error", err).Debug("unable to write to buffer")
 		}
 
 		return err
@@ -112,14 +114,13 @@ func (v *Status) KeyHelp() string {
 }
 
 func (v *Status) Layout(g *gocui.Gui, minX, minY, maxX, maxY int) error {
-	logrus.Tracef("view.Layout(minX: %d, minY: %d, maxX: %d, maxY: %d) %s", minX, minY, maxX, maxY, v.Name())
+	v.logger.Tracef("layout(minX: %d, minY: %d, maxX: %d, maxY: %d)", minX, minY, maxX, maxY)
 
 	view, viewErr := g.SetView(v.Name(), minX, minY, maxX, maxY, 0)
 	if utils.IsNewView(viewErr) {
 		err := v.Setup(view)
 		if err != nil {
-			logrus.Error("unable to setup status controller", err)
-			return err
+			return fmt.Errorf("unable to setup status controller: %w", err)
 		}
 	}
 	return nil

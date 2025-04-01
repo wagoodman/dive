@@ -2,11 +2,11 @@ package filetree
 
 import (
 	"fmt"
+	"github.com/wagoodman/dive/internal/log"
 	"path"
 	"strings"
 
 	"github.com/google/uuid"
-	"github.com/sirupsen/logrus"
 )
 
 const (
@@ -146,7 +146,7 @@ func (tree *FileTree) VisibleSize() int {
 	}
 	err := tree.VisitDepthParentFirst(visitor, visitEvaluator)
 	if err != nil {
-		logrus.Errorf("unable to determine visible tree size: %+v", err)
+		log.WithFields("error", err).Debug("unable to determine visible tree size")
 	}
 
 	// don't include root
@@ -180,7 +180,7 @@ func (tree *FileTree) Copy() *FileTree {
 	}, nil)
 
 	if err != nil {
-		logrus.Errorf("unable to propagate tree on copy(): %+v", err)
+		log.WithFields("error", err).Debug("unable to propagate tree on copy")
 	}
 
 	return newTree
@@ -383,8 +383,7 @@ func StackTreeRange(trees []*FileTree, start, stop int) (*FileTree, []PathError,
 			errors = append(errors, failedPaths...)
 		}
 		if err != nil {
-			logrus.Errorf("could not stack tree range: %v", err)
-			return nil, nil, err
+			return nil, nil, fmt.Errorf("could not stack tree range: %w", err)
 		}
 	}
 	return tree, errors, nil

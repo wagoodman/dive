@@ -2,8 +2,9 @@ package view
 
 import (
 	"fmt"
+	"github.com/anchore/go-logger"
 	"github.com/awesome-gocui/gocui"
-	"github.com/sirupsen/logrus"
+	"github.com/wagoodman/dive/internal/log"
 	v1 "github.com/wagoodman/dive/runtime/ui/v1"
 
 	"github.com/wagoodman/dive/dive/image"
@@ -21,6 +22,7 @@ type Layer struct {
 	header                *gocui.View
 	vm                    *viewmodel.LayerSetState
 	kb                    key.Bindings
+	logger                logger.Logger
 	constrainedRealEstate bool
 
 	listeners []LayerChangeListener
@@ -29,15 +31,16 @@ type Layer struct {
 }
 
 // newLayerView creates a new view object attached the global [gocui] screen object.
-func newLayerView(gui *gocui.Gui, cfg v1.Config) (controller *Layer, err error) {
-	controller = new(Layer)
+func newLayerView(gui *gocui.Gui, cfg v1.Config) (c *Layer, err error) {
+	c = new(Layer)
 
-	controller.listeners = make([]LayerChangeListener, 0)
+	c.logger = log.Nested("ui", "layer")
+	c.listeners = make([]LayerChangeListener, 0)
 
 	// populate main fields
-	controller.name = "layer"
-	controller.gui = gui
-	controller.kb = cfg.Preferences.KeyBindings
+	c.name = "layer"
+	c.gui = gui
+	c.kb = cfg.Preferences.KeyBindings
 
 	var compareMode viewmodel.LayerCompareMode
 
@@ -50,9 +53,9 @@ func newLayerView(gui *gocui.Gui, cfg v1.Config) (controller *Layer, err error) 
 		return nil, fmt.Errorf("unknown layer.show-aggregated-changes value: %v", mode)
 	}
 
-	controller.vm = viewmodel.NewLayerSetState(cfg.Analysis.Layers, compareMode)
+	c.vm = viewmodel.NewLayerSetState(cfg.Analysis.Layers, compareMode)
 
-	return controller, err
+	return c, err
 }
 
 func (v *Layer) AddLayerChangeListener(listener ...LayerChangeListener) {
@@ -71,14 +74,13 @@ func (v *Layer) notifyLayerChangeListeners() error {
 	for _, listener := range v.listeners {
 		err := listener(selection)
 		if err != nil {
-			logrus.Errorf("notifyLayerChangeListeners error: %+v", err)
-			return err
+			return fmt.Errorf("error notifying layer change listeners: %w", err)
 		}
 	}
 	// this is hacky, and I do not like it
 	if layerDetails, err := v.gui.View("layerDetails"); err == nil {
 		if err := layerDetails.SetCursor(0, 0); err != nil {
-			logrus.Debug("Couldn't set cursor to 0,0 for layerDetails")
+			v.logger.Debug("Couldn't set cursor to 0,0 for layerDetails")
 		}
 	}
 	return nil
@@ -90,7 +92,7 @@ func (v *Layer) Name() string {
 
 // Setup initializes the UI concerns within the context of a global [gocui] view object.
 func (v *Layer) Setup(body *gocui.View, header *gocui.View) error {
-	logrus.Tracef("view.Setup() %s", v.Name())
+	v.logger.Trace("Setup()")
 
 	// set controller options
 	v.body = body
@@ -269,14 +271,14 @@ func (v *Layer) renderCompareBar(layerIdx int) string {
 
 func (v *Layer) ConstrainLayout() {
 	if !v.constrainedRealEstate {
-		logrus.Debugf("constraining layer layout")
+		v.logger.Debug("constraining layout")
 		v.constrainedRealEstate = true
 	}
 }
 
 func (v *Layer) ExpandLayout() {
 	if v.constrainedRealEstate {
-		logrus.Debugf("expanding layer layout")
+		v.logger.Debug("expanding layout")
 		v.constrainedRealEstate = false
 	}
 }
@@ -299,7 +301,7 @@ func (v *Layer) Update() error {
 // 1. the layers of the image + metadata
 // 2. the current selected image
 func (v *Layer) Render() error {
-	logrus.Tracef("view.Render() %s", v.Name())
+	v.logger.Trace("render()")
 
 	// indicate when selected
 	title := "Layers"
@@ -345,7 +347,6 @@ func (v *Layer) Render() error {
 			}
 
 			if err != nil {
-				logrus.Debug("unable to write to buffer: ", err)
 				return err
 			}
 		}

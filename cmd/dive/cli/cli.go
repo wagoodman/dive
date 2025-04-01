@@ -3,7 +3,7 @@ package cli
 import (
 	"github.com/anchore/clio"
 	"github.com/spf13/cobra"
-	"github.com/wagoodman/dive/cmd/dive/cli/command"
+	command2 "github.com/wagoodman/dive/cmd/dive/cli/internal/command"
 	"io"
 	"os"
 )
@@ -59,7 +59,7 @@ func create(id clio.Identification, out io.Writer) (clio.Application, *cobra.Com
 
 	app := clio.New(*clioCfg)
 
-	rootCmd := command.Root(app)
+	rootCmd := command2.Root(app)
 
 	// add sub-commands
 	rootCmd.AddCommand(
@@ -68,7 +68,7 @@ func create(id clio.Identification, out io.Writer) (clio.Application, *cobra.Com
 		clio.ConfigCommand(app, nil),
 
 		// application commands
-		command.Build(app),
+		command2.Build(app),
 	)
 
 	return app, rootCmd

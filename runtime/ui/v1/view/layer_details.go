@@ -2,12 +2,12 @@ package view
 
 import (
 	"fmt"
+	"github.com/anchore/go-logger"
+	"github.com/wagoodman/dive/internal/log"
 	"strings"
 
 	"github.com/awesome-gocui/gocui"
 	"github.com/dustin/go-humanize"
-	"github.com/sirupsen/logrus"
-
 	"github.com/wagoodman/dive/dive/image"
 	"github.com/wagoodman/dive/runtime/ui/v1/format"
 	"github.com/wagoodman/dive/runtime/ui/v1/key"
@@ -19,6 +19,7 @@ type LayerDetails struct {
 	body         *gocui.View
 	CurrentLayer *image.Layer
 	kb           key.Bindings
+	logger       logger.Logger
 }
 
 func (v *LayerDetails) Name() string {
@@ -26,7 +27,9 @@ func (v *LayerDetails) Name() string {
 }
 
 func (v *LayerDetails) Setup(body, header *gocui.View) error {
-	logrus.Tracef("LayerDetails setup()")
+	v.logger = log.Nested("ui", "layerDetails")
+	v.logger.Trace("setup()")
+
 	v.body = body
 	v.body.Editable = false
 	v.body.Wrap = true
@@ -96,7 +99,7 @@ func (v *LayerDetails) Render() error {
 
 		v.body.Clear()
 		if _, err = fmt.Fprintln(v.body, strings.Join(lines, "\n")); err != nil {
-			logrus.Debug("unable to write to buffer: ", err)
+			log.WithFields("layer", v.CurrentLayer.Id, "error", err).Debug("unable to write to buffer")
 		}
 		return nil
 	})
@@ -118,7 +121,7 @@ func (v *LayerDetails) IsVisible() bool {
 // CursorUp moves the cursor up in the details pane
 func (v *LayerDetails) CursorUp() error {
 	if err := CursorUp(v.gui, v.body); err != nil {
-		logrus.Debug("Couldn't move the cursor up")
+		v.logger.WithFields("error", err).Debug("couldn't move the cursor up")
 	}
 	return nil
 }
@@ -126,7 +129,7 @@ func (v *LayerDetails) CursorUp() error {
 // CursorDown moves the cursor up in the details pane
 func (v *LayerDetails) CursorDown() error {
 	if err := CursorDown(v.gui, v.body); err != nil {
-		logrus.Debug("Couldn't move the cursor down")
+		v.logger.WithFields("error", err).Debug("couldn't move the cursor down")
 	}
 	return nil
 }

@@ -2,9 +2,9 @@ package export
 
 import (
 	"encoding/json"
-	"github.com/sirupsen/logrus"
 	"github.com/wagoodman/dive/dive/filetree"
 	diveImage "github.com/wagoodman/dive/dive/image"
+	"github.com/wagoodman/dive/internal/log"
 )
 
 type export struct {
@@ -33,7 +33,7 @@ func NewExport(analysis *diveImage.Analysis) *export {
 		}
 		err := curLayer.Tree.VisitDepthChildFirst(visitor, nil)
 		if err != nil {
-			logrus.Errorf("Unable to propagate layer tree: %+v", err)
+			log.WithFields("layer", curLayer.Id, "error", err).Debug("unable to propagate layer tree")
 		}
 		data.Layer[idx] = layer{
 			Index:     curLayer.Index,

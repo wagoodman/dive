@@ -2,8 +2,9 @@ package view
 
 import (
 	"fmt"
+	"github.com/anchore/go-logger"
 	"github.com/awesome-gocui/gocui"
-	"github.com/sirupsen/logrus"
+	"github.com/wagoodman/dive/internal/log"
 
 	"github.com/wagoodman/dive/runtime/ui/v1/format"
 	"github.com/wagoodman/dive/utils"
@@ -15,19 +16,21 @@ type Debug struct {
 	gui    *gocui.Gui
 	view   *gocui.View
 	header *gocui.View
+	logger logger.Logger
 
 	selectedView Helper
 }
 
 // newDebugView creates a new view object attached the global [gocui] screen object.
-func newDebugView(gui *gocui.Gui) (controller *Debug) {
-	controller = new(Debug)
+func newDebugView(gui *gocui.Gui) *Debug {
+	c := new(Debug)
 
 	// populate main fields
-	controller.name = "debug"
-	controller.gui = gui
+	c.name = "debug"
+	c.gui = gui
+	c.logger = log.Nested("ui", "debug")
 
-	return controller
+	return c
 }
 
 func (v *Debug) SetCurrentView(r Helper) {
@@ -40,7 +43,7 @@ func (v *Debug) Name() string {
 
 // Setup initializes the UI concerns within the context of a global [gocui] view object.
 func (v *Debug) Setup(view *gocui.View, header *gocui.View) error {
-	logrus.Tracef("view.Setup() %s", v.Name())
+	v.logger.Trace("setup()")
 
 	// set controller options
 	v.view = view
@@ -77,7 +80,7 @@ func (v *Debug) OnLayoutChange() error {
 
 // Render flushes the state objects to the screen.
 func (v *Debug) Render() error {
-	logrus.Tracef("view.Render() %s", v.Name())
+	v.logger.Trace("render()")
 
 	v.gui.Update(func(g *gocui.Gui) error {
 		// update header...
@@ -90,7 +93,7 @@ func (v *Debug) Render() error {
 		v.view.Clear()
 		_, err := fmt.Fprintln(v.view, "blerg")
 		if err != nil {
-			logrus.Debug("unable to write to buffer: ", err)
+			v.logger.WithFields("error", err).Debug("unable to write to buffer")
 		}
 
 		return nil
@@ -99,7 +102,7 @@ func (v *Debug) Render() error {
 }
 
 func (v *Debug) Layout(g *gocui.Gui, minX, minY, maxX, maxY int) error {
-	logrus.Tracef("view.Layout(minX: %d, minY: %d, maxX: %d, maxY: %d) %s", minX, minY, maxX, maxY, v.Name())
+	v.logger.Tracef("layout(minX: %d, minY: %d, maxX: %d, maxY: %d)", minX, minY, maxX, maxY)
 
 	// header
 	headerSize := 1
@@ -111,8 +114,7 @@ func (v *Debug) Layout(g *gocui.Gui, minX, minY, maxX, maxY int) error {
 	if utils.IsNewView(viewErr, headerErr) {
 		err := v.Setup(view, header)
 		if err != nil {
-			logrus.Error("unable to setup debug controller", err)
-			return err
+			return fmt.Errorf("unable to setup debug controller: %w", err)
 		}
 	}
 	return nil

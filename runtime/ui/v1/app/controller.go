@@ -1,13 +1,12 @@
 package app
 
 import (
+	"fmt"
 	v1 "github.com/wagoodman/dive/runtime/ui/v1"
 	"golang.org/x/net/context"
 	"regexp"
 
 	"github.com/awesome-gocui/gocui"
-	"github.com/sirupsen/logrus"
-
 	"github.com/wagoodman/dive/runtime/ui/v1/view"
 	"github.com/wagoodman/dive/runtime/ui/v1/viewmodel"
 )
@@ -116,14 +115,12 @@ func (c *controller) onLayerChange(selection viewmodel.LayerSelection) error {
 func (c *controller) UpdateAndRender() error {
 	err := c.Update()
 	if err != nil {
-		logrus.Debug("failed update: ", err)
-		return err
+		return fmt.Errorf("controller failed update: %w", err)
 	}
 
 	err = c.Render()
 	if err != nil {
-		logrus.Debug("failed render: ", err)
-		return err
+		return fmt.Errorf("controller failed render: %w", err)
 	}
 
 	return nil
@@ -134,8 +131,7 @@ func (c *controller) Update() error {
 	for _, v := range c.views.Renderers() {
 		err := v.Update()
 		if err != nil {
-			logrus.Debug("unable to update view: ")
-			return err
+			return fmt.Errorf("controller unable to update view: %w", err)
 		}
 	}
 	return nil
@@ -158,7 +154,7 @@ func (c *controller) Render() error {
 func (c *controller) NextPane() (err error) {
 	v := c.gui.CurrentView()
 	if v == nil {
-		panic("Current view is nil")
+		panic("CurrentView is nil")
 	}
 	if v.Name() == c.views.Layer.Name() {
 		_, err = c.gui.SetCurrentView(c.views.LayerDetails.Name())
@@ -172,8 +168,7 @@ func (c *controller) NextPane() (err error) {
 	}
 
 	if err != nil {
-		logrus.Error("unable to toggle view: ", err)
-		return err
+		return fmt.Errorf("controller unable to switch to next pane: %w", err)
 	}
 
 	return c.UpdateAndRender()
@@ -197,8 +192,7 @@ func (c *controller) PrevPane() (err error) {
 	}
 
 	if err != nil {
-		logrus.Error("unable to toggle view: ", err)
-		return err
+		return fmt.Errorf("controller unable to switch to previous pane: %w", err)
 	}
 
 	return c.UpdateAndRender()
@@ -216,8 +210,7 @@ func (c *controller) ToggleView() (err error) {
 	}
 
 	if err != nil {
-		logrus.Error("unable to toggle view: ", err)
-		return err
+		return fmt.Errorf("controller unable to toggle view: %w", err)
 	}
 
 	return c.UpdateAndRender()
@@ -236,8 +229,7 @@ func (c *controller) ToggleFilterView() error {
 	// delete all user input from the tree view
 	err := c.views.Filter.ToggleVisible()
 	if err != nil {
-		logrus.Error("unable to toggle filter visibility: ", err)
-		return err
+		return fmt.Errorf("unable to toggle filter visibility: %w", err)
 	}
 
 	// we have just hidden the filter view...
@@ -248,8 +240,7 @@ func (c *controller) ToggleFilterView() error {
 		// ...adjust focus to a valid (visible) view
 		err = c.ToggleView()
 		if err != nil {
-			logrus.Error("unable to toggle filter view (back): ", err)
-			return err
+			return fmt.Errorf("unable to toggle filter view (back): %w", err)
 		}
 	}
 

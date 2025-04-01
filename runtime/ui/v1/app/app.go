@@ -3,7 +3,6 @@ package app
 import (
 	"errors"
 	"github.com/awesome-gocui/gocui"
-	"github.com/sirupsen/logrus"
 	v1 "github.com/wagoodman/dive/runtime/ui/v1"
 	"github.com/wagoodman/dive/runtime/ui/v1/key"
 	"github.com/wagoodman/dive/runtime/ui/v1/layout"
@@ -48,7 +47,6 @@ func Run(ctx context.Context, c v1.Config) error {
 	}
 
 	if err := g.MainLoop(); err != nil && !errors.Is(err, gocui.ErrQuit) {
-		logrus.Error("main loop error: ", err)
 		return err
 	}
 	return nil

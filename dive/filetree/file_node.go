@@ -3,12 +3,12 @@ package filetree
 import (
 	"archive/tar"
 	"fmt"
+	"github.com/wagoodman/dive/internal/log"
 	"strings"
 
 	"github.com/dustin/go-humanize"
 	"github.com/fatih/color"
 	"github.com/phayes/permbits"
-	"github.com/sirupsen/logrus"
 )
 
 const (
@@ -199,7 +199,7 @@ func (node *FileNode) GetSize() int64 {
 		}
 		err := node.VisitDepthChildFirst(sizer, nil, nil)
 		if err != nil {
-			logrus.Errorf("unable to propagate node for metadata: %+v", err)
+			log.WithFields("error", err).Debug("unable to propagate tree to get file size")
 		}
 	}
 	node.Size = sizeBytes

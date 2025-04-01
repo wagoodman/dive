@@ -2,7 +2,7 @@ package options
 
 import (
 	"github.com/anchore/clio"
-	log "github.com/sirupsen/logrus"
+	"github.com/wagoodman/dive/internal/log"
 	v1 "github.com/wagoodman/dive/runtime/ui/v1"
 )
 

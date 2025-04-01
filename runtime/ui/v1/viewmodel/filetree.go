@@ -3,12 +3,12 @@ package viewmodel
 import (
 	"bytes"
 	"fmt"
+	"github.com/wagoodman/dive/internal/log"
 	v1 "github.com/wagoodman/dive/runtime/ui/v1"
 	"regexp"
 	"strings"
 
 	"github.com/lunixbochs/vtclean"
-	"github.com/sirupsen/logrus"
 	"github.com/wagoodman/dive/dive/filetree"
 	"github.com/wagoodman/dive/runtime/ui/v1/format"
 )
@@ -112,8 +112,7 @@ func (vm *FileTreeViewModel) SetTreeByLayer(bottomTreeStart, bottomTreeStop, top
 	}
 	newTree, err := vm.comparer.GetTree(filetree.NewTreeIndexKey(bottomTreeStart, bottomTreeStop, topTreeStart, topTreeStop))
 	if err != nil {
-		logrus.Errorf("unable to fetch layer tree from cache: %+v", err)
-		return err
+		return fmt.Errorf("unable to fetch layer tree from cache: %w", err)
 	}
 
 	// preserve vm state on copy
@@ -126,15 +125,14 @@ func (vm *FileTreeViewModel) SetTreeByLayer(bottomTreeStart, bottomTreeStop, top
 	}
 	err = vm.ModelTree.VisitDepthChildFirst(visitor, nil)
 	if err != nil {
-		logrus.Errorf("unable to propagate layer tree: %+v", err)
-		return err
+		return fmt.Errorf("unable to propagate layer tree: %w", err)
 	}
 
 	vm.ModelTree = newTree
 	return nil
 }
 
-// doCursorUp performs the internal view's buffer adjustments on cursor up. Note: this is independent of the gocui buffer.
+// CursorUp performs the internal view's buffer adjustments on cursor up. Note: this is independent of the gocui buffer.
 func (vm *FileTreeViewModel) CursorUp() bool {
 	if vm.TreeIndex <= 0 {
 		return false
@@ -149,7 +147,7 @@ func (vm *FileTreeViewModel) CursorUp() bool {
 	return true
 }
 
-// doCursorDown performs the internal view's buffer adjustments on cursor down. Note: this is independent of the gocui buffer.
+// CursorDown performs the internal view's buffer adjustments on cursor down. Note: this is independent of the gocui buffer.
 func (vm *FileTreeViewModel) CursorDown() bool {
 	if vm.TreeIndex >= vm.ModelTree.VisibleSize() {
 		return false
@@ -165,7 +163,6 @@ func (vm *FileTreeViewModel) CursorDown() bool {
 	return true
 }
 
-// CursorLeft moves the cursor up until we reach the Parent Node or top of the tree
 func (vm *FileTreeViewModel) CurrentNode(filterRegex *regexp.Regexp) *filetree.FileNode {
 	return vm.getAbsPositionNode(filterRegex)
 }
@@ -202,8 +199,7 @@ func (vm *FileTreeViewModel) CursorLeft(filterRegex *regexp.Regexp) error {
 
 	err := vm.ModelTree.VisitDepthParentFirst(visitor, evaluator)
 	if err != nil {
-		logrus.Errorf("could not propagate tree on cursorLeft: %+v", err)
-		return err
+		return fmt.Errorf("unable to propagate tree on cursorLeft: %w", err)
 	}
 
 	vm.TreeIndex = newIndex
@@ -333,7 +329,7 @@ func (vm *FileTreeViewModel) getAbsPositionNode(filterRegex *regexp.Regexp) (nod
 
 	err := vm.ModelTree.VisitDepthParentFirst(visitor, evaluator)
 	if err != nil {
-		logrus.Errorf("unable to get node position: %+v", err)
+		log.WithFields("error", err).Debug("unable to propagate tree on getAbsPositionNode")
 	}
 
 	return node
@@ -363,7 +359,7 @@ func (vm *FileTreeViewModel) ToggleCollapseAll() error {
 
 	err := vm.ModelTree.VisitDepthChildFirst(visitor, evaluator)
 	if err != nil {
-		logrus.Errorf("unable to propagate tree on ToggleCollapseAll: %+v", err)
+		log.WithFields("error", err).Debug("unable to propagate tree on ToggleCollapseAll")
 	}
 
 	return nil
@@ -378,7 +374,6 @@ func (vm *FileTreeViewModel) ToggleSortOrder() error {
 
 func (vm *FileTreeViewModel) ConstrainLayout() {
 	if !vm.constrainedRealEstate {
-		logrus.Debugf("constraining filetree layout")
 		vm.constrainedRealEstate = true
 		vm.unconstrainedShowAttributes = vm.ShowAttributes
 		vm.ShowAttributes = false
@@ -387,13 +382,12 @@ func (vm *FileTreeViewModel) ConstrainLayout() {
 
 func (vm *FileTreeViewModel) ExpandLayout() {
 	if vm.constrainedRealEstate {
-		logrus.Debugf("expanding filetree layout")
 		vm.ShowAttributes = vm.unconstrainedShowAttributes
 		vm.constrainedRealEstate = false
 	}
 }
 
-// ToggleCollapse will collapse/expand the selected FileNode.
+// ToggleAttributes will hi
 func (vm *FileTreeViewModel) ToggleAttributes() error {
 	// ignore any attempt to show the attributes when the layout is constrained
 	if vm.constrainedRealEstate {
@@ -432,8 +426,7 @@ func (vm *FileTreeViewModel) Update(filterRegex *regexp.Regexp, width, height in
 	}, nil)
 
 	if err != nil {
-		logrus.Errorf("unable to propagate vm model tree: %+v", err)
-		return err
+		return fmt.Errorf("unable to propagate vm model tree: %w", err)
 	}
 
 	// make a new tree with only visible nodes
@@ -449,8 +442,7 @@ func (vm *FileTreeViewModel) Update(filterRegex *regexp.Regexp, width, height in
 	}, nil)
 
 	if err != nil {
-		logrus.Errorf("unable to propagate vm view tree: %+v", err)
-		return err
+		return fmt.Errorf("unable to propagate vm view tree: %w", err)
 	}
 
 	return nil
@@ -467,13 +459,11 @@ func (vm *FileTreeViewModel) Render() error {
 		if idx == vm.bufferIndex {
 			_, err := fmt.Fprintln(&vm.Buffer, format.Selected(vtclean.Clean(line, false)))
 			if err != nil {
-				logrus.Debug("unable to write to buffer: ", err)
 				return err
 			}
 		} else {
 			_, err := fmt.Fprintln(&vm.Buffer, line)
 			if err != nil {
-				logrus.Debug("unable to write to buffer: ", err)
 				return err
 			}
 		}
