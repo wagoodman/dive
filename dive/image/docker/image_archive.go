@@ -237,9 +237,9 @@ func getFileList(tarReader *tar.Reader) ([]filetree.FileInfo, error) {
 
 		switch header.Typeflag {
 		case tar.TypeXGlobalHeader:
-			return nil, fmt.Errorf("unexptected tar file: (XGlobalHeader): type=%v name=%s", header.Typeflag, name)
+			return nil, fmt.Errorf("unexpected tar file: (XGlobalHeader): type=%v name=%s", header.Typeflag, name)
 		case tar.TypeXHeader:
-			return nil, fmt.Errorf("unexptected tar file (XHeader): type=%v name=%s", header.Typeflag, name)
+			return nil, fmt.Errorf("unexpected tar file (XHeader): type=%v name=%s", header.Typeflag, name)
 		default:
 			files = append(files, filetree.NewFileInfoFromTarHeader(tarReader, header, name))
 		}
