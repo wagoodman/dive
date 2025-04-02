@@ -6,21 +6,37 @@ import (
 	"github.com/gkampitakis/go-snaps/snaps"
 	"github.com/google/shlex"
 	"github.com/spf13/cobra"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"io"
 	"os"
 	"testing"
 )
 
-func Test_Config(t *testing.T) {
-	t.Setenv("DIVE_CONFIG", "./testdata/image-multi-layer/dive.yaml")
+// TODO: remove coverage from consideration of these tests (or make different test classes)
 
-	rootCmd := getTestCommand(t, "config")
+func Test_Config(t *testing.T) {
+	t.Setenv("DIVE_CONFIG", "./testdata/image-multi-layer-dockerfile/dive.yaml")
+
+	rootCmd := getTestCommand(t, "config --load")
 	all := Capture().All().Run(t, func() {
 		require.NoError(t, rootCmd.Execute())
 	})
 
 	snaps.MatchSnapshot(t, all)
+}
+
+func Test_LegacyRules(t *testing.T) {
+	t.Setenv("DIVE_CONFIG", "./testdata/config/dive-ci-legacy.yaml")
+
+	rootCmd := getTestCommand(t, "config --load")
+	all := Capture().All().Run(t, func() {
+		require.NoError(t, rootCmd.Execute())
+	})
+
+	assert.Contains(t, all, "lowest-efficiency: '0.95'", "missing lowest-efficiency legacy rule")
+	assert.Contains(t, all, "highest-wasted-bytes: '20MB'", "missing highest-wasted-bytes legacy rule")
+	assert.Contains(t, all, "highest-user-wasted-percent: '0.2'", "missing highest-user-wasted-percent legacy rule")
 }
 
 func Test_Build_Dockerfile(t *testing.T) {

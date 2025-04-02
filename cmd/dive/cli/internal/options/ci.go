@@ -33,8 +33,8 @@ func (c *CI) DescribeFields(descriptions clio.FieldDescriptionSet) {
 }
 
 func (c *CI) AddFlags(flags clio.FlagSet) {
-	flags.BoolVarP(&c.Enabled, "ci", "", "Skip the interactive TUI and validate against CI rules (same as env var CI=true)")
-	flags.StringVarP(&c.ConfigPath, "ci-config", "", "If CI=true in the environment, use the given yaml to drive validation rules.")
+	flags.BoolVarP(&c.Enabled, "ci", "", "skip the interactive TUI and validate against CI rules (same as env var CI=true)")
+	flags.StringVarP(&c.ConfigPath, "ci-config", "", "if CI=true in the environment, use the given yaml to drive validation rules.")
 }
 
 func (c *CI) PostLoad() error {
@@ -56,6 +56,7 @@ func (c *CI) PostLoad() error {
 			return fmt.Errorf("failed to unmarshal CI config file %s: %w", c.ConfigPath, err)
 		}
 	}
+
 	return nil
 }
 

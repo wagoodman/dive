@@ -2,18 +2,21 @@ package options
 
 import (
 	"github.com/anchore/clio"
-	ci2 "github.com/wagoodman/dive/cmd/dive/cli/internal/command/ci"
+	"github.com/wagoodman/dive/cmd/dive/cli/internal/command/ci"
+	"github.com/wagoodman/dive/internal/log"
 )
 
 type CIRules struct {
-	// TODO: allow for snake or camel case
+	LowestEfficiencyThresholdString       string `yaml:"lowest-efficiency" mapstructure:"lowest-efficiency"`
+	LegacyLowestEfficiencyThresholdString string `yaml:"-" mapstructure:"lowestEfficiency"`
 
-	// user values
-	LowestEfficiencyThresholdString string `yaml:"lowest-efficiency-threshold" mapstructure:"lowest-efficiency-threshold"`
-	HighestWastedBytesString        string `yaml:"highest-wasted-bytes" mapstructure:"highest-wasted-bytes"`
-	HighestUserWastedPercentString  string `yaml:"highest-user-wasted-percent" mapstructure:"highest-user-wasted-percent"`
+	HighestWastedBytesString       string `yaml:"highest-wasted-bytes" mapstructure:"highest-wasted-bytes"`
+	LegacyHighestWastedBytesString string `yaml:"-" mapstructure:"highestWastedBytes"`
 
-	List []ci2.Rule `yaml:"-" mapstructure:"-"`
+	HighestUserWastedPercentString       string `yaml:"highest-user-wasted-percent" mapstructure:"highest-user-wasted-percent"`
+	LegacyHighestUserWastedPercentString string `yaml:"-" mapstructure:"highestUserWastedPercent"`
+
+	List []ci.Rule `yaml:"-" mapstructure:"-"`
 }
 
 func DefaultCIRules() CIRules {
@@ -36,11 +39,31 @@ func (c *CIRules) AddFlags(flags clio.FlagSet) {
 	flags.StringVarP(&c.HighestUserWastedPercentString, "highestUserWastedPercent", "", "(only valid with --ci given) highest allowable percentage of bytes wasted (as a ratio between 0-1), otherwise CI validation will fail.")
 }
 
+func (c CIRules) hasLegacyOptionsInUse() bool {
+	return c.LegacyLowestEfficiencyThresholdString != "" || c.LegacyHighestWastedBytesString != "" || c.LegacyHighestUserWastedPercentString != ""
+}
+
 func (c *CIRules) PostLoad() error {
 	// protect against repeated calls
 	c.List = nil
 
-	rules, err := ci2.Rules(c.LowestEfficiencyThresholdString, c.HighestWastedBytesString, c.HighestUserWastedPercentString)
+	if c.hasLegacyOptionsInUse() {
+		log.Warnf("please specify ci rules in snake-case (the legacy camelCase format is deprecated)")
+	}
+
+	if c.LegacyLowestEfficiencyThresholdString != "" {
+		c.LowestEfficiencyThresholdString = c.LegacyLowestEfficiencyThresholdString
+	}
+
+	if c.LegacyHighestWastedBytesString != "" {
+		c.HighestWastedBytesString = c.LegacyHighestWastedBytesString
+	}
+
+	if c.LegacyHighestUserWastedPercentString != "" {
+		c.HighestUserWastedPercentString = c.LegacyHighestUserWastedPercentString
+	}
+
+	rules, err := ci.Rules(c.LowestEfficiencyThresholdString, c.HighestWastedBytesString, c.HighestUserWastedPercentString)
 	if err != nil {
 		return err
 	}

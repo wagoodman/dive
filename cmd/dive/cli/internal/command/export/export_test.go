@@ -9,7 +9,8 @@ import (
 )
 
 func Test_Export(t *testing.T) {
-	result := docker.TestAnalysisFromArchive(t, "../../.data/test-docker-image.tar")
+	// TODO: fix relative path to be relative to repo root instead (use a helper)
+	result := docker.TestAnalysisFromArchive(t, "../../../../../../.data/test-docker-image.tar")
 
 	export := NewExport(result)
 	payload, err := export.Marshal()

@@ -1,6 +1,7 @@
 package ci
 
 import (
+	"context"
 	"github.com/stretchr/testify/require"
 	"testing"
 
@@ -8,7 +9,8 @@ import (
 )
 
 func Test_Evaluator(t *testing.T) {
-	result := docker.TestAnalysisFromArchive(t, "../../.data/test-docker-image.tar")
+	// TODO: fix relative path to be relative to repo root instead (use a helper)
+	result := docker.TestAnalysisFromArchive(t, "../../../../../../.data/test-docker-image.tar")
 
 	validTests := []struct {
 		name           string
@@ -75,10 +77,10 @@ func Test_Evaluator(t *testing.T) {
 			require.NoError(t, err)
 
 			evaluator := NewEvaluator(rules)
-			pass := evaluator.Evaluate(result)
+			eval := evaluator.Evaluate(context.TODO(), result)
 
-			if test.expectedPass != pass {
-				t.Errorf("expected pass=%v, got %v", test.expectedPass, pass)
+			if test.expectedPass != eval.Pass {
+				t.Errorf("expected pass=%v, got %v", test.expectedPass, eval.Pass)
 			}
 
 			if len(test.expectedResult) != len(evaluator.Results) {

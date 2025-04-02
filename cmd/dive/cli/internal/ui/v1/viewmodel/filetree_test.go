@@ -82,7 +82,9 @@ func assertTestData(t *testing.T, actualBytes []byte) {
 
 func initializeTestViewModel(t *testing.T) *FileTreeViewModel {
 	t.Helper()
-	result := docker.TestAnalysisFromArchive(t, "../../../../.data/test-docker-image.tar")
+
+	// TODO: fix relative path to be relative to repo root instead (use a helper)
+	result := docker.TestAnalysisFromArchive(t, "../../../../../../../.data/test-docker-image.tar")
 	require.NotNil(t, result, "unable to load test data")
 
 	format.Selected = color.New(color.ReverseVideo, color.Bold).SprintFunc()
