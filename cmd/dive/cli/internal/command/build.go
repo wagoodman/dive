@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/anchore/clio"
 	"github.com/spf13/cobra"
-	"github.com/wagoodman/dive/cmd/dive/cli/internal/command/runtime"
+	"github.com/wagoodman/dive/cmd/dive/cli/internal/command/adapter"
 	"github.com/wagoodman/dive/cmd/dive/cli/internal/options"
 	"github.com/wagoodman/dive/dive"
 )
@@ -27,17 +27,20 @@ func Build(app clio.Application) *cobra.Command {
 			if err := setUI(app, opts.Application); err != nil {
 				return fmt.Errorf("failed to set UI: %w", err)
 			}
-			return runtime.Run(
-				cmd.Context(),
-				runtime.Config{
-					Source:     dive.ParseImageSource(opts.Analysis.ContainerEngine),
-					BuildArgs:  args,
-					Ci:         opts.CI.Enabled,
-					CiRules:    opts.CI.Rules.List,
-					ExportFile: opts.Export.JsonPath,
-					UI:         opts.V1Preferences(),
-				},
-			)
+
+			resolver, err := dive.GetImageResolver(opts.Analysis.Source)
+			if err != nil {
+				return fmt.Errorf("cannot determine image provider for build: %w", err)
+			}
+
+			ctx := cmd.Context()
+
+			img, err := adapter.ImageResolver(resolver).Build(ctx, args)
+			if err != nil {
+				return fmt.Errorf("cannot fetch image: %w", err)
+			}
+
+			return run(cmd.Context(), opts.Application, img, resolver)
 		},
 	}, opts)
 }

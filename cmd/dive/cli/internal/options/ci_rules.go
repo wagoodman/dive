@@ -2,7 +2,7 @@ package options
 
 import (
 	"github.com/anchore/clio"
-	"github.com/wagoodman/dive/cmd/dive/cli/internal/command/runtime/ci"
+	ci2 "github.com/wagoodman/dive/cmd/dive/cli/internal/command/ci"
 )
 
 type CIRules struct {
@@ -13,7 +13,7 @@ type CIRules struct {
 	HighestWastedBytesString        string `yaml:"highest-wasted-bytes" mapstructure:"highest-wasted-bytes"`
 	HighestUserWastedPercentString  string `yaml:"highest-user-wasted-percent" mapstructure:"highest-user-wasted-percent"`
 
-	List []ci.Rule `yaml:"-" mapstructure:"-"`
+	List []ci2.Rule `yaml:"-" mapstructure:"-"`
 }
 
 func DefaultCIRules() CIRules {
@@ -40,7 +40,7 @@ func (c *CIRules) PostLoad() error {
 	// protect against repeated calls
 	c.List = nil
 
-	rules, err := ci.Rules(c.LowestEfficiencyThresholdString, c.HighestWastedBytesString, c.HighestUserWastedPercentString)
+	rules, err := ci2.Rules(c.LowestEfficiencyThresholdString, c.HighestWastedBytesString, c.HighestUserWastedPercentString)
 	if err != nil {
 		return err
 	}

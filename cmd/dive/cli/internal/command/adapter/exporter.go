@@ -1,10 +1,10 @@
-package runtime
+package adapter
 
 import (
 	"context"
 	"fmt"
 	"github.com/spf13/afero"
-	"github.com/wagoodman/dive/cmd/dive/cli/internal/command/runtime/export"
+	"github.com/wagoodman/dive/cmd/dive/cli/internal/command/export"
 	"github.com/wagoodman/dive/dive/image"
 	"github.com/wagoodman/dive/internal/log"
 	"os"
@@ -18,7 +18,7 @@ type jsonExporter struct {
 	filesystem afero.Fs
 }
 
-func defaultExporter(fs afero.Fs) Exporter {
+func NewExporter(fs afero.Fs) Exporter {
 	return &jsonExporter{
 		filesystem: fs,
 	}

@@ -1,4 +1,4 @@
-package runtime
+package adapter
 
 import (
 	"context"
@@ -18,7 +18,7 @@ type analysisActionObserver struct {
 	Analyzer func(context.Context, *image.Image) (*image.Analysis, error)
 }
 
-func defaultAnalyzer() Analyzer {
+func NewAnalyzer() Analyzer {
 	return analysisActionObserver{
 		Analyzer: image.Analyze,
 	}

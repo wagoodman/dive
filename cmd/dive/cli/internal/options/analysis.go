@@ -67,6 +67,8 @@ func (c *Analysis) PostLoad() error {
 
 		c.Image = imageStr
 		c.Source = sourceType
+	} else {
+		c.Source = dive.ParseImageSource(c.ContainerEngine)
 	}
 
 	return nil

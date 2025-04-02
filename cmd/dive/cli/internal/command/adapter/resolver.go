@@ -1,8 +1,7 @@
-package runtime
+package adapter
 
 import (
 	"context"
-	"fmt"
 	"github.com/wagoodman/dive/dive/image"
 	"github.com/wagoodman/dive/internal/bus"
 	"github.com/wagoodman/dive/internal/bus/event/payload"
@@ -11,46 +10,42 @@ import (
 	"time"
 )
 
-type ImageResolver interface {
-	Get(ctx context.Context) (*image.Image, error)
-	Extract(ctx context.Context, id string, layer string, path string) error
-}
-
 type imageActionObserver struct {
-	cfg Config
 	image.Resolver
 }
 
-func defaultImageResolver(cfg Config, resolver image.Resolver) imageActionObserver {
+func ImageResolver(resolver image.Resolver) image.Resolver {
 	return imageActionObserver{
-		cfg:      cfg,
 		Resolver: resolver,
 	}
 }
 
-func (i imageActionObserver) Get(ctx context.Context) (*image.Image, error) {
-	doBuild := len(i.cfg.BuildArgs) > 0
+func (i imageActionObserver) Build(ctx context.Context, options []string) (*image.Image, error) {
+	log.Info("building image")
+	log.Debugf("└── %s", strings.Join(options, " "))
 
-	var img *image.Image
-	var err error
+	mon := bus.StartTask(payload.GenericTask{
+		Title: payload.Title{
+			Default:      "Building image",
+			WhileRunning: "Building image",
+			OnSuccess:    "Built image",
+		},
+		HideOnSuccess:      false,
+		HideStageOnSuccess: false,
+		Context:            "... " + strings.Join(options, " "),
+	})
 
-	if doBuild {
-		img, err = i.Build(ctx, i.cfg.BuildArgs)
-		if err != nil {
-			return nil, fmt.Errorf("cannot build image: %w", err)
-		}
+	img, err := i.Resolver.Build(ctx, options)
+	if err != nil {
+		mon.SetError(err)
 	} else {
-		img, err = i.Fetch(ctx, i.cfg.Image)
-		if err != nil {
-			return nil, fmt.Errorf("cannot fetch image: %w", err)
-		}
+		mon.SetCompleted()
 	}
-	return img, nil
+	return img, err
 }
 
 func (i imageActionObserver) Fetch(ctx context.Context, id string) (*image.Image, error) {
 	log.WithFields("image", id).Info("fetching")
-	log.Debugf("├── request:  %s://%s", i.cfg.Source.String(), i.cfg.Image)
 	log.Debugf("└── resolver: %s", i.Resolver.Name())
 
 	ctx, cancel := context.WithCancel(ctx)
@@ -83,30 +78,6 @@ func (i imageActionObserver) Fetch(ctx context.Context, id string) (*image.Image
 	}()
 
 	img, err := i.Resolver.Fetch(ctx, id)
-	if err != nil {
-		mon.SetError(err)
-	} else {
-		mon.SetCompleted()
-	}
-	return img, err
-}
-
-func (i imageActionObserver) Build(ctx context.Context, options []string) (*image.Image, error) {
-	log.Info("building image")
-	log.Debugf("└── %s", strings.Join(options, " "))
-
-	mon := bus.StartTask(payload.GenericTask{
-		Title: payload.Title{
-			Default:      "Building image",
-			WhileRunning: "Building image",
-			OnSuccess:    "Built image",
-		},
-		HideOnSuccess:      false,
-		HideStageOnSuccess: false,
-		Context:            strings.Join(options, " "),
-	})
-
-	img, err := i.Resolver.Build(ctx, options)
 	if err != nil {
 		mon.SetError(err)
 	} else {

@@ -1,9 +1,9 @@
-package runtime
+package adapter
 
 import (
 	"context"
 	"fmt"
-	"github.com/wagoodman/dive/cmd/dive/cli/internal/command/runtime/ci"
+	"github.com/wagoodman/dive/cmd/dive/cli/internal/command/ci"
 	"github.com/wagoodman/dive/dive/image"
 	"github.com/wagoodman/dive/internal/bus"
 	"github.com/wagoodman/dive/internal/bus/event/payload"
@@ -18,7 +18,7 @@ type evaluationActionObserver struct {
 	ci.Evaluator
 }
 
-func defaultEvaluator(rules []ci.Rule) Evaluator {
+func NewEvaluator(rules []ci.Rule) Evaluator {
 	return evaluationActionObserver{
 		Evaluator: ci.NewEvaluator(rules),
 	}

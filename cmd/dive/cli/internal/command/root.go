@@ -1,13 +1,19 @@
 package command
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"github.com/anchore/clio"
 	"github.com/anchore/go-logger/adapter/discard"
+	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
-	"github.com/wagoodman/dive/cmd/dive/cli/internal/command/runtime"
+	"github.com/wagoodman/dive/cmd/dive/cli/internal/command/adapter"
 	"github.com/wagoodman/dive/cmd/dive/cli/internal/options"
 	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui"
+	"github.com/wagoodman/dive/dive"
+	"github.com/wagoodman/dive/dive/image"
+	"github.com/wagoodman/dive/internal/bus"
 	"github.com/wagoodman/dive/internal/log"
 	"os"
 )
@@ -38,17 +44,20 @@ the amount of wasted space and identifies the offending files from the image.`,
 			if err := setUI(app, opts.Application); err != nil {
 				return fmt.Errorf("failed to set UI: %w", err)
 			}
-			return runtime.Run(
-				cmd.Context(),
-				runtime.Config{
-					Image:      opts.Analysis.Image,
-					Source:     opts.Analysis.Source,
-					Ci:         opts.CI.Enabled,
-					CiRules:    opts.CI.Rules.List,
-					ExportFile: opts.Export.JsonPath,
-					UI:         opts.V1Preferences(),
-				},
-			)
+
+			resolver, err := dive.GetImageResolver(opts.Analysis.Source)
+			if err != nil {
+				return fmt.Errorf("cannot determine image provider to fetch from: %w", err)
+			}
+
+			ctx := cmd.Context()
+
+			img, err := adapter.ImageResolver(resolver).Fetch(ctx, opts.Analysis.Image)
+			if err != nil {
+				return fmt.Errorf("cannot fetch image: %w", err)
+			}
+
+			return run(ctx, opts.Application, img, resolver)
 		},
 	}, opts)
 }
@@ -64,4 +73,31 @@ func setUI(app clio.Application, opts options.Application) error {
 
 	ux := ui.NewV1UI(opts.V1Preferences(), os.Stdout, state.Config.Log.Quiet)
 	return state.UI.Replace(ux)
+}
+
+func run(ctx context.Context, opts options.Application, img *image.Image, content image.ContentReader) error {
+	analysis, err := adapter.NewAnalyzer().Analyze(ctx, img)
+	if err != nil {
+		return fmt.Errorf("cannot analyze image: %w", err)
+	}
+
+	if opts.Export.JsonPath != "" {
+		if err := adapter.NewExporter(afero.NewOsFs()).ExportTo(ctx, analysis, opts.Export.JsonPath); err != nil {
+			return fmt.Errorf("cannot export analysis: %w", err)
+		}
+		return nil
+	}
+
+	if opts.CI.Enabled {
+		eval := adapter.NewEvaluator(opts.CI.Rules.List).Evaluate(ctx, analysis)
+
+		if !eval.Pass {
+			return errors.New("evaluation failed")
+		}
+		return nil
+	}
+
+	bus.ExploreAnalysis(*analysis, content)
+
+	return nil
 }
