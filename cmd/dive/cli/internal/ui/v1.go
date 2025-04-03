@@ -97,6 +97,7 @@ func (n *V1UI) Handle(e partybus.Event) error {
 			log.WithFields("error", err, "event", fmt.Sprintf("%#v", e)).Warn("failed to parse event")
 		}
 
+		n.writeToStderr("")
 		n.writeToStdout(text)
 	case event.ExploreAnalysis:
 		analysis, content, err := parser.ParseExploreAnalysis(e)

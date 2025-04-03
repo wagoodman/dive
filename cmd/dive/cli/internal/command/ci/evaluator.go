@@ -2,14 +2,13 @@ package ci
 
 import (
 	"fmt"
-	"github.com/wagoodman/dive/internal/utils"
+	"github.com/charmbracelet/lipgloss"
 	"golang.org/x/net/context"
 	"sort"
 	"strconv"
 	"strings"
 
 	"github.com/dustin/go-humanize"
-	"github.com/logrusorgru/aurora/v4"
 	"github.com/wagoodman/dive/dive/image"
 )
 
@@ -25,6 +24,19 @@ type Evaluator struct {
 	Pass             bool
 	Misconfigured    bool
 	InefficientFiles []ReferenceFile
+	format           format
+}
+
+type format struct {
+	Title       lipgloss.Style
+	Success     lipgloss.Style
+	Warning     lipgloss.Style
+	Disabled    lipgloss.Style
+	Failure     lipgloss.Style
+	TableHeader lipgloss.Style
+	Label       lipgloss.Style
+	Aux         lipgloss.Style
+	Value       lipgloss.Style
 }
 
 type ResultTally struct {
@@ -46,24 +58,35 @@ func NewEvaluator(rules []Rule) Evaluator {
 		Rules:   rules,
 		Results: make(map[string]RuleResult),
 		Pass:    true,
+		format: format{
+			Title:       lipgloss.NewStyle().Bold(true),
+			Success:     lipgloss.NewStyle().Foreground(lipgloss.Color("2")),
+			Warning:     lipgloss.NewStyle().Foreground(lipgloss.Color("3")),
+			Disabled:    lipgloss.NewStyle().Faint(true),
+			Failure:     lipgloss.NewStyle().Foreground(lipgloss.Color("1")).Reverse(true),
+			TableHeader: lipgloss.NewStyle().Bold(true).Underline(true),
+			Label:       lipgloss.NewStyle().Width(18),
+			Aux:         lipgloss.NewStyle().Faint(true),
+			Value:       lipgloss.NewStyle(),
+		},
 	}
 }
 
-func (ci Evaluator) isRuleEnabled(rule Rule) bool {
+func (e Evaluator) isRuleEnabled(rule Rule) bool {
 	return rule.Configuration() != "disabled"
 }
 
-func (ci Evaluator) Evaluate(ctx context.Context, analysis *image.Analysis) Evaluation {
-	for _, rule := range ci.Rules {
-		if !ci.isRuleEnabled(rule) {
-			ci.Results[rule.Key()] = RuleResult{
+func (e Evaluator) Evaluate(ctx context.Context, analysis *image.Analysis) Evaluation {
+	for _, rule := range e.Rules {
+		if !e.isRuleEnabled(rule) {
+			e.Results[rule.Key()] = RuleResult{
 				status:  RuleConfigured,
 				message: "rule disabled",
 			}
 			continue
 		}
 
-		ci.Results[rule.Key()] = RuleResult{
+		e.Results[rule.Key()] = RuleResult{
 			status:  RuleConfigured,
 			message: "test",
 		}
@@ -73,7 +96,7 @@ func (ci Evaluator) Evaluate(ctx context.Context, analysis *image.Analysis) Eval
 	for idx := 0; idx < len(analysis.Inefficiencies); idx++ {
 		fileData := analysis.Inefficiencies[len(analysis.Inefficiencies)-1-idx]
 
-		ci.InefficientFiles = append(ci.InefficientFiles, ReferenceFile{
+		e.InefficientFiles = append(e.InefficientFiles, ReferenceFile{
 			References: len(fileData.Nodes),
 			SizeBytes:  uint64(fileData.CumulativeSize),
 			Path:       fileData.Path,
@@ -81,114 +104,205 @@ func (ci Evaluator) Evaluate(ctx context.Context, analysis *image.Analysis) Eval
 	}
 
 	// evaluate results against the configured CI rules
-	for _, rule := range ci.Rules {
-		if !ci.isRuleEnabled(rule) {
-			ci.Results[rule.Key()] = RuleResult{
+	for _, rule := range e.Rules {
+		if !e.isRuleEnabled(rule) {
+			e.Results[rule.Key()] = RuleResult{
 				status:  RuleDisabled,
-				message: "rule disabled",
+				message: "disabled",
 			}
 			continue
 		}
 
 		status, message := rule.Evaluate(analysis)
 
-		if value, exists := ci.Results[rule.Key()]; exists && value.status != RuleConfigured && value.status != RuleMisconfigured {
+		if value, exists := e.Results[rule.Key()]; exists && value.status != RuleConfigured && value.status != RuleMisconfigured {
 			panic(fmt.Errorf("CI rule result recorded twice: %s", rule.Key()))
 		}
 
 		if status == RuleFailed {
-			ci.Pass = false
+			e.Pass = false
 		}
 
-		ci.Results[rule.Key()] = RuleResult{
+		if message == "" {
+			message = rule.Configuration()
+		}
+
+		e.Results[rule.Key()] = RuleResult{
 			status:  status,
 			message: message,
 		}
 	}
 
-	ci.Tally.Total = len(ci.Results)
-	for rule, result := range ci.Results {
+	e.Tally.Total = len(e.Results)
+	for rule, result := range e.Results {
 		switch result.status {
 		case RulePassed:
-			ci.Tally.Pass++
+			e.Tally.Pass++
 		case RuleFailed:
-			ci.Tally.Fail++
+			e.Tally.Fail++
 		case RuleWarning:
-			ci.Tally.Warn++
+			e.Tally.Warn++
 		case RuleDisabled:
-			ci.Tally.Skip++
+			e.Tally.Skip++
 		default:
 			panic(fmt.Errorf("unknown test status (rule='%v'): %v", rule, result.status))
 		}
 	}
 
 	return Evaluation{
-		Report: ci.report(analysis),
-		Pass:   ci.Pass,
+		Report: e.report(analysis),
+		Pass:   e.Pass,
 	}
 }
 
-func (ci Evaluator) report(analysis *image.Analysis) string {
-	var sb strings.Builder
+func (e Evaluator) report(analysis *image.Analysis) string {
+	sections := []string{
+		e.renderAnalysisSection(analysis),
+		e.renderInefficientFilesSection(analysis),
+		e.renderEvaluationSection(),
+	}
 
-	var wastedByteStr, userWastedPercent string
+	return strings.Join(sections, "\n\n")
+}
+
+func (e Evaluator) renderAnalysisSection(analysis *image.Analysis) string {
+	wastedByteStr := ""
+	userWastedPercent := "0 %"
+
 	if analysis.WastedBytes > 0 {
 		wastedByteStr = fmt.Sprintf("(%s)", humanize.Bytes(analysis.WastedBytes))
 		userWastedPercent = fmt.Sprintf("%.2f %%", analysis.WastedUserPercent*100)
-	} else {
-		userWastedPercent = "0 %"
 	}
 
-	fmt.Fprintln(&sb, utils.TitleFormat("Analysis:"))
-	fmt.Fprintf(&sb, "  efficiency:        %.2f %%\n", analysis.Efficiency*100)
-	fmt.Fprintf(&sb, "  wastedBytes:       %d bytes %s\n", analysis.WastedBytes, wastedByteStr)
-	fmt.Fprintf(&sb, "  userWastedPercent: %s\n", userWastedPercent)
+	title := e.format.Title.Render("Analysis:")
 
-	fmt.Fprint(&sb, utils.TitleFormat("\nInefficient Files:"))
+	rows := []string{
+		formatKeyValue(e.format, "efficiency", fmt.Sprintf("%.2f %%", analysis.Efficiency*100)),
+		formatKeyValue(e.format, "wastedBytes", fmt.Sprintf("%d bytes %s", analysis.WastedBytes, wastedByteStr)),
+		formatKeyValue(e.format, "userWastedPercent", userWastedPercent),
+	}
+
+	return title + "\n" + strings.Join(rows, "\n")
+}
+
+func (e Evaluator) renderInefficientFilesSection(analysis *image.Analysis) string {
+	title := e.format.Title.Render("Inefficient Files:")
+
 	if len(analysis.Inefficiencies) == 0 {
-		fmt.Fprintln(&sb, " (None)")
-	} else {
-		template := "%5s  %12s  %-s\n"
-		fmt.Fprintf(&sb, template, "Count", "Wasted Space", "File Path")
-		for _, file := range ci.InefficientFiles {
-			fmt.Fprintf(&sb, template, strconv.Itoa(file.References), humanize.Bytes(file.SizeBytes), file.Path)
-		}
+		return title + " (None)"
 	}
 
-	fmt.Fprintln(&sb, utils.TitleFormat("\nEvaluation:"))
+	header := e.format.TableHeader.Render(
+		fmt.Sprintf("%-5s  %-12s  %-s", "Count", "Wasted Space", "File Path"),
+	)
 
-	status := "PASS"
+	rows := []string{header}
+	for _, file := range e.InefficientFiles {
+		row := fmt.Sprintf("%-5s  %-12s  %-s",
+			strconv.Itoa(file.References),
+			humanize.Bytes(file.SizeBytes),
+			file.Path,
+		)
+		rows = append(rows, row)
+	}
 
-	rules := make([]string, 0, len(ci.Results))
-	for name := range ci.Results {
+	return title + "\n" + strings.Join(rows, "\n")
+}
+
+func (e Evaluator) renderEvaluationSection() string {
+	title := e.format.Title.Render("Evaluation:")
+
+	// sort rules by name for consistent output
+	rules := make([]string, 0, len(e.Results))
+	for name := range e.Results {
 		rules = append(rules, name)
 	}
 	sort.Strings(rules)
 
-	if ci.Tally.Fail > 0 {
+	ruleResults := []string{}
+	for _, rule := range rules {
+		result := e.Results[rule]
+		ruleResult := e.formatRuleResult(rule, result)
+		ruleResults = append(ruleResults, ruleResult)
+	}
+
+	status := e.renderStatusSummary()
+
+	return title + "\n" + strings.Join(ruleResults, "\n") + "\n\n" + status
+}
+
+func (e Evaluator) formatRuleResult(ruleName string, result RuleResult) string {
+	var style lipgloss.Style
+	textStyle := lipgloss.NewStyle()
+	switch result.status {
+	case RulePassed:
+		style = e.format.Success
+	case RuleFailed:
+		style = e.format.Failure
+	case RuleWarning, RuleMisconfigured:
+		style = e.format.Warning
+	case RuleDisabled:
+		style = e.format.Disabled
+		textStyle = e.format.Disabled
+	default:
+		style = lipgloss.NewStyle()
+	}
+
+	statusStr := style.Render(result.status.String(e.format))
+
+	if result.message != "" {
+		return fmt.Sprintf("  %s  %s", statusStr, textStyle.Render(ruleName+" ("+result.message+")"))
+	}
+
+	return fmt.Sprintf("  %s  %s", statusStr, textStyle.Render(ruleName))
+}
+
+func (e Evaluator) renderStatusSummary() string {
+	if e.Misconfigured {
+		return e.format.Failure.Render("CI Misconfigured")
+	}
+
+	status := "PASS"
+	if e.Tally.Fail > 0 {
 		status = "FAIL"
 	}
 
-	for _, rule := range rules {
-		result := ci.Results[rule]
-		if result.message != "" {
-			fmt.Fprintf(&sb, "  %s: %s: %s\n", result.status.String(), rule, result.message)
-		} else {
-			fmt.Fprintf(&sb, "  %s: %s\n", result.status.String(), rule)
+	parts := []string{}
+
+	type tallyItem struct {
+		name  string
+		value int
+	}
+
+	items := []tallyItem{
+		//{"total", e.Tally.Total},
+		{"pass", e.Tally.Pass},
+		{"fail", e.Tally.Fail},
+		{"warn", e.Tally.Warn},
+		{"skip", e.Tally.Skip},
+	}
+
+	for _, item := range items {
+		if item.value > 0 {
+			parts = append(parts, fmt.Sprintf("%s:%d", item.name, item.value))
 		}
 	}
 
-	if ci.Misconfigured {
-		fmt.Fprintln(&sb, aurora.Red("CI Misconfigured"))
-	} else {
-		summary := fmt.Sprintf("Result:%s [Total:%d] [Passed:%d] [Failed:%d] [Warn:%d] [Skipped:%d]", status, ci.Tally.Total, ci.Tally.Pass, ci.Tally.Fail, ci.Tally.Warn, ci.Tally.Skip)
-		if ci.Pass {
-			fmt.Fprintln(&sb, aurora.Green(summary))
-		} else if ci.Pass && ci.Tally.Warn > 0 {
-			fmt.Fprintln(&sb, aurora.Blue(summary))
-		} else {
-			fmt.Fprintln(&sb, aurora.Red(summary))
-		}
+	auxSummary := e.format.Aux.Render(" [" + strings.Join(parts, " ") + "]")
+
+	var style lipgloss.Style
+	switch {
+	case e.Pass && e.Tally.Warn == 0:
+		style = e.format.Success
+	case e.Pass && e.Tally.Warn > 0:
+		style = e.format.Warning
+	default:
+		style = e.format.Failure
 	}
-	return sb.String()
+	return style.Render(status) + auxSummary
+}
+
+func formatKeyValue(f format, key, value string) string {
+	formattedKey := f.Label.Render(key + ":")
+	return fmt.Sprintf("  %s %s", formattedKey, value)
 }

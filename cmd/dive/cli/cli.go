@@ -7,39 +7,23 @@ import (
 	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui"
 	"github.com/wagoodman/dive/internal/bus"
 	"github.com/wagoodman/dive/internal/log"
-	"io"
-	"os"
 )
 
 func Application(id clio.Identification) clio.Application {
-	app, _ := create(id, os.Stdout)
+	app, _ := create(id)
 	return app
 }
 
 func Command(id clio.Identification) *cobra.Command {
-	_, cmd := create(id, os.Stdout)
+	_, cmd := create(id)
 	return cmd
 }
 
-func create(id clio.Identification, out io.Writer) (clio.Application, *cobra.Command) {
+func create(id clio.Identification) (clio.Application, *cobra.Command) {
 	clioCfg := clio.NewSetupConfig(id).
 		WithGlobalConfigFlag().   // add persistent -c <path> for reading an application config from
 		WithGlobalLoggingFlags(). // add persistent -v and -q flags tied to the logging config
 		WithConfigInRootHelp().   // --help on the root command renders the full application config in the help text
-		//WithUIConstructor(
-		//	// select a UI based on the logging configuration and state of stdin (if stdin is a tty)
-		//	func(cfg clio.Config) (*clio.UICollection, error) {
-		//		noUI := ui.None(out, cfg.Log.Quiet)
-		//		if !cfg.Log.AllowUI(os.Stdin) || cfg.Log.Quiet {
-		//			return clio.NewUICollection(noUI), nil
-		//		}
-		//
-		//		return clio.NewUICollection(
-		//			ui.NewV1UI(out, cfg.Log.Quiet),
-		//			noUI, // fallback incase the v1 UI fails
-		//		), nil
-		//	},
-		//).
 		WithUI(ui.None()).
 		WithInitializers(
 			func(state *clio.State) error {

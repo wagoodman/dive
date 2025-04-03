@@ -2,13 +2,7 @@ package utils
 
 import (
 	"strings"
-
-	"github.com/logrusorgru/aurora/v4"
 )
-
-func TitleFormat(s string) string {
-	return aurora.Bold(s).String()
-}
 
 // CleanArgs trims the whitespace from the given set of strings.
 func CleanArgs(s []string) []string {

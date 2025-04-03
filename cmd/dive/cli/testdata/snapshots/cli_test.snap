@@ -108,109 +108,158 @@ keybinding:
 
 diff:
   # types of file differences to hide (added, removed, modified, unmodified) (env: DIVE_DIFF_HIDE)
-  hide:
-    - 'added'
+  hide: []
 
 filetree:
   # collapse directories by default in the filetree (env: DIVE_FILETREE_COLLAPSE_DIR)
-  collapse-dir: true
+  collapse-dir: false
 
   # percentage of screen width for the filetree pane (must be >0 and <1) (env: DIVE_FILETREE_PANE_WIDTH)
-  pane-width: 0.7
+  pane-width: 0.5
 
   # show file attributes in the filetree view (env: DIVE_FILETREE_SHOW_ATTRIBUTES)
-  show-attributes: false
+  show-attributes: true
 
 layer:
   # show aggregated changes across all previous layers (env: DIVE_LAYER_SHOW_AGGREGATED_CHANGES)
-  show-aggregated-changes: true
+  show-aggregated-changes: false
 
 ---
 
 [Test_Build_Dockerfile/implicit_dockerfile - 1]
-[1mAnalysis:[0m
+Analysis:
   efficiency:        100.00 %
   wastedBytes:       131 bytes (131 B)
   userWastedPercent: 71.98 %
-[1m
-Inefficient Files:[0mCount  Wasted Space  File Path
-    3          80 B  /root/saved.txt
-    2          34 B  /root/example/somefile1.txt
-    2          17 B  /root/example/somefile3.txt
-    2           0 B  /root
-   10           0 B  /etc
-[1m
-Evaluation:[0m
-  PASS: highestUserWastedPercent
-  PASS: highestWastedBytes
-  PASS: lowestEfficiency
-[32mResult:PASS [Total:3] [Passed:3] [Failed:0] [Warn:0] [Skipped:0][0m
 
+Inefficient Files:
+Count  Wasted Space  File Path
+3      80 B          /root/saved.txt
+2      34 B          /root/example/somefile1.txt
+2      17 B          /root/example/somefile3.txt
+2      0 B           /root
+10     0 B           /etc
+
+Evaluation:
+  PASS  highestUserWastedPercent (0.90)
+  PASS  highestWastedBytes (20MB)
+  PASS  lowestEfficiency (0.9)
+
+PASS [pass:3]
 
 ---
 
 [Test_Build_Dockerfile/explicit_file_flag - 1]
-[1mAnalysis:[0m
+Analysis:
   efficiency:        100.00 %
   wastedBytes:       131 bytes (131 B)
   userWastedPercent: 71.98 %
-[1m
-Inefficient Files:[0mCount  Wasted Space  File Path
-    3          80 B  /root/saved.txt
-    2          34 B  /root/example/somefile1.txt
-    2          17 B  /root/example/somefile3.txt
-    2           0 B  /root
-   10           0 B  /etc
-[1m
-Evaluation:[0m
-  PASS: highestUserWastedPercent
-  PASS: highestWastedBytes
-  PASS: lowestEfficiency
-[32mResult:PASS [Total:3] [Passed:3] [Failed:0] [Warn:0] [Skipped:0][0m
 
+Inefficient Files:
+Count  Wasted Space  File Path
+3      80 B          /root/saved.txt
+2      34 B          /root/example/somefile1.txt
+2      17 B          /root/example/somefile3.txt
+2      0 B           /root
+10     0 B           /etc
+
+Evaluation:
+  PASS  highestUserWastedPercent (0.90)
+  PASS  highestWastedBytes (20MB)
+  PASS  lowestEfficiency (0.9)
+
+PASS [pass:3]
 
 ---
 
 [Test_Build_Containerfile/implicit_containerfile - 1]
-[1mAnalysis:[0m
+Analysis:
   efficiency:        100.00 %
   wastedBytes:       131 bytes (131 B)
   userWastedPercent: 71.98 %
-[1m
-Inefficient Files:[0mCount  Wasted Space  File Path
-    3          80 B  /root/saved.txt
-    2          34 B  /root/example/somefile1.txt
-    2          17 B  /root/example/somefile3.txt
-    2           0 B  /root
-   10           0 B  /etc
-[1m
-Evaluation:[0m
-  PASS: highestUserWastedPercent
-  PASS: highestWastedBytes
-  PASS: lowestEfficiency
-[32mResult:PASS [Total:3] [Passed:3] [Failed:0] [Warn:0] [Skipped:0][0m
 
+Inefficient Files:
+Count  Wasted Space  File Path
+3      80 B          /root/saved.txt
+2      34 B          /root/example/somefile1.txt
+2      17 B          /root/example/somefile3.txt
+2      0 B           /root
+10     0 B           /etc
+
+Evaluation:
+  PASS  highestUserWastedPercent (0.90)
+  PASS  highestWastedBytes (20MB)
+  PASS  lowestEfficiency (0.9)
+
+PASS [pass:3]
 
 ---
 
 [Test_Build_Containerfile/explicit_file_flag - 1]
-[1mAnalysis:[0m
+Analysis:
   efficiency:        100.00 %
   wastedBytes:       131 bytes (131 B)
   userWastedPercent: 71.98 %
-[1m
-Inefficient Files:[0mCount  Wasted Space  File Path
-    3          80 B  /root/saved.txt
-    2          34 B  /root/example/somefile1.txt
-    2          17 B  /root/example/somefile3.txt
-    2           0 B  /root
-   10           0 B  /etc
-[1m
-Evaluation:[0m
-  PASS: highestUserWastedPercent
-  PASS: highestWastedBytes
-  PASS: lowestEfficiency
-[32mResult:PASS [Total:3] [Passed:3] [Failed:0] [Warn:0] [Skipped:0][0m
 
+Inefficient Files:
+Count  Wasted Space  File Path
+3      80 B          /root/saved.txt
+2      34 B          /root/example/somefile1.txt
+2      17 B          /root/example/somefile3.txt
+2      0 B           /root
+10     0 B           /etc
+
+Evaluation:
+  PASS  highestUserWastedPercent (0.90)
+  PASS  highestWastedBytes (20MB)
+  PASS  lowestEfficiency (0.9)
+
+PASS [pass:3]
+
+---
+
+[Test_Build_CI_gate_fail - 1]
+Analysis:
+  efficiency:        100.00 %
+  wastedBytes:       131 bytes (131 B)
+  userWastedPercent: 71.98 %
+
+Inefficient Files:
+Count  Wasted Space  File Path
+3      80 B          /root/saved.txt
+2      34 B          /root/example/somefile1.txt
+2      17 B          /root/example/somefile3.txt
+2      0 B           /root
+10     0 B           /etc
+
+Evaluation:
+  FAIL  highestUserWastedPercent (too many bytes wasted, relative to the user bytes added (%-user-wasted-bytes=0.7197802197802198 > threshold=0.1))
+  SKIP  highestWastedBytes (disabled)
+  PASS  lowestEfficiency (0.9)
+
+FAIL [pass:1 fail:1 skip:1]
+
+---
+
+[Test_root_CI_gate_fail - 1]
+Analysis:
+  efficiency:        100.00 %
+  wastedBytes:       131 bytes (131 B)
+  userWastedPercent: 71.98 %
+
+Inefficient Files:
+Count  Wasted Space  File Path
+3      80 B          /root/saved.txt
+2      34 B          /root/example/somefile1.txt
+2      17 B          /root/example/somefile3.txt
+2      0 B           /root
+10     0 B           /etc
+
+Evaluation:
+  FAIL  highestUserWastedPercent (too many bytes wasted, relative to the user bytes added (%-user-wasted-bytes=0.7197802197802198 > threshold=0.1))
+  SKIP  highestWastedBytes (disabled)
+  PASS  lowestEfficiency (0.9)
+
+FAIL [pass:1 fail:1 skip:1]
 
 ---

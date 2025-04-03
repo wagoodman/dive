@@ -1,7 +1,6 @@
 package ci
 
 import (
-	"github.com/logrusorgru/aurora/v4"
 	"github.com/wagoodman/dive/dive/image"
 )
 
@@ -28,21 +27,21 @@ type RuleResult struct {
 	message string
 }
 
-func (status RuleStatus) String() string {
+func (status RuleStatus) String(f format) string {
 	switch status {
 	case RulePassed:
-		return "PASS"
+		return f.Success.Render("PASS")
 	case RuleFailed:
-		return aurora.Bold(aurora.Inverse(aurora.Red("FAIL"))).String()
+		return f.Failure.Render("FAIL")
 	case RuleWarning:
-		return aurora.Blue("WARN").String()
+		return f.Warning.Render("WARN")
 	case RuleDisabled:
-		return aurora.Blue("SKIP").String()
+		return f.Disabled.Render("SKIP")
 	case RuleMisconfigured:
-		return aurora.Bold(aurora.Inverse(aurora.Red("MISCONFIGURED"))).String()
+		return f.Warning.Render("MISCONFIGURED")
 	case RuleConfigured:
 		return "CONFIGURED   "
 	default:
-		return aurora.Inverse("Unknown").String()
+		return f.Warning.Render("Unknown")
 	}
 }

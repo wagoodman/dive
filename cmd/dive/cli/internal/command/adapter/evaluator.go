@@ -35,7 +35,7 @@ func (c evaluationActionObserver) Evaluate(ctx context.Context, analysis *image.
 		HideOnSuccess:      false,
 		HideStageOnSuccess: false,
 		ID:                 analysis.Image,
-		Context:            analysis.Image,
+		Context:            fmt.Sprintf("[rules: %d]", len(c.Rules)),
 	})
 	eval := c.Evaluator.Evaluate(ctx, analysis)
 	if eval.Pass {
