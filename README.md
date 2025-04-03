@@ -136,8 +136,7 @@ pacman -S dive
 If you use [Homebrew](https://brew.sh):
 
 ```bash
-brew tap wagoodman/dive
-brew install wagoodman/dive/dive
+brew install dive
 ```
 
 If you use [MacPorts](https://www.macports.org):
