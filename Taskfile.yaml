@@ -61,6 +61,7 @@ tasks:
     desc: Run all levels of test
     cmds:
       - task: unit
+      - task: cli
 
   ## Bootstrap tasks #################################
 
@@ -172,7 +173,7 @@ tasks:
       - tmpdir
     vars:
       TEST_PKGS:
-        sh: "go list ./... | tr '\n' ' '"
+        sh: "go list ./... | grep -v '^github.com/wagoodman/dive/cmd/dive/cli$'  | tr '\n' ' '"
 
       # unit test coverage threshold (in % coverage)
       COVERAGE_THRESHOLD: 30
@@ -181,6 +182,10 @@ tasks:
       - cmd: ".github/scripts/coverage.py {{ .COVERAGE_THRESHOLD }} {{ .TMP_DIR }}/unit-coverage-details.txt"
         silent: true
 
+  cli:
+    desc: Run CLI tests
+    cmds:
+      - "go test github.com/wagoodman/dive/cmd/dive/cli"
 
   ## Acceptance tests #################################
 

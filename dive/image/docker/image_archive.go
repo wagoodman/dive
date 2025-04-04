@@ -247,7 +247,7 @@ func getFileList(tarReader *tar.Reader) ([]filetree.FileInfo, error) {
 	return files, nil
 }
 
-func (img *ImageArchive) ToImage() (*image.Image, error) {
+func (img *ImageArchive) ToImage(id string) (*image.Image, error) {
 	trees := make([]*filetree.FileTree, 0)
 
 	// build the content tree
@@ -294,8 +294,9 @@ func (img *ImageArchive) ToImage() (*image.Image, error) {
 	}
 
 	return &image.Image{
-		Trees:  trees,
-		Layers: layers,
+		Request: id,
+		Trees:   trees,
+		Layers:  layers,
 	}, nil
 }
 

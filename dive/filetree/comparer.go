@@ -2,8 +2,6 @@ package filetree
 
 import (
 	"fmt"
-
-	"github.com/sirupsen/logrus"
 )
 
 type TreeIndexKey struct {
@@ -78,8 +76,7 @@ func (cmp *Comparer) get(key TreeIndexKey) (*FileTree, []PathError, error) {
 		markPathErrors, err := newTree.CompareAndMark(cmp.refTrees[idx])
 		pathErrors = append(pathErrors, markPathErrors...)
 		if err != nil {
-			logrus.Errorf("error while building tree: %+v", err)
-			return nil, nil, err
+			return nil, nil, fmt.Errorf("failed to build tree: %w", err)
 		}
 	}
 	return newTree, pathErrors, nil

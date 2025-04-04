@@ -2,6 +2,7 @@ package filetree
 
 import (
 	"fmt"
+	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
@@ -798,9 +799,7 @@ func TestStackRange(t *testing.T) {
 	if len(failedPaths) > 0 {
 		t.Errorf("expected no filepath errors, got %d", len(failedPaths))
 	}
-	if err != nil {
-		t.Fatal(err)
-	}
+	assert.NoError(t, err)
 }
 
 func TestRemoveOnIterate(t *testing.T) {

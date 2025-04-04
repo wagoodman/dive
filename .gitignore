@@ -1,3 +1,6 @@
+# app configs
+.dive.yaml
+
 # misc
 /.image
 *.log
@@ -15,6 +18,8 @@ VERSION
 /.tool
 /.mise.toml
 /.task
+/go.work
+/go.work.sum
 
 # builds
 /dist

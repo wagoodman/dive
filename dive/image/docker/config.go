@@ -2,8 +2,7 @@ package docker
 
 import (
 	"encoding/json"
-
-	"github.com/sirupsen/logrus"
+	"fmt"
 )
 
 type config struct {
@@ -29,7 +28,7 @@ func newConfig(configBytes []byte) config {
 	var imageConfig config
 	err := json.Unmarshal(configBytes, &imageConfig)
 	if err != nil {
-		logrus.Panic(err)
+		panic(fmt.Errorf("failed to unmarshal docker config: %w", err))
 	}
 
 	layerIdx := 0
