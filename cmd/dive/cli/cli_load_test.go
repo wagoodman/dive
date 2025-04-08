@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"os"
 	"os/exec"
 	"testing"
 )
@@ -90,5 +91,15 @@ func Test_FetchFailure(t *testing.T) {
 		assert.Contains(t, combined, "Loading image")
 
 		snaps.MatchSnapshot(t, combined)
+	})
+}
+
+func cd(t testing.TB, to string) {
+	t.Helper()
+	from, err := os.Getwd()
+	require.NoError(t, err)
+	require.NoError(t, os.Chdir(to))
+	t.Cleanup(func() {
+		require.NoError(t, os.Chdir(from))
 	})
 }

@@ -1,14 +1,4 @@
 
-[Test_FetchFailure/nonexistent_image - 1]
-Loading image                 docker:wagoodman/nonexistent/image:tag
-
----
-
-[Test_FetchFailure/invalid_image_name - 1]
-Loading image                 /wagoodman/invalid:image:format
-
----
-
 [Test_LoadImage/from_docker_engine - 1]
 Loading image                 busybox:1.37.0@sha256:ad9fa4d07136a83e69a54ef00102f579d04eba431932de3b0f098cc5d5948f9f
 Analyzing image               [layers:1 files:441 size:4.3 MB]
@@ -30,7 +20,49 @@ PASS [pass:3]
 
 ---
 
+[Test_LoadImage/from_docker_engine_(flag) - 1]
+Loading image                 busybox:1.37.0@sha256:ad9fa4d07136a83e69a54ef00102f579d04eba431932de3b0f098cc5d5948f9f
+Analyzing image               [layers:1 files:441 size:4.3 MB]
+Evaluating image              [rules: 3]
+
+Analysis:
+  efficiency:        100.00 %
+  wastedBytes:       0 bytes 
+  userWastedPercent: 0 %
+
+Inefficient Files: (None)
+
+Evaluation:
+  PASS  highestUserWastedPercent (0.90)
+  PASS  highestWastedBytes (20MB)
+  PASS  lowestEfficiency (0.9)
+
+PASS [pass:3]
+
+---
+
 [Test_LoadImage/from_podman_engine - 1]
+Loading image                 busybox:1.37.0@sha256:ad9fa4d07136a83e69a54ef00102f579d04eba431932de3b0f098cc5d5948f9f
+Analyzing image               [layers:1 files:441 size:4.3 MB]
+Evaluating image              [rules: 3]
+
+Analysis:
+  efficiency:        100.00 %
+  wastedBytes:       0 bytes 
+  userWastedPercent: 0 %
+
+Inefficient Files: (None)
+
+Evaluation:
+  PASS  highestUserWastedPercent (0.90)
+  PASS  highestWastedBytes (20MB)
+  PASS  lowestEfficiency (0.9)
+
+PASS [pass:3]
+
+---
+
+[Test_LoadImage/from_podman_engine_(flag) - 1]
 Loading image                 busybox:1.37.0@sha256:ad9fa4d07136a83e69a54ef00102f579d04eba431932de3b0f098cc5d5948f9f
 Analyzing image               [layers:1 files:441 size:4.3 MB]
 Evaluating image              [rules: 3]
@@ -76,48 +108,6 @@ PASS [pass:3]
 
 ---
 
-[Test_LoadImage/from_docker_engine_(flag) - 1]
-Loading image                 busybox:1.37.0@sha256:ad9fa4d07136a83e69a54ef00102f579d04eba431932de3b0f098cc5d5948f9f
-Analyzing image               [layers:1 files:441 size:4.3 MB]
-Evaluating image              [rules: 3]
-
-Analysis:
-  efficiency:        100.00 %
-  wastedBytes:       0 bytes 
-  userWastedPercent: 0 %
-
-Inefficient Files: (None)
-
-Evaluation:
-  PASS  highestUserWastedPercent (0.90)
-  PASS  highestWastedBytes (20MB)
-  PASS  lowestEfficiency (0.9)
-
-PASS [pass:3]
-
----
-
-[Test_LoadImage/from_podman_engine_(flag) - 1]
-Loading image                 busybox:1.37.0@sha256:ad9fa4d07136a83e69a54ef00102f579d04eba431932de3b0f098cc5d5948f9f
-Analyzing image               [layers:1 files:441 size:4.3 MB]
-Evaluating image              [rules: 3]
-
-Analysis:
-  efficiency:        100.00 %
-  wastedBytes:       0 bytes 
-  userWastedPercent: 0 %
-
-Inefficient Files: (None)
-
-Evaluation:
-  PASS  highestUserWastedPercent (0.90)
-  PASS  highestWastedBytes (20MB)
-  PASS  lowestEfficiency (0.9)
-
-PASS [pass:3]
-
----
-
 [Test_LoadImage/from_archive_(flag) - 1]
 Loading image                 /Users/wagoodman/code/dive/.data/test-docker-image.tar
 Analyzing image               [layers:14 files:451 size:1.2 MB]
@@ -140,5 +130,15 @@ Evaluation:
   PASS  lowestEfficiency (0.9)
 
 PASS [pass:3]
+
+---
+
+[Test_FetchFailure/nonexistent_image - 1]
+Loading image                 docker:wagoodman/nonexistent/image:tag
+
+---
+
+[Test_FetchFailure/invalid_image_name - 1]
+Loading image                 /wagoodman/invalid:image:format
 
 ---

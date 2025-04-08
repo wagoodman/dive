@@ -13,6 +13,8 @@ var _ interface {
 	clio.FlagAdder
 } = (*CI)(nil)
 
+const defaultCIConfigPath = ".dive-ci"
+
 type CI struct {
 	Enabled    bool    `yaml:"ci" mapstructure:"ci"`
 	ConfigPath string  `yaml:"ci-config" mapstructure:"ci-config"`
@@ -22,7 +24,7 @@ type CI struct {
 func DefaultCI() CI {
 	return CI{
 		Enabled:    false,
-		ConfigPath: ".dive-ci",
+		ConfigPath: defaultCIConfigPath,
 		Rules:      DefaultCIRules(),
 	}
 }
@@ -43,21 +45,45 @@ func (c *CI) PostLoad() error {
 		c.Enabled = true
 	}
 
-	if c.ConfigPath != "" && fileExists(c.ConfigPath) {
-		// if a config file is provided, load it and override any values provided in the application config.
-		// If we're hitting this case we should pretend that only the config file was provided and applied
-		// on top of the default config values.
-		yamlFile, err := os.ReadFile(c.ConfigPath)
-		if err != nil {
-			return fmt.Errorf("failed to read CI config file %s: %w", c.ConfigPath, err)
-		}
-		c.Rules = DefaultCIRules()
-		if err := yaml.Unmarshal(yamlFile, &c.Rules); err != nil {
-			return fmt.Errorf("failed to unmarshal CI config file %s: %w", c.ConfigPath, err)
+	if c.ConfigPath != "" {
+		if fileExists(c.ConfigPath) {
+			// if a config file is provided, load it and override any values provided in the application config.
+			// If we're hitting this case we should pretend that only the config file was provided and applied
+			// on top of the default config values.
+			yamlFile, err := os.ReadFile(c.ConfigPath)
+			if err != nil {
+				return fmt.Errorf("failed to read CI config file %s: %w", c.ConfigPath, err)
+			}
+			def := DefaultCIRules()
+			r := legacyRuleFile{
+				LowestEfficiencyThresholdString: def.LowestEfficiencyThresholdString,
+				HighestWastedBytesString:        def.HighestWastedBytesString,
+				HighestUserWastedPercentString:  def.HighestUserWastedPercentString,
+			}
+			wrapper := struct {
+				Rules *legacyRuleFile `yaml:"rules"`
+			}{
+				Rules: &r,
+			}
+			if err := yaml.Unmarshal(yamlFile, &wrapper); err != nil {
+				return fmt.Errorf("failed to unmarshal CI config file %s: %w", c.ConfigPath, err)
+			}
+			// TODO: should this be a deprecated use warning in the future?
+			c.Rules = CIRules{
+				LowestEfficiencyThresholdString: r.LowestEfficiencyThresholdString,
+				HighestWastedBytesString:        r.HighestWastedBytesString,
+				HighestUserWastedPercentString:  r.HighestUserWastedPercentString,
+			}
 		}
 	}
 
 	return nil
+}
+
+type legacyRuleFile struct {
+	LowestEfficiencyThresholdString string `yaml:"lowestEfficiency"`
+	HighestWastedBytesString        string `yaml:"highestWastedBytes"`
+	HighestUserWastedPercentString  string `yaml:"highestUserWastedPercent"`
 }
 
 func fileExists(path string) bool {

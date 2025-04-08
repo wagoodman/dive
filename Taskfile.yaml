@@ -185,7 +185,7 @@ tasks:
   cli:
     desc: Run CLI tests
     cmds:
-      - "go test github.com/wagoodman/dive/cmd/dive/cli"
+      - "go test github.com/wagoodman/dive/cmd/dive/cli -v"
 
   ## Acceptance tests #################################
 
@@ -202,7 +202,8 @@ tasks:
       - |
         docker run \
           --rm \
-          -ti \
+          -t \
+          --env CLICOLOR_FORCE=true \
           -v /var/run/docker.sock:/var/run/docker.sock \
           'docker.io/wagoodman/dive:latest' \
             '{{ .TEST_IMAGE }}' \
@@ -217,6 +218,7 @@ tasks:
           -v /var/run/docker.sock:/var/run/docker.sock \
           -v /${PWD}:/src \
           -w /src \
+          --env CLICOLOR_FORCE=true \
           ubuntu:latest \
             /bin/bash -x -c "\
               apt update && \
@@ -239,6 +241,7 @@ tasks:
           -v /var/run/docker.sock:/var/run/docker.sock \
           -v /${PWD}:/src \
           -w /src \
+          --env CLICOLOR_FORCE=true \
           fedora:latest \
             /bin/bash -x -c "\
               curl -L 'https://download.docker.com/linux/static/stable/x86_64/docker-{{ .DOCKER_CLI_VERSION }}.tgz' | \

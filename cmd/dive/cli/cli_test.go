@@ -73,8 +73,11 @@ func repoRoot(t testing.TB) string {
 }
 
 func getTestCommand(t testing.TB, cmd string) *cobra.Command {
-	if os.Getenv("DIVE_CONFIG") == "" {
+	switch os.Getenv("DIVE_CONFIG") {
+	case "":
 		t.Setenv("DIVE_CONFIG", "./testdata/dive-enable-ci.yaml")
+	case "-":
+		t.Setenv("DIVE_CONFIG", "")
 	}
 
 	// need basic output to logger for testing...

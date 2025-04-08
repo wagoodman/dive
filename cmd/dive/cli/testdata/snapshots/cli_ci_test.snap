@@ -21,3 +21,58 @@ Evaluation:
 FAIL [pass:1 fail:1 skip:1]
 
 ---
+
+[Test_CI_DefaultCIConfig - 1]
+[0001]  INFO dive version: testing
+[0001] DEBUG config:
+[35m  log:
+      quiet: false
+      level: debug
+      file: ""
+  dev:
+      profile: none
+  image: /Users/wagoodman/code/dive/.data/test-docker-image.tar
+  container-engine: docker
+  ignore-errors: false
+  ci: false
+  ci-config: .dive-ci
+  rules:
+      lowest-efficiency: "0.96"
+      highest-wasted-bytes: 19Mb
+      highest-user-wasted-percent: "0.6"
+  json-path: ""
+  keybinding:
+      quit: ctrl+c
+      toggle-view: tab
+      filter-files: ctrl+f, ctrl+slash
+      close-filter-files: esc
+      up: up,k
+      down: down,j
+      left: left,h
+      right: right,l
+      page-up: pgup,u
+      page-down: pgdn,d
+      compare-all: ctrl+a
+      compare-layer: ctrl+l
+      toggle-collapse-dir: space
+      toggle-collapse-all-dir: ctrl+space
+      toggle-added-files: ctrl+a
+      toggle-removed-files: ctrl+r
+      toggle-modified-files: ctrl+m
+      toggle-unmodified-files: ctrl+u
+      toggle-filetree-attributes: ctrl+b
+      toggle-sort-order: ctrl+o
+      toggle-wrap-tree: ctrl+p
+      extract-file: ctrl+e
+  diff:
+      hide: []
+  filetree:
+      collapse-dir: false
+      pane-width: 0.5
+      show-attributes: true
+  layer:
+      show-aggregated-changes: false[0m
+[0001]  INFO fetching image=/Users/wagoodman/code/dive/.data/test-docker-image.tar
+[0001] DEBUG └── resolver: docker-engine
+
+---
