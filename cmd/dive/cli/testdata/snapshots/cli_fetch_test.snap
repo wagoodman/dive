@@ -1,7 +1,7 @@
 
 [Test_FetchImage/fetch_from_docker_engine - 1]
-Fetching image                busybox:1.37.0@sha256:ad9fa4d07136a83e69a54ef00102f579d04eba431932de3b0f098cc5d5948f9f
-Analyzing image               [layers: 1 files: 441 size: 4.3 MB]
+Loading image                 busybox:1.37.0@sha256:ad9fa4d07136a83e69a54ef00102f579d04eba431932de3b0f098cc5d5948f9f
+Analyzing image               [layers:1 files:441 size:4.3 MB]
 Evaluating image              [rules: 3]
 
 Analysis:
@@ -21,18 +21,18 @@ PASS [pass:3]
 ---
 
 [Test_FetchFailure/nonexistent_image - 1]
-Fetching image                docker:wagoodman/nonexistent/image:tag
+Loading image                 docker:wagoodman/nonexistent/image:tag
 
 ---
 
 [Test_FetchFailure/invalid_image_name - 1]
-Fetching image                /wagoodman/invalid:image:format
+Loading image                 /wagoodman/invalid:image:format
 
 ---
 
 [Test_FetchImage/fetch_from_podman_engine - 1]
-Fetching image                busybox:1.37.0@sha256:ad9fa4d07136a83e69a54ef00102f579d04eba431932de3b0f098cc5d5948f9f
-Analyzing image               [layers: 1 files: 441 size: 4.3 MB]
+Loading image                 busybox:1.37.0@sha256:ad9fa4d07136a83e69a54ef00102f579d04eba431932de3b0f098cc5d5948f9f
+Analyzing image               [layers:1 files:441 size:4.3 MB]
 Evaluating image              [rules: 3]
 
 Analysis:

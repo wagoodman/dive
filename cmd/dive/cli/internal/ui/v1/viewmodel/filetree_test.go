@@ -1,12 +1,11 @@
 package viewmodel
 
 import (
-	"bytes"
 	"flag"
-	"github.com/fatih/color"
+	"github.com/google/go-cmp/cmp"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1"
-	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1/format"
 	"go.uber.org/atomic"
 	"os"
 	"os/exec"
@@ -14,8 +13,6 @@ import (
 	"regexp"
 	"strings"
 	"testing"
-
-	"github.com/sergi/go-diff/diffmatchpatch"
 
 	"github.com/wagoodman/dive/dive/filetree"
 	"github.com/wagoodman/dive/dive/image/docker"
@@ -66,42 +63,17 @@ func helperCaptureBytes(t *testing.T, data []byte) {
 	}
 }
 
-func helperCheckDiff(t *testing.T, expected, actual []byte) {
-	t.Helper()
-	if !bytes.Equal(expected, actual) {
-		dmp := diffmatchpatch.New()
-		diffs := dmp.DiffMain(string(expected), string(actual), true)
-		t.Errorf("%s", dmp.DiffPrettyText(diffs))
-		t.Errorf("%s: bytes mismatch", t.Name())
-	}
-}
-
-func assertTestData(t *testing.T, actualBytes []byte) {
-	t.Helper()
-	path := testCaseDataFilePath(t.Name())
-	if !fileExists(path) {
-		if *updateSnapshot {
-			helperCaptureBytes(t, actualBytes)
-		} else {
-			t.Fatalf("missing test data: %s", path)
-		}
-	}
-	expectedBytes := helperLoadBytes(t)
-	helperCheckDiff(t, expectedBytes, actualBytes)
-}
-
 func initializeTestViewModel(t *testing.T) *FileTreeViewModel {
 	t.Helper()
 
 	result := docker.TestAnalysisFromArchive(t, repoPath(t, ".data/test-docker-image.tar"))
 	require.NotNil(t, result, "unable to load test data")
 
-	format.Selected = color.New(color.ReverseVideo, color.Bold).SprintFunc()
-
 	vm, err := NewFileTreeViewModel(v1.Config{
 		Analysis:    *result,
 		Preferences: v1.DefaultPreferences(),
 	}, 0)
+
 	require.NoError(t, err, "unable to create viewmodel")
 	return vm
 }
@@ -118,7 +90,19 @@ func runTestCase(t *testing.T, vm *FileTreeViewModel, width, height int, filterR
 		t.Errorf("failed to render viewmodel: %v", err)
 	}
 
-	assertTestData(t, vm.Buffer.Bytes())
+	actualBytes := vm.Buffer.Bytes()
+	path := testCaseDataFilePath(t.Name())
+	if !fileExists(path) {
+		if *updateSnapshot {
+			helperCaptureBytes(t, actualBytes)
+		} else {
+			t.Fatalf("missing test data: %s", path)
+		}
+	}
+	expectedBytes := helperLoadBytes(t)
+	if d := cmp.Diff(string(expectedBytes), string(actualBytes)); d != "" {
+		t.Errorf("bytes mismatch (-want +got):\n%s", d)
+	}
 }
 
 func checkError(t *testing.T, err error, message string) {
@@ -164,21 +148,34 @@ func TestFileTreeDirCollapse(t *testing.T) {
 	vm.Setup(0, height)
 	vm.ShowAttributes = true
 
+	assertPath(t, vm, "/bin", "before toggle of bin")
+
 	// collapse /bin
 	err := vm.ToggleCollapse(nil)
 	checkError(t, err, "unable to collapse /bin")
+	assertPath(t, vm, "/bin", "after toggle of bin")
 
 	moved := vm.CursorDown() // select /dev
 	require.True(t, moved, "unable to cursor down")
+	assertPath(t, vm, "/dev", "down to dev")
 
 	moved = vm.CursorDown() // select /etc
 	require.True(t, moved, "unable to cursor down")
+	assertPath(t, vm, "/etc", "down to etc")
 
 	// collapse /etc
 	err = vm.ToggleCollapse(nil)
 	checkError(t, err, "unable to collapse /etc")
+	assertPath(t, vm, "/etc", "after toggle of etc")
 
 	runTestCase(t, vm, width, height, nil)
+}
+
+func assertPath(t *testing.T, vm *FileTreeViewModel, expected string, msg string) {
+	t.Helper()
+	n := vm.CurrentNode(nil)
+	require.NotNil(t, n, "unable to get current node")
+	assert.Equal(t, expected, n.Path(), msg)
 }
 
 func TestFileTreeDirCollapseAll(t *testing.T) {

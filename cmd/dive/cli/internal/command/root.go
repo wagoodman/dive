@@ -52,7 +52,7 @@ the amount of wasted space and identifies the offending files from the image.`,
 
 			img, err := adapter.ImageResolver(resolver).Fetch(ctx, opts.Analysis.Image)
 			if err != nil {
-				return fmt.Errorf("cannot fetch image: %w", err)
+				return fmt.Errorf("cannot load image: %w", err)
 			}
 
 			return run(ctx, opts.Application, img, resolver)

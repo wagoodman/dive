@@ -55,8 +55,8 @@ func (i imageActionObserver) Fetch(ctx context.Context, id string) (*image.Image
 
 	mon := bus.StartTask(payload.GenericTask{
 		Title: payload.Title{
-			Default:      "Fetching image",
-			WhileRunning: "Fetching image",
+			Default:      "Loading image",
+			WhileRunning: "Loading image",
 			OnSuccess:    "Fetched image",
 		},
 		HideOnSuccess:      false,

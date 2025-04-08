@@ -50,7 +50,7 @@ func (a analysisActionObserver) Analyze(ctx context.Context, img *image.Image) (
 		HideOnSuccess:      false,
 		HideStageOnSuccess: false,
 		ID:                 img.Request,
-		Context:            fmt.Sprintf("[layers: %d files: %s size: %s]", layers, filesStr, fileSizeStr),
+		Context:            fmt.Sprintf("[layers:%d files:%s size:%s]", layers, filesStr, fileSizeStr),
 	})
 
 	analysis, err := a.Analyzer(ctx, img)

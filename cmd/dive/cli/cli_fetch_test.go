@@ -16,7 +16,7 @@ func Test_FetchImage(t *testing.T) {
 			require.NoError(t, rootCmd.Execute())
 		})
 
-		assert.Contains(t, combined, "Fetching image")
+		assert.Contains(t, combined, "Loading image")
 		assert.Contains(t, combined, "Analyzing image")
 		assert.Contains(t, combined, "Evaluating image")
 
@@ -38,7 +38,7 @@ func Test_FetchImage(t *testing.T) {
 			require.NoError(t, rootCmd.Execute())
 		})
 
-		assert.Contains(t, combined, "Fetching image")
+		assert.Contains(t, combined, "Loading image")
 		assert.Contains(t, combined, "Analyzing image")
 		assert.Contains(t, combined, "Evaluating image")
 
@@ -50,10 +50,10 @@ func Test_FetchFailure(t *testing.T) {
 	t.Run("nonexistent image", func(t *testing.T) {
 		rootCmd := getTestCommand(t, "docker:wagoodman/nonexistent/image:tag")
 		combined := Capture().WithStdout().WithStderr().Run(t, func() {
-			require.ErrorContains(t, rootCmd.Execute(), "cannot fetch image: Error response from daemon: invalid reference format")
+			require.ErrorContains(t, rootCmd.Execute(), "cannot load image: Error response from daemon: invalid reference format")
 		})
 
-		assert.Contains(t, combined, "Fetching image")
+		assert.Contains(t, combined, "Loading image")
 
 		snaps.MatchSnapshot(t, combined)
 	})
@@ -61,10 +61,10 @@ func Test_FetchFailure(t *testing.T) {
 	t.Run("invalid image name", func(t *testing.T) {
 		rootCmd := getTestCommand(t, "docker:///wagoodman/invalid:image:format")
 		combined := Capture().WithStdout().WithStderr().Run(t, func() {
-			require.ErrorContains(t, rootCmd.Execute(), "cannot fetch image: Error response from daemon: invalid reference format")
+			require.ErrorContains(t, rootCmd.Execute(), "cannot load image: Error response from daemon: invalid reference format")
 		})
 
-		assert.Contains(t, combined, "Fetching image")
+		assert.Contains(t, combined, "Loading image")
 
 		snaps.MatchSnapshot(t, combined)
 	})

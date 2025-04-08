@@ -71,7 +71,7 @@ func NewFileTreeViewModel(cfg v1.Config, initialLayer int) (treeViewModel *FileT
 		}
 	}
 
-	return treeViewModel, nil
+	return treeViewModel, treeViewModel.SetTreeByLayer(0, 0, initialLayer, initialLayer)
 }
 
 // Setup initializes the UI concerns within the context of a global [gocui] view object.
