@@ -119,7 +119,7 @@ func NewLowestEfficiencyRule(configValue string) (Rule, error) {
 func (r *LowestEfficiencyRule) Evaluate(analysis *image.Analysis) (RuleStatus, string) {
 	if r.threshold > analysis.Efficiency {
 		return RuleFailed, fmt.Sprintf(
-			"image efficiency is too low (efficiency=%v < threshold=%v)",
+			"image efficiency is too low (efficiency=%2.2f < threshold=%v)",
 			analysis.Efficiency, r.threshold)
 	}
 	return RulePassed, ""
@@ -149,7 +149,7 @@ func NewHighestWastedBytesRule(configValue string) (Rule, error) {
 func (r *HighestWastedBytesRule) Evaluate(analysis *image.Analysis) (RuleStatus, string) {
 	if analysis.WastedBytes > r.threshold {
 		return RuleFailed, fmt.Sprintf(
-			"too many bytes wasted (wasted-bytes=%v > threshold=%v)",
+			"too many bytes wasted (wasted-bytes=%d > threshold=%v)",
 			analysis.WastedBytes, r.threshold)
 	}
 	return RulePassed, ""
@@ -184,7 +184,7 @@ func NewHighestUserWastedPercentRule(configValue string) (Rule, error) {
 func (r *HighestUserWastedPercentRule) Evaluate(analysis *image.Analysis) (RuleStatus, string) {
 	if analysis.WastedUserPercent > r.threshold {
 		return RuleFailed, fmt.Sprintf(
-			"too many bytes wasted, relative to the user bytes added (%%-user-wasted-bytes=%v > threshold=%v)",
+			"too many bytes wasted, relative to the user bytes added (%%-user-wasted-bytes=%2.2f > threshold=%v)",
 			analysis.WastedUserPercent, r.threshold)
 	}
 	return RulePassed, ""

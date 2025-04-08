@@ -6,6 +6,7 @@ import (
 	"github.com/anchore/clio"
 	"github.com/anchore/go-logger/adapter/discard"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/muesli/termenv"
 	v1 "github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1"
 	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1/app"
 	"github.com/wagoodman/dive/internal/bus/event"
@@ -14,6 +15,7 @@ import (
 	"github.com/wagoodman/go-partybus"
 	"io"
 	"os"
+	"strings"
 )
 
 var _ clio.UI = (*V1UI)(nil)
@@ -58,8 +60,34 @@ func (n *V1UI) Setup(subscription partybus.Unsubscribable) error {
 		log.Set(discard.New())
 	}
 
+	// remove CI var from consideration when determining if we should use the UI
+	lipgloss.SetDefaultRenderer(lipgloss.NewRenderer(n.out, termenv.WithEnvironment(environWithoutCI{})))
+
 	n.subscription = subscription
 	return nil
+}
+
+var _ termenv.Environ = (*environWithoutCI)(nil)
+
+type environWithoutCI struct {
+}
+
+func (e environWithoutCI) Environ() []string {
+	var out []string
+	for _, s := range os.Environ() {
+		if strings.HasPrefix(s, "CI=") {
+			continue
+		}
+		out = append(out, s)
+	}
+	return out
+}
+
+func (e environWithoutCI) Getenv(s string) string {
+	if s == "CI" {
+		return ""
+	}
+	return os.Getenv(s)
 }
 
 func (n *V1UI) Handle(e partybus.Event) error {

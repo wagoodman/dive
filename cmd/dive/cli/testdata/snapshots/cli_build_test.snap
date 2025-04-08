@@ -128,7 +128,7 @@ Inefficient Files:
   10     0 B           /etc
 
 Evaluation:
-  FAIL  highestUserWastedPercent (too many bytes wasted, relative to the user bytes added (%-user-wasted-bytes=0.7197802197802198 > threshold=0.1))
+  FAIL  highestUserWastedPercent (too many bytes wasted, relative to the user bytes added (%-user-wasted-bytes=0.72 > threshold=0.1))
   SKIP  highestWastedBytes (disabled)
   PASS  lowestEfficiency (0.9)
 
