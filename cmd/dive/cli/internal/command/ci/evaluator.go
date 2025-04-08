@@ -193,12 +193,12 @@ func (e Evaluator) renderInefficientFilesSection(analysis *image.Analysis) strin
 	}
 
 	header := e.format.TableHeader.Render(
-		fmt.Sprintf("%-5s  %-12s  %-s", "Count", "Wasted Space", "File Path"),
+		fmt.Sprintf("  %-5s  %-12s  %-s", "Count", "Wasted Space", "File Path"),
 	)
 
 	rows := []string{header}
 	for _, file := range e.InefficientFiles {
-		row := fmt.Sprintf("%-5s  %-12s  %-s",
+		row := fmt.Sprintf("  %-5s  %-12s  %-s",
 			strconv.Itoa(file.References),
 			humanize.Bytes(file.SizeBytes),
 			file.Path,
