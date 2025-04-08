@@ -3,14 +3,19 @@ package ci
 import (
 	"context"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/atomic"
+	"os/exec"
+	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/wagoodman/dive/dive/image/docker"
 )
 
+var repoRootCache atomic.String
+
 func Test_Evaluator(t *testing.T) {
-	// TODO: fix relative path to be relative to repo root instead (use a helper)
-	result := docker.TestAnalysisFromArchive(t, "../../../../../../.data/test-docker-image.tar")
+	result := docker.TestAnalysisFromArchive(t, repoPath(t, ".data/test-docker-image.tar"))
 
 	validTests := []struct {
 		name           string
@@ -168,4 +173,26 @@ func Test_Evaluator_Misconfigurations(t *testing.T) {
 			}
 		})
 	}
+}
+
+func repoPath(t testing.TB, path string) string {
+	t.Helper()
+	root := repoRoot(t)
+	return filepath.Join(root, path)
+}
+
+func repoRoot(t testing.TB) string {
+	val := repoRootCache.Load()
+	if val != "" {
+		return val
+	}
+	t.Helper()
+	// use git to find the root of the repo
+	out, err := exec.Command("git", "rev-parse", "--show-toplevel").Output()
+	if err != nil {
+		t.Fatalf("failed to get repo root: %v", err)
+	}
+	val = strings.TrimSpace(string(out))
+	repoRootCache.Store(val)
+	return val
 }

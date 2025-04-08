@@ -15,6 +15,7 @@ env:
 
 builds:
   - binary: dive
+    dir: ./cmd/dive
     env:
       - CGO_ENABLED=0
     goos:

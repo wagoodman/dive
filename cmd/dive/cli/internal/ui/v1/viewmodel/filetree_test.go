@@ -2,13 +2,17 @@ package viewmodel
 
 import (
 	"bytes"
+	"flag"
 	"github.com/fatih/color"
 	"github.com/stretchr/testify/require"
 	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1"
 	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1/format"
+	"go.uber.org/atomic"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/sergi/go-diff/diffmatchpatch"
@@ -17,7 +21,13 @@ import (
 	"github.com/wagoodman/dive/dive/image/docker"
 )
 
-const allowTestDataCapture = false
+var repoRootCache atomic.String
+
+var updateSnapshot = flag.Bool("update", false, "update any test snapshots")
+
+func TestUpdateSnapshotDisabled(t *testing.T) {
+	require.False(t, *updateSnapshot, "update snapshot flag should be disabled")
+}
 
 func fileExists(filename string) bool {
 	info, err := os.Stat(filename)
@@ -44,7 +54,7 @@ func helperLoadBytes(t *testing.T) []byte {
 func helperCaptureBytes(t *testing.T, data []byte) {
 	// TODO: switch to https://github.com/gkampitakis/go-snaps
 	t.Helper()
-	if !allowTestDataCapture {
+	if *updateSnapshot {
 		t.Fatalf("cannot capture data in test mode: %s", t.Name())
 	}
 
@@ -70,7 +80,7 @@ func assertTestData(t *testing.T, actualBytes []byte) {
 	t.Helper()
 	path := testCaseDataFilePath(t.Name())
 	if !fileExists(path) {
-		if allowTestDataCapture {
+		if *updateSnapshot {
 			helperCaptureBytes(t, actualBytes)
 		} else {
 			t.Fatalf("missing test data: %s", path)
@@ -83,8 +93,7 @@ func assertTestData(t *testing.T, actualBytes []byte) {
 func initializeTestViewModel(t *testing.T) *FileTreeViewModel {
 	t.Helper()
 
-	// TODO: fix relative path to be relative to repo root instead (use a helper)
-	result := docker.TestAnalysisFromArchive(t, "../../../../../../../.data/test-docker-image.tar")
+	result := docker.TestAnalysisFromArchive(t, repoPath(t, ".data/test-docker-image.tar"))
 	require.NotNil(t, result, "unable to load test data")
 
 	format.Selected = color.New(color.ReverseVideo, color.Bold).SprintFunc()
@@ -391,4 +400,26 @@ func TestFileTreeHideTypeWithFilter(t *testing.T) {
 	}
 
 	runTestCase(t, vm, width, height, regex)
+}
+
+func repoPath(t testing.TB, path string) string {
+	t.Helper()
+	root := repoRoot(t)
+	return filepath.Join(root, path)
+}
+
+func repoRoot(t testing.TB) string {
+	val := repoRootCache.Load()
+	if val != "" {
+		return val
+	}
+	t.Helper()
+	// use git to find the root of the repo
+	out, err := exec.Command("git", "rev-parse", "--show-toplevel").Output()
+	if err != nil {
+		t.Fatalf("failed to get repo root: %v", err)
+	}
+	val = strings.TrimSpace(string(out))
+	repoRootCache.Store(val)
+	return val
 }

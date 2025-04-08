@@ -46,6 +46,10 @@ func TestMain(m *testing.M) {
 	os.Exit(v)
 }
 
+func TestUpdateSnapshotDisabled(t *testing.T) {
+	require.False(t, *updateSnapshot, "update snapshot flag should be disabled")
+}
+
 func repoPath(t testing.TB, path string) string {
 	t.Helper()
 	root := repoRoot(t)
