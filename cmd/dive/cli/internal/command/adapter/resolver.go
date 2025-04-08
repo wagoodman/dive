@@ -35,6 +35,8 @@ func (i imageActionObserver) Build(ctx context.Context, options []string) (*imag
 		Context:            "... " + strings.Join(options, " "),
 	})
 
+	ctx = payload.SetGenericProgressToContext(ctx, mon)
+
 	img, err := i.Resolver.Build(ctx, options)
 	if err != nil {
 		mon.SetError(err)
@@ -62,6 +64,8 @@ func (i imageActionObserver) Fetch(ctx context.Context, id string) (*image.Image
 		ID:                 id,
 		Context:            id,
 	})
+
+	ctx = payload.SetGenericProgressToContext(ctx, mon)
 
 	go func() {
 		// in 5 seconds if the context is not cancelled, log the message

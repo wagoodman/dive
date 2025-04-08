@@ -1,0 +1,4432 @@
+
+[Test_JsonOutput/json_output - 1]
+{
+ "image": {
+  "efficiencyScore": 1,
+  "fileReference": [],
+  "inefficientBytes": 0,
+  "sizeBytes": 4277894
+ },
+ "layer": [
+  {
+   "command": "BusyBox 1.37.0 (glibc), Debian 12",
+   "digestId": "sha256:068f50152bbc6e10c9d223150c9fbd30d11bcfd7789c432152aa0a99703bd03a",
+   "fileList": [
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "",
+     "path": "bin/[",
+     "size": 1029688,
+     "typeFlag": 48,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/[[",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/acpid",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/add-shell",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/addgroup",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/adduser",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/adjtimex",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/ar",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/arch",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/arp",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/arping",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/ascii",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/ash",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/awk",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/base32",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/base64",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/basename",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/bc",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/beep",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/blkdiscard",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/blkid",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/blockdev",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/bootchartd",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/brctl",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/bunzip2",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/busybox",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/bzcat",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/bzip2",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/cal",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/cat",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/chat",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/chattr",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/chgrp",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/chmod",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/chown",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/chpasswd",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/chpst",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/chroot",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/chrt",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/chvt",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/cksum",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/clear",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/cmp",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/comm",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/conspy",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/cp",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/cpio",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/crc32",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/crond",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/crontab",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/cryptpw",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/cttyhack",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/cut",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/date",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/dc",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/dd",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/deallocvt",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/delgroup",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/deluser",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/depmod",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/devmem",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/df",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/dhcprelay",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/diff",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/dirname",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/dmesg",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/dnsd",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/dnsdomainname",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/dos2unix",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/dpkg",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/dpkg-deb",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/du",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/dumpkmap",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/dumpleases",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/echo",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/ed",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/egrep",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/eject",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/env",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/envdir",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/envuidgid",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/ether-wake",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/expand",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/expr",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/factor",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/fakeidentd",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/fallocate",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/false",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/fatattr",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/fbset",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/fbsplash",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/fdflush",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/fdformat",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/fdisk",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/fgconsole",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/fgrep",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/find",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/findfs",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/flock",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/fold",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/free",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/freeramdisk",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/fsck",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/fsck.minix",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/fsfreeze",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/fstrim",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/fsync",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/ftpd",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/ftpget",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/ftpput",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/fuser",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "",
+     "path": "bin/getconf",
+     "size": 27136,
+     "typeFlag": 48,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/getfattr",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/getopt",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/getty",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/grep",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/groups",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/gunzip",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/gzip",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/halt",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/hd",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/hdparm",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/head",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/hexdump",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/hexedit",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/hostid",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/hostname",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/httpd",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/hush",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/hwclock",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/i2cdetect",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/i2cdump",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/i2cget",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/i2cset",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/i2ctransfer",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/id",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/ifconfig",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/ifdown",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/ifenslave",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/ifplugd",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/ifup",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/inetd",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/init",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/insmod",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/install",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/ionice",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/iostat",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/ip",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/ipaddr",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/ipcalc",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/ipcrm",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/ipcs",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/iplink",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/ipneigh",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/iproute",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/iprule",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/iptunnel",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/kbd_mode",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/kill",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/killall",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/killall5",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/klogd",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/last",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/less",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/link",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/linux32",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/linux64",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/linuxrc",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/ln",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/loadfont",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/loadkmap",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/logger",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/login",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/logname",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/logread",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/losetup",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/lpd",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/lpq",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/lpr",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/ls",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/lsattr",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/lsmod",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/lsof",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/lspci",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/lsscsi",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/lsusb",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/lzcat",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/lzma",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/lzop",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/makedevs",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/makemime",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/man",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/md5sum",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/mdev",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/mesg",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/microcom",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/mim",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/mkdir",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/mkdosfs",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/mke2fs",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/mkfifo",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/mkfs.ext2",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/mkfs.minix",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/mkfs.vfat",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/mknod",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/mkpasswd",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/mkswap",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/mktemp",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/modinfo",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/modprobe",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/more",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/mount",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/mountpoint",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/mpstat",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/mt",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/mv",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/nameif",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/nanddump",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/nandwrite",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/nbd-client",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/nc",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/netstat",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/nice",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/nl",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/nmeter",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/nohup",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/nologin",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/nproc",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/nsenter",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/nslookup",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/ntpd",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/od",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/openvt",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/partprobe",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/passwd",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/paste",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/patch",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/pgrep",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/pidof",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/ping",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/ping6",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/pipe_progress",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/pivot_root",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/pkill",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/pmap",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/popmaildir",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/poweroff",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/powertop",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/printenv",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/printf",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/ps",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/pscan",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/pstree",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/pwd",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/pwdx",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/raidautorun",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/rdate",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/rdev",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/readahead",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/readlink",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/readprofile",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/realpath",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/reboot",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/reformime",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/remove-shell",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/renice",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/reset",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/resize",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/resume",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/rev",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/rm",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/rmdir",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/rmmod",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/route",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/rpm",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/rpm2cpio",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/rtcwake",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/run-init",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/run-parts",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/runlevel",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/runsv",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/runsvdir",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/rx",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/script",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/scriptreplay",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/sed",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/seedrng",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/sendmail",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/seq",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/setarch",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/setconsole",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/setfattr",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/setfont",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/setkeycodes",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/setlogcons",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/setpriv",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/setserial",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/setsid",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/setuidgid",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/sh",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/sha1sum",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/sha256sum",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/sha3sum",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/sha512sum",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/showkey",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/shred",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/shuf",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/slattach",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/sleep",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/smemcap",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/softlimit",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/sort",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/split",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/ssl_client",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/start-stop-daemon",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/stat",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/strings",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/stty",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/su",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/sulogin",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/sum",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/sv",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/svc",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/svlogd",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/svok",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/swapoff",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/swapon",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/switch_root",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/sync",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/sysctl",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/syslogd",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/tac",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/tail",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/tar",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/taskset",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/tc",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/tcpsvd",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/tee",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/telnet",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/telnetd",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/test",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/tftp",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/tftpd",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/time",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/timeout",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/top",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/touch",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/tr",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/traceroute",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/traceroute6",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/tree",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/true",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/truncate",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/ts",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/tsort",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/tty",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/ttysize",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/tunctl",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/ubiattach",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/ubidetach",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/ubimkvol",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/ubirename",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/ubirmvol",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/ubirsvol",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/ubiupdatevol",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/udhcpc",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/udhcpc6",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/udhcpd",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/udpsvd",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/uevent",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/umount",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/uname",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/unexpand",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/uniq",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/unix2dos",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/unlink",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/unlzma",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/unshare",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/unxz",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/unzip",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/uptime",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/users",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/usleep",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/uudecode",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/uuencode",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/vconfig",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/vi",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/vlock",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/volname",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/w",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/wall",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/watch",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/watchdog",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/wc",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/wget",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/which",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/who",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/whoami",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/whois",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/xargs",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/xxd",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/xz",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/xzcat",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/yes",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/zcat",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "bin/[",
+     "path": "bin/zcip",
+     "size": 0,
+     "typeFlag": 49,
+     "uid": 0
+    },
+    {
+     "fileMode": 2147484141,
+     "gid": 0,
+     "isDir": true,
+     "linkName": "",
+     "path": "bin",
+     "size": 0,
+     "typeFlag": 53,
+     "uid": 0
+    },
+    {
+     "fileMode": 2147484141,
+     "gid": 0,
+     "isDir": true,
+     "linkName": "",
+     "path": "dev",
+     "size": 0,
+     "typeFlag": 53,
+     "uid": 0
+    },
+    {
+     "fileMode": 420,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "",
+     "path": "etc/group",
+     "size": 306,
+     "typeFlag": 48,
+     "uid": 0
+    },
+    {
+     "fileMode": 420,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "",
+     "path": "etc/localtime",
+     "size": 114,
+     "typeFlag": 48,
+     "uid": 0
+    },
+    {
+     "fileMode": 2147484141,
+     "gid": 0,
+     "isDir": true,
+     "linkName": "",
+     "path": "etc/network/if-down.d",
+     "size": 0,
+     "typeFlag": 53,
+     "uid": 0
+    },
+    {
+     "fileMode": 2147484141,
+     "gid": 0,
+     "isDir": true,
+     "linkName": "",
+     "path": "etc/network/if-post-down.d",
+     "size": 0,
+     "typeFlag": 53,
+     "uid": 0
+    },
+    {
+     "fileMode": 2147484141,
+     "gid": 0,
+     "isDir": true,
+     "linkName": "",
+     "path": "etc/network/if-pre-up.d",
+     "size": 0,
+     "typeFlag": 53,
+     "uid": 0
+    },
+    {
+     "fileMode": 2147484141,
+     "gid": 0,
+     "isDir": true,
+     "linkName": "",
+     "path": "etc/network/if-up.d",
+     "size": 0,
+     "typeFlag": 53,
+     "uid": 0
+    },
+    {
+     "fileMode": 2147484141,
+     "gid": 0,
+     "isDir": true,
+     "linkName": "",
+     "path": "etc/network",
+     "size": 0,
+     "typeFlag": 53,
+     "uid": 0
+    },
+    {
+     "fileMode": 420,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "",
+     "path": "etc/nsswitch.conf",
+     "size": 494,
+     "typeFlag": 48,
+     "uid": 0
+    },
+    {
+     "fileMode": 420,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "",
+     "path": "etc/passwd",
+     "size": 340,
+     "typeFlag": 48,
+     "uid": 0
+    },
+    {
+     "fileMode": 384,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "",
+     "path": "etc/shadow",
+     "size": 136,
+     "typeFlag": 48,
+     "uid": 0
+    },
+    {
+     "fileMode": 2147484141,
+     "gid": 0,
+     "isDir": true,
+     "linkName": "",
+     "path": "etc",
+     "size": 0,
+     "typeFlag": 53,
+     "uid": 0
+    },
+    {
+     "fileMode": 2147484141,
+     "gid": 65534,
+     "isDir": true,
+     "linkName": "",
+     "path": "home",
+     "size": 0,
+     "typeFlag": 53,
+     "uid": 65534
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "",
+     "path": "lib/ld-linux-x86-64.so.2",
+     "size": 215000,
+     "typeFlag": 48,
+     "uid": 0
+    },
+    {
+     "fileMode": 493,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "",
+     "path": "lib/libc.so.6",
+     "size": 1922136,
+     "typeFlag": 48,
+     "uid": 0
+    },
+    {
+     "fileMode": 420,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "",
+     "path": "lib/libm.so.6",
+     "size": 911904,
+     "typeFlag": 48,
+     "uid": 0
+    },
+    {
+     "fileMode": 420,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "",
+     "path": "lib/libnss_compat.so.2",
+     "size": 39896,
+     "typeFlag": 48,
+     "uid": 0
+    },
+    {
+     "fileMode": 420,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "",
+     "path": "lib/libnss_dns.so.2",
+     "size": 14400,
+     "typeFlag": 48,
+     "uid": 0
+    },
+    {
+     "fileMode": 420,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "",
+     "path": "lib/libnss_files.so.2",
+     "size": 14400,
+     "typeFlag": 48,
+     "uid": 0
+    },
+    {
+     "fileMode": 420,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "",
+     "path": "lib/libnss_hesiod.so.2",
+     "size": 27136,
+     "typeFlag": 48,
+     "uid": 0
+    },
+    {
+     "fileMode": 420,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "",
+     "path": "lib/libpthread.so.0",
+     "size": 14480,
+     "typeFlag": 48,
+     "uid": 0
+    },
+    {
+     "fileMode": 420,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "",
+     "path": "lib/libresolv.so.2",
+     "size": 60328,
+     "typeFlag": 48,
+     "uid": 0
+    },
+    {
+     "fileMode": 2147484141,
+     "gid": 0,
+     "isDir": true,
+     "linkName": "",
+     "path": "lib",
+     "size": 0,
+     "typeFlag": 53,
+     "uid": 0
+    },
+    {
+     "fileMode": 134218239,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "lib",
+     "path": "lib64",
+     "size": 0,
+     "typeFlag": 50,
+     "uid": 0
+    },
+    {
+     "fileMode": 2147484096,
+     "gid": 0,
+     "isDir": true,
+     "linkName": "",
+     "path": "root",
+     "size": 0,
+     "typeFlag": 53,
+     "uid": 0
+    },
+    {
+     "fileMode": 2148532735,
+     "gid": 0,
+     "isDir": true,
+     "linkName": "",
+     "path": "tmp",
+     "size": 0,
+     "typeFlag": 53,
+     "uid": 0
+    },
+    {
+     "fileMode": 134218239,
+     "gid": 0,
+     "isDir": false,
+     "linkName": "../../bin/env",
+     "path": "usr/bin/env",
+     "size": 0,
+     "typeFlag": 50,
+     "uid": 0
+    },
+    {
+     "fileMode": 2147484141,
+     "gid": 0,
+     "isDir": true,
+     "linkName": "",
+     "path": "usr/bin",
+     "size": 0,
+     "typeFlag": 53,
+     "uid": 0
+    },
+    {
+     "fileMode": 2147484141,
+     "gid": 1,
+     "isDir": true,
+     "linkName": "",
+     "path": "usr/sbin",
+     "size": 0,
+     "typeFlag": 53,
+     "uid": 1
+    },
+    {
+     "fileMode": 2147484141,
+     "gid": 0,
+     "isDir": true,
+     "linkName": "",
+     "path": "usr",
+     "size": 0,
+     "typeFlag": 53,
+     "uid": 0
+    },
+    {
+     "fileMode": 2147484141,
+     "gid": 8,
+     "isDir": true,
+     "linkName": "",
+     "path": "var/spool/mail",
+     "size": 0,
+     "typeFlag": 53,
+     "uid": 8
+    },
+    {
+     "fileMode": 2147484141,
+     "gid": 0,
+     "isDir": true,
+     "linkName": "",
+     "path": "var/spool",
+     "size": 0,
+     "typeFlag": 53,
+     "uid": 0
+    },
+    {
+     "fileMode": 2147484141,
+     "gid": 0,
+     "isDir": true,
+     "linkName": "",
+     "path": "var/www",
+     "size": 0,
+     "typeFlag": 53,
+     "uid": 0
+    },
+    {
+     "fileMode": 2147484141,
+     "gid": 0,
+     "isDir": true,
+     "linkName": "",
+     "path": "var",
+     "size": 0,
+     "typeFlag": 53,
+     "uid": 0
+    }
+   ],
+   "id": "blobs",
+   "index": 0,
+   "sizeBytes": 4277894
+  }
+ ]
+}
+---

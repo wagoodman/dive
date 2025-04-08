@@ -9,7 +9,6 @@ import (
 	"github.com/google/shlex"
 	"github.com/muesli/termenv"
 	"github.com/spf13/cobra"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/atomic"
 	"io"
@@ -21,7 +20,7 @@ import (
 )
 
 var (
-	updateSnapshot = flag.Bool("update", false, "update snapshots flag")
+	updateSnapshot = flag.Bool("update", false, "update any test snapshots")
 	snaps          *snapsPkg.Config
 	repoRootCache  atomic.String
 )
@@ -29,6 +28,8 @@ var (
 func TestMain(m *testing.M) {
 	// flags are not parsed until after test.Main is called...
 	flag.Parse()
+
+	os.Unsetenv("DIVE_CONFIG")
 
 	// disable colors
 	lipgloss.SetColorProfile(termenv.Ascii)
@@ -43,95 +44,6 @@ func TestMain(m *testing.M) {
 	snapsPkg.Clean(m)
 
 	os.Exit(v)
-}
-
-func Test_Config(t *testing.T) {
-	t.Setenv("DIVE_CONFIG", "./testdata/image-multi-layer-dockerfile/dive-pass.yaml")
-
-	rootCmd := getTestCommand(t, "config --load")
-	all := Capture().All().Run(t, func() {
-		require.NoError(t, rootCmd.Execute())
-	})
-
-	snaps.MatchSnapshot(t, all)
-}
-
-func Test_LegacyRules(t *testing.T) {
-	t.Setenv("DIVE_CONFIG", "./testdata/config/dive-ci-legacy.yaml")
-
-	rootCmd := getTestCommand(t, "config --load")
-	all := Capture().All().Run(t, func() {
-		require.NoError(t, rootCmd.Execute())
-	})
-
-	// this proves that we can load the legacy rules and map them to the standard rules
-	assert.Contains(t, all, "lowest-efficiency: '0.95'", "missing lowest-efficiency legacy rule")
-	assert.Contains(t, all, "highest-wasted-bytes: '20MB'", "missing highest-wasted-bytes legacy rule")
-	assert.Contains(t, all, "highest-user-wasted-percent: '0.2'", "missing highest-user-wasted-percent legacy rule")
-}
-
-func Test_Build_Dockerfile(t *testing.T) {
-	t.Setenv("DIVE_CONFIG", "./testdata/image-multi-layer-dockerfile/dive-pass.yaml")
-
-	t.Run("implicit dockerfile", func(t *testing.T) {
-		rootCmd := getTestCommand(t, "build testdata/image-multi-layer-dockerfile")
-		stdout := Capture().WithStdout().WithSuppress().Run(t, func() {
-			require.NoError(t, rootCmd.Execute())
-		})
-		snaps.MatchSnapshot(t, stdout)
-	})
-
-	t.Run("explicit file flag", func(t *testing.T) {
-		rootCmd := getTestCommand(t, "build testdata/image-multi-layer-dockerfile -f testdata/image-multi-layer-dockerfile/Dockerfile")
-		stdout := Capture().WithStdout().WithSuppress().Run(t, func() {
-			require.NoError(t, rootCmd.Execute())
-		})
-		snaps.MatchSnapshot(t, stdout)
-	})
-}
-
-func Test_Build_Containerfile(t *testing.T) {
-	t.Setenv("DIVE_CONFIG", "./testdata/image-multi-layer-containerfile/dive-pass.yaml")
-
-	t.Run("implicit containerfile", func(t *testing.T) {
-		rootCmd := getTestCommand(t, "build testdata/image-multi-layer-containerfile")
-		stdout := Capture().WithStdout().WithSuppress().Run(t, func() {
-			require.NoError(t, rootCmd.Execute())
-		})
-		snaps.MatchSnapshot(t, stdout)
-	})
-
-	t.Run("explicit file flag", func(t *testing.T) {
-		rootCmd := getTestCommand(t, "build testdata/image-multi-layer-containerfile -f testdata/image-multi-layer-containerfile/Containerfile")
-		stdout := Capture().WithStdout().WithSuppress().Run(t, func() {
-			require.NoError(t, rootCmd.Execute())
-		})
-		snaps.MatchSnapshot(t, stdout)
-	})
-}
-
-func Test_Build_CI_gate_fail(t *testing.T) {
-	t.Setenv("DIVE_CONFIG", "./testdata/image-multi-layer-dockerfile/dive-fail.yaml")
-
-	rootCmd := getTestCommand(t, "build testdata/image-multi-layer-dockerfile")
-	stdout := Capture().WithStdout().WithSuppress().Run(t, func() {
-		// failing gate should result in a non-zero exit code
-		require.Error(t, rootCmd.Execute())
-	})
-	snaps.MatchSnapshot(t, stdout)
-
-}
-
-func Test_root_CI_gate_fail(t *testing.T) {
-	t.Setenv("DIVE_CONFIG", "./testdata/image-multi-layer-dockerfile/dive-fail.yaml")
-
-	rootCmd := getTestCommand(t, "build testdata/image-multi-layer-dockerfile")
-	stdout := Capture().WithStdout().WithSuppress().Run(t, func() {
-		// failing gate should result in a non-zero exit code
-		require.Error(t, rootCmd.Execute())
-	})
-	snaps.MatchSnapshot(t, stdout)
-
 }
 
 func repoPath(t testing.TB, path string) string {
@@ -157,6 +69,16 @@ func repoRoot(t testing.TB) string {
 }
 
 func getTestCommand(t testing.TB, cmd string) *cobra.Command {
+	if os.Getenv("DIVE_CONFIG") == "" {
+		t.Setenv("DIVE_CONFIG", "./testdata/dive-enable-ci.yaml")
+	}
+
+	// need basic output to logger for testing...
+	//l, err := logrus.New(logrus.DefaultConfig())
+	//require.NoError(t, err)
+	//log.Set(l)
+
+	// get the root command
 	c := Command(clio.Identification{
 		Name:    "dive",
 		Version: "testing",

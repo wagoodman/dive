@@ -37,7 +37,7 @@ func Build(app clio.Application) *cobra.Command {
 
 			img, err := adapter.ImageResolver(resolver).Build(ctx, args)
 			if err != nil {
-				return fmt.Errorf("cannot fetch image: %w", err)
+				return fmt.Errorf("cannot build image: %w", err)
 			}
 
 			return run(cmd.Context(), opts.Application, img, resolver)

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/anchore/clio"
+	"github.com/anchore/go-logger/adapter/discard"
 	"github.com/charmbracelet/lipgloss"
 	v1 "github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1"
 	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1/app"
@@ -24,6 +25,7 @@ type V1UI struct {
 
 	subscription partybus.Unsubscribable
 	quiet        bool
+	verbosity    int
 	format       format
 }
 
@@ -34,12 +36,13 @@ type format struct {
 	Notification lipgloss.Style
 }
 
-func NewV1UI(cfg v1.Preferences, out io.Writer, quiet bool) *V1UI {
+func NewV1UI(cfg v1.Preferences, out io.Writer, quiet bool, verbosity int) *V1UI {
 	return &V1UI{
-		cfg:   cfg,
-		out:   out,
-		err:   os.Stderr,
-		quiet: quiet,
+		cfg:       cfg,
+		out:       out,
+		err:       os.Stderr,
+		quiet:     quiet,
+		verbosity: verbosity,
 		format: format{
 			Title:        lipgloss.NewStyle().Bold(true).Width(30),
 			Aux:          lipgloss.NewStyle().Faint(true),
@@ -49,6 +52,12 @@ func NewV1UI(cfg v1.Preferences, out io.Writer, quiet bool) *V1UI {
 }
 
 func (n *V1UI) Setup(subscription partybus.Unsubscribable) error {
+	if n.verbosity == 0 || n.quiet {
+		// we still use the UI, but we want to suppress responding to events that would print out what is already
+		// being logged.
+		log.Set(discard.New())
+	}
+
 	n.subscription = subscription
 	return nil
 }
@@ -104,6 +113,10 @@ func (n *V1UI) Handle(e partybus.Event) error {
 		if err != nil {
 			log.WithFields("error", err, "event", fmt.Sprintf("%#v", e)).Warn("failed to parse event")
 		}
+
+		// ensure the logger will not interfere with the UI
+		log.Set(discard.New())
+
 		return app.Run(
 			// TODO: this is not plumbed through from the command object...
 			context.Background(),
@@ -122,6 +135,11 @@ func (n *V1UI) writeToStdout(s string) {
 }
 
 func (n *V1UI) writeToStderr(s string) {
+	if n.quiet || n.verbosity > 0 {
+		// we've been told to not report anything or that we're in verbose mode thus the logger should report all info.
+		// This only applies to status like info on stderr, not to primary reports on stdout.
+		return
+	}
 	fmt.Fprintln(n.err, s)
 }
 

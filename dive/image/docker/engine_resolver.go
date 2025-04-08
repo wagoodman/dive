@@ -3,6 +3,8 @@ package docker
 import (
 	"fmt"
 	"github.com/spf13/afero"
+	"github.com/wagoodman/dive/internal/bus/event/payload"
+	"github.com/wagoodman/dive/internal/log"
 	"io"
 	"net/http"
 	"os"
@@ -30,7 +32,7 @@ func (r *engineResolver) Name() string {
 }
 
 func (r *engineResolver) Fetch(ctx context.Context, id string) (*image.Image, error) {
-	reader, err := r.fetchArchive(id)
+	reader, err := r.fetchArchive(ctx, id)
 	if err != nil {
 		return nil, err
 	}
@@ -52,7 +54,7 @@ func (r *engineResolver) Build(ctx context.Context, args []string) (*image.Image
 }
 
 func (r *engineResolver) Extract(ctx context.Context, id string, l string, p string) error {
-	reader, err := r.fetchArchive(id)
+	reader, err := r.fetchArchive(ctx, id)
 	if err != nil {
 		return err
 	}
@@ -64,16 +66,13 @@ func (r *engineResolver) Extract(ctx context.Context, id string, l string, p str
 	return fmt.Errorf("unable to extract from image '%s': %+v", id, err)
 }
 
-func (r *engineResolver) fetchArchive(id string) (io.ReadCloser, error) {
+func (r *engineResolver) fetchArchive(ctx context.Context, id string) (io.ReadCloser, error) {
 	var err error
 	var dockerClient *client.Client
 
-	// pull the engineResolver if it does not exist
-	ctx := context.Background()
-
 	host, err := determineDockerHost()
 	if err != nil {
-		fmt.Printf("> could not determine docker host: %v\n", err)
+		return nil, fmt.Errorf("could not determine docker host: %v", err)
 	}
 	clientOpts := []client.Opt{client.FromEnv}
 	clientOpts = append(clientOpts, client.WithHost(host))
@@ -82,7 +81,7 @@ func (r *engineResolver) fetchArchive(id string) (io.ReadCloser, error) {
 	case "ssh":
 		helper, err := connhelper.GetConnectionHelper(host)
 		if err != nil {
-			fmt.Println("docker host", err)
+			return nil, fmt.Errorf("failed to get docker connection helper: %w", err)
 		}
 		clientOpts = append(clientOpts, func(c *client.Client) error {
 			httpClient := &http.Client{
@@ -112,7 +111,13 @@ func (r *engineResolver) fetchArchive(id string) (io.ReadCloser, error) {
 	if err != nil {
 		// check if the error is due to the image not existing locally
 		if client.IsErrNotFound(err) {
-			fmt.Println("The image is not available locally. Trying to pull '" + id + "'...")
+			mon := payload.GetGenericProgressFromContext(ctx)
+			if mon != nil {
+				mon.AtomicStage.Set("attempting to pull")
+				log.Debugf("the image is not available locally, pulling %q", id)
+			} else {
+				log.Infof("the image is not available locally, pulling %q", id)
+			}
 			err = runDockerCmd("pull", id)
 			if err != nil {
 				return nil, err

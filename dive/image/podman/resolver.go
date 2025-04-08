@@ -1,5 +1,4 @@
 //go:build linux || darwin
-// +build linux darwin
 
 package podman
 
@@ -39,7 +38,7 @@ func (r *resolver) Fetch(ctx context.Context, id string) (*image.Image, error) {
 		return img, err
 	}
 
-	return nil, fmt.Errorf("unable to resolve image '%s': %+v", id, err)
+	return nil, fmt.Errorf("unable to resolve image %q: %+v", id, err)
 }
 
 func (r *resolver) Extract(ctx context.Context, id string, l string, p string) error {
@@ -54,7 +53,7 @@ func (r *resolver) Extract(ctx context.Context, id string, l string, p string) e
 		return nil
 	}
 
-	return fmt.Errorf("unable to extract from image '%s': %+v", id, err)
+	return fmt.Errorf("unable to extract from image %q: %+v", id, err)
 }
 
 func (r *resolver) resolveFromDockerArchive(id string) (*image.Image, error) {

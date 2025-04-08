@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/anchore/clio"
-	"github.com/anchore/go-logger/adapter/discard"
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 	"github.com/wagoodman/dive/cmd/dive/cli/internal/command/adapter"
@@ -14,7 +13,6 @@ import (
 	"github.com/wagoodman/dive/dive"
 	"github.com/wagoodman/dive/dive/image"
 	"github.com/wagoodman/dive/internal/bus"
-	"github.com/wagoodman/dive/internal/log"
 	"os"
 )
 
@@ -63,15 +61,13 @@ the amount of wasted space and identifies the offending files from the image.`,
 }
 
 func setUI(app clio.Application, opts options.Application) error {
-	log.Set(discard.New())
-
 	type Stater interface {
 		State() *clio.State
 	}
 
 	state := app.(Stater).State()
 
-	ux := ui.NewV1UI(opts.V1Preferences(), os.Stdout, state.Config.Log.Quiet)
+	ux := ui.NewV1UI(opts.V1Preferences(), os.Stdout, state.Config.Log.Quiet, state.Config.Log.Verbosity)
 	return state.UI.Replace(ux)
 }
 
