@@ -202,7 +202,7 @@ tasks:
       - |
         docker run \
           --rm \
-          -t \
+          -ti \
           -v /var/run/docker.sock:/var/run/docker.sock \
           'docker.io/wagoodman/dive:latest' \
             '{{ .TEST_IMAGE }}' \
@@ -213,6 +213,7 @@ tasks:
     cmds:
       - |
         docker run \
+          --platform linux/amd64 \
           -v /var/run/docker.sock:/var/run/docker.sock \
           -v /${PWD}:/src \
           -w /src \
@@ -234,6 +235,7 @@ tasks:
     cmds:
       - |
         docker run \
+          --platform linux/amd64 \
           -v /var/run/docker.sock:/var/run/docker.sock \
           -v /${PWD}:/src \
           -w /src \
@@ -326,6 +328,7 @@ tasks:
     deps: [tools, tmpdir]
     sources:
       - "**/*.go"
+      - ".goreleaser.yaml"
     method: checksum
     cmds:
       - silent: true

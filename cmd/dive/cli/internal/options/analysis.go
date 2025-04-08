@@ -29,7 +29,7 @@ func DefaultAnalysis() Analysis {
 	return Analysis{
 		ContainerEngine:           defaultContainerEngine,
 		IgnoreErrors:              false,
-		AvailableContainerEngines: []string{"docker", "podman"},
+		AvailableContainerEngines: dive.ImageSources,
 	}
 }
 

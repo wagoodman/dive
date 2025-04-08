@@ -67,6 +67,7 @@ dockers:
     use: buildx
     goarch: amd64
     image_templates:
+      - docker.io/wagoodman/dive:latest
       - docker.io/wagoodman/dive:v{{.Version}}-amd64
     build_flag_templates:
       - "--build-arg=DOCKER_CLI_VERSION={{.Env.DOCKER_CLI_VERSION}}"
