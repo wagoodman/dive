@@ -15,6 +15,7 @@ env:
 
 builds:
   - binary: dive
+    dir: ./cmd/dive
     env:
       - CGO_ENABLED=0
     goos:
@@ -25,7 +26,14 @@ builds:
       - amd64
       - arm64
       - ppc64le
-    ldflags: -s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.buildTime={{.Date}}
+    ldflags:
+      -w
+      -s
+      -extldflags '-static'
+      -X main.version={{.Version}}
+      -X main.gitCommit={{.Commit}}
+      -X main.buildDate={{.Date}}
+      -X main.gitDescription={{.Summary}}
 
 brews:
   - repository:
@@ -59,6 +67,7 @@ dockers:
     use: buildx
     goarch: amd64
     image_templates:
+      - docker.io/wagoodman/dive:latest
       - docker.io/wagoodman/dive:v{{.Version}}-amd64
     build_flag_templates:
       - "--build-arg=DOCKER_CLI_VERSION={{.Env.DOCKER_CLI_VERSION}}"

@@ -1,9 +1,9 @@
 //go:build linux || darwin
-// +build linux darwin
 
 package podman
 
 import (
+	"context"
 	"fmt"
 	"io"
 
@@ -22,15 +22,15 @@ func (r *resolver) Name() string {
 	return "podman"
 }
 
-func (r *resolver) Build(args []string) (*image.Image, error) {
+func (r *resolver) Build(ctx context.Context, args []string) (*image.Image, error) {
 	id, err := buildImageFromCli(args)
 	if err != nil {
 		return nil, err
 	}
-	return r.Fetch(id)
+	return r.Fetch(ctx, id)
 }
 
-func (r *resolver) Fetch(id string) (*image.Image, error) {
+func (r *resolver) Fetch(ctx context.Context, id string) (*image.Image, error) {
 	// todo: add podman fetch attempt via varlink first...
 
 	img, err := r.resolveFromDockerArchive(id)
@@ -38,10 +38,10 @@ func (r *resolver) Fetch(id string) (*image.Image, error) {
 		return img, err
 	}
 
-	return nil, fmt.Errorf("unable to resolve image '%s': %+v", id, err)
+	return nil, fmt.Errorf("unable to resolve image %q: %+v", id, err)
 }
 
-func (r *resolver) Extract(id string, l string, p string) error {
+func (r *resolver) Extract(ctx context.Context, id string, l string, p string) error {
 	// todo: add podman fetch attempt via varlink first...
 
 	err, reader := streamPodmanCmd("image", "save", id)
@@ -53,7 +53,7 @@ func (r *resolver) Extract(id string, l string, p string) error {
 		return nil
 	}
 
-	return fmt.Errorf("unable to extract from image '%s': %+v", id, err)
+	return fmt.Errorf("unable to extract from image %q: %+v", id, err)
 }
 
 func (r *resolver) resolveFromDockerArchive(id string) (*image.Image, error) {
@@ -66,5 +66,5 @@ func (r *resolver) resolveFromDockerArchive(id string) (*image.Image, error) {
 	if err != nil {
 		return nil, err
 	}
-	return img.ToImage()
+	return img.ToImage(id)
 }

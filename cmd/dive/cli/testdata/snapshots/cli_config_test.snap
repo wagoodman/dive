@@ -1,0 +1,127 @@
+
+[Test_Config - 1]
+log:
+  # suppress all logging output (env: DIVE_LOG_QUIET)
+  quiet: false
+
+  # explicitly set the logging level (available: [error warn info debug trace]) (env: DIVE_LOG_LEVEL)
+  level: 'warn'
+
+  # file path to write logs to (env: DIVE_LOG_FILE)
+  file: ''
+
+dev:
+  # capture resource profiling data (available: [cpu, mem]) (env: DIVE_DEV_PROFILE)
+  profile: 'none'
+
+# container engine to use for image analysis (supported options: 'docker' and 'podman') (env: DIVE_CONTAINER_ENGINE)
+container-engine: 'docker'
+
+# continue with analysis even if there are errors parsing the image archive (env: DIVE_IGNORE_ERRORS)
+ignore-errors: false
+
+# enable CI mode (env: DIVE_CI)
+ci: true
+
+# path to the CI config file (env: DIVE_CI_CONFIG)
+ci-config: '.dive-ci'
+
+rules:
+  # lowest allowable image efficiency (as a ratio between 0-1), otherwise CI validation will fail. (env: DIVE_RULES_LOWEST_EFFICIENCY)
+  lowest-efficiency: '0.9'
+
+  # highest allowable bytes wasted, otherwise CI validation will fail. (env: DIVE_RULES_HIGHEST_WASTED_BYTES)
+  highest-wasted-bytes: '20MB'
+
+  # highest allowable percentage of bytes wasted (as a ratio between 0-1), otherwise CI validation will fail. (env: DIVE_RULES_HIGHEST_USER_WASTED_PERCENT)
+  highest-user-wasted-percent: '0.90'
+
+# Skip the interactive TUI and write the layer analysis statistics to a given file. (env: DIVE_JSON_PATH)
+json-path: ''
+
+keybinding:
+  # quit the application (global) (env: DIVE_KEYBINDING_QUIT)
+  quit: 'ctrl+c'
+
+  # toggle between different views (global) (env: DIVE_KEYBINDING_TOGGLE_VIEW)
+  toggle-view: 'tab'
+
+  # filter files by name (global) (env: DIVE_KEYBINDING_FILTER_FILES)
+  filter-files: 'ctrl+f, ctrl+slash'
+
+  # close file filtering (global) (env: DIVE_KEYBINDING_CLOSE_FILTER_FILES)
+  close-filter-files: 'esc'
+
+  # move cursor up (global) (env: DIVE_KEYBINDING_UP)
+  up: 'up,k'
+
+  # move cursor down (global) (env: DIVE_KEYBINDING_DOWN)
+  down: 'down,j'
+
+  # move cursor left (global) (env: DIVE_KEYBINDING_LEFT)
+  left: 'left,h'
+
+  # move cursor right (global) (env: DIVE_KEYBINDING_RIGHT)
+  right: 'right,l'
+
+  # scroll page up (file view) (env: DIVE_KEYBINDING_PAGE_UP)
+  page-up: 'pgup,u'
+
+  # scroll page down (file view) (env: DIVE_KEYBINDING_PAGE_DOWN)
+  page-down: 'pgdn,d'
+
+  # compare all layers (layer view) (env: DIVE_KEYBINDING_COMPARE_ALL)
+  compare-all: 'ctrl+a'
+
+  # compare specific layer (layer view) (env: DIVE_KEYBINDING_COMPARE_LAYER)
+  compare-layer: 'ctrl+l'
+
+  # toggle directory collapse (file view) (env: DIVE_KEYBINDING_TOGGLE_COLLAPSE_DIR)
+  toggle-collapse-dir: 'space'
+
+  # toggle collapse all directories (file view) (env: DIVE_KEYBINDING_TOGGLE_COLLAPSE_ALL_DIR)
+  toggle-collapse-all-dir: 'ctrl+space'
+
+  # toggle visibility of added files (file view) (env: DIVE_KEYBINDING_TOGGLE_ADDED_FILES)
+  toggle-added-files: 'ctrl+a'
+
+  # toggle visibility of removed files (file view) (env: DIVE_KEYBINDING_TOGGLE_REMOVED_FILES)
+  toggle-removed-files: 'ctrl+r'
+
+  # toggle visibility of modified files (file view) (env: DIVE_KEYBINDING_TOGGLE_MODIFIED_FILES)
+  toggle-modified-files: 'ctrl+m'
+
+  # toggle visibility of unmodified files (file view) (env: DIVE_KEYBINDING_TOGGLE_UNMODIFIED_FILES)
+  toggle-unmodified-files: 'ctrl+u'
+
+  # toggle display of file attributes (file view) (env: DIVE_KEYBINDING_TOGGLE_FILETREE_ATTRIBUTES)
+  toggle-filetree-attributes: 'ctrl+b'
+
+  # toggle sort order (file view) (env: DIVE_KEYBINDING_TOGGLE_SORT_ORDER)
+  toggle-sort-order: 'ctrl+o'
+
+  # (env: DIVE_KEYBINDING_TOGGLE_WRAP_TREE)
+  toggle-wrap-tree: 'ctrl+p'
+
+  # extract file contents (file view) (env: DIVE_KEYBINDING_EXTRACT_FILE)
+  extract-file: 'ctrl+e'
+
+diff:
+  # types of file differences to hide (added, removed, modified, unmodified) (env: DIVE_DIFF_HIDE)
+  hide: []
+
+filetree:
+  # collapse directories by default in the filetree (env: DIVE_FILETREE_COLLAPSE_DIR)
+  collapse-dir: false
+
+  # percentage of screen width for the filetree pane (must be >0 and <1) (env: DIVE_FILETREE_PANE_WIDTH)
+  pane-width: 0.5
+
+  # show file attributes in the filetree view (env: DIVE_FILETREE_SHOW_ATTRIBUTES)
+  show-attributes: true
+
+layer:
+  # show aggregated changes across all previous layers (env: DIVE_LAYER_SHOW_AGGREGATED_CHANGES)
+  show-aggregated-changes: false
+
+---

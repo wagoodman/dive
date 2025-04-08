@@ -1,0 +1,5 @@
+ci: true
+rules:
+  lowest-efficiency-threshold: '0.10'
+  highest-wasted-bytes: '20MB'
+  highest-user-wasted-percent: '0.90'

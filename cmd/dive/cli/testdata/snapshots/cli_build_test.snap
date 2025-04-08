@@ -1,0 +1,137 @@
+
+[Test_Build_Dockerfile/implicit_dockerfile - 1]
+Analysis:
+  efficiency:        100.00 %
+  wastedBytes:       131 bytes (131 B)
+  userWastedPercent: 71.98 %
+
+Inefficient Files:
+  Count  Wasted Space  File Path
+  3      80 B          /root/saved.txt
+  2      34 B          /root/example/somefile1.txt
+  2      17 B          /root/example/somefile3.txt
+  2      0 B           /root
+  10     0 B           /etc
+
+Evaluation:
+  PASS  highestUserWastedPercent (0.90)
+  PASS  highestWastedBytes (20MB)
+  PASS  lowestEfficiency (0.9)
+
+PASS [pass:3]
+
+---
+
+[Test_Build_Dockerfile/explicit_file_flag - 1]
+Analysis:
+  efficiency:        100.00 %
+  wastedBytes:       131 bytes (131 B)
+  userWastedPercent: 71.98 %
+
+Inefficient Files:
+  Count  Wasted Space  File Path
+  3      80 B          /root/saved.txt
+  2      34 B          /root/example/somefile1.txt
+  2      17 B          /root/example/somefile3.txt
+  2      0 B           /root
+  10     0 B           /etc
+
+Evaluation:
+  PASS  highestUserWastedPercent (0.90)
+  PASS  highestWastedBytes (20MB)
+  PASS  lowestEfficiency (0.9)
+
+PASS [pass:3]
+
+---
+
+[Test_Build_Containerfile/implicit_containerfile - 1]
+Analysis:
+  efficiency:        100.00 %
+  wastedBytes:       131 bytes (131 B)
+  userWastedPercent: 71.98 %
+
+Inefficient Files:
+  Count  Wasted Space  File Path
+  3      80 B          /root/saved.txt
+  2      34 B          /root/example/somefile1.txt
+  2      17 B          /root/example/somefile3.txt
+  2      0 B           /root
+  10     0 B           /etc
+
+Evaluation:
+  PASS  highestUserWastedPercent (0.90)
+  PASS  highestWastedBytes (20MB)
+  PASS  lowestEfficiency (0.9)
+
+PASS [pass:3]
+
+---
+
+[Test_Build_Containerfile/explicit_file_flag - 1]
+Analysis:
+  efficiency:        100.00 %
+  wastedBytes:       131 bytes (131 B)
+  userWastedPercent: 71.98 %
+
+Inefficient Files:
+  Count  Wasted Space  File Path
+  3      80 B          /root/saved.txt
+  2      34 B          /root/example/somefile1.txt
+  2      17 B          /root/example/somefile3.txt
+  2      0 B           /root
+  10     0 B           /etc
+
+Evaluation:
+  PASS  highestUserWastedPercent (0.90)
+  PASS  highestWastedBytes (20MB)
+  PASS  lowestEfficiency (0.9)
+
+PASS [pass:3]
+
+---
+
+[Test_BuildFailure/nonexistent_directory - 1]
+Building image                ... ./path/does/not/exist
+
+---
+
+[Test_BuildFailure/invalid_dockerfile - 1]
+Building image                ... ./testdata/invalid
+#0 building with "desktop-linux" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 100B done
+#1 DONE 0.0s
+Dockerfile:2
+--------------------
+   1 |     FROM scratch
+   2 | >>> INVALID woops
+--------------------
+ERROR: failed to solve: dockerfile parse error on line 2: unknown instruction: INVALID
+
+View build details: docker-desktop://<redacted>
+---
+
+[Test_Build_CI_gate_fail - 1]
+Analysis:
+  efficiency:        100.00 %
+  wastedBytes:       131 bytes (131 B)
+  userWastedPercent: 71.98 %
+
+Inefficient Files:
+  Count  Wasted Space  File Path
+  3      80 B          /root/saved.txt
+  2      34 B          /root/example/somefile1.txt
+  2      17 B          /root/example/somefile3.txt
+  2      0 B           /root
+  10     0 B           /etc
+
+Evaluation:
+  FAIL  highestUserWastedPercent (too many bytes wasted, relative to the user bytes added (%-user-wasted-bytes=0.72 > threshold=0.1))
+  SKIP  highestWastedBytes (disabled)
+  PASS  lowestEfficiency (0.9)
+
+FAIL [pass:1 fail:1 skip:1]
+
+---

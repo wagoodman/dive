@@ -1,15 +1,15 @@
 //go:build linux || darwin
-// +build linux darwin
 
 package podman
 
 import (
 	"fmt"
+	"github.com/wagoodman/dive/internal/log"
+	"github.com/wagoodman/dive/internal/utils"
 	"io"
 	"os"
 	"os/exec"
-
-	"github.com/wagoodman/dive/utils"
+	"strings"
 )
 
 // runPodmanCmd runs a given Podman command in the current tty
@@ -19,6 +19,9 @@ func runPodmanCmd(cmdStr string, args ...string) error {
 	}
 
 	allArgs := utils.CleanArgs(append([]string{cmdStr}, args...))
+
+	fullCmd := strings.Join(append([]string{"docker"}, allArgs...), " ")
+	log.WithFields("cmd", fullCmd).Trace("executing")
 
 	cmd := exec.Command("podman", allArgs...)
 	cmd.Env = os.Environ()
@@ -35,7 +38,11 @@ func streamPodmanCmd(args ...string) (error, io.Reader) {
 		return fmt.Errorf("cannot find podman client executable"), nil
 	}
 
-	cmd := exec.Command("podman", utils.CleanArgs(args)...)
+	allArgs := utils.CleanArgs(args)
+	fullCmd := strings.Join(append([]string{"docker"}, allArgs...), " ")
+	log.WithFields("cmd", fullCmd).Trace("executing (streaming)")
+
+	cmd := exec.Command("podman", allArgs...)
 	cmd.Env = os.Environ()
 
 	reader, writer, err := os.Pipe()

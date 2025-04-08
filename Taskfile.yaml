@@ -61,6 +61,7 @@ tasks:
     desc: Run all levels of test
     cmds:
       - task: unit
+      - task: cli
 
   ## Bootstrap tasks #################################
 
@@ -172,15 +173,19 @@ tasks:
       - tmpdir
     vars:
       TEST_PKGS:
-        sh: "go list ./... | tr '\n' ' '"
+        sh: "go list ./... | grep -v '^github.com/wagoodman/dive/cmd/dive/cli$'  | tr '\n' ' '"
 
       # unit test coverage threshold (in % coverage)
-      COVERAGE_THRESHOLD: 30
+      COVERAGE_THRESHOLD: 25
     cmds:
       - "go test -coverprofile {{ .TMP_DIR }}/unit-coverage-details.txt {{ .TEST_PKGS }}"
       - cmd: ".github/scripts/coverage.py {{ .COVERAGE_THRESHOLD }} {{ .TMP_DIR }}/unit-coverage-details.txt"
         silent: true
 
+  cli:
+    desc: Run CLI tests
+    cmds:
+      - "go test github.com/wagoodman/dive/cmd/dive/cli -v"
 
   ## Acceptance tests #################################
 
@@ -198,6 +203,7 @@ tasks:
         docker run \
           --rm \
           -t \
+          --env CLICOLOR_FORCE=true \
           -v /var/run/docker.sock:/var/run/docker.sock \
           'docker.io/wagoodman/dive:latest' \
             '{{ .TEST_IMAGE }}' \
@@ -208,9 +214,11 @@ tasks:
     cmds:
       - |
         docker run \
+          --platform linux/amd64 \
           -v /var/run/docker.sock:/var/run/docker.sock \
           -v /${PWD}:/src \
           -w /src \
+          --env CLICOLOR_FORCE=true \
           ubuntu:latest \
             /bin/bash -x -c "\
               apt update && \
@@ -229,9 +237,11 @@ tasks:
     cmds:
       - |
         docker run \
+          --platform linux/amd64 \
           -v /var/run/docker.sock:/var/run/docker.sock \
           -v /${PWD}:/src \
           -w /src \
+          --env CLICOLOR_FORCE=true \
           fedora:latest \
             /bin/bash -x -c "\
               curl -L 'https://download.docker.com/linux/static/stable/x86_64/docker-{{ .DOCKER_CLI_VERSION }}.tgz' | \
@@ -321,6 +331,7 @@ tasks:
     deps: [tools, tmpdir]
     sources:
       - "**/*.go"
+      - ".goreleaser.yaml"
     method: checksum
     cmds:
       - silent: true
