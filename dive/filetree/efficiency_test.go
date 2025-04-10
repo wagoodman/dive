@@ -1,6 +1,7 @@
 package filetree
 
 import (
+	"reflect"
 	"testing"
 )
 
@@ -32,7 +33,11 @@ func TestEfficiency(t *testing.T) {
 
 	var expectedScore = 0.75
 	var expectedMatches = EfficiencySlice{
-		&EfficiencyData{Path: "/etc/nginx/nginx.conf", CumulativeSize: 7000},
+		&EfficiencyData{
+			Path:           "/etc/nginx/nginx.conf",
+			CumulativeSize: 7000,
+			Layers:         []int{0, 1},
+		},
 	}
 	actualScore, actualMatches := Efficiency(trees)
 
@@ -49,6 +54,19 @@ func TestEfficiency(t *testing.T) {
 
 	if expectedMatches[0].Path != actualMatches[0].Path {
 		t.Errorf("Expected path of %s but go %s", expectedMatches[0].Path, actualMatches[0].Path)
+	}
+
+	if !reflect.DeepEqual(expectedMatches[0].Layers, actualMatches[0].Layers) {
+		t.Errorf("Expected layers of %v but got %v", expectedMatches[0].Layers, actualMatches[0].Layers)
+	}
+
+	if actualMatches[0].FirstLayer() != 0 {
+		t.Errorf("expected first layer 0 but got %v", actualMatches[0].FirstLayer())
+	}
+
+	expectedSubsequent := []int{1}
+	if !reflect.DeepEqual(actualMatches[0].SubsequentLayers(), expectedSubsequent) {
+		t.Errorf("expected subsequent layers %v but got %v", expectedSubsequent, actualMatches[0].SubsequentLayers())
 	}
 
 	if expectedMatches[0].CumulativeSize != actualMatches[0].CumulativeSize {
