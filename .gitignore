@@ -45,3 +45,6 @@ coverage.txt
 /build
 /_vendor*
 /vendor
+deb
+_build
+dive-build-deps_*
