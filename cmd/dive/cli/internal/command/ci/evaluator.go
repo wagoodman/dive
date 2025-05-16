@@ -3,13 +3,13 @@ package ci
 import (
 	"fmt"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/wagoodman/dive/dive/v1/image"
 	"golang.org/x/net/context"
 	"sort"
 	"strconv"
 	"strings"
 
 	"github.com/dustin/go-humanize"
-	"github.com/wagoodman/dive/dive/image"
 )
 
 type Evaluation struct {

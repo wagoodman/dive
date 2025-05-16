@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/spf13/afero"
 	"github.com/wagoodman/dive/cmd/dive/cli/internal/command/export"
-	"github.com/wagoodman/dive/dive/image"
+	"github.com/wagoodman/dive/dive/v1/image"
 	"github.com/wagoodman/dive/internal/bus"
 	"github.com/wagoodman/dive/internal/bus/event/payload"
 	"github.com/wagoodman/dive/internal/log"

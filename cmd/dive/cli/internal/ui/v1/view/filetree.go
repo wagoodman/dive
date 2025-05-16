@@ -7,12 +7,12 @@ import (
 	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1/format"
 	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1/key"
 	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1/viewmodel"
+	"github.com/wagoodman/dive/dive/v1/filetree"
 	"github.com/wagoodman/dive/internal/log"
 	"github.com/wagoodman/dive/internal/utils"
 	"regexp"
 
 	"github.com/awesome-gocui/gocui"
-	"github.com/wagoodman/dive/dive/filetree"
 )
 
 type ViewOptionChangeListener func() error

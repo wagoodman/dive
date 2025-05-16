@@ -1,12 +1,21 @@
 package bus
 
 import (
-	"github.com/wagoodman/dive/dive/image"
+	"github.com/anchore/clio"
+	"github.com/wagoodman/dive/dive/v1/image"
 	"github.com/wagoodman/dive/internal/bus/event"
 	"github.com/wagoodman/dive/internal/bus/event/payload"
 	"github.com/wagoodman/go-partybus"
 	"github.com/wagoodman/go-progress"
 )
+
+func Exit() {
+	Publish(clio.ExitEvent(false))
+}
+
+func ExitWithInterrupt() {
+	Publish(clio.ExitEvent(true))
+}
 
 func Report(report string) {
 	if len(report) == 0 {

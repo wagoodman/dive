@@ -1,9 +1,8 @@
 package export
 
 import (
+	"github.com/wagoodman/dive/dive/v1/image/docker"
 	"testing"
-
-	"github.com/wagoodman/dive/dive/image/docker"
 )
 
 func Test_Export(t *testing.T) {

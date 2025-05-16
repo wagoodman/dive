@@ -8,7 +8,7 @@ import (
 	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1/format"
 	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1/key"
 	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1/viewmodel"
-	"github.com/wagoodman/dive/dive/image"
+	"github.com/wagoodman/dive/dive/v1/image"
 	"github.com/wagoodman/dive/internal/log"
 )
 

@@ -2,6 +2,7 @@ package cli
 
 import (
 	"github.com/anchore/clio"
+	"github.com/anchore/stereoscope"
 	"github.com/spf13/cobra"
 	"github.com/wagoodman/dive/cmd/dive/cli/internal/command"
 	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui"
@@ -30,14 +31,14 @@ func create(id clio.Identification) (clio.Application, *cobra.Command) {
 				bus.Set(state.Bus)
 				log.Set(state.Logger)
 
-				//stereoscope.SetBus(state.Bus)
-				//stereoscope.SetLogger(state.Logger)
+				stereoscope.SetBus(state.Bus)
+				stereoscope.SetLogger(state.Logger)
 				return nil
 			},
-		)
-	//WithPostRuns(func(_ *clio.State, _ error) {
-	//	stereoscope.Cleanup()
-	//})
+		).
+		WithPostRuns(func(_ *clio.State, _ error) {
+			stereoscope.Cleanup()
+		})
 
 	app := clio.New(*clioCfg)
 

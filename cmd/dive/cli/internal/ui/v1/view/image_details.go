@@ -5,13 +5,13 @@ import (
 	"github.com/anchore/go-logger"
 	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1/format"
 	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1/key"
+	"github.com/wagoodman/dive/dive/v1/filetree"
 	"github.com/wagoodman/dive/internal/log"
 	"strconv"
 	"strings"
 
 	"github.com/awesome-gocui/gocui"
 	"github.com/dustin/go-humanize"
-	"github.com/wagoodman/dive/dive/filetree"
 )
 
 type ImageDetails struct {

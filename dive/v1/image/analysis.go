@@ -2,7 +2,7 @@ package image
 
 import (
 	"context"
-	"github.com/wagoodman/dive/dive/filetree"
+	"github.com/wagoodman/dive/dive/v1/filetree"
 )
 
 type Analysis struct {
