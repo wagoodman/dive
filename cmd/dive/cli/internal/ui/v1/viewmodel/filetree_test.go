@@ -6,6 +6,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1"
+	"github.com/wagoodman/dive/dive/v1/filetree"
+	"github.com/wagoodman/dive/dive/v1/image/docker"
 	"go.uber.org/atomic"
 	"os"
 	"os/exec"
@@ -13,9 +15,6 @@ import (
 	"regexp"
 	"strings"
 	"testing"
-
-	"github.com/wagoodman/dive/dive/filetree"
-	"github.com/wagoodman/dive/dive/image/docker"
 )
 
 var repoRootCache atomic.String

@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1"
 	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1/format"
+	"github.com/wagoodman/dive/dive/v1/filetree"
 	"github.com/wagoodman/dive/internal/log"
 	"regexp"
 	"strings"
 
 	"github.com/lunixbochs/vtclean"
-	"github.com/wagoodman/dive/dive/filetree"
 )
 
 // FileTreeViewModel holds the UI objects and data models for populating the right pane. Specifically, the pane that

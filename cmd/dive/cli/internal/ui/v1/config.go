@@ -4,8 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1/key"
-	"github.com/wagoodman/dive/dive/filetree"
-	"github.com/wagoodman/dive/dive/image"
+	"github.com/wagoodman/dive/dive/v1/filetree"
+	"github.com/wagoodman/dive/dive/v1/image"
 	"golang.org/x/net/context"
 	"sync"
 )

@@ -6,8 +6,7 @@ package podman
 import (
 	"context"
 	"fmt"
-
-	"github.com/wagoodman/dive/dive/image"
+	"github.com/wagoodman/dive/dive/v1/image"
 )
 
 type resolver struct{}

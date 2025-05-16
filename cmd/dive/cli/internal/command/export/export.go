@@ -2,8 +2,8 @@ package export
 
 import (
 	"encoding/json"
-	"github.com/wagoodman/dive/dive/filetree"
-	diveImage "github.com/wagoodman/dive/dive/image"
+	"github.com/wagoodman/dive/dive/v1/filetree"
+	diveImage "github.com/wagoodman/dive/dive/v1/image"
 	"github.com/wagoodman/dive/internal/log"
 )
 

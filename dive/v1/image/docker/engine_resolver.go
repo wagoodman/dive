@@ -3,6 +3,7 @@ package docker
 import (
 	"fmt"
 	"github.com/spf13/afero"
+	"github.com/wagoodman/dive/dive/v1/image"
 	"github.com/wagoodman/dive/internal/bus/event/payload"
 	"github.com/wagoodman/dive/internal/log"
 	"io"
@@ -16,8 +17,6 @@ import (
 	ctxstore "github.com/docker/cli/cli/context/store"
 	"github.com/docker/docker/client"
 	"golang.org/x/net/context"
-
-	"github.com/wagoodman/dive/dive/image"
 )
 
 type engineResolver struct{}

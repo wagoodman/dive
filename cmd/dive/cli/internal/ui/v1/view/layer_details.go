@@ -5,12 +5,12 @@ import (
 	"github.com/anchore/go-logger"
 	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1/format"
 	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1/key"
+	"github.com/wagoodman/dive/dive/v1/image"
 	"github.com/wagoodman/dive/internal/log"
 	"strings"
 
 	"github.com/awesome-gocui/gocui"
 	"github.com/dustin/go-humanize"
-	"github.com/wagoodman/dive/dive/image"
 )
 
 type LayerDetails struct {

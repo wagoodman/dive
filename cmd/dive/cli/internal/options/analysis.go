@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/anchore/clio"
 	"github.com/scylladb/go-set/strset"
-	"github.com/wagoodman/dive/dive"
+	diveV1 "github.com/wagoodman/dive/dive/v1"
 	"github.com/wagoodman/dive/internal/log"
 	"strings"
 )
@@ -18,18 +18,18 @@ var _ interface {
 
 // Analysis provides configuration for the image analysis behavior
 type Analysis struct {
-	Image                     string           `yaml:"image" mapstructure:"-"`
-	ContainerEngine           string           `yaml:"container-engine" mapstructure:"container-engine"`
-	Source                    dive.ImageSource `yaml:"-" mapstructure:"-"`
-	IgnoreErrors              bool             `yaml:"ignore-errors" mapstructure:"ignore-errors"`
-	AvailableContainerEngines []string         `yaml:"-" mapstructure:"-"`
+	Image                     string             `yaml:"image" mapstructure:"-"`
+	ContainerEngine           string             `yaml:"container-engine" mapstructure:"container-engine"`
+	Source                    diveV1.ImageSource `yaml:"-" mapstructure:"-"`
+	IgnoreErrors              bool               `yaml:"ignore-errors" mapstructure:"ignore-errors"`
+	AvailableContainerEngines []string           `yaml:"-" mapstructure:"-"`
 }
 
 func DefaultAnalysis() Analysis {
 	return Analysis{
 		ContainerEngine:           defaultContainerEngine,
 		IgnoreErrors:              false,
-		AvailableContainerEngines: dive.ImageSources,
+		AvailableContainerEngines: diveV1.ImageSources,
 	}
 }
 
@@ -53,11 +53,11 @@ func (c *Analysis) PostLoad() error {
 	}
 
 	if c.Image != "" {
-		sourceType, imageStr := dive.DeriveImageSource(c.Image)
+		sourceType, imageStr := diveV1.DeriveImageSource(c.Image)
 
-		if sourceType == dive.SourceUnknown {
-			sourceType = dive.ParseImageSource(c.ContainerEngine)
-			if sourceType == dive.SourceUnknown {
+		if sourceType == diveV1.SourceUnknown {
+			sourceType = diveV1.ParseImageSource(c.ContainerEngine)
+			if sourceType == diveV1.SourceUnknown {
 				return fmt.Errorf("unable to determine image source from %q: %v\n", c.Image, c.ContainerEngine)
 			}
 
@@ -68,7 +68,7 @@ func (c *Analysis) PostLoad() error {
 		c.Image = imageStr
 		c.Source = sourceType
 	} else {
-		c.Source = dive.ParseImageSource(c.ContainerEngine)
+		c.Source = diveV1.ParseImageSource(c.ContainerEngine)
 	}
 
 	return nil
