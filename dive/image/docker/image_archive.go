@@ -160,8 +160,23 @@ func NewImageArchive(tarFile io.ReadCloser) (*ImageArchive, error) {
 		}
 	}
 
-	manifestContent, exists := jsonFiles["manifest.json"]
+	var manifestMediaType string
+	manifestPath := "manifest.json"
+	indexContent, exists := jsonFiles["index.json"]
 	if exists {
+		manifest := extractManifest(indexContent)
+		manifestPath = digestPath(manifest.Digest)
+		manifestMediaType = manifest.MediaType
+	}
+
+	manifestContent, exists := jsonFiles[manifestPath]
+	if exists && manifestMediaType == "application/vnd.oci.image.manifest.v1+json" {
+		ociManifest := newOCIManifest(manifestContent)
+		img.manifest = manifest{
+			ConfigPath:    digestPath(ociManifest.Config.Digest),
+			LayerTarPaths: layerPaths(ociManifest),
+		}
+	} else if exists {
 		img.manifest = newManifest(manifestContent)
 	} else {
 		// manifest.json is not part of the OCI spec, docker includes it for compatibility
