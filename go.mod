@@ -28,7 +28,7 @@ require (
 	github.com/wagoodman/go-partybus v0.0.0-20230516145632-8ccac152c651
 	github.com/wagoodman/go-progress v0.0.0-20230925121702-07e42b3cdba0
 	go.uber.org/atomic v1.11.0
-	golang.org/x/net v0.40.0
+	golang.org/x/net v0.41.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
@@ -112,7 +112,7 @@ require (
 	go.uber.org/multierr v1.9.0 // indirect
 	golang.org/x/sys v0.33.0 // indirect
 	golang.org/x/term v0.32.0 // indirect
-	golang.org/x/text v0.25.0 // indirect
+	golang.org/x/text v0.26.0 // indirect
 	golang.org/x/time v0.11.0 // indirect
 	gotest.tools/v3 v3.5.0 // indirect
 )
