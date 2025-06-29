@@ -1,0 +1,4 @@
+- Loading image                 /home/calelin/dive/.data/test-docker-image.tar
+  Analyzing image               [layers:14 files:451 size:1.2 MB]
+  Evaluating image              [rules: 3]
+  ↵
