@@ -2,17 +2,18 @@ package viewmodel
 
 import (
 	"flag"
-	"github.com/google/go-cmp/cmp"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1"
-	"go.uber.org/atomic"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"regexp"
 	"strings"
 	"testing"
+
+	"github.com/google/go-cmp/cmp"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1"
+	"go.uber.org/atomic"
 
 	"github.com/wagoodman/dive/dive/filetree"
 	"github.com/wagoodman/dive/dive/image/docker"
@@ -56,8 +57,7 @@ func helperCaptureBytes(t *testing.T, data []byte) {
 	}
 
 	path := testCaseDataFilePath(t.Name())
-	err := os.WriteFile(path, data, 0644)
-
+	err := os.WriteFile(path, data, 0o644)
 	if err != nil {
 		t.Fatalf("unable to save test data ('%s'): %+v", t.Name(), err)
 	}
@@ -419,4 +419,34 @@ func repoRoot(t testing.TB) string {
 	val = strings.TrimSpace(string(out))
 	repoRootCache.Store(val)
 	return val
+}
+
+// TestCursorLeftWithNilParent tests that CursorLeft handles nil parent gracefully
+func TestCursorLeftWithNilParent(t *testing.T) {
+	// Use the standard test initialization
+	vm := initializeTestViewModel(t)
+
+	// Set tree index to 0 (root node)
+	vm.TreeIndex = 0
+
+	// Call CursorLeft - should not panic even though root has no parent
+	err := vm.CursorLeft(nil)
+
+	// Should return without error and not panic
+	require.NoError(t, err)
+}
+
+// TestGetAbsPositionNodeReturnsNil tests that getAbsPositionNode can return nil
+func TestGetAbsPositionNodeReturnsNil(t *testing.T) {
+	// Use the standard test initialization
+	vm := initializeTestViewModel(t)
+
+	// Set tree index to a position that doesn't exist
+	vm.TreeIndex = 100000
+
+	// Call getAbsPositionNode - should return nil
+	node := vm.getAbsPositionNode(nil)
+
+	// Should return nil without panic
+	require.Nil(t, node)
 }

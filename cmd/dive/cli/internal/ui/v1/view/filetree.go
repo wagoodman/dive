@@ -2,6 +2,8 @@ package view
 
 import (
 	"fmt"
+	"regexp"
+
 	"github.com/anchore/go-logger"
 	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1"
 	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1/format"
@@ -9,7 +11,6 @@ import (
 	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1/viewmodel"
 	"github.com/wagoodman/dive/internal/log"
 	"github.com/wagoodman/dive/internal/utils"
-	"regexp"
 
 	"github.com/awesome-gocui/gocui"
 	"github.com/wagoodman/dive/dive/filetree"
@@ -99,7 +100,7 @@ func (v *FileTree) Setup(view, header *gocui.View) error {
 	v.header.Wrap = false
 	v.header.Frame = false
 
-	var infos = []key.BindingInfo{
+	infos := []key.BindingInfo{
 		{
 			Config:   v.kb.Filetree.ToggleCollapseDir,
 			OnAction: v.toggleCollapse,
@@ -322,6 +323,9 @@ func (v *FileTree) toggleSortOrder() error {
 
 func (v *FileTree) extractFile() error {
 	node := v.vm.CurrentNode(v.filterRegex)
+	if node == nil {
+		return fmt.Errorf("no file selected for extraction")
+	}
 	for _, listener := range v.extractListeners {
 		err := listener(node.Path())
 		if err != nil {
