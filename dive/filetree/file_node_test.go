@@ -43,7 +43,6 @@ func TestAddChild(t *testing.T) {
 	if expectedFC.Path != actualFC.Path {
 		t.Errorf("Expected 'ones' payload to be %+v got %+v.", expectedFC, actualFC)
 	}
-
 }
 
 func TestRemoveChild(t *testing.T) {
@@ -79,7 +78,6 @@ func TestRemoveChild(t *testing.T) {
 	if tree.Root.Children["nil"] != nil {
 		t.Errorf("Expected 'nil' node to be deleted.")
 	}
-
 }
 
 func TestPath(t *testing.T) {
@@ -130,6 +128,7 @@ func TestDiffTypeFromAddedChildren(t *testing.T) {
 		t.Errorf("Expected Modified but got %v", tree.Root.Children["usr"].Data.DiffType)
 	}
 }
+
 func TestDiffTypeFromRemovedChildren(t *testing.T) {
 	tree := NewFileTree()
 	_, _, _ = tree.AddPath("/usr", *BlankFileChangeInfo("/usr"))
@@ -148,7 +147,6 @@ func TestDiffTypeFromRemovedChildren(t *testing.T) {
 	if tree.Root.Children["usr"].Data.DiffType != Modified {
 		t.Errorf("Expected Modified but got %v", tree.Root.Children["usr"].Data.DiffType)
 	}
-
 }
 
 func TestDirSize(t *testing.T) {
@@ -164,5 +162,44 @@ func TestDirSize(t *testing.T) {
 	expected, actual := "----------         0:0      600 B ", node.MetadataString()
 	if expected != actual {
 		t.Errorf("Expected metadata '%s' got '%s'", expected, actual)
+	}
+}
+
+// TestNilNodePath tests that calling Path() on a nil node returns empty string without panic
+func TestNilNodePath(t *testing.T) {
+	var node *FileNode
+
+	// This should not panic and should return empty string
+	result := node.Path()
+	expected := ""
+
+	if result != expected {
+		t.Errorf("Expected Path() on nil node to return '%s', got '%s'", expected, result)
+	}
+}
+
+// TestNilNodeString tests that calling String() on a nil node returns empty string without panic
+func TestNilNodeString(t *testing.T) {
+	var node *FileNode
+
+	// This should not panic and should return empty string
+	result := node.String()
+	expected := ""
+
+	if result != expected {
+		t.Errorf("Expected String() on nil node to return '%s', got '%s'", expected, result)
+	}
+}
+
+// TestNilNodeMetadataString tests that calling MetadataString() on a nil node returns empty string without panic
+func TestNilNodeMetadataString(t *testing.T) {
+	var node *FileNode
+
+	// This should not panic and should return empty string
+	result := node.MetadataString()
+	expected := ""
+
+	if result != expected {
+		t.Errorf("Expected MetadataString() on nil node to return '%s', got '%s'", expected, result)
 	}
 }

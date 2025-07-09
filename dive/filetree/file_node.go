@@ -3,8 +3,9 @@ package filetree
 import (
 	"archive/tar"
 	"fmt"
-	"github.com/wagoodman/dive/internal/log"
 	"strings"
+
+	"github.com/wagoodman/dive/internal/log"
 
 	"github.com/dustin/go-humanize"
 	"github.com/fatih/color"
@@ -191,7 +192,6 @@ func (node *FileNode) GetSize() int64 {
 		sizeBytes = node.Data.FileInfo.Size
 	} else {
 		sizer := func(curNode *FileNode) error {
-
 			if curNode.Data.DiffType != Removed || node.Data.DiffType == Removed {
 				sizeBytes += curNode.Data.FileInfo.Size
 			}
@@ -273,6 +273,9 @@ func (node *FileNode) IsLeaf() bool {
 
 // Path returns a slash-delimited string from the root of the greater tree to the current node (e.g. /a/path/to/here)
 func (node *FileNode) Path() string {
+	if node == nil {
+		return ""
+	}
 	if node.path == "" {
 		var path []string
 		curNode := node

@@ -3,11 +3,12 @@ package viewmodel
 import (
 	"bytes"
 	"fmt"
+	"regexp"
+	"strings"
+
 	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1"
 	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1/format"
 	"github.com/wagoodman/dive/internal/log"
-	"regexp"
-	"strings"
 
 	"github.com/lunixbochs/vtclean"
 	"github.com/wagoodman/dive/dive/filetree"
@@ -176,6 +177,9 @@ func (vm *FileTreeViewModel) CursorLeft(filterRegex *regexp.Regexp) error {
 	currentNode := vm.getAbsPositionNode(filterRegex)
 
 	if currentNode == nil {
+		return nil
+	}
+	if currentNode.Parent == nil {
 		return nil
 	}
 	parentPath := currentNode.Parent.Path()
@@ -424,7 +428,6 @@ func (vm *FileTreeViewModel) Update(filterRegex *regexp.Regexp, width, height in
 		}
 		return nil
 	}, nil)
-
 	if err != nil {
 		return fmt.Errorf("unable to propagate vm model tree: %w", err)
 	}
@@ -440,7 +443,6 @@ func (vm *FileTreeViewModel) Update(filterRegex *regexp.Regexp, width, height in
 		}
 		return nil
 	}, nil)
-
 	if err != nil {
 		return fmt.Errorf("unable to propagate vm view tree: %w", err)
 	}
