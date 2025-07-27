@@ -252,29 +252,45 @@ rules:
 ```
 You can override the CI config path with the `--ci-config` option.
 
-## KeyBindings
-
-Key Binding                                | Description
+## Default keybindings
+### Global
+Keybinding                                 | Description
 -------------------------------------------|---------------------------------------------------------
 <kbd>Ctrl + C</kbd> or <kbd>Q</kbd>        | Exit
 <kbd>Tab</kbd>                             | Switch between the layer and filetree views
-<kbd>Ctrl + F</kbd>                        | Filter files
+<kbd>Ctrl + F</kbd> or <kbd>Ctrl + /</kbd> | Filter files
 <kbd>ESC</kbd>                             | Close filter files
 <kbd>PageUp</kbd> or <kbd>U</kbd>          | Scroll up a page
 <kbd>PageDown</kbd> or <kbd>D</kbd>        | Scroll down a page
 <kbd>Up</kbd> or <kbd>K</kbd>              | Move up one line within a page
 <kbd>Down</kbd> or <kbd>J</kbd>            | Move down one line within a page
-<kbd>Ctrl + A</kbd>                        | Layer view: see aggregated image modifications
-<kbd>Ctrl + L</kbd>                        | Layer view: see current layer modifications
-<kbd>Space</kbd>                           | Filetree view: collapse/uncollapse a directory
-<kbd>Ctrl + Space</kbd>                    | Filetree view: collapse/uncollapse all directories
-<kbd>Ctrl + A</kbd>                        | Filetree view: show/hide added files
-<kbd>Ctrl + R</kbd>                        | Filetree view: show/hide removed files
-<kbd>Ctrl + M</kbd>                        | Filetree view: show/hide modified files
-<kbd>Ctrl + U</kbd>                        | Filetree view: show/hide unmodified files
-<kbd>Ctrl + B</kbd>                        | Filetree view: show/hide file attributes
-<kbd>PageUp</kbd> or <kbd>U</kbd>          | Filetree view: scroll up a page
-<kbd>PageDown</kbd> or <kbd>D</kbd>        | Filetree view: scroll down a page
+
+### Layer
+Keybinding                                 | Description
+-------------------------------------------|---------------------------------------------------------
+<kbd>Left</kdb> or <kbd>H</kbd>            | move up section
+<kbd>Right</kdb> or <kbd>L</kbd>           | move down section
+<kbd>Ctrl + A</kbd>                        | see aggregated image modifications
+<kbd>Ctrl + L</kbd>                        | see current layer modifications
+
+### Filetree
+Keybinding                                 | Description
+-------------------------------------------|---------------------------------------------------------
+<kbd>Left</kbd> or <kbd>h</kbd>            | move cursor to parent directory
+<kbd>Right</kbd> or <kbd>h</kbd>           | move cursor to child directory and/or expand collapsed directory
+<kbd>Space</kbd>                           | collapse/uncollapse a directory
+<kbd>Ctrl + Space</kbd>                    | collapse/uncollapse all directories
+<kbd>Ctrl + A</kbd>                        | show/hide added files
+<kbd>Ctrl + R</kbd>                        | show/hide removed files
+<kbd>Ctrl + M</kbd>                        | show/hide modified files
+<kbd>Ctrl + U</kbd>                        | show/hide unmodified files
+<kbd>Ctrl + B</kbd>                        | show/hide file attributes
+<kbd>Ctrl + O</kbd>                        | Sort file size asc/desc
+<kbd>Ctrl + P</kbd>                        | Wrap lines 
+<kbd>Ctrl + E</kbd>                        | Extract file (experimental)
+
+
+
 
 ## UI Configuration
 
