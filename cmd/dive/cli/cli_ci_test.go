@@ -11,7 +11,7 @@ func Test_CI_DefaultCIConfig(t *testing.T) {
 	t.Setenv("DIVE_CONFIG", "-")
 
 	rootCmd := getTestCommand(t, repoPath(t, ".data/test-docker-image.tar")+" -vv")
-	cd(t, "testdata/default-ci-config")
+	t.Chdir("testdata/default-ci-config")
 	combined := Capture().WithStdout().WithStderr().Run(t, func() {
 		// failing gate should result in a non-zero exit code
 		require.Error(t, rootCmd.Execute())
