@@ -93,13 +93,3 @@ func Test_FetchFailure(t *testing.T) {
 		snaps.MatchSnapshot(t, combined)
 	})
 }
-
-func cd(t testing.TB, to string) {
-	t.Helper()
-	from, err := os.Getwd()
-	require.NoError(t, err)
-	require.NoError(t, os.Chdir(to))
-	t.Cleanup(func() {
-		require.NoError(t, os.Chdir(from))
-	})
-}
