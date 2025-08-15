@@ -195,6 +195,14 @@ nix-env -iA nixpkgs.dive
 x env use dive
 ```
 
+**gah**
+
+If you use [gah](https://github.com/marverix/gah)
+
+```bash
+gah install dive
+```
+
 **Docker**
 ```bash
 docker pull docker.io/wagoodman/dive
