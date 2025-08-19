@@ -89,7 +89,7 @@ dive <source>://<your-image>
 With valid `source` options as such:
 - `docker`: Docker engine (the default option)
 - `docker-archive`: A Docker Tar Archive from disk
-- `podman`: Podman engine (linux only)
+- `podman`: Podman engine
 
 ## Installation
 
