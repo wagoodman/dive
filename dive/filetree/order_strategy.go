@@ -1,6 +1,8 @@
 package filetree
 
 import (
+	"maps"
+	"slices"
 	"sort"
 )
 
@@ -30,10 +32,7 @@ func GetSortOrderStrategy(sortOrder SortOrder) OrderStrategy {
 type orderByNameStrategy struct{}
 
 func (orderByNameStrategy) orderKeys(files map[string]*FileNode) []string {
-	var keys []string
-	for key := range files {
-		keys = append(keys, key)
-	}
+	keys := slices.Collect(maps.Keys(files))
 
 	sort.Strings(keys)
 
@@ -43,10 +42,7 @@ func (orderByNameStrategy) orderKeys(files map[string]*FileNode) []string {
 type orderBySizeDescStrategy struct{}
 
 func (orderBySizeDescStrategy) orderKeys(files map[string]*FileNode) []string {
-	var keys []string
-	for key := range files {
-		keys = append(keys, key)
-	}
+	keys := slices.Collect(maps.Keys(files))
 
 	sort.Slice(keys, func(i, j int) bool {
 		ki, kj := keys[i], keys[j]
