@@ -2,11 +2,12 @@ package app
 
 import (
 	"fmt"
-	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1"
+	"regexp"
+
+	v1 "github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1"
 	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1/view"
 	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1/viewmodel"
 	"golang.org/x/net/context"
-	"regexp"
 
 	"github.com/awesome-gocui/gocui"
 )
@@ -60,7 +61,7 @@ func newController(ctx context.Context, g *gocui.Gui, cfg v1.Config) (*controlle
 }
 
 func (c *controller) onFileTreeViewExtract(p string) error {
-	return c.config.Content.Extract(c.ctx, c.config.Analysis.Image, c.views.LayerDetails.CurrentLayer.Id, p)
+	return c.config.Content.Extract(c.ctx, c.config.Analysis.Image, c.views.LayerDetails.CurrentLayer.Tree.Name, p)
 }
 
 func (c *controller) onFileTreeViewOptionChange() error {

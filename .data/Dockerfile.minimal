@@ -1,2 +1,7 @@
-FROM scratch
-COPY README.md /README.md
+FROM busybox:latest AS minimal
+COPY README.md /extract/README.md
+RUN mkdir -p /root/minimal/really/nested
+
+FROM alpine:latest AS final
+COPY --from=minimal /extract/README.md /tmp/README.md
+RUN mkdir -p /root/minimal
