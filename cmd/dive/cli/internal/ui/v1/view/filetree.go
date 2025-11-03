@@ -2,14 +2,15 @@ package view
 
 import (
 	"fmt"
+	"regexp"
+
 	"github.com/anchore/go-logger"
-	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1"
+	v1 "github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1"
 	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1/format"
 	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1/key"
 	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1/viewmodel"
 	"github.com/wagoodman/dive/internal/log"
 	"github.com/wagoodman/dive/internal/utils"
-	"regexp"
 
 	"github.com/awesome-gocui/gocui"
 	"github.com/wagoodman/dive/dive/filetree"
@@ -321,7 +322,7 @@ func (v *FileTree) toggleSortOrder() error {
 }
 
 func (v *FileTree) extractFile() error {
-	node := v.vm.CurrentNode(v.filterRegex)
+	node := v.vm.CurrentNode(nil)
 	for _, listener := range v.extractListeners {
 		err := listener(node.Path())
 		if err != nil {
