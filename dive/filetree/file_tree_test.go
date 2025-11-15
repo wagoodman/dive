@@ -2,18 +2,11 @@ package filetree
 
 import (
 	"fmt"
-	"github.com/stretchr/testify/assert"
+	"slices"
 	"testing"
-)
 
-func stringInSlice(a string, list []string) bool {
-	for _, b := range list {
-		if b == a {
-			return true
-		}
-	}
-	return false
-}
+	"github.com/stretchr/testify/assert"
+)
 
 func AssertDiffType(node *FileNode, expectedDiffType DiffType) error {
 	if node.Data.DiffType != expectedDiffType {
@@ -517,11 +510,11 @@ func TestCompareWithAdds(t *testing.T) {
 		p := n.Path()
 		if p == "/" {
 			return nil
-		} else if stringInSlice(p, []string{"/usr/bin/bash", "/a", "/a/new", "/a/new/path"}) {
+		} else if slices.Contains([]string{"/usr/bin/bash", "/a", "/a/new", "/a/new/path"}, p) {
 			if err := AssertDiffType(n, Added); err != nil {
 				failedAssertions = append(failedAssertions, err)
 			}
-		} else if stringInSlice(p, []string{"/usr/bin", "/usr"}) {
+		} else if slices.Contains([]string{"/usr/bin", "/usr"}, p) {
 			if err := AssertDiffType(n, Modified); err != nil {
 				failedAssertions = append(failedAssertions, err)
 			}
@@ -634,7 +627,7 @@ func TestCompareWithChanges(t *testing.T) {
 		p := n.Path()
 		if p == "/" {
 			return nil
-		} else if stringInSlice(p, changedPaths) {
+		} else if slices.Contains(changedPaths, p) {
 			if err := AssertDiffType(n, Modified); err != nil {
 				failedAssertions = append(failedAssertions, err)
 			}
@@ -701,11 +694,11 @@ func TestCompareWithRemoves(t *testing.T) {
 		p := n.Path()
 		if p == "/" {
 			return nil
-		} else if stringInSlice(p, []string{"/etc", "/usr/bin", "/etc/hosts", "/etc/sudoers", "/root/example/some1", "/root/example/some2", "/root/example"}) {
+		} else if slices.Contains([]string{"/etc", "/usr/bin", "/etc/hosts", "/etc/sudoers", "/root/example/some1", "/root/example/some2", "/root/example"}, p) {
 			if err := AssertDiffType(n, Removed); err != nil {
 				failedAssertions = append(failedAssertions, err)
 			}
-		} else if stringInSlice(p, []string{"/usr", "/root"}) {
+		} else if slices.Contains([]string{"/usr", "/root"}, p) {
 			if err := AssertDiffType(n, Modified); err != nil {
 				failedAssertions = append(failedAssertions, err)
 			}
@@ -814,7 +807,7 @@ func TestRemoveOnIterate(t *testing.T) {
 			hash:     123,
 		}
 		node, _, err := tree.AddPath(value, fakeData)
-		if err == nil && stringInSlice(node.Path(), []string{"/etc"}) {
+		if err == nil && slices.Contains([]string{"/etc"}, node.Path()) {
 			node.Data.ViewInfo.Hidden = true
 		}
 	}
