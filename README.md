@@ -195,6 +195,14 @@ nix-env -iA nixpkgs.dive
 x env use dive
 ```
 
+**Mise on Linux/MacOS/Windows**
+
+If you use [mise](https://github.com/jdx/mise):
+
+```bash
+mise use -g dive@latest
+```
+
 **Docker**
 ```bash
 docker pull docker.io/wagoodman/dive
