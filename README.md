@@ -51,19 +51,19 @@ CI=true dive <your-image>
 
 ## Basic Features
 
-**Show Docker image contents broken down by layer**
+### Show Docker image contents broken down by layer
 
 As you select a layer on the left, you are shown the contents of that layer combined with all previous layers on the right. Also, you can fully explore the file tree with the arrow keys.
 
-**Indicate what's changed in each layer**
+### Indicate what's changed in each layer
 
 Files that have changed, been modified, added, or removed are indicated in the file tree. This can be adjusted to show changes for a specific layer, or aggregated changes up to this layer.
 
-**Estimate "image efficiency"**
+### Estimate "image efficiency"
 
 The lower left pane shows basic layer info and an experimental metric that will guess how much wasted space your image contains. This might be from duplicating files across layers, moving files across layers, or not fully removing files. Both a percentage "score" and total wasted file space is provided.
 
-**Quick build/analysis cycles**
+### Quick build/analysis cycles
 
 You can build a Docker image and do an immediate analysis with one command:
 `dive build -t some-tag .`
@@ -71,11 +71,11 @@ You can build a Docker image and do an immediate analysis with one command:
 You only need to replace your `docker build` command with the same `dive build`
 command.
 
-**CI Integration**
+### CI Integration
 
 Analyze an image and get a pass/fail result based on the image efficiency and wasted space. Simply set `CI=true` in the environment when invoking any valid dive command.
 
-**Multiple Image Sources and Container Engines Supported**
+### Multiple Image Sources and Container Engines Supported
 
 With the `--source` option, you can select where to fetch the container image from:
 ```bash
@@ -93,7 +93,7 @@ With valid `source` options as such:
 
 ## Installation
 
-**Ubuntu/Debian**
+### Ubuntu/Debian
 
 Using debs:
 ```bash
@@ -116,14 +116,14 @@ sudo snap connect dive:docker-daemon docker:docker-daemon
 > See also: https://github.com/wagoodman/dive/issues/546
 
 
-**RHEL/Centos**
+### RHEL/Centos
 ```bash
 DIVE_VERSION=$(curl -sL "https://api.github.com/repos/wagoodman/dive/releases/latest" | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/')
 curl -fOL "https://github.com/wagoodman/dive/releases/download/v${DIVE_VERSION}/dive_${DIVE_VERSION}_linux_amd64.rpm"
 rpm -i dive_${DIVE_VERSION}_linux_amd64.rpm
 ```
 
-**Arch Linux**
+### Arch Linux
 
 Available in the [extra repository](https://archlinux.org/packages/extra/x86_64/dive/) and can be installed via [pacman](https://wiki.archlinux.org/title/Pacman):
 
@@ -169,7 +169,7 @@ winget install --id wagoodman.dive
 
 Or download the latest Windows build from the [releases page](https://github.com/wagoodman/dive/releases/latest).
 
-**Go tools**
+### Go tools
 Requires Go version 1.10 or higher.
 
 ```bash
@@ -177,7 +177,7 @@ go install github.com/wagoodman/dive@latest
 ```
 *Note*: installing in this way you will not see a proper version when running `dive -v`.
 
-**Nix/NixOS**
+### Nix/NixOS
 
 On NixOS:
 ```bash
@@ -188,14 +188,14 @@ On non-NixOS (Linux, Mac)
 nix-env -iA nixpkgs.dive
 ```
 
-**X-CMD**
+### X-CMD
 
 [x-cmd](https://www.x-cmd.com/) is a **toolbox for Posix Shell**, offering a lightweight package manager built using shell and awk.
 ```sh
 x env use dive
 ```
 
-**Docker**
+### Docker
 ```bash
 docker pull docker.io/wagoodman/dive
 # or alternatively
