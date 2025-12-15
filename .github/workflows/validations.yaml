@@ -67,7 +67,7 @@ jobs:
       # why not use actions/upload-artifact? It is very slow (3 minutes to upload ~600MB of data, vs 10 seconds with this approach).
       # see https://github.com/actions/upload-artifact/issues/199 for more info
       - name: Upload snapshot artifacts
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v5
         with:
           path: snapshot
           key: snapshot-build-${{ github.run_id }}
@@ -86,7 +86,7 @@ jobs:
       - uses: actions/checkout@master
 
       - name: Download snapshot build
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         with:
           path: snapshot
           key: snapshot-build-${{ github.run_id }}
@@ -108,7 +108,7 @@ jobs:
       - uses: actions/checkout@master
 
       - name: Download snapshot build
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         with:
           path: snapshot
           key: snapshot-build-${{ github.run_id }}
