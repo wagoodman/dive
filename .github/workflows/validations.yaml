@@ -73,7 +73,7 @@ jobs:
           key: snapshot-build-${{ github.run_id }}
 
       # ... however the cache trick doesn't work on windows :(
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with:
           name: windows-artifacts
           path: snapshot/dive_windows_amd64_v1/dive.exe
