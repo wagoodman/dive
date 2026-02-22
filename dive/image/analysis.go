@@ -30,7 +30,7 @@ func Analyze(ctx context.Context, img *Image) (*Analysis, error) {
 
 	var wastedBytes uint64
 	for _, file := range inefficiencies {
-		wastedBytes += uint64(file.CumulativeSize)
+		wastedBytes += uint64(file.WastedSize())
 	}
 
 	return &Analysis{

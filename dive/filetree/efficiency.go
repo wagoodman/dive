@@ -14,6 +14,17 @@ type EfficiencyData struct {
 	minDiscoveredSize int64
 }
 
+// WastedSize is the estimated reclaimable size for this path.
+// Exactly one discovered copy must remain, so only bytes beyond the smallest
+// discovered copy count as removable.
+func (data *EfficiencyData) WastedSize() int64 {
+	wasted := data.CumulativeSize - data.minDiscoveredSize
+	if wasted < 0 {
+		return 0
+	}
+	return wasted
+}
+
 // EfficiencySlice represents an ordered set of EfficiencyData data structures.
 type EfficiencySlice []*EfficiencyData
 
