@@ -21,7 +21,12 @@ type ImageDetails struct {
 	imageSize      uint64
 	efficiency     float64
 	inefficiencies filetree.EfficiencySlice
+	preRendered    string
 	kb             key.Bindings
+
+	lastRenderWidth      int
+	lastRenderIsSelected bool
+	rendered             bool
 }
 
 func (v *ImageDetails) Name() string {
@@ -77,14 +82,29 @@ func (v *ImageDetails) Setup(body, header *gocui.View) error {
 // 2. the estimated wasted image space
 // 3. a list of inefficient file allocations
 func (v *ImageDetails) Render() error {
-	body, err := renderImageDetailsBody(v.imageName, v.imageSize, v.efficiency, v.inefficiencies)
-	if err != nil {
-		return err
+	if v.body == nil {
+		return nil
 	}
 
-	v.gui.Update(func(g *gocui.Gui) error {
-		width, _ := v.body.Size()
+	if v.preRendered == "" {
+		body, err := renderImageDetailsBody(v.imageName, v.imageSize, v.efficiency, v.inefficiencies)
+		if err != nil {
+			return err
+		}
+		v.preRendered = body
+	}
 
+	width, _ := v.body.Size()
+	isSelected := v.gui.CurrentView() == v.body
+	if !v.shouldRender(width, isSelected) {
+		return nil
+	}
+
+	v.lastRenderWidth = width
+	v.lastRenderIsSelected = isSelected
+	v.rendered = true
+
+	v.gui.Update(func(g *gocui.Gui) error {
 		imageHeaderStr := format.RenderHeader("Image Details", width, v.gui.CurrentView() == v.body)
 
 		v.header.Clear()
@@ -93,7 +113,7 @@ func (v *ImageDetails) Render() error {
 			log.WithFields("error", err).Debug("unable to write to buffer")
 		}
 		v.body.Clear()
-		_, err = fmt.Fprintln(v.body, body)
+		_, err = fmt.Fprintln(v.body, v.preRendered)
 		if err != nil {
 			log.WithFields("error", err).Debug("unable to write to buffer")
 		}
@@ -101,6 +121,19 @@ func (v *ImageDetails) Render() error {
 	})
 
 	return nil
+}
+
+func (v *ImageDetails) shouldRender(width int, isSelected bool) bool {
+	if !v.rendered {
+		return true
+	}
+	if v.lastRenderWidth != width {
+		return true
+	}
+	if v.lastRenderIsSelected != isSelected {
+		return true
+	}
+	return false
 }
 
 func (v *ImageDetails) OnLayoutChange() error {
