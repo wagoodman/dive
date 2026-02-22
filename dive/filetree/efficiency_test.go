@@ -78,3 +78,74 @@ func TestEfficiency_ScratchImage(t *testing.T) {
 	}
 
 }
+
+func TestEfficiency_ManyCopiesAndHashSizeVariation(t *testing.T) {
+	tests := map[string]struct {
+		path      string
+		sizes     []int64
+		hashes    []uint64
+		expected  int64
+		expectedN int
+	}{
+		"hundred_copies": {
+			path: "/dup",
+			sizes: func() []int64 {
+				vals := make([]int64, 100)
+				for i := range vals {
+					vals[i] = 10
+				}
+				return vals
+			}(),
+			hashes: func() []uint64 {
+				vals := make([]uint64, 100)
+				for i := range vals {
+					vals[i] = uint64(i + 1)
+				}
+				return vals
+			}(),
+			expected:  1000,
+			expectedN: 100,
+		},
+		"different_hashes_same_size": {
+			path:      "/same-size",
+			sizes:     []int64{100, 100, 100},
+			hashes:    []uint64{1, 2, 3},
+			expected:  300,
+			expectedN: 3,
+		},
+		"different_sizes_and_hashes": {
+			path:      "/varying",
+			sizes:     []int64{400, 250, 100, 100},
+			hashes:    []uint64{10, 20, 30, 40},
+			expected:  850,
+			expectedN: 4,
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			trees := make([]*FileTree, len(test.sizes))
+			for idx := range test.sizes {
+				trees[idx] = NewFileTree()
+				_, _, err := trees[idx].AddPath(test.path, FileInfo{Size: test.sizes[idx], hash: test.hashes[idx]})
+				if err != nil {
+					t.Fatalf("could not setup test at layer %d: %+v", idx, err)
+				}
+			}
+
+			_, matches := Efficiency(trees)
+
+			if len(matches) != 1 {
+				t.Fatalf("expected 1 inefficiency match, got %d", len(matches))
+			}
+
+			if matches[0].CumulativeSize != test.expected {
+				t.Fatalf("expected cumulative size %d, got %d", test.expected, matches[0].CumulativeSize)
+			}
+
+			if len(matches[0].Nodes) != test.expectedN {
+				t.Fatalf("expected node count %d, got %d", test.expectedN, len(matches[0].Nodes))
+			}
+		})
+	}
+}

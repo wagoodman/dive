@@ -14,7 +14,7 @@ func Test_Analysis(t *testing.T) {
 		wastedPercent float64
 		path          string
 	}{
-		"docker-image": {0.9844212134184309, 1220598, 66237, 32025, 0.4834911001404049, "../../../.data/test-docker-image.tar"},
+		"docker-image": {0.9844212134184309, 1220598, 66237, 19215, 0.29009466008424295, "../../../.data/test-docker-image.tar"},
 	}
 
 	for name, test := range table {
