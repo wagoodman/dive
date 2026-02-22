@@ -6,11 +6,8 @@ import (
 	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1/format"
 	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1/key"
 	"github.com/wagoodman/dive/internal/log"
-	"strconv"
-	"strings"
 
 	"github.com/awesome-gocui/gocui"
-	"github.com/dustin/go-humanize"
 	"github.com/wagoodman/dive/dive/filetree"
 )
 
@@ -80,21 +77,10 @@ func (v *ImageDetails) Setup(body, header *gocui.View) error {
 // 2. the estimated wasted image space
 // 3. a list of inefficient file allocations
 func (v *ImageDetails) Render() error {
-	analysisTemplate := "%5s  %12s  %-s\n"
-	inefficiencyReport := fmt.Sprintf(format.Header(analysisTemplate), "Count", "Total Space", "Path")
-
-	var wastedSpace int64
-	for idx := 0; idx < len(v.inefficiencies); idx++ {
-		data := v.inefficiencies[len(v.inefficiencies)-1-idx]
-		wastedSpace += data.CumulativeSize
-
-		inefficiencyReport += fmt.Sprintf(analysisTemplate, strconv.Itoa(len(data.Nodes)), humanize.Bytes(uint64(data.CumulativeSize)), data.Path)
+	body, err := renderImageDetailsBody(v.imageName, v.imageSize, v.efficiency, v.inefficiencies)
+	if err != nil {
+		return err
 	}
-
-	imageNameStr := fmt.Sprintf("%s %s", format.Header("Image name:"), v.imageName)
-	imageSizeStr := fmt.Sprintf("%s %s", format.Header("Total Image size:"), humanize.Bytes(v.imageSize))
-	efficiencyStr := fmt.Sprintf("%s %d %%", format.Header("Image efficiency score:"), int(100.0*v.efficiency))
-	wastedSpaceStr := fmt.Sprintf("%s %s", format.Header("Potential wasted space:"), humanize.Bytes(uint64(wastedSpace)))
 
 	v.gui.Update(func(g *gocui.Gui) error {
 		width, _ := v.body.Size()
@@ -106,18 +92,8 @@ func (v *ImageDetails) Render() error {
 		if err != nil {
 			log.WithFields("error", err).Debug("unable to write to buffer")
 		}
-
-		var lines = []string{
-			imageNameStr,
-			imageSizeStr,
-			wastedSpaceStr,
-			efficiencyStr,
-			" ", // to avoid an empty line so CursorDown can work as expected
-			inefficiencyReport,
-		}
-
 		v.body.Clear()
-		_, err = fmt.Fprintln(v.body, strings.Join(lines, "\n"))
+		_, err = fmt.Fprintln(v.body, body)
 		if err != nil {
 			log.WithFields("error", err).Debug("unable to write to buffer")
 		}
