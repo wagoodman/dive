@@ -1,6 +1,6 @@
 module github.com/wagoodman/dive
 
-go 1.24
+go 1.25
 
 require (
 	github.com/anchore/clio v0.0.0-20250401141128-4c1d6bd1e872
