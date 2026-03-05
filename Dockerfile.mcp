@@ -1,0 +1,49 @@
+# Stage 1: Build the dive binary
+FROM golang:1.24-alpine AS builder
+
+WORKDIR /src
+
+# Pre-copy/cache go.mod for pre-downloading dependencies
+COPY go.mod go.sum ./
+RUN go mod download
+
+# Explicitly copy required source directories to bypass .dockerignore exclusions
+COPY cmd/ ./cmd/
+COPY dive/ ./dive/
+COPY internal/ ./internal/
+
+# Build the binary with standard LDFlags for versioning
+RUN go build -ldflags "-s -w -X main.version=v$(cat VERSION 2>/dev/null || echo '0.0.0-mcp')" -o /usr/local/bin/dive ./cmd/dive
+
+# Stage 2: Final image
+FROM alpine:3.21
+
+# Install Docker CLI for engine-based analysis
+# Using 28.0.0 as the default project standard
+ARG DOCKER_CLI_VERSION=28.0.0
+RUN apk add --no-cache ca-certificates wget tar && \
+    wget -O- https://download.docker.com/linux/static/stable/$(uname -m)/docker-${DOCKER_CLI_VERSION}.tgz | \
+    tar -xzf - docker/docker --strip-component=1 -C /usr/local/bin && \
+    apk del wget tar
+
+# Copy the dive binary from builder
+COPY --from=builder /usr/local/bin/dive /usr/local/bin/dive
+
+# Metadata
+LABEL org.opencontainers.image.title="Dive MCP Server"
+LABEL org.opencontainers.image.description="Docker image explorer with MCP support (stdio, sse, streamable-http)"
+LABEL org.opencontainers.image.source="https://github.com/wagoodman/dive"
+LABEL maintainer="antholoj"
+
+# Expose default port for MCP HTTP/SSE/Streamable transports
+EXPOSE 8080
+
+# Default environment for MCP
+ENV DIVE_MCP_HOST=0.0.0.0
+ENV DIVE_MCP_PORT=8080
+
+# The entrypoint allows for standard 'dive' commands or 'dive mcp'
+ENTRYPOINT ["/usr/local/bin/dive"]
+
+# Default to help if no arguments are provided
+CMD ["--help"]

@@ -49,6 +49,24 @@ CI=true dive <your-image>
 
 **This is beta quality!** *Feel free to submit an issue if you want a new feature or find a bug :)*
 
+## Model Context Protocol (MCP) Server
+
+`dive` can act as an MCP server, allowing AI agents (like Claude Desktop or IDE extensions) to programmatically analyze images, inspect layers, and perform deep diffing between image states.
+
+For detailed instructions on configuration, transport options, and client setup, see the [Comprehensive MCP Guide](docs/MCP_GUIDE.md).
+
+### Quick Start (Stdio)
+```bash
+dive mcp --quiet
+```
+
+### Quick Start (HTTP)
+```bash
+dive mcp --transport streamable-http --port 8080
+```
+- **Endpoint:** `http://localhost:8080/mcp`
+
+
 ## Basic Features
 
 **Show Docker image contents broken down by layer**

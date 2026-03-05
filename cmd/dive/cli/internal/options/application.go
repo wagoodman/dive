@@ -8,6 +8,7 @@ type Application struct {
 	Analysis Analysis `yaml:",inline" mapstructure:",squash"`
 	CI       CI       `yaml:",inline" mapstructure:",squash"`
 	Export   Export   `yaml:",inline" mapstructure:",squash"`
+	MCP      MCP      `yaml:",inline" mapstructure:",squash"`
 	UI       UI       `yaml:",inline" mapstructure:",squash"`
 }
 
@@ -16,6 +17,7 @@ func DefaultApplication() Application {
 		Analysis: DefaultAnalysis(),
 		CI:       DefaultCI(),
 		Export:   DefaultExport(),
+		MCP:      DefaultMCP(),
 		UI:       DefaultUI(),
 	}
 }

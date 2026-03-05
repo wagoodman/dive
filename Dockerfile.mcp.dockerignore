@@ -1,0 +1,9 @@
+# This file overrides the default .dockerignore for the MCP build.
+# We leave it mostly empty to ensure all source code (cmd, dive, internal) 
+# is included in the build context.
+
+.git
+.tmp
+.tool
+snapshot/
+dist/
