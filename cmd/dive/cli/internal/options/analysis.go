@@ -2,11 +2,13 @@ package options
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/anchore/clio"
 	"github.com/scylladb/go-set/strset"
+
 	"github.com/wagoodman/dive/dive"
 	"github.com/wagoodman/dive/internal/log"
-	"strings"
 )
 
 const defaultContainerEngine = "docker"
@@ -20,6 +22,7 @@ var _ interface {
 type Analysis struct {
 	Image                     string           `yaml:"image" mapstructure:"-"`
 	ContainerEngine           string           `yaml:"container-engine" mapstructure:"container-engine"`
+	LegacySource              string           `yaml:"-" mapstructure:"source"`
 	Source                    dive.ImageSource `yaml:"-" mapstructure:"-"`
 	IgnoreErrors              bool             `yaml:"ignore-errors" mapstructure:"ignore-errors"`
 	AvailableContainerEngines []string         `yaml:"-" mapstructure:"-"`
@@ -46,6 +49,13 @@ func (c *Analysis) AddFlags(flags clio.FlagSet) {
 }
 
 func (c *Analysis) PostLoad() error {
+	// Support the legacy "source" config key (used before the CLI refactor in v0.14).
+	// If "container-engine" is still at its default and "source" was explicitly set, promote it.
+	if c.LegacySource != "" && c.ContainerEngine == defaultContainerEngine {
+		log.Warnf("config key 'source' is deprecated; please rename it to 'container-engine'")
+		c.ContainerEngine = c.LegacySource
+	}
+
 	validEngines := strset.New(c.AvailableContainerEngines...)
 	if !validEngines.Has(c.ContainerEngine) {
 		log.Warnf("invalid container engine: %s (valid options: %s), using default %q", c.ContainerEngine, strings.Join(c.AvailableContainerEngines, ", "), defaultContainerEngine)
