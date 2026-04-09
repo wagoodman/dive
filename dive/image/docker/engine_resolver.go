@@ -56,14 +56,15 @@ func (r *engineResolver) Build(ctx context.Context, args []string) (*image.Image
 func (r *engineResolver) Extract(ctx context.Context, id string, l string, p string) error {
 	reader, err := r.fetchArchive(ctx, id)
 	if err != nil {
-		return err
+		return fmt.Errorf("unable to extract from image '%s': %w", id, err)
 	}
 
-	if err := ExtractFromImage(io.NopCloser(reader), l, p); err == nil {
-		return nil
+	err = ExtractFromImage(io.NopCloser(reader), l, p)
+	if err != nil {
+		return fmt.Errorf("unable to extract from image '%s': %w", id, err)
 	}
 
-	return fmt.Errorf("unable to extract from image '%s': %+v", id, err)
+	return nil
 }
 
 func (r *engineResolver) fetchArchive(ctx context.Context, id string) (io.ReadCloser, error) {
