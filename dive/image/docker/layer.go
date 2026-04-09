@@ -16,7 +16,14 @@ type layer struct {
 
 // String represents a layer in a columnar format.
 func (l *layer) ToLayer() *image.Layer {
-	id := strings.Split(l.tree.Name, "/")[0]
+	// For Docker format: tree.Name is like "<layer-id>/layer.tar" -> ID is "<layer-id>"
+	// For OCI format: tree.Name is like "blobs/sha256/<digest>" -> ID is "sha256:<digest>"
+	var id string
+	if strings.HasPrefix(l.tree.Name, "blobs/") {
+		id = strings.TrimPrefix(l.tree.Name, "blobs/")
+	} else {
+		id = strings.Split(l.tree.Name, "/")[0]
+	}
 	return &image.Layer{
 		Id:      id,
 		Index:   l.index,

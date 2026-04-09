@@ -16,6 +16,7 @@ import (
 
 	"github.com/wagoodman/dive/dive/filetree"
 	"github.com/wagoodman/dive/dive/image"
+	"github.com/wagoodman/dive/internal/log"
 )
 
 type ImageArchive struct {
@@ -301,7 +302,11 @@ func (img *ImageArchive) ToImage(id string) (*image.Image, error) {
 }
 
 func ExtractFromImage(tarFile io.ReadCloser, l string, p string) error {
+	defer tarFile.Close()
 	tarReader := tar.NewReader(tarFile)
+
+	// sanity check
+	log.Debugf("ExtractFromImage: searching for layer '%s'", l)
 
 	for {
 		header, err := tarReader.Next()
@@ -311,42 +316,92 @@ func ExtractFromImage(tarFile io.ReadCloser, l string, p string) error {
 		}
 
 		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
+			return fmt.Errorf("error reading tar entry: %w", err)
 		}
 
 		name := header.Name
 
 		switch header.Typeflag {
 		case tar.TypeReg:
-			if name == l {
-				err = extractInner(tar.NewReader(tarReader), p)
-				if err != nil {
-					return err
-				}
-				return nil
+			switch name {
+			// Docker format: layers stored as <layer-id>/layer.tar
+			case l + "/layer.tar":
+				log.Debugf("ExtractFromImage: found docker format layer '%s'", name)
+				return extractFromTar(tar.NewReader(tarReader), strings.TrimPrefix(p, "/"))
+			// OCI format: layers stored as blobs/<layer-id>
+			case "blobs/" + l:
+				log.Debugf("ExtractFromImage: found OCI format layer '%s'", name)
+				return extractCompressedLayer(tarReader, strings.TrimPrefix(p, "/"))
+			default:
+				continue
 			}
+		case tar.TypeSymlink:
+			log.Debugf("ExtractFromImage: found symlink '%s'", name)
+			continue
 		default:
 			continue
 		}
 	}
 
-	return nil
+	return fmt.Errorf("layer '%s' not found in image archive", l)
 }
 
-func extractInner(reader *tar.Reader, p string) error {
-	target := strings.TrimPrefix(p, "/")
+func extractCompressedLayer(reader io.Reader, target string) error {
+	if target == "" {
+		target = "."
+	}
+
+	// Read a buffer to figure out the compression type
+	buf := make([]byte, 1024)
+	n, err := io.ReadFull(reader, buf)
+	if err != nil && err != io.ErrUnexpectedEOF {
+		return fmt.Errorf("failed to read layer header: %w", err)
+	}
+	if n == 0 {
+		return fmt.Errorf("empty layer entry")
+	}
+
+	layerReader := io.MultiReader(bytes.NewReader(buf[:n]), reader)
+
+	// Check magic bytes to determine compression type
+	if n >= 2 && buf[0] == 0x1f && buf[1] == 0x8b {
+		// gzip magic bytes
+		gzReader, err := gzip.NewReader(layerReader)
+		if err != nil {
+			return fmt.Errorf("failed to decompress gzip layer: %w", err)
+		}
+		defer gzReader.Close()
+		return extractFromTar(tar.NewReader(gzReader), target)
+	}
+
+	if n >= 4 && buf[0] == 0x28 && buf[1] == 0xb5 && buf[2] == 0x2f && buf[3] == 0xfd {
+		// zstd magic bytes (0xFD2FB528 little-endian)
+		zstdReader, err := zstd.NewReader(layerReader)
+		if err != nil {
+			return fmt.Errorf("failed to decompress zstd layer: %w", err)
+		}
+		defer zstdReader.Close()
+		return extractFromTar(tar.NewReader(zstdReader), target)
+	}
+
+	// No compression — plain tar archive
+	return extractFromTar(tar.NewReader(layerReader), target)
+}
+
+func extractFromTar(tarReader *tar.Reader, target string) error {
+	if target == "" {
+		target = "."
+	}
 
 	for {
-		header, err := reader.Next()
+		header, err := tarReader.Next()
 
 		if err == io.EOF {
 			break
 		}
 
 		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
+			return fmt.Errorf("error reading layer tar entry: %w", err)
 		}
 
 		name := header.Name
@@ -354,20 +409,25 @@ func extractInner(reader *tar.Reader, p string) error {
 		switch header.Typeflag {
 		case tar.TypeReg:
 			if strings.HasPrefix(name, target) {
-				err := os.MkdirAll(filepath.Dir(name), 0755)
-				if err != nil {
-					return err
+				outPath := filepath.Clean(name)
+				if filepath.IsAbs(outPath) {
+					outPath = outPath[1:]
 				}
 
-				out, err := os.Create(name)
-				if err != nil {
-					return err
+				if err := os.MkdirAll(filepath.Dir(outPath), 0755); err != nil {
+					return fmt.Errorf("failed to create directory %s: %w", filepath.Dir(outPath), err)
 				}
 
-				_, err = io.Copy(out, reader)
+				out, err := os.Create(outPath)
 				if err != nil {
-					return err
+					return fmt.Errorf("failed to create file %s: %w", outPath, err)
 				}
+
+				if _, err := io.Copy(out, tarReader); err != nil {
+					out.Close()
+					return fmt.Errorf("failed to write file %s: %w", outPath, err)
+				}
+				out.Close()
 			}
 		default:
 			continue

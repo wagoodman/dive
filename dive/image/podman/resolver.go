@@ -49,11 +49,11 @@ func (r *resolver) Extract(ctx context.Context, id string, l string, p string) e
 		return err
 	}
 
-	if err := docker.ExtractFromImage(io.NopCloser(reader), l, p); err == nil {
-		return nil
+	if err := docker.ExtractFromImage(io.NopCloser(reader), l, p); err != nil {
+		return fmt.Errorf("unable to extract from image %q: %w", id, err)
 	}
 
-	return fmt.Errorf("unable to extract from image %q: %+v", id, err)
+	return nil
 }
 
 func (r *resolver) resolveFromDockerArchive(id string) (*image.Image, error) {
