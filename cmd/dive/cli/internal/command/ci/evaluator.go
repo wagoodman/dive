@@ -98,7 +98,7 @@ func (e Evaluator) Evaluate(ctx context.Context, analysis *image.Analysis) Evalu
 
 		e.InefficientFiles = append(e.InefficientFiles, ReferenceFile{
 			References: len(fileData.Nodes),
-			SizeBytes:  uint64(fileData.CumulativeSize),
+			SizeBytes:  uint64(fileData.WastedSize()),
 			Path:       fileData.Path,
 		})
 	}
