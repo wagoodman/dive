@@ -43,8 +43,7 @@ func NewImageArchive(tarFile io.ReadCloser) (*ImageArchive, error) {
 		}
 
 		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
+			return img, err
 		}
 
 		name := header.Name
@@ -311,8 +310,7 @@ func ExtractFromImage(tarFile io.ReadCloser, l string, p string) error {
 		}
 
 		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
+			return err
 		}
 
 		name := header.Name
@@ -345,8 +343,7 @@ func extractInner(reader *tar.Reader, p string) error {
 		}
 
 		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
+			return err
 		}
 
 		name := header.Name
@@ -363,6 +360,7 @@ func extractInner(reader *tar.Reader, p string) error {
 				if err != nil {
 					return err
 				}
+				defer out.Close()
 
 				_, err = io.Copy(out, reader)
 				if err != nil {
