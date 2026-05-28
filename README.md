@@ -10,6 +10,9 @@
 
 ![Image](.data/demo.gif)
 
+> [!NOTE]
+> For the best experience, run dive in a terminal with **at least 120 columns**. In narrower terminals the layer and filetree panes may appear compressed and difficult to use. You can adjust the filetree pane width in the [UI Configuration](#ui-configuration) via the `pane-width` setting.
+
 To analyze a Docker image simply run dive with an image tag/id/digest:
 ```bash
 dive <your-image-tag>
