@@ -176,7 +176,7 @@ func determineDockerHost() (string, error) {
 	}
 	dockerEP, ok := md.Endpoints[ddocker.DockerEndpoint]
 	if !ok {
-		return "", err
+		return "", fmt.Errorf("docker endpoint not found in context %q", currentContext)
 	}
 	dockerEPMeta, ok := dockerEP.(ddocker.EndpointMeta)
 	if !ok {
