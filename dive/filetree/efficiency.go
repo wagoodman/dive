@@ -14,6 +14,13 @@ type EfficiencyData struct {
 	minDiscoveredSize int64
 }
 
+// WastedSize returns the number of bytes wasted by this path across layers.
+// For a path with N copies, only N-1 copies are reclaimable waste (one copy must be kept).
+// Previously, CumulativeSize (all N copies) was used, which double-counted waste.
+func (e *EfficiencyData) WastedSize() int64 {
+	return e.CumulativeSize - e.minDiscoveredSize
+}
+
 // EfficiencySlice represents an ordered set of EfficiencyData data structures.
 type EfficiencySlice []*EfficiencyData
 
