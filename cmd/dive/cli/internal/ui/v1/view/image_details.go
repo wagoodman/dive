@@ -86,7 +86,7 @@ func (v *ImageDetails) Render() error {
 	var wastedSpace int64
 	for idx := 0; idx < len(v.inefficiencies); idx++ {
 		data := v.inefficiencies[len(v.inefficiencies)-1-idx]
-		wastedSpace += data.CumulativeSize
+		wastedSpace += data.WastedSize()
 
 		inefficiencyReport += fmt.Sprintf(analysisTemplate, strconv.Itoa(len(data.Nodes)), humanize.Bytes(uint64(data.CumulativeSize)), data.Path)
 	}
