@@ -116,7 +116,7 @@ sudo snap connect dive:docker-daemon docker:docker-daemon
 > See also: https://github.com/wagoodman/dive/issues/546
 
 
-**RHEL/Centos**
+**RHEL/CentOS**
 ```bash
 DIVE_VERSION=$(curl -sL "https://api.github.com/repos/wagoodman/dive/releases/latest" | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/')
 curl -fOL "https://github.com/wagoodman/dive/releases/download/v${DIVE_VERSION}/dive_${DIVE_VERSION}_linux_amd64.rpm"
@@ -170,7 +170,7 @@ winget install --id wagoodman.dive
 Or download the latest Windows build from the [releases page](https://github.com/wagoodman/dive/releases/latest).
 
 **Go tools**
-Requires Go version 1.10 or higher.
+Requires Go version 1.24 or higher.
 
 ```bash
 go install github.com/wagoodman/dive@latest
