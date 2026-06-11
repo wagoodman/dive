@@ -322,6 +322,9 @@ func (v *FileTree) toggleSortOrder() error {
 
 func (v *FileTree) extractFile() error {
 	node := v.vm.CurrentNode(v.filterRegex)
+	if node == nil {
+		return nil
+	}
 	for _, listener := range v.extractListeners {
 		err := listener(node.Path())
 		if err != nil {
