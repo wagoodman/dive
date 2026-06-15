@@ -151,7 +151,7 @@ func TestFileTreeDirCollapse(t *testing.T) {
 	assertPath(t, vm, "/bin", "before toggle of bin")
 
 	// collapse /bin
-	err := vm.ToggleCollapse(nil)
+	err := vm.ToggleCollapse()
 	checkError(t, err, "unable to collapse /bin")
 	assertPath(t, vm, "/bin", "after toggle of bin")
 
@@ -164,7 +164,7 @@ func TestFileTreeDirCollapse(t *testing.T) {
 	assertPath(t, vm, "/etc", "down to etc")
 
 	// collapse /etc
-	err = vm.ToggleCollapse(nil)
+	err = vm.ToggleCollapse()
 	checkError(t, err, "unable to collapse /etc")
 	assertPath(t, vm, "/etc", "after toggle of etc")
 
@@ -173,7 +173,7 @@ func TestFileTreeDirCollapse(t *testing.T) {
 
 func assertPath(t *testing.T, vm *FileTreeViewModel, expected string, msg string) {
 	t.Helper()
-	n := vm.CurrentNode(nil)
+	n := vm.CurrentNode()
 	require.NotNil(t, n, "unable to get current node")
 	assert.Equal(t, expected, n.Path(), msg)
 }
@@ -199,7 +199,7 @@ func TestFileTreeSelectLayer(t *testing.T) {
 	vm.ShowAttributes = true
 
 	// collapse /bin
-	err := vm.ToggleCollapse(nil)
+	err := vm.ToggleCollapse()
 	checkError(t, err, "unable to collapse /bin")
 
 	// select the next layer, compareMode = layer
@@ -218,7 +218,7 @@ func TestFileShowAggregateChanges(t *testing.T) {
 	vm.ShowAttributes = true
 
 	// collapse /bin
-	err := vm.ToggleCollapse(nil)
+	err := vm.ToggleCollapse()
 	checkError(t, err, "unable to collapse /bin")
 
 	// select the next layer, compareMode = layer
@@ -280,7 +280,7 @@ func TestFileTreeDirCursorRight(t *testing.T) {
 	vm.ShowAttributes = true
 
 	// collapse /bin
-	err := vm.ToggleCollapse(nil)
+	err := vm.ToggleCollapse()
 	checkError(t, err, "unable to collapse /bin")
 
 	moved := vm.CursorDown()
@@ -294,11 +294,11 @@ func TestFileTreeDirCursorRight(t *testing.T) {
 	}
 
 	// collapse /etc
-	err = vm.ToggleCollapse(nil)
+	err = vm.ToggleCollapse()
 	checkError(t, err, "unable to collapse /etc")
 
 	// expand /etc
-	err = vm.CursorRight(nil)
+	err = vm.CursorRight()
 	checkError(t, err, "unable to cursor right")
 
 	runTestCase(t, vm, width, height, nil)
@@ -319,6 +319,67 @@ func TestFileTreeFilterTree(t *testing.T) {
 	runTestCase(t, vm, width, height, regex)
 }
 
+// TestFileTreeNavigateWithActiveFilter is a regression test for
+// https://github.com/wagoodman/dive/issues/627: with a filter active, the cursor must
+// still resolve to the visible ancestor directories of a match. Filtering for "network"
+// keeps /etc visible (a descendant matches) even though /etc itself does not match, so
+// /etc must remain selectable and collapsible.
+func TestFileTreeNavigateWithActiveFilter(t *testing.T) {
+	vm := initializeTestViewModel(t)
+
+	width, height := 100, 1000
+	vm.Setup(0, height)
+
+	regex := regexp.MustCompile("network")
+	err := vm.Update(regex, width, height)
+	require.NoError(t, err, "unable to update viewmodel")
+
+	// the cursor starts at the top of the filtered tree, which is /etc.
+	node := vm.CurrentNode()
+	require.NotNil(t, node, "expected a selectable node under an active filter")
+	require.True(t, node.Data.FileInfo.IsDir, "expected the selected node to be a directory")
+	assert.Equal(t, "/etc", node.Path(), "expected /etc to be selectable under the filter")
+
+	// the selected directory must be collapsible while the filter is active.
+	require.False(t, node.Data.ViewInfo.Collapsed, "expected /etc to start expanded")
+	err = vm.ToggleCollapse()
+	require.NoError(t, err, "unable to toggle collapse under filter")
+	assert.True(t, node.Data.ViewInfo.Collapsed, "expected /etc to collapse under the filter")
+}
+
+// TestFileTreeNavigateCollapseAllThenFilter reproduces the exact sequence from
+// https://github.com/wagoodman/dive/issues/627: collapse all directories, apply a
+// filter, then expand a directory. Before the fix getAbsPositionNode returned nil here
+// (no node matched the regex at the top level), making collapse/expand a no-op.
+func TestFileTreeNavigateCollapseAllThenFilter(t *testing.T) {
+	vm := initializeTestViewModel(t)
+
+	width, height := 100, 1000
+	vm.Setup(0, height)
+
+	// collapse all directories, then reset the cursor to the top (as the UI does).
+	err := vm.ToggleCollapseAll()
+	require.NoError(t, err, "unable to collapse all")
+	vm.ResetCursor()
+
+	// apply the filter.
+	regex := regexp.MustCompile("network")
+	err = vm.Update(regex, width, height)
+	require.NoError(t, err, "unable to update viewmodel")
+
+	// /etc is collapsed but still visible (it has a matching descendant); it must be
+	// selectable and expandable.
+	node := vm.CurrentNode()
+	require.NotNil(t, node, "expected a selectable node after collapse-all + filter")
+	assert.Equal(t, "/etc", node.Path(), "expected /etc to be selectable")
+	require.True(t, node.Data.ViewInfo.Collapsed, "expected /etc to be collapsed after collapse-all")
+
+	// expand it via cursor-right.
+	err = vm.CursorRight()
+	require.NoError(t, err, "unable to expand directory under filter")
+	assert.False(t, node.Data.ViewInfo.Collapsed, "expected /etc to expand under the filter")
+}
+
 func TestFileTreeHideAddedRemovedModified(t *testing.T) {
 	vm := initializeTestViewModel(t)
 
@@ -327,7 +388,7 @@ func TestFileTreeHideAddedRemovedModified(t *testing.T) {
 	vm.ShowAttributes = true
 
 	// collapse /bin
-	err := vm.ToggleCollapse(nil)
+	err := vm.ToggleCollapse()
 	checkError(t, err, "unable to collapse /bin")
 
 	// select the 7th layer, compareMode = layer
@@ -356,7 +417,7 @@ func TestFileTreeHideUnmodified(t *testing.T) {
 	vm.ShowAttributes = true
 
 	// collapse /bin
-	err := vm.ToggleCollapse(nil)
+	err := vm.ToggleCollapse()
 	checkError(t, err, "unable to collapse /bin")
 
 	// select the 7th layer, compareMode = layer
@@ -379,7 +440,7 @@ func TestFileTreeHideTypeWithFilter(t *testing.T) {
 	vm.ShowAttributes = true
 
 	// collapse /bin
-	err := vm.ToggleCollapse(nil)
+	err := vm.ToggleCollapse()
 	checkError(t, err, "unable to collapse /bin")
 
 	// select the 7th layer, compareMode = layer

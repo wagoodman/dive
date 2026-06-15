@@ -246,7 +246,7 @@ func (v *FileTree) CursorUp() error {
 
 // CursorLeft moves the cursor up until we reach the Parent Node or top of the tree
 func (v *FileTree) CursorLeft() error {
-	err := v.vm.CursorLeft(v.filterRegex)
+	err := v.vm.CursorLeft()
 	if err != nil {
 		return err
 	}
@@ -256,7 +256,7 @@ func (v *FileTree) CursorLeft() error {
 
 // CursorRight descends into directory expanding it if needed
 func (v *FileTree) CursorRight() error {
-	err := v.vm.CursorRight(v.filterRegex)
+	err := v.vm.CursorRight()
 	if err != nil {
 		return err
 	}
@@ -289,7 +289,7 @@ func (v *FileTree) PageUp() error {
 
 // ToggleCollapse will collapse/expand the selected FileNode.
 func (v *FileTree) toggleCollapse() error {
-	err := v.vm.ToggleCollapse(v.filterRegex)
+	err := v.vm.ToggleCollapse()
 	if err != nil {
 		return err
 	}
@@ -321,7 +321,7 @@ func (v *FileTree) toggleSortOrder() error {
 }
 
 func (v *FileTree) extractFile() error {
-	node := v.vm.CurrentNode(v.filterRegex)
+	node := v.vm.CurrentNode()
 	for _, listener := range v.extractListeners {
 		err := listener(node.Path())
 		if err != nil {
