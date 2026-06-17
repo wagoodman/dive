@@ -23,7 +23,7 @@ func DefaultCIRules() CIRules {
 	return CIRules{
 		LowestEfficiencyThresholdString: "0.9",
 		HighestWastedBytesString:        "disabled",
-		HighestUserWastedPercentString:  "0.1",
+		HighestUserWastedPercentString:  "disabled",
 	}
 }
 
