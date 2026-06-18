@@ -1,5 +1,5 @@
 package docker
 
 const (
-	defaultDockerHost = "npipe:////.pipe/docker_engine"
+	defaultDockerHost = "npipe:////./pipe/docker_engine"
 )
