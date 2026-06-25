@@ -26,6 +26,7 @@ builds:
       - amd64
       - arm64
       - ppc64le
+      - riscv64
     ldflags:
       -w
       -s
