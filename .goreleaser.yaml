@@ -146,3 +146,13 @@ docker_manifests:
 
   - name_template: ghcr.io/wagoodman/dive:v{{.Version}}
     image_templates: *ghcr_images
+
+signs:
+  - artifacts: checksum
+    signature: ${artifact}.sigstore.json
+    cmd: cosign
+    args:
+      - sign-blob
+      - --bundle=${signature}
+      - --yes
+      - ${artifact}
