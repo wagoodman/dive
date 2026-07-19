@@ -3,13 +3,14 @@ package adapter
 import (
 	"context"
 	"fmt"
+	"os"
+
 	"github.com/spf13/afero"
 	"github.com/wagoodman/dive/cmd/dive/cli/internal/command/export"
 	"github.com/wagoodman/dive/dive/image"
 	"github.com/wagoodman/dive/internal/bus"
 	"github.com/wagoodman/dive/internal/bus/event/payload"
 	"github.com/wagoodman/dive/internal/log"
-	"os"
 )
 
 type Exporter interface {
@@ -49,7 +50,7 @@ func (e *jsonExporter) ExportTo(ctx context.Context, analysis *image.Analysis, p
 		mon.SetCompleted()
 	}
 
-	file, err := e.filesystem.OpenFile(path, os.O_RDWR|os.O_CREATE, 0644)
+	file, err := e.filesystem.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
 	if err != nil {
 		return fmt.Errorf("cannot open export file: %w", err)
 	}
