@@ -169,6 +169,8 @@ winget install --id wagoodman.dive
 
 Or download the latest Windows build from the [releases page](https://github.com/wagoodman/dive/releases/latest).
 
+After Chocolatey, Scoop, or Winget, open a **new** terminal so `PATH` picks up `dive`.
+
 **Go tools**
 Requires Go version 1.10 or higher.
 
@@ -231,6 +233,8 @@ if you are using an alternative runtime (Colima etc) then you may need to specif
 ```bash
    export DOCKER_HOST=$(docker context inspect -f '{{ .Endpoints.docker.Host }}')
 ```
+
+On Windows, Docker typically exposes a named pipe (for example `npipe:////./pipe/docker_engine`) rather than a Unix socket — prefer the host from `docker context inspect`, or set `$env:DOCKER_HOST` accordingly in PowerShell.
 
 ## CI Integration
 
