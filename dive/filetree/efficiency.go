@@ -42,14 +42,6 @@ func Efficiency(trees []*FileTree) (float64, EfficiencySlice) {
 
 	visitor := func(node *FileNode) error {
 		path := node.Path()
-		if _, ok := efficiencyMap[path]; !ok {
-			efficiencyMap[path] = &EfficiencyData{
-				Path:              path,
-				Nodes:             make([]*FileNode, 0),
-				minDiscoveredSize: -1,
-			}
-		}
-		data := efficiencyMap[path]
 
 		// this node may have had children that were deleted, however, we won't explicitly list out every child, only
 		// the top-most parent with the cumulative size. These operations will need to be done on the full (stacked)
@@ -72,9 +64,13 @@ func Efficiency(trees []*FileTree) (float64, EfficiencySlice) {
 				return fmt.Errorf("unable to stack tree range: %w", err)
 			}
 
+			// a whiteout may reference a path that never existed in any lower layer (e.g. it was created and deleted
+			// within the same layer). This is not an error: there is simply no previous content to account for, so
+			// don't let it abort the analysis of the remaining files in this layer.
 			previousTreeNode, err := stackedTree.GetNode(node.Path())
 			if err != nil {
-				return err
+				log.WithFields("path", node.Path()).Debug("whiteout path not found in lower layers")
+				return nil
 			}
 
 			if previousTreeNode.Data.FileInfo.IsDir {
@@ -86,6 +82,15 @@ func Efficiency(trees []*FileTree) (float64, EfficiencySlice) {
 		} else {
 			sizeBytes = node.Data.FileInfo.Size
 		}
+
+		if _, ok := efficiencyMap[path]; !ok {
+			efficiencyMap[path] = &EfficiencyData{
+				Path:              path,
+				Nodes:             make([]*FileNode, 0),
+				minDiscoveredSize: -1,
+			}
+		}
+		data := efficiencyMap[path]
 
 		data.CumulativeSize += sizeBytes
 		if data.minDiscoveredSize < 0 || sizeBytes < data.minDiscoveredSize {
