@@ -15,6 +15,12 @@ To analyze a Docker image simply run dive with an image tag/id/digest:
 dive <your-image-tag>
 ```
 
+**Terminal size:** the interactive UI needs a reasonably wide terminal. Use at
+least **120 columns** so the layer pane on the left stays readable; at the
+common 80-column width that pane collapses and is hard to use. You can also
+adjust the relative pane sizes later via `filetree.pane-width` in the
+[UI Configuration](#ui-configuration).
+
 or you can dive with Docker directly:
 ```
 alias dive="docker run -ti --rm  -v /var/run/docker.sock:/var/run/docker.sock docker.io/wagoodman/dive"
