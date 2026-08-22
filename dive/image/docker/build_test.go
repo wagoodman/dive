@@ -47,6 +47,30 @@ func TestIsFileFlagsAreSet(t *testing.T) {
 			expected: true,
 		},
 		{
+			name:     "long flag present with inline value",
+			args:     []string{"--file=CustomDockerfile", "context"},
+			flags:    []string{"-f", "--file"},
+			expected: true,
+		},
+		{
+			name:     "short flag present with inline value",
+			args:     []string{"-f=CustomDockerfile", "context"},
+			flags:    []string{"-f", "--file"},
+			expected: true,
+		},
+		{
+			name:     "short flag present with attached value",
+			args:     []string{"-fCustomDockerfile", "context"},
+			flags:    []string{"-f", "--file"},
+			expected: true,
+		},
+		{
+			name:     "similar inline flag is not a match",
+			args:     []string{"--file-format=json", "context"},
+			flags:    []string{"-f", "--file"},
+			expected: false,
+		},
+		{
 			name:     "none of multiple flags present",
 			args:     []string{"arg1", "-x", "value", "arg2"},
 			flags:    []string{"-f", "--file"},

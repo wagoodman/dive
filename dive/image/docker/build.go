@@ -5,7 +5,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/scylladb/go-set/strset"
 	"github.com/spf13/afero"
 )
 
@@ -48,10 +47,17 @@ func buildImageFromCli(fs afero.Fs, buildArgs []string) (string, error) {
 
 // isFileFlagsAreSet Checks if specified flags are present in the argument list.
 func isFileFlagsAreSet(args []string, flags ...string) bool {
-	flagSet := strset.New(flags...)
 	for i, arg := range args {
-		if flagSet.Has(arg) && i+1 < len(args) {
-			return true
+		for _, flag := range flags {
+			if arg == flag && i+1 < len(args) {
+				return true
+			}
+			if strings.HasPrefix(arg, flag+"=") {
+				return true
+			}
+			if len(flag) == 2 && flag[0] == '-' && len(arg) > len(flag) && strings.HasPrefix(arg, flag) {
+				return true
+			}
 		}
 	}
 	return false
