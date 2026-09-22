@@ -344,7 +344,7 @@ func (v *FileTree) toggleWrapTree() error {
 		return err
 	}
 
-	// we need to render the changes to the status pane as well (not just this contoller/view)
+	// we need to render the changes to the status pane as well (not just this controller/view)
 	return v.notifyOnViewOptionChangeListeners()
 }
 
