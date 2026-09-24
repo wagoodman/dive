@@ -334,8 +334,37 @@ func ExtractFromImage(tarFile io.ReadCloser, l string, p string) error {
 	return nil
 }
 
+// cleanTarPath normalizes a tar entry or tree path to a slash-separated
+// relative form with ".." resolved. Absolute inputs are stripped to relative.
+func cleanTarPath(p string) string {
+	p = strings.TrimPrefix(p, "/")
+	cleaned := path.Clean("/" + p)
+	return strings.TrimPrefix(cleaned, "/")
+}
+
+// safeExtractPath joins name under root and rejects escapes (tar-slip / CWE-22).
+func safeExtractPath(root, name string) (string, error) {
+	rel := filepath.FromSlash(name)
+	if rel == ".." || strings.HasPrefix(rel, ".."+string(os.PathSeparator)) {
+		return "", fmt.Errorf("refusing path escape in archive entry %q", name)
+	}
+	dest := filepath.Clean(filepath.Join(root, rel))
+	root = filepath.Clean(root)
+	sep := string(os.PathSeparator)
+	if dest != root && !strings.HasPrefix(dest, root+sep) {
+		return "", fmt.Errorf("refusing path escape in archive entry %q", name)
+	}
+	return dest, nil
+}
+
 func extractInner(reader *tar.Reader, p string) error {
-	target := strings.TrimPrefix(p, "/")
+	target := cleanTarPath(p)
+
+	root, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+	root = filepath.Clean(root)
 
 	for {
 		header, err := reader.Next()
@@ -345,29 +374,40 @@ func extractInner(reader *tar.Reader, p string) error {
 		}
 
 		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
+			return err
 		}
 
-		name := header.Name
+		name := cleanTarPath(header.Name)
 
 		switch header.Typeflag {
 		case tar.TypeReg:
-			if strings.HasPrefix(name, target) {
-				err := os.MkdirAll(filepath.Dir(name), 0755)
-				if err != nil {
-					return err
-				}
+			// Match like the old strings.HasPrefix(name, target), but only after
+			// cleaning so entries such as "etc/motd/../../../tmp/x" cannot pass.
+			if !strings.HasPrefix(name, target) {
+				continue
+			}
 
-				out, err := os.Create(name)
-				if err != nil {
-					return err
-				}
+			outPath, err := safeExtractPath(root, name)
+			if err != nil {
+				return err
+			}
 
-				_, err = io.Copy(out, reader)
-				if err != nil {
-					return err
-				}
+			if err := os.MkdirAll(filepath.Dir(outPath), 0755); err != nil {
+				return err
+			}
+
+			out, err := os.Create(outPath)
+			if err != nil {
+				return err
+			}
+
+			_, copyErr := io.Copy(out, reader)
+			closeErr := out.Close()
+			if copyErr != nil {
+				return copyErr
+			}
+			if closeErr != nil {
+				return closeErr
 			}
 		default:
 			continue
