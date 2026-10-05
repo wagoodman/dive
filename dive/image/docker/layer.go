@@ -16,7 +16,7 @@ type layer struct {
 
 // String represents a layer in a columnar format.
 func (l *layer) ToLayer() *image.Layer {
-	id := strings.Split(l.tree.Name, "/")[0]
+	id := extractLayerID(l.tree.Name)
 	return &image.Layer{
 		Id:      id,
 		Index:   l.index,
