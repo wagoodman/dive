@@ -33,7 +33,7 @@ func newConfig(configBytes []byte) config {
 
 	layerIdx := 0
 	for idx := range imageConfig.History {
-		if imageConfig.History[idx].EmptyLayer {
+		if imageConfig.History[idx].EmptyLayer || layerIdx >= len(imageConfig.RootFs.DiffIds) {
 			imageConfig.History[idx].ID = "<missing>"
 		} else {
 			imageConfig.History[idx].ID = imageConfig.RootFs.DiffIds[layerIdx]
