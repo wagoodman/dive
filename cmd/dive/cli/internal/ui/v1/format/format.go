@@ -40,6 +40,7 @@ const (
 var (
 	Header                func(...interface{}) string
 	Selected              func(...interface{}) string
+	Layer                 func(...interface{}) string
 	StatusSelected        func(...interface{}) string
 	StatusNormal          func(...interface{}) string
 	StatusControlSelected func(...interface{}) string
@@ -49,22 +50,29 @@ var (
 	reset                 = color.New(color.Reset).Sprint("")
 )
 
-func init() {
-	wrapper := func(fn func(a ...any) string) func(a ...any) string {
-		return func(a ...any) string {
-			// for some reason not all color formatter functions are not applying RESET, we'll add it manually for now
-			return fn(a...) + reset
-		}
+func wrapper(fn func(a ...any) string) func(a ...any) string {
+	return func(a ...any) string {
+		// for some reason not all color formatter functions are not applying RESET, we'll add it manually for now
+		return fn(a...) + reset
 	}
+}
 
+func ResetDefaults() {
 	Selected = wrapper(color.New(color.ReverseVideo, color.Bold).SprintFunc())
 	Header = wrapper(color.New(color.Bold).SprintFunc())
+	Layer = func(a ...any) string {
+		return fmt.Sprint(a...)
+	}
 	StatusSelected = wrapper(color.New(color.BgMagenta, color.FgWhite).SprintFunc())
 	StatusNormal = wrapper(color.New(color.ReverseVideo).SprintFunc())
 	StatusControlSelected = wrapper(color.New(color.BgMagenta, color.FgWhite, color.Bold).SprintFunc())
 	StatusControlNormal = wrapper(color.New(color.ReverseVideo, color.Bold).SprintFunc())
 	CompareTop = wrapper(color.New(color.BgMagenta).SprintFunc())
 	CompareBottom = wrapper(color.New(color.BgGreen).SprintFunc())
+}
+
+func init() {
+	ResetDefaults()
 }
 
 func RenderNoHeader(width int, selected bool) string {

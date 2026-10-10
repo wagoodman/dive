@@ -21,6 +21,7 @@ type app struct {
 
 // Run is the UI entrypoint.
 func Run(ctx context.Context, c v1.Config) error {
+	c.Preferences.Colors.Apply()
 	var err error
 
 	// it appears there is a race condition where termbox.Init() will

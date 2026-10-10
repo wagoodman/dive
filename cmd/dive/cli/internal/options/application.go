@@ -28,5 +28,6 @@ func (c Application) V1Preferences() v1.Preferences {
 		CollapseFiletreeDirectory:  c.UI.Filetree.CollapseDir,
 		FiletreePaneWidth:          c.UI.Filetree.PaneWidth,
 		FiletreeDiffHide:           nil,
+		Colors:                     c.UI.Colors.ToV1Colors(),
 	}
 }

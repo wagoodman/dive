@@ -19,6 +19,7 @@ type controller struct {
 }
 
 func newController(ctx context.Context, g *gocui.Gui, cfg v1.Config) (*controller, error) {
+	cfg.Preferences.Colors.Apply()
 	views, err := view.NewViews(g, cfg)
 	if err != nil {
 		return nil, err

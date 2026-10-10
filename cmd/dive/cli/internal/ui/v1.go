@@ -39,6 +39,7 @@ type format struct {
 }
 
 func NewV1UI(cfg v1.Preferences, out io.Writer, quiet bool, verbosity int) *V1UI {
+	cfg.Colors.Apply()
 	return &V1UI{
 		cfg:       cfg,
 		out:       out,
