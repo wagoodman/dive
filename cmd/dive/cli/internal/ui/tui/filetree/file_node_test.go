@@ -3,6 +3,8 @@ package filetree
 import (
 	"archive/tar"
 	"testing"
+
+	"github.com/fatih/color"
 )
 
 func TestAddChild(t *testing.T) {
@@ -207,5 +209,42 @@ func TestFileTypeDisplay(t *testing.T) {
 func checkError(t *testing.T, err error, message string) {
 	if err != nil {
 		t.Errorf(message+": %+v", err)
+	}
+}
+
+func TestDiffTypeColors(t *testing.T) {
+	defer ResetDiffTypeColors()
+
+	// Verify defaults
+	if DiffTypeColor(Added) == nil {
+		t.Errorf("Expected default color for Added to be non-nil")
+	}
+	if DiffTypeColor(Removed) == nil {
+		t.Errorf("Expected default color for Removed to be non-nil")
+	}
+	if DiffTypeColor(Modified) == nil {
+		t.Errorf("Expected default color for Modified to be non-nil")
+	}
+	if DiffTypeColor(Unmodified) == nil {
+		t.Errorf("Expected default color for Unmodified to be non-nil")
+	}
+
+	// Test custom color override
+	custom := color.New(color.FgCyan)
+	SetDiffTypeColor(Added, custom)
+	if DiffTypeColor(Added) != custom {
+		t.Errorf("Expected custom color for Added")
+	}
+
+	// Test nil does not override
+	SetDiffTypeColor(Added, nil)
+	if DiffTypeColor(Added) != custom {
+		t.Errorf("Expected custom color to remain after passing nil")
+	}
+
+	// Test reset
+	ResetDiffTypeColors()
+	if DiffTypeColor(Added) == custom {
+		t.Errorf("Expected color to be reset back to default")
 	}
 }
