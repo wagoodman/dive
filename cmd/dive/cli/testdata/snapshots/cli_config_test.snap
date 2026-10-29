@@ -14,8 +14,11 @@ dev:
   # capture resource profiling data (available: [cpu, mem]) (env: DIVE_DEV_PROFILE)
   profile: 'none'
 
-# container engine to use for image analysis (supported options: 'docker' and 'podman') (env: DIVE_CONTAINER_ENGINE)
+# where to load the image from when the image reference has no scheme (supported options: docker, podman, docker-archive, oci-archive, oci-dir, registry, containerd, containers-storage, auto) (env: DIVE_CONTAINER_ENGINE)
 container-engine: 'docker'
+
+# platform to select from a multi-platform image, e.g. 'linux/arm64' (default: the image source's default) (env: DIVE_PLATFORM)
+platform: ''
 
 # continue with analysis even if there are errors parsing the image archive (env: DIVE_IGNORE_ERRORS)
 ignore-errors: false
