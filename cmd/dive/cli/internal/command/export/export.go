@@ -10,8 +10,6 @@ import (
 	"github.com/anchore/stereoscope/pkg/filetree/filenode"
 
 	"github.com/wagoodman/dive/dive"
-	"github.com/wagoodman/dive/dive/filetree"
-	diveImage "github.com/wagoodman/dive/dive/image"
 	"github.com/wagoodman/dive/internal/log"
 )
 
@@ -54,66 +52,9 @@ type FileReference struct {
 	Path       string `json:"file"`
 }
 
-// NewExport exports the analysis to a JSON
-func NewExport(analysis *diveImage.Analysis) *Export {
-	data := Export{
-		Layer: make([]Layer, len(analysis.Layers)),
-		Image: Image{
-			InefficientFiles: make([]FileReference, len(analysis.Inefficiencies)),
-			SizeBytes:        analysis.SizeBytes,
-			EfficiencyScore:  analysis.Efficiency,
-			InefficientBytes: analysis.WastedBytes,
-		},
-	}
-
-	// export layers in order
-	for idx, curLayer := range analysis.Layers {
-		layerFileList := make([]FileInfo, 0)
-		visitor := func(node *filetree.FileNode) error {
-			fi := node.Data.FileInfo
-			layerFileList = append(layerFileList, FileInfo{
-				Path:     fi.Path,
-				TypeFlag: fi.TypeFlag,
-				Linkname: fi.Linkname,
-				Size:     fi.Size,
-				Mode:     fi.Mode,
-				Uid:      fi.Uid,
-				Gid:      fi.Gid,
-				IsDir:    fi.IsDir,
-			})
-			return nil
-		}
-		err := curLayer.Tree.VisitDepthChildFirst(visitor, nil)
-		if err != nil {
-			log.WithFields("layer", curLayer.Id, "error", err).Debug("unable to propagate layer tree")
-		}
-		data.Layer[idx] = Layer{
-			Index:     curLayer.Index,
-			ID:        curLayer.Id,
-			DigestID:  curLayer.Digest,
-			SizeBytes: curLayer.Size,
-			Command:   curLayer.Command,
-			FileList:  layerFileList,
-		}
-	}
-
-	// add file references
-	for idx := 0; idx < len(analysis.Inefficiencies); idx++ {
-		fileData := analysis.Inefficiencies[len(analysis.Inefficiencies)-1-idx]
-
-		data.Image.InefficientFiles[idx] = FileReference{
-			References: len(fileData.Nodes),
-			SizeBytes:  uint64(fileData.CumulativeSize),
-			Path:       fileData.Path,
-		}
-	}
-
-	return &data
-}
-
-// NewExportFromAnalysis exports a stereoscope based analysis, in the same shape as NewExport. Each layer lists the
+// NewExport exports an analysis to the JSON shape. Each layer lists the
 // entries of its own tar (whiteouts included, implicit parent directories left out) children before parents.
-func NewExportFromAnalysis(analysis *dive.Analysis) *Export {
+func NewExport(analysis *dive.Analysis) *Export {
 	data := Export{
 		Layer: make([]Layer, len(analysis.Layers)),
 		Image: Image{

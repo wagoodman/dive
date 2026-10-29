@@ -1,11 +1,11 @@
 package app
 
 import (
+	"context"
 	"fmt"
 	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1"
 	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1/view"
 	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1/viewmodel"
-	"golang.org/x/net/context"
 	"regexp"
 
 	"github.com/awesome-gocui/gocui"

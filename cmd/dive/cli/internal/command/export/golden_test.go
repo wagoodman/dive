@@ -17,7 +17,7 @@ func Test_ExportGoldens(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			analysis, err := dive.Analyze(context.Background(), name, imagefixture.Load(t, name))
 			require.NoError(t, err)
-			payload, err := NewExportFromAnalysis(analysis).Marshal()
+			payload, err := NewExport(analysis).Marshal()
 			require.NoError(t, err)
 			imagefixture.AssertGolden(t, imagefixture.GoldenPath(name, "export"), append(payload, '\n'))
 		})

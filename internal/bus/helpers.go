@@ -43,21 +43,6 @@ func StartTask(info payload.GenericTask) *payload.GenericProgress {
 	return t
 }
 
-func StartSizedTask(info payload.GenericTask, size int64, initialStage string) *payload.GenericProgress {
-	t := &payload.GenericProgress{
-		AtomicStage: progress.NewAtomicStage(initialStage),
-		Manual:      progress.NewManual(size),
-	}
-
-	Publish(partybus.Event{
-		Type:   event.TaskStarted,
-		Source: info,
-		Value:  progress.StagedProgressable(t),
-	})
-
-	return t
-}
-
 // ExploreAnalysis hands the analysis to the TUI and blocks until the UI is done with it (or ctx is done). The TUI
 // reads file contents from the analysis image for diffs and extraction, so the caller can only clean up the image
 // once this returns.
@@ -66,7 +51,7 @@ func ExploreAnalysis(ctx context.Context, analysis *dive.Analysis) {
 	var once sync.Once
 	Publish(partybus.Event{
 		Type:  event.ExploreAnalysis,
-		Value: event.Explore{Analysis: analysis, Done: func() { once.Do(func() { close(done) }) }},
+		Value: payload.Explore{Analysis: analysis, Done: func() { once.Do(func() { close(done) }) }},
 	})
 	select {
 	case <-done:

@@ -60,7 +60,7 @@ func ParseExploreAnalysis(e partybus.Event) (*dive.Analysis, func(), error) {
 		return nil, func() {}, err
 	}
 
-	ex, ok := e.Value.(event.Explore)
+	ex, ok := e.Value.(payload.Explore)
 	if !ok {
 		return nil, func() {}, newPayloadErr(e.Type, "Value", e.Value)
 	}

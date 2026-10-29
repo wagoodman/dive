@@ -1,16 +1,15 @@
 package ci
 
 import (
+	"context"
 	"fmt"
 	"github.com/charmbracelet/lipgloss"
-	"golang.org/x/net/context"
 	"sort"
 	"strconv"
 	"strings"
 
 	"github.com/dustin/go-humanize"
 	"github.com/wagoodman/dive/dive"
-	"github.com/wagoodman/dive/dive/image"
 )
 
 // Stats is what the CI rules and report read from an analysis.
@@ -34,25 +33,6 @@ func NewStats(analysis *dive.Analysis) Stats {
 			References: ineff.Count,
 			SizeBytes:  ineff.SizeBytes,
 			Path:       ineff.Path,
-		})
-	}
-	return stats
-}
-
-// NewStatsFromImageAnalysis reads the CI stats of an analysis from the dive/image parser.
-func NewStatsFromImageAnalysis(analysis *image.Analysis) Stats {
-	stats := Stats{
-		Efficiency:        analysis.Efficiency,
-		WastedBytes:       analysis.WastedBytes,
-		WastedUserPercent: analysis.WastedUserPercent,
-	}
-	// inefficiencies are sorted smallest first
-	for idx := len(analysis.Inefficiencies) - 1; idx >= 0; idx-- {
-		fileData := analysis.Inefficiencies[idx]
-		stats.InefficientFiles = append(stats.InefficientFiles, ReferenceFile{
-			References: len(fileData.Nodes),
-			SizeBytes:  uint64(fileData.CumulativeSize),
-			Path:       fileData.Path,
 		})
 	}
 	return stats

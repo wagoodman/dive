@@ -141,7 +141,7 @@ func exportTo(analysis *dive.Analysis, path string) error {
 		Context: fmt.Sprintf("[file: %s]", path),
 	})
 
-	data, err := export.NewExportFromAnalysis(analysis).Marshal()
+	data, err := export.NewExport(analysis).Marshal()
 	if err == nil {
 		err = os.WriteFile(path, data, 0o644)
 	}

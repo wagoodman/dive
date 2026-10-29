@@ -1,13 +1,13 @@
 package app
 
 import (
+	"context"
 	"errors"
 	"github.com/awesome-gocui/gocui"
 	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1"
 	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1/key"
 	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1/layout"
 	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1/layout/compound"
-	"golang.org/x/net/context"
 	"time"
 )
 
