@@ -21,8 +21,13 @@ package main
 // THE SOFTWARE.
 
 import (
+	"fmt"
+	"os"
+
 	"github.com/anchore/clio"
+
 	"github.com/wagoodman/dive/cmd/dive/cli"
+	"github.com/wagoodman/dive/dive/source"
 )
 
 // applicationName is the non-capitalized name of the application (do not change this)
@@ -52,4 +57,10 @@ func main() {
 	)
 
 	app.Run()
+
+	// on an interrupt clio returns here without waiting for the command, which then never cleans up its image.
+	// (on an error exit clio calls os.Exit instead, but the command has already finished and cleaned up then)
+	if err := source.Cleanup(); err != nil {
+		fmt.Fprintf(os.Stderr, "unable to clean up temp dirs: %v\n", err)
+	}
 }

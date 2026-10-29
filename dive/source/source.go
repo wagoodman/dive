@@ -88,8 +88,18 @@ func schemeSource(scheme string) (string, bool) {
 	return s, ok && s != Auto
 }
 
+// tempDirs parents the temp dirs of every Load, so Cleanup can remove them even when the caller never got the
+// image back (e.g. an interrupt while a provider is still copying the image).
+var tempDirs = file.NewTempDirGenerator("dive")
+
+// Cleanup removes the temp dirs of every image Load has read (or is still reading). It is safe to call more than once
+// and concurrently with img.Cleanup(). Meant for the end of the process, when interrupted work never returned.
+func Cleanup() error {
+	return tempDirs.Cleanup()
+}
+
 // Load resolves the user reference (see Parse) and reads the image with stereoscope. The caller owns the returned
-// image and must call img.Cleanup() when done with it, including on interrupt, to remove the temp dirs it holds.
+// image and should call img.Cleanup() when done with it; Cleanup is the backstop for paths that never get there.
 func Load(ctx context.Context, input string, cfg Config) (*image.Image, error) {
 	src, ref := Parse(input, cfg.Source)
 
@@ -102,7 +112,7 @@ func Load(ctx context.Context, input string, cfg Config) (*image.Image, error) {
 		platform = p
 	}
 
-	tmp := file.NewTempDirGenerator("dive")
+	tmp := tempDirs.NewGenerator()
 	ps, err := providers(src, ref, runtime.GOOS, platform, tmp)
 	if err != nil {
 		return nil, err

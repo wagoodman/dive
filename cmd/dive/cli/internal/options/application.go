@@ -20,7 +20,7 @@ func DefaultApplication() Application {
 	}
 }
 
-func (c Application) V1Preferences() v1.Preferences {
+func (c Application) TUIPreferences() v1.Preferences {
 	return v1.Preferences{
 		KeyBindings:                c.UI.Keybinding.Config,
 		ShowFiletreeAttributes:     c.UI.Filetree.ShowAttributes,

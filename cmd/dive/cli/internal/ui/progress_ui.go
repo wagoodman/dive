@@ -31,7 +31,7 @@ import (
 func New(prefs v1.Preferences, out io.Writer, quiet bool, verbosity int) clio.UI {
 	lc := clio.LoggingConfig{Quiet: quiet, Verbosity: verbosity}
 	if quiet || isCI() || !lc.AllowUI(os.Stdin) {
-		return NewV1UI(prefs, out, quiet, verbosity)
+		return NewLineUI(prefs, out, quiet, verbosity)
 	}
 	return newProgressUI(prefs, out, handler.New(handler.DefaultHandlerConfig()))
 }

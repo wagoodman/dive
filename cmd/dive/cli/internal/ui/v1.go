@@ -14,9 +14,9 @@ import (
 	"os"
 )
 
-var _ clio.UI = (*V1UI)(nil)
+var _ clio.UI = (*LineUI)(nil)
 
-type V1UI struct {
+type LineUI struct {
 	cfg v1.Preferences
 	out io.Writer
 	err io.Writer
@@ -34,8 +34,8 @@ type format struct {
 	Notification lipgloss.Style
 }
 
-func NewV1UI(cfg v1.Preferences, out io.Writer, quiet bool, verbosity int) *V1UI {
-	return &V1UI{
+func NewLineUI(cfg v1.Preferences, out io.Writer, quiet bool, verbosity int) *LineUI {
+	return &LineUI{
 		cfg:       cfg,
 		out:       out,
 		err:       os.Stderr,
@@ -49,7 +49,7 @@ func NewV1UI(cfg v1.Preferences, out io.Writer, quiet bool, verbosity int) *V1UI
 	}
 }
 
-func (n *V1UI) Setup(subscription partybus.Unsubscribable) error {
+func (n *LineUI) Setup(subscription partybus.Unsubscribable) error {
 	if n.verbosity == 0 || n.quiet {
 		// we still use the UI, but we want to suppress responding to events that would print out what is already
 		// being logged.
@@ -63,7 +63,7 @@ func (n *V1UI) Setup(subscription partybus.Unsubscribable) error {
 	return nil
 }
 
-func (n *V1UI) Handle(e partybus.Event) error {
+func (n *LineUI) Handle(e partybus.Event) error {
 	switch e.Type {
 	case event.TaskStarted:
 		if n.quiet {
@@ -115,11 +115,11 @@ func (n *V1UI) Handle(e partybus.Event) error {
 	return nil
 }
 
-func (n *V1UI) writeToStdout(s string) {
+func (n *LineUI) writeToStdout(s string) {
 	fmt.Fprintln(n.out, s)
 }
 
-func (n *V1UI) writeToStderr(s string) {
+func (n *LineUI) writeToStderr(s string) {
 	if n.quiet || n.verbosity > 0 {
 		// we've been told to not report anything or that we're in verbose mode thus the logger should report all info.
 		// This only applies to status like info on stderr, not to primary reports on stdout.
@@ -128,6 +128,6 @@ func (n *V1UI) writeToStderr(s string) {
 	fmt.Fprintln(n.err, s)
 }
 
-func (n V1UI) Teardown(_ bool) error {
+func (n LineUI) Teardown(_ bool) error {
 	return nil
 }

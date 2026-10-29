@@ -37,9 +37,6 @@ func create(id clio.Identification) (clio.Application, *cobra.Command) {
 				return nil
 			},
 		)
-	//WithPostRuns(func(_ *clio.State, _ error) {
-	//	stereoscope.Cleanup()
-	//})
 
 	app := clio.New(*clioCfg)
 

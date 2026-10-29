@@ -2,11 +2,12 @@ package options
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/anchore/clio"
-	"github.com/wagoodman/dive/dive"
+
 	"github.com/wagoodman/dive/dive/source"
 	"github.com/wagoodman/dive/internal/log"
-	"strings"
 )
 
 const defaultContainerEngine = "docker"
@@ -18,15 +19,12 @@ var _ interface {
 
 // Analysis provides configuration for the image analysis behavior
 type Analysis struct {
-	Image string `yaml:"image" mapstructure:"-"`
-	// Reference is the image argument exactly as the user gave it (scheme included), for source.Load
-	Reference       string `yaml:"-" mapstructure:"-"`
-	ContainerEngine string `yaml:"container-engine" mapstructure:"container-engine"`
-	Platform        string `yaml:"platform" mapstructure:"platform"`
-	// Source is only used by the old resolver path, it knows docker, podman and docker-archive
-	Source                    dive.ImageSource `yaml:"-" mapstructure:"-"`
-	IgnoreErrors              bool             `yaml:"ignore-errors" mapstructure:"ignore-errors"`
-	AvailableContainerEngines []string         `yaml:"-" mapstructure:"-"`
+	// Image is the image argument exactly as the user gave it (scheme included), see source.Parse
+	Image                     string   `yaml:"image" mapstructure:"-"`
+	ContainerEngine           string   `yaml:"container-engine" mapstructure:"container-engine"`
+	Platform                  string   `yaml:"platform" mapstructure:"platform"`
+	IgnoreErrors              bool     `yaml:"ignore-errors" mapstructure:"ignore-errors"`
+	AvailableContainerEngines []string `yaml:"-" mapstructure:"-"`
 }
 
 func DefaultAnalysis() Analysis {
@@ -56,26 +54,6 @@ func (c *Analysis) PostLoad() error {
 	if _, ok := source.Normalize(c.ContainerEngine); !ok {
 		log.Warnf("invalid container engine: %s (valid options: %s), using default %q", c.ContainerEngine, strings.Join(c.AvailableContainerEngines, ", "), defaultContainerEngine)
 		c.ContainerEngine = defaultContainerEngine
-	}
-
-	c.Reference = c.Image
-
-	// the rest maps onto the old resolver path, which only knows docker, podman and docker-archive
-	if c.Image != "" {
-		sourceType, imageStr := dive.DeriveImageSource(c.Image)
-
-		if sourceType == dive.SourceUnknown {
-			// new sources stay unknown here, GetImageResolver reports them
-			sourceType = dive.ParseImageSource(c.ContainerEngine)
-
-			// use exactly what the user provided
-			imageStr = c.Image
-		}
-
-		c.Image = imageStr
-		c.Source = sourceType
-	} else {
-		c.Source = dive.ParseImageSource(c.ContainerEngine)
 	}
 
 	return nil

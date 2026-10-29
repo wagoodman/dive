@@ -181,6 +181,29 @@ func TestLoad(t *testing.T) {
 	}
 }
 
+func TestCleanup(t *testing.T) {
+	path := imagefixture.Path(t, "oci-save-gzip")
+	tmp := t.TempDir()
+	t.Setenv("TMPDIR", tmp) // unix
+	t.Setenv("TMP", tmp)    // windows
+
+	// an image whose owner never got to img.Cleanup() (an interrupt) still gets removed
+	img, err := Load(context.Background(), "docker-archive:"+path, Config{})
+	require.NoError(t, err)
+	require.NotEmpty(t, img.Layers)
+	entries, err := os.ReadDir(tmp)
+	require.NoError(t, err)
+	require.NotEmpty(t, entries, "expected the image to hold temp dirs")
+
+	require.NoError(t, Cleanup())
+	entries, err = os.ReadDir(tmp)
+	require.NoError(t, err)
+	assert.Empty(t, entries)
+
+	// the owner cleaning up afterwards is fine
+	require.NoError(t, img.Cleanup())
+}
+
 func TestDockerHost(t *testing.T) {
 	newConfigDir := func(t *testing.T, currentContext string, contexts map[string]string) string {
 		t.Helper()

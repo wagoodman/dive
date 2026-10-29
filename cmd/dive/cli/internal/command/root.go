@@ -1,20 +1,12 @@
 package command
 
 import (
-	"context"
-	"errors"
 	"fmt"
+
 	"github.com/anchore/clio"
-	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
-	"github.com/wagoodman/dive/cmd/dive/cli/internal/command/adapter"
+
 	"github.com/wagoodman/dive/cmd/dive/cli/internal/options"
-	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui"
-	"github.com/wagoodman/dive/dive"
-	"github.com/wagoodman/dive/dive/image"
-	"github.com/wagoodman/dive/dive/source"
-	"github.com/wagoodman/dive/internal/bus"
-	"os"
 )
 
 type rootOptions struct {
@@ -40,81 +32,10 @@ the amount of wasted space and identifies the offending files from the image.`,
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			if err := setUI(app, opts.Application); err != nil {
+			if err := setUI(app, opts.Application, progressUI); err != nil {
 				return fmt.Errorf("failed to set UI: %w", err)
 			}
-
-			resolver, err := dive.GetImageResolver(opts.Analysis.Source)
-			if err != nil {
-				return fmt.Errorf("cannot determine image provider to fetch from: %w", err)
-			}
-
-			ctx := cmd.Context()
-
-			img, err := adapter.ImageResolver(resolver).Fetch(ctx, opts.Analysis.Image)
-			if err != nil {
-				return fmt.Errorf("cannot load image: %w", err)
-			}
-
-			return run(ctx, opts.Application, img, opts.Analysis.Reference)
+			return run(cmd.Context(), opts.Application, opts.Analysis.Image)
 		},
 	}, opts)
-}
-
-func setUI(app clio.Application, opts options.Application) error {
-	type Stater interface {
-		State() *clio.State
-	}
-
-	state := app.(Stater).State()
-
-	ux := ui.NewV1UI(opts.V1Preferences(), os.Stdout, state.Config.Log.Quiet, state.Config.Log.Verbosity)
-	return state.UI.Replace(ux)
-}
-
-// ref is what the TUI bridge loads through dive/source (the raw reference, or the ID of a built image)
-func run(ctx context.Context, opts options.Application, img *image.Image, ref string) error {
-	analysis, err := adapter.NewAnalyzer().Analyze(ctx, img)
-	if err != nil {
-		return fmt.Errorf("cannot analyze image: %w", err)
-	}
-
-	if opts.Export.JsonPath != "" {
-		if err := adapter.NewExporter(afero.NewOsFs()).ExportTo(ctx, analysis, opts.Export.JsonPath); err != nil {
-			return fmt.Errorf("cannot export analysis: %w", err)
-		}
-		return nil
-	}
-
-	if opts.CI.Enabled {
-		eval := adapter.NewEvaluator(opts.CI.Rules.List).Evaluate(ctx, analysis)
-
-		if !eval.Pass {
-			return errors.New("evaluation failed")
-		}
-		return nil
-	}
-
-	return explore(ctx, opts, ref)
-}
-
-// explore loads the image a second time through stereoscope for the TUI.
-// todo: removed when commands are rewired
-func explore(ctx context.Context, opts options.Application, ref string) (err error) {
-	img, err := source.Load(ctx, ref, source.Config{Source: opts.Analysis.ContainerEngine, Platform: opts.Analysis.Platform})
-	if err != nil {
-		return fmt.Errorf("cannot load image: %w", err)
-	}
-	defer func() {
-		err = errors.Join(err, img.Cleanup())
-	}()
-
-	analysis, err := dive.Analyze(ctx, ref, img)
-	if err != nil {
-		return fmt.Errorf("cannot analyze image: %w", err)
-	}
-
-	// blocks until the TUI returns, the image has to outlive it
-	bus.ExploreAnalysis(ctx, analysis)
-	return nil
 }
