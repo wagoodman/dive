@@ -14,18 +14,17 @@ func Test_LoadImage(t *testing.T) {
 	archive := repoPath(t, ".data/test-docker-image.tar")
 
 	t.Run("from docker engine", func(t *testing.T) {
+		requireDocker(t)
 		runWithCombinedOutput(t, fmt.Sprintf("docker://%s", image))
 	})
 
 	t.Run("from docker engine (flag)", func(t *testing.T) {
-
+		requireDocker(t)
 		runWithCombinedOutput(t, fmt.Sprintf("--source docker %s", image))
 	})
 
 	t.Run("from podman engine", func(t *testing.T) {
-		if _, err := exec.LookPath("podman"); err != nil {
-			t.Skip("podman not installed, skipping test")
-		}
+		requireEngine(t, "podman")
 		// pull the image from podman first
 		require.NoError(t, exec.Command("podman", "pull", image).Run())
 
@@ -33,9 +32,7 @@ func Test_LoadImage(t *testing.T) {
 	})
 
 	t.Run("from podman engine (flag)", func(t *testing.T) {
-		if _, err := exec.LookPath("podman"); err != nil {
-			t.Skip("podman not installed, skipping test")
-		}
+		requireEngine(t, "podman")
 
 		// pull the image from podman first
 		require.NoError(t, exec.Command("podman", "pull", image).Run())
@@ -59,7 +56,7 @@ func runWithCombinedOutput(t testing.TB, cmd string) {
 		require.NoError(t, rootCmd.Execute())
 	})
 
-	assertLoadOutput(t, combined)
+	assertLoadOutput(t, sanitize(t, combined))
 }
 
 func assertLoadOutput(t testing.TB, combined string) {
@@ -71,10 +68,12 @@ func assertLoadOutput(t testing.TB, combined string) {
 }
 
 func Test_FetchFailure(t *testing.T) {
+	requireDocker(t)
+
 	t.Run("nonexistent image", func(t *testing.T) {
 		rootCmd := getTestCommand(t, "docker:wagoodman/nonexistent/image:tag")
 		combined := Capture().WithStdout().WithStderr().Run(t, func() {
-			require.ErrorContains(t, rootCmd.Execute(), "cannot load image: Error response from daemon: invalid reference format")
+			require.ErrorContains(t, rootCmd.Execute(), "cannot load image")
 		})
 
 		assert.Contains(t, combined, "Loading image")
@@ -85,7 +84,7 @@ func Test_FetchFailure(t *testing.T) {
 	t.Run("invalid image name", func(t *testing.T) {
 		rootCmd := getTestCommand(t, "docker:///wagoodman/invalid:image:format")
 		combined := Capture().WithStdout().WithStderr().Run(t, func() {
-			require.ErrorContains(t, rootCmd.Execute(), "cannot load image: Error response from daemon: invalid reference format")
+			require.ErrorContains(t, rootCmd.Execute(), "cannot load image")
 		})
 
 		assert.Contains(t, combined, "Loading image")

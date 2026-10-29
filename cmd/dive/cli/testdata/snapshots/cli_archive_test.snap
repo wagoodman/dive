@@ -1,0 +1,38 @@
+
+[Test_Archive_CI/fail - 1]
+Analysis:
+  efficiency:        98.44 %
+  wastedBytes:       32025 bytes (32 kB)
+  userWastedPercent: 48.35 %
+
+Inefficient Files:
+  Count  Wasted Space  File Path
+  2      13 kB         /root/example/somefile1.txt
+  2      13 kB         /root/saved.txt
+  2      6.4 kB        /root/example/somefile3.txt
+
+Evaluation:
+  FAIL  highestUserWastedPercent (too many bytes wasted, relative to the user bytes added (%-user-wasted-bytes=0.48 > threshold=0.1))
+  SKIP  highestWastedBytes (disabled)
+  PASS  lowestEfficiency (0.9)
+
+FAIL [pass:1 fail:1 skip:1]
+
+---
+
+[Test_Archive_CI/oci-archive - 1]
+Analysis:
+  efficiency:        100.00 %
+  wastedBytes:       0 bytes 
+  userWastedPercent: 0 %
+
+Inefficient Files: (None)
+
+Evaluation:
+  PASS  highestUserWastedPercent (0.90)
+  PASS  highestWastedBytes (20MB)
+  PASS  lowestEfficiency (0.9)
+
+PASS [pass:3]
+
+---

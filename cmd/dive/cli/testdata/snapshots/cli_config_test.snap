@@ -20,7 +20,7 @@ container-engine: 'docker'
 # platform to select from a multi-platform image, e.g. 'linux/arm64' (default: the image source's default) (env: DIVE_PLATFORM)
 platform: ''
 
-# continue with analysis even if there are errors parsing the image archive (env: DIVE_IGNORE_ERRORS)
+# deprecated, has no effect: image path errors no longer stop the analysis or the TUI (env: DIVE_IGNORE_ERRORS)
 ignore-errors: false
 
 # enable CI mode (env: DIVE_CI)

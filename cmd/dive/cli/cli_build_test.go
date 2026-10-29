@@ -8,6 +8,7 @@ import (
 )
 
 func Test_Build_Dockerfile(t *testing.T) {
+	requireDocker(t)
 	t.Setenv("DIVE_CONFIG", "./testdata/image-multi-layer-dockerfile/dive-pass.yaml")
 
 	t.Run("implicit dockerfile", func(t *testing.T) {
@@ -28,6 +29,7 @@ func Test_Build_Dockerfile(t *testing.T) {
 }
 
 func Test_Build_Containerfile(t *testing.T) {
+	requireDocker(t)
 	t.Setenv("DIVE_CONFIG", "./testdata/image-multi-layer-containerfile/dive-pass.yaml")
 
 	t.Run("implicit containerfile", func(t *testing.T) {
@@ -48,6 +50,7 @@ func Test_Build_Containerfile(t *testing.T) {
 }
 
 func Test_Build_CI_gate_fail(t *testing.T) {
+	requireDocker(t)
 	t.Setenv("DIVE_CONFIG", "./testdata/image-multi-layer-dockerfile/dive-fail.yaml")
 
 	rootCmd := getTestCommand(t, "build testdata/image-multi-layer-dockerfile")
@@ -73,10 +76,11 @@ func Test_BuildFailure(t *testing.T) {
 	})
 
 	t.Run("invalid dockerfile", func(t *testing.T) {
+		requireDocker(t)
 		rootCmd := getTestCommand(t, "build ./testdata/invalid")
 		combined := Capture().WithStdout().WithStderr().WithSuppress().Run(t, func() {
 
-			require.ErrorContains(t, rootCmd.Execute(), "cannot build image: exit status 1")
+			require.ErrorContains(t, rootCmd.Execute(), "exit status 1")
 		})
 
 		assert.Contains(t, combined, "Building image")

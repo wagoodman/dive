@@ -10,8 +10,8 @@ Inefficient Files:
   3      80 B          /root/saved.txt
   2      34 B          /root/example/somefile1.txt
   2      17 B          /root/example/somefile3.txt
-  2      0 B           /root
   10     0 B           /etc
+  2      0 B           /root
 
 Evaluation:
   PASS  highestUserWastedPercent (0.90)
@@ -33,8 +33,8 @@ Inefficient Files:
   3      80 B          /root/saved.txt
   2      34 B          /root/example/somefile1.txt
   2      17 B          /root/example/somefile3.txt
-  2      0 B           /root
   10     0 B           /etc
+  2      0 B           /root
 
 Evaluation:
   PASS  highestUserWastedPercent (0.90)
@@ -56,8 +56,8 @@ Inefficient Files:
   3      80 B          /root/saved.txt
   2      34 B          /root/example/somefile1.txt
   2      17 B          /root/example/somefile3.txt
-  2      0 B           /root
   10     0 B           /etc
+  2      0 B           /root
 
 Evaluation:
   PASS  highestUserWastedPercent (0.90)
@@ -79,8 +79,8 @@ Inefficient Files:
   3      80 B          /root/saved.txt
   2      34 B          /root/example/somefile1.txt
   2      17 B          /root/example/somefile3.txt
-  2      0 B           /root
   10     0 B           /etc
+  2      0 B           /root
 
 Evaluation:
   PASS  highestUserWastedPercent (0.90)
@@ -124,8 +124,8 @@ Inefficient Files:
   3      80 B          /root/saved.txt
   2      34 B          /root/example/somefile1.txt
   2      17 B          /root/example/somefile3.txt
-  2      0 B           /root
   10     0 B           /etc
+  2      0 B           /root
 
 Evaluation:
   FAIL  highestUserWastedPercent (too many bytes wasted, relative to the user bytes added (%-user-wasted-bytes=0.72 > threshold=0.1))
