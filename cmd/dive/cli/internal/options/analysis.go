@@ -20,9 +20,10 @@ var _ interface {
 // Analysis provides configuration for the image analysis behavior
 type Analysis struct {
 	// Image is the image argument exactly as the user gave it (scheme included), see source.Parse
-	Image                     string   `yaml:"image" mapstructure:"-"`
-	ContainerEngine           string   `yaml:"container-engine" mapstructure:"container-engine"`
-	Platform                  string   `yaml:"platform" mapstructure:"platform"`
+	Image           string `yaml:"image" mapstructure:"-"`
+	ContainerEngine string `yaml:"container-engine" mapstructure:"container-engine"`
+	Platform        string `yaml:"platform" mapstructure:"platform"`
+	// IgnoreErrors is deprecated and unused
 	IgnoreErrors              bool     `yaml:"ignore-errors" mapstructure:"ignore-errors"`
 	AvailableContainerEngines []string `yaml:"-" mapstructure:"-"`
 }
@@ -38,7 +39,7 @@ func DefaultAnalysis() Analysis {
 func (c *Analysis) DescribeFields(descriptions clio.FieldDescriptionSet) {
 	descriptions.Add(&c.ContainerEngine, fmt.Sprintf("where to load the image from when the image reference has no scheme (supported options: %s)", strings.Join(c.AvailableContainerEngines, ", ")))
 	descriptions.Add(&c.Platform, "platform to select from a multi-platform image, e.g. 'linux/arm64' (default: the image source's default)")
-	descriptions.Add(&c.IgnoreErrors, "continue with analysis even if there are errors parsing the image archive")
+	descriptions.Add(&c.IgnoreErrors, "deprecated, has no effect: image path errors no longer stop the analysis or the TUI")
 }
 
 func (c *Analysis) AddFlags(flags clio.FlagSet) {
@@ -47,13 +48,17 @@ func (c *Analysis) AddFlags(flags clio.FlagSet) {
 
 	flags.StringVarP(&c.Platform, "platform", "", "platform to select from a multi-platform image (e.g. 'linux/arm64')")
 
-	flags.BoolVarP(&c.IgnoreErrors, "ignore-errors", "i", "ignore image parsing errors and run the analysis anyway")
+	// ponytail: kept as a no-op so existing scripts and configs still parse
+	flags.BoolVarP(&c.IgnoreErrors, "ignore-errors", "i", "(deprecated, has no effect) ignore image parsing errors and run the analysis anyway")
 }
 
 func (c *Analysis) PostLoad() error {
 	if _, ok := source.Normalize(c.ContainerEngine); !ok {
 		log.Warnf("invalid container engine: %s (valid options: %s), using default %q", c.ContainerEngine, strings.Join(c.AvailableContainerEngines, ", "), defaultContainerEngine)
 		c.ContainerEngine = defaultContainerEngine
+	}
+	if c.IgnoreErrors {
+		log.Warn("ignore-errors is deprecated and has no effect")
 	}
 
 	return nil

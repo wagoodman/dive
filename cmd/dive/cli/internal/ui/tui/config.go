@@ -13,7 +13,6 @@ type Config struct {
 
 type Preferences struct {
 	KeyBindings                key.Bindings
-	IgnoreErrors               bool
 	ShowFiletreeAttributes     bool
 	ShowAggregatedLayerChanges bool
 	CollapseFiletreeDirectory  bool
