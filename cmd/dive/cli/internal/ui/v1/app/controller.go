@@ -60,7 +60,8 @@ func newController(ctx context.Context, g *gocui.Gui, cfg v1.Config) (*controlle
 }
 
 func (c *controller) onFileTreeViewExtract(p string) error {
-	return c.config.Content.Extract(c.ctx, c.config.Analysis.Image, c.views.LayerDetails.CurrentLayer.Id, p)
+	// files land relative to the current working directory, the same as before
+	return extract(c.config.Analysis.Image, c.views.LayerDetails.CurrentLayer.Index, p, ".")
 }
 
 func (c *controller) onFileTreeViewOptionChange() error {

@@ -40,7 +40,7 @@ func Build(app clio.Application) *cobra.Command {
 				return fmt.Errorf("cannot build image: %w", err)
 			}
 
-			return run(cmd.Context(), opts.Application, img, resolver)
+			return run(cmd.Context(), opts.Application, img, img.Request)
 		},
 	}, opts)
 }

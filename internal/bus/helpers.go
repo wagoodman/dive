@@ -1,7 +1,10 @@
 package bus
 
 import (
-	"github.com/wagoodman/dive/dive/image"
+	"context"
+	"sync"
+
+	"github.com/wagoodman/dive/dive"
 	"github.com/wagoodman/dive/internal/bus/event"
 	"github.com/wagoodman/dive/internal/bus/event/payload"
 	"github.com/wagoodman/go-partybus"
@@ -55,9 +58,18 @@ func StartSizedTask(info payload.GenericTask, size int64, initialStage string) *
 	return t
 }
 
-func ExploreAnalysis(analysis image.Analysis, reader image.ContentReader) {
+// ExploreAnalysis hands the analysis to the TUI and blocks until the UI is done with it (or ctx is done). The TUI
+// reads file contents from the analysis image for diffs and extraction, so the caller can only clean up the image
+// once this returns.
+func ExploreAnalysis(ctx context.Context, analysis *dive.Analysis) {
+	done := make(chan struct{})
+	var once sync.Once
 	Publish(partybus.Event{
 		Type:  event.ExploreAnalysis,
-		Value: payload.Explore{Analysis: analysis, Content: reader},
+		Value: event.Explore{Analysis: analysis, Done: func() { once.Do(func() { close(done) }) }},
 	})
+	select {
+	case <-done:
+	case <-ctx.Done():
+	}
 }

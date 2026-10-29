@@ -12,6 +12,7 @@ import (
 	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui"
 	"github.com/wagoodman/dive/dive"
 	"github.com/wagoodman/dive/dive/image"
+	"github.com/wagoodman/dive/dive/source"
 	"github.com/wagoodman/dive/internal/bus"
 	"os"
 )
@@ -55,7 +56,7 @@ the amount of wasted space and identifies the offending files from the image.`,
 				return fmt.Errorf("cannot load image: %w", err)
 			}
 
-			return run(ctx, opts.Application, img, resolver)
+			return run(ctx, opts.Application, img, opts.Analysis.Reference)
 		},
 	}, opts)
 }
@@ -71,7 +72,8 @@ func setUI(app clio.Application, opts options.Application) error {
 	return state.UI.Replace(ux)
 }
 
-func run(ctx context.Context, opts options.Application, img *image.Image, content image.ContentReader) error {
+// ref is what the TUI bridge loads through dive/source (the raw reference, or the ID of a built image)
+func run(ctx context.Context, opts options.Application, img *image.Image, ref string) error {
 	analysis, err := adapter.NewAnalyzer().Analyze(ctx, img)
 	if err != nil {
 		return fmt.Errorf("cannot analyze image: %w", err)
@@ -93,7 +95,26 @@ func run(ctx context.Context, opts options.Application, img *image.Image, conten
 		return nil
 	}
 
-	bus.ExploreAnalysis(*analysis, content)
+	return explore(ctx, opts, ref)
+}
 
+// explore loads the image a second time through stereoscope for the TUI.
+// todo: removed when commands are rewired
+func explore(ctx context.Context, opts options.Application, ref string) (err error) {
+	img, err := source.Load(ctx, ref, source.Config{Source: opts.Analysis.ContainerEngine, Platform: opts.Analysis.Platform})
+	if err != nil {
+		return fmt.Errorf("cannot load image: %w", err)
+	}
+	defer func() {
+		err = errors.Join(err, img.Cleanup())
+	}()
+
+	analysis, err := dive.Analyze(ctx, ref, img)
+	if err != nil {
+		return fmt.Errorf("cannot analyze image: %w", err)
+	}
+
+	// blocks until the TUI returns, the image has to outlive it
+	bus.ExploreAnalysis(ctx, analysis)
 	return nil
 }

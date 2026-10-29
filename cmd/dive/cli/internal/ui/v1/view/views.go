@@ -44,7 +44,7 @@ func NewViews(g *gocui.Gui, cfg v1.Config) (*Views, error) {
 		Filter: newFilterView(g),
 		ImageDetails: &ImageDetails{
 			gui:            g,
-			imageName:      cfg.Analysis.Image,
+			imageName:      cfg.Analysis.Ref,
 			imageSize:      cfg.Analysis.SizeBytes,
 			efficiency:     cfg.Analysis.Efficiency,
 			inefficiencies: cfg.Analysis.Inefficiencies,

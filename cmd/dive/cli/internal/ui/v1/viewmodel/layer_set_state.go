@@ -1,15 +1,13 @@
 package viewmodel
 
-import "github.com/wagoodman/dive/dive/image"
-
 type LayerSetState struct {
 	LayerIndex        int
-	Layers            []*image.Layer
+	Layers            []*Layer
 	CompareMode       LayerCompareMode
 	CompareStartIndex int
 }
 
-func NewLayerSetState(layers []*image.Layer, compareMode LayerCompareMode) *LayerSetState {
+func NewLayerSetState(layers []*Layer, compareMode LayerCompareMode) *LayerSetState {
 	return &LayerSetState{
 		Layers:      layers,
 		CompareMode: compareMode,

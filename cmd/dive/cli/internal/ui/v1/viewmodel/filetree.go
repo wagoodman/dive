@@ -3,23 +3,24 @@ package viewmodel
 import (
 	"bytes"
 	"fmt"
-	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1"
-	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1/format"
-	"github.com/wagoodman/dive/internal/log"
 	"regexp"
 	"strings"
 
 	"github.com/lunixbochs/vtclean"
-	"github.com/wagoodman/dive/dive/filetree"
+
+	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1"
+	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1/filetree"
+	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1/format"
+	"github.com/wagoodman/dive/internal/log"
 )
 
 // FileTreeViewModel holds the UI objects and data models for populating the right pane. Specifically, the pane that
 // shows selected layer or aggregate file ASCII tree.
 type FileTreeViewModel struct {
-	ModelTree *filetree.FileTree
-	ViewTree  *filetree.FileTree
-	RefTrees  []*filetree.FileTree
-	comparer  filetree.Comparer
+	ModelTree  *filetree.FileTree
+	ViewTree   *filetree.FileTree
+	layerCount int
+	comparer   *filetree.Comparer
 
 	constrainedRealEstate bool
 
@@ -41,7 +42,8 @@ type FileTreeViewModel struct {
 func NewFileTreeViewModel(cfg v1.Config, initialLayer int) (treeViewModel *FileTreeViewModel, err error) {
 	treeViewModel = new(FileTreeViewModel)
 
-	comparer, err := cfg.TreeComparer()
+	comparer := filetree.NewComparer(cfg.Analysis.Image)
+	initialTree, err := comparer.GetTree(filetree.NewTreeIndexKey(0, initialLayer, initialLayer, initialLayer))
 	if err != nil {
 		return nil, err
 	}
@@ -50,8 +52,8 @@ func NewFileTreeViewModel(cfg v1.Config, initialLayer int) (treeViewModel *FileT
 	treeViewModel.ShowAttributes = cfg.Preferences.ShowFiletreeAttributes
 	treeViewModel.unconstrainedShowAttributes = treeViewModel.ShowAttributes
 	treeViewModel.CollapseAll = cfg.Preferences.CollapseFiletreeDirectory
-	treeViewModel.ModelTree = cfg.Analysis.RefTrees[initialLayer]
-	treeViewModel.RefTrees = cfg.Analysis.RefTrees
+	treeViewModel.ModelTree = initialTree
+	treeViewModel.layerCount = len(cfg.Analysis.Image.Layers)
 	treeViewModel.comparer = comparer
 	treeViewModel.HiddenDiffTypes = make([]bool, 4)
 
@@ -107,8 +109,8 @@ func (vm *FileTreeViewModel) ResetCursor() {
 
 // SetTreeByLayer populates the view model by stacking the indicated image layer file trees.
 func (vm *FileTreeViewModel) SetTreeByLayer(bottomTreeStart, bottomTreeStop, topTreeStart, topTreeStop int) error {
-	if topTreeStop > len(vm.RefTrees)-1 {
-		return fmt.Errorf("invalid layer index given: %d of %d", topTreeStop, len(vm.RefTrees)-1)
+	if topTreeStop > vm.layerCount-1 {
+		return fmt.Errorf("invalid layer index given: %d of %d", topTreeStop, vm.layerCount-1)
 	}
 	newTree, err := vm.comparer.GetTree(filetree.NewTreeIndexKey(bottomTreeStart, bottomTreeStop, topTreeStart, topTreeStop))
 	if err != nil {

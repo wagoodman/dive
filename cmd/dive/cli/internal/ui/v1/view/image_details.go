@@ -11,7 +11,7 @@ import (
 
 	"github.com/awesome-gocui/gocui"
 	"github.com/dustin/go-humanize"
-	"github.com/wagoodman/dive/dive/filetree"
+	"github.com/wagoodman/dive/dive"
 )
 
 type ImageDetails struct {
@@ -23,7 +23,7 @@ type ImageDetails struct {
 	imageName      string
 	imageSize      uint64
 	efficiency     float64
-	inefficiencies filetree.EfficiencySlice
+	inefficiencies []dive.Inefficiency
 	kb             key.Bindings
 }
 
@@ -83,18 +83,18 @@ func (v *ImageDetails) Render() error {
 	analysisTemplate := "%5s  %12s  %-s\n"
 	inefficiencyReport := fmt.Sprintf(format.Header(analysisTemplate), "Count", "Total Space", "Path")
 
-	var wastedSpace int64
-	for idx := 0; idx < len(v.inefficiencies); idx++ {
-		data := v.inefficiencies[len(v.inefficiencies)-1-idx]
-		wastedSpace += data.CumulativeSize
+	var wastedSpace uint64
+	// inefficiencies are already sorted largest first
+	for _, data := range v.inefficiencies {
+		wastedSpace += data.SizeBytes
 
-		inefficiencyReport += fmt.Sprintf(analysisTemplate, strconv.Itoa(len(data.Nodes)), humanize.Bytes(uint64(data.CumulativeSize)), data.Path)
+		inefficiencyReport += fmt.Sprintf(analysisTemplate, strconv.Itoa(data.Count), humanize.Bytes(data.SizeBytes), data.Path)
 	}
 
 	imageNameStr := fmt.Sprintf("%s %s", format.Header("Image name:"), v.imageName)
 	imageSizeStr := fmt.Sprintf("%s %s", format.Header("Total Image size:"), humanize.Bytes(v.imageSize))
 	efficiencyStr := fmt.Sprintf("%s %d %%", format.Header("Image efficiency score:"), int(100.0*v.efficiency))
-	wastedSpaceStr := fmt.Sprintf("%s %s", format.Header("Potential wasted space:"), humanize.Bytes(uint64(wastedSpace)))
+	wastedSpaceStr := fmt.Sprintf("%s %s", format.Header("Potential wasted space:"), humanize.Bytes(wastedSpace))
 
 	v.gui.Update(func(g *gocui.Gui) error {
 		width, _ := v.body.Size()

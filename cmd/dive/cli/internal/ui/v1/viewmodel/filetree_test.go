@@ -1,24 +1,22 @@
 package viewmodel
 
 import (
+	"context"
 	"flag"
+	"os"
+	"path/filepath"
+	"regexp"
+	"testing"
+
 	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
 	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1"
-	"go.uber.org/atomic"
-	"os"
-	"os/exec"
-	"path/filepath"
-	"regexp"
-	"strings"
-	"testing"
-
-	"github.com/wagoodman/dive/dive/filetree"
-	"github.com/wagoodman/dive/dive/image/docker"
+	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1/filetree"
+	"github.com/wagoodman/dive/dive"
+	"github.com/wagoodman/dive/internal/imagefixture"
 )
-
-var repoRootCache atomic.String
 
 var updateSnapshot = flag.Bool("update", false, "update any test snapshots")
 
@@ -66,11 +64,12 @@ func helperCaptureBytes(t *testing.T, data []byte) {
 func initializeTestViewModel(t *testing.T) *FileTreeViewModel {
 	t.Helper()
 
-	result := docker.TestAnalysisFromArchive(t, repoPath(t, ".data/test-docker-image.tar"))
-	require.NotNil(t, result, "unable to load test data")
+	img := imagefixture.Load(t, "test-docker-image")
+	result, err := dive.Analyze(context.Background(), "test-docker-image", img)
+	require.NoError(t, err, "unable to analyze test data")
 
 	vm, err := NewFileTreeViewModel(v1.Config{
-		Analysis:    *result,
+		Analysis:    result,
 		Preferences: v1.DefaultPreferences(),
 	}, 0)
 
@@ -397,26 +396,4 @@ func TestFileTreeHideTypeWithFilter(t *testing.T) {
 	}
 
 	runTestCase(t, vm, width, height, regex)
-}
-
-func repoPath(t testing.TB, path string) string {
-	t.Helper()
-	root := repoRoot(t)
-	return filepath.Join(root, path)
-}
-
-func repoRoot(t testing.TB) string {
-	val := repoRootCache.Load()
-	if val != "" {
-		return val
-	}
-	t.Helper()
-	// use git to find the root of the repo
-	out, err := exec.Command("git", "rev-parse", "--show-toplevel").Output()
-	if err != nil {
-		t.Fatalf("failed to get repo root: %v", err)
-	}
-	val = strings.TrimSpace(string(out))
-	repoRootCache.Store(val)
-	return val
 }

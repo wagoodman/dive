@@ -8,7 +8,6 @@ import (
 	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1/format"
 	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1/key"
 	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1/viewmodel"
-	"github.com/wagoodman/dive/dive/image"
 	"github.com/wagoodman/dive/internal/log"
 )
 
@@ -52,7 +51,7 @@ func newLayerView(gui *gocui.Gui, cfg v1.Config) (c *Layer, err error) {
 		return nil, fmt.Errorf("unknown layer.show-aggregated-changes value: %v", mode)
 	}
 
-	c.vm = viewmodel.NewLayerSetState(cfg.Analysis.Layers, compareMode)
+	c.vm = viewmodel.NewLayerSetState(viewmodel.NewLayers(cfg.Analysis.Layers), compareMode)
 
 	return c, err
 }
@@ -243,7 +242,7 @@ func (v *Layer) SetCursor(layer int) error {
 }
 
 // CurrentLayer returns the Layer object currently selected.
-func (v *Layer) CurrentLayer() *image.Layer {
+func (v *Layer) CurrentLayer() *viewmodel.Layer {
 	return v.vm.Layers[v.vm.LayerIndex]
 }
 
@@ -320,7 +319,7 @@ func (v *Layer) Render() error {
 			}
 		} else {
 			headerStr := format.RenderHeader(title, width, isSelected)
-			headerStr += fmt.Sprintf("Cmp"+image.LayerFormat, "Size", "Command")
+			headerStr += fmt.Sprintf("Cmp"+viewmodel.LayerFormat, "Size", "Command")
 			_, err := fmt.Fprintln(v.header, headerStr)
 			if err != nil {
 				return err

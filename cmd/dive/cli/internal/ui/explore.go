@@ -19,7 +19,9 @@ import (
 // runExplore runs the gocui TUI for an ExploreAnalysis event and blocks until the user quits. This is the only place
 // that reads the ExploreAnalysis payload, so a payload change only touches this function (and the parser).
 func runExplore(e partybus.Event, prefs v1.Preferences) error {
-	analysis, content, err := parser.ParseExploreAnalysis(e)
+	analysis, done, err := parser.ParseExploreAnalysis(e)
+	// the publisher waits on this before cleaning up the image
+	defer done()
 	if err != nil {
 		return fmt.Errorf("unable to explore analysis: %w", err)
 	}
@@ -31,7 +33,6 @@ func runExplore(e partybus.Event, prefs v1.Preferences) error {
 		// TODO: this is not plumbed through from the command object...
 		context.Background(),
 		v1.Config{
-			Content:     content,
 			Analysis:    analysis,
 			Preferences: prefs,
 		},
