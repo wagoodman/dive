@@ -74,7 +74,7 @@ func Test_CIGoldens(t *testing.T) {
 				}
 				for setName, rules := range ruleSets {
 					evaluator := ci.NewEvaluator(rules)
-					eval := evaluator.Evaluate(context.Background(), analysis)
+					eval := evaluator.Evaluate(context.Background(), ci.NewStatsFromImageAnalysis(analysis))
 					g := evalGolden{Pass: eval.Pass, Rules: map[string]ruleGolden{}, Report: eval.Report}
 					for key, result := range evaluator.Results {
 						g.Rules[key] = ruleGolden{Status: result.StatusString(), Message: result.Message()}

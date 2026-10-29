@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/dustin/go-humanize"
-	"github.com/wagoodman/dive/dive/image"
 	"strconv"
 	"strings"
 )
@@ -45,7 +44,7 @@ func DisabledRule(key string) Rule {
 	return &BaseRule{
 		key:         key,
 		configValue: "disabled",
-		evaluator: func(_ *image.Analysis) (RuleStatus, string) {
+		evaluator: func(_ Stats) (RuleStatus, string) {
 			return RuleDisabled, "rule disabled"
 		},
 	}
@@ -55,7 +54,7 @@ type BaseRule struct {
 	key         string
 	configValue string
 	status      RuleStatus
-	evaluator   func(*image.Analysis) (RuleStatus, string)
+	evaluator   func(Stats) (RuleStatus, string)
 }
 
 func (rule *BaseRule) Key() string {
@@ -66,7 +65,7 @@ func (rule *BaseRule) Configuration() string {
 	return rule.configValue
 }
 
-func (rule *BaseRule) Evaluate(result *image.Analysis) (RuleStatus, string) {
+func (rule *BaseRule) Evaluate(result Stats) (RuleStatus, string) {
 	if rule.status != RuleUnknown {
 		return rule.status, ""
 	}
@@ -116,7 +115,7 @@ func NewLowestEfficiencyRule(configValue string) (Rule, error) {
 	}, nil
 }
 
-func (r *LowestEfficiencyRule) Evaluate(analysis *image.Analysis) (RuleStatus, string) {
+func (r *LowestEfficiencyRule) Evaluate(analysis Stats) (RuleStatus, string) {
 	if r.threshold > analysis.Efficiency {
 		return RuleFailed, fmt.Sprintf(
 			"image efficiency is too low (efficiency=%2.2f < threshold=%v)",
@@ -146,7 +145,7 @@ func NewHighestWastedBytesRule(configValue string) (Rule, error) {
 	}, nil
 }
 
-func (r *HighestWastedBytesRule) Evaluate(analysis *image.Analysis) (RuleStatus, string) {
+func (r *HighestWastedBytesRule) Evaluate(analysis Stats) (RuleStatus, string) {
 	if analysis.WastedBytes > r.threshold {
 		return RuleFailed, fmt.Sprintf(
 			"too many bytes wasted (wasted-bytes=%d > threshold=%v)",
@@ -181,7 +180,7 @@ func NewHighestUserWastedPercentRule(configValue string) (Rule, error) {
 	}, nil
 }
 
-func (r *HighestUserWastedPercentRule) Evaluate(analysis *image.Analysis) (RuleStatus, string) {
+func (r *HighestUserWastedPercentRule) Evaluate(analysis Stats) (RuleStatus, string) {
 	if analysis.WastedUserPercent > r.threshold {
 		return RuleFailed, fmt.Sprintf(
 			"too many bytes wasted, relative to the user bytes added (%%-user-wasted-bytes=%2.2f > threshold=%v)",

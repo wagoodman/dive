@@ -9,8 +9,54 @@ import (
 	"strings"
 
 	"github.com/dustin/go-humanize"
+	"github.com/wagoodman/dive/dive"
 	"github.com/wagoodman/dive/dive/image"
 )
+
+// Stats is what the CI rules and report read from an analysis.
+type Stats struct {
+	Efficiency        float64
+	WastedBytes       uint64
+	WastedUserPercent float64
+	// InefficientFiles is sorted largest first
+	InefficientFiles []ReferenceFile
+}
+
+// NewStats reads the CI stats of a stereoscope based analysis.
+func NewStats(analysis *dive.Analysis) Stats {
+	stats := Stats{
+		Efficiency:        analysis.Efficiency,
+		WastedBytes:       analysis.WastedBytes,
+		WastedUserPercent: analysis.WastedUserPercent,
+	}
+	for _, ineff := range analysis.Inefficiencies {
+		stats.InefficientFiles = append(stats.InefficientFiles, ReferenceFile{
+			References: ineff.Count,
+			SizeBytes:  ineff.SizeBytes,
+			Path:       ineff.Path,
+		})
+	}
+	return stats
+}
+
+// NewStatsFromImageAnalysis reads the CI stats of an analysis from the dive/image parser.
+func NewStatsFromImageAnalysis(analysis *image.Analysis) Stats {
+	stats := Stats{
+		Efficiency:        analysis.Efficiency,
+		WastedBytes:       analysis.WastedBytes,
+		WastedUserPercent: analysis.WastedUserPercent,
+	}
+	// inefficiencies are sorted smallest first
+	for idx := len(analysis.Inefficiencies) - 1; idx >= 0; idx-- {
+		fileData := analysis.Inefficiencies[idx]
+		stats.InefficientFiles = append(stats.InefficientFiles, ReferenceFile{
+			References: len(fileData.Nodes),
+			SizeBytes:  uint64(fileData.CumulativeSize),
+			Path:       fileData.Path,
+		})
+	}
+	return stats
+}
 
 type Evaluation struct {
 	Report string
@@ -76,7 +122,7 @@ func (e Evaluator) isRuleEnabled(rule Rule) bool {
 	return rule.Configuration() != "disabled"
 }
 
-func (e Evaluator) Evaluate(ctx context.Context, analysis *image.Analysis) Evaluation {
+func (e Evaluator) Evaluate(ctx context.Context, analysis Stats) Evaluation {
 	for _, rule := range e.Rules {
 		if !e.isRuleEnabled(rule) {
 			e.Results[rule.Key()] = RuleResult{
@@ -93,15 +139,7 @@ func (e Evaluator) Evaluate(ctx context.Context, analysis *image.Analysis) Evalu
 	}
 
 	// capture inefficient files
-	for idx := 0; idx < len(analysis.Inefficiencies); idx++ {
-		fileData := analysis.Inefficiencies[len(analysis.Inefficiencies)-1-idx]
-
-		e.InefficientFiles = append(e.InefficientFiles, ReferenceFile{
-			References: len(fileData.Nodes),
-			SizeBytes:  uint64(fileData.CumulativeSize),
-			Path:       fileData.Path,
-		})
-	}
+	e.InefficientFiles = append(e.InefficientFiles, analysis.InefficientFiles...)
 
 	// evaluate results against the configured CI rules
 	for _, rule := range e.Rules {
@@ -155,7 +193,7 @@ func (e Evaluator) Evaluate(ctx context.Context, analysis *image.Analysis) Evalu
 	}
 }
 
-func (e Evaluator) report(analysis *image.Analysis) string {
+func (e Evaluator) report(analysis Stats) string {
 	sections := []string{
 		e.renderAnalysisSection(analysis),
 		e.renderInefficientFilesSection(analysis),
@@ -165,7 +203,7 @@ func (e Evaluator) report(analysis *image.Analysis) string {
 	return strings.Join(sections, "\n\n")
 }
 
-func (e Evaluator) renderAnalysisSection(analysis *image.Analysis) string {
+func (e Evaluator) renderAnalysisSection(analysis Stats) string {
 	wastedByteStr := ""
 	userWastedPercent := "0 %"
 
@@ -185,10 +223,10 @@ func (e Evaluator) renderAnalysisSection(analysis *image.Analysis) string {
 	return title + "\n" + strings.Join(rows, "\n")
 }
 
-func (e Evaluator) renderInefficientFilesSection(analysis *image.Analysis) string {
+func (e Evaluator) renderInefficientFilesSection(analysis Stats) string {
 	title := e.format.Title.Render("Inefficient Files:")
 
-	if len(analysis.Inefficiencies) == 0 {
+	if len(analysis.InefficientFiles) == 0 {
 		return title + " (None)"
 	}
 

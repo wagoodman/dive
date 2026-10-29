@@ -82,7 +82,7 @@ func Test_Evaluator(t *testing.T) {
 			require.NoError(t, err)
 
 			evaluator := NewEvaluator(rules)
-			eval := evaluator.Evaluate(context.TODO(), result)
+			eval := evaluator.Evaluate(context.TODO(), NewStatsFromImageAnalysis(result))
 
 			if test.expectedPass != eval.Pass {
 				t.Errorf("expected pass=%v, got %v", test.expectedPass, eval.Pass)

@@ -1,9 +1,5 @@
 package ci
 
-import (
-	"github.com/wagoodman/dive/dive/image"
-)
-
 const (
 	RuleUnknown = iota
 	RulePassed
@@ -17,7 +13,7 @@ const (
 type Rule interface {
 	Key() string
 	Configuration() string
-	Evaluate(result *image.Analysis) (RuleStatus, string)
+	Evaluate(result Stats) (RuleStatus, string)
 }
 
 type RuleStatus int

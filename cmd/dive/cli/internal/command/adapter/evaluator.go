@@ -37,7 +37,7 @@ func (c evaluationActionObserver) Evaluate(ctx context.Context, analysis *image.
 		ID:                 analysis.Image,
 		Context:            fmt.Sprintf("[rules: %d]", len(c.Rules)),
 	})
-	eval := c.Evaluator.Evaluate(ctx, analysis)
+	eval := c.Evaluator.Evaluate(ctx, ci.NewStatsFromImageAnalysis(analysis))
 	if eval.Pass {
 		mon.SetCompleted()
 	} else {
