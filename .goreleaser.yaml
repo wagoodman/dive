@@ -14,19 +14,20 @@ env:
   - CGO_ENABLED=0
 
 builds:
-  - binary: dive
+  - id: linux-build
+    binary: dive
     dir: ./cmd/dive
     env:
       - CGO_ENABLED=0
     goos:
-      - windows
-      - darwin
       - linux
-    goarch:
+    goarch: &build-goarch
       - amd64
       - arm64
       - ppc64le
-    ldflags:
+    # compiles in stereoscope's containers-storage provider (podman/buildah stores). btrfs needs cgo, so drop it (same as syft)
+    tags: [containers_image_openpgp, exclude_graphdriver_btrfs]
+    ldflags: &build-ldflags
       -w
       -s
       -extldflags '-static'
@@ -34,6 +35,17 @@ builds:
       -X main.gitCommit={{.Commit}}
       -X main.buildDate={{.Date}}
       -X main.gitDescription={{.Summary}}
+
+  - id: build
+    binary: dive
+    dir: ./cmd/dive
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - windows
+      - darwin
+    goarch: *build-goarch
+    ldflags: *build-ldflags
 
 brews:
   - repository:
@@ -63,7 +75,7 @@ dockers:
   - &dockerhub_amd64
     id: docker-amd64
     ids:
-      - dive
+      - linux-build
     use: buildx
     goarch: amd64
     image_templates:
@@ -86,7 +98,7 @@ dockers:
   - &dockerhub_arm64
     id: docker-arm64
     ids:
-      - dive
+      - linux-build
     use: buildx
     goarch: arm64
     image_templates:
