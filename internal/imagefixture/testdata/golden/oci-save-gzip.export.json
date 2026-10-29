@@ -2,7 +2,7 @@
   "layer": [
     {
       "index": 0,
-      "id": "blobs",
+      "id": "sha256:66f33cbb294cf96bfd044fb74647a1f02fa2bf7fc5c204c704554d7657a34d92",
       "digestId": "sha256:66f33cbb294cf96bfd044fb74647a1f02fa2bf7fc5c204c704554d7657a34d92",
       "sizeBytes": 5059,
       "command": "#(nop) ADD file:0123456789abcdef in / ",
@@ -81,7 +81,7 @@
     },
     {
       "index": 1,
-      "id": "blobs",
+      "id": "sha256:380a61f3f20d316156cb78d9cae23150769754cf7180c7fdbcdc533616355615",
       "digestId": "sha256:380a61f3f20d316156cb78d9cae23150769754cf7180c7fdbcdc533616355615",
       "sizeBytes": 17,
       "command": "COPY app /app # buildkit",
@@ -120,7 +120,7 @@
     },
     {
       "index": 2,
-      "id": "blobs",
+      "id": "sha256:3006e0d6acbeeb4f3edcbcc05397c1cfcb872ead32bcea984fb20afc694f1e8a",
       "digestId": "sha256:3006e0d6acbeeb4f3edcbcc05397c1cfcb872ead32bcea984fb20afc694f1e8a",
       "sizeBytes": 13,
       "command": "echo 'hello, world' \u003e /app/main.txt \u0026\u0026 rm /etc/os-release",

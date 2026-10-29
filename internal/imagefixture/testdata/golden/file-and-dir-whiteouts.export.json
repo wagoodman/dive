@@ -2,7 +2,7 @@
   "layer": [
     {
       "index": 0,
-      "id": "blobs",
+      "id": "sha256:05506ffceda6a1ffdd71181736b4b54baa4f26d8c9dc87875b0703155b1c2f02",
       "digestId": "sha256:05506ffceda6a1ffdd71181736b4b54baa4f26d8c9dc87875b0703155b1c2f02",
       "sizeBytes": 1505,
       "command": "make data",
@@ -81,7 +81,7 @@
     },
     {
       "index": 1,
-      "id": "blobs",
+      "id": "sha256:44dacff139cedf673baa0cb99c234c0ffc491e47f202f38e52045cbeef897dc9",
       "digestId": "sha256:44dacff139cedf673baa0cb99c234c0ffc491e47f202f38e52045cbeef897dc9",
       "sizeBytes": 0,
       "command": "rm -rf /data/remove.txt /data/olddir",
@@ -120,7 +120,7 @@
     },
     {
       "index": 2,
-      "id": "blobs",
+      "id": "sha256:4751de2c32c3ff6cc5c5cb637950fbb963fe287b90940ffafeecea45778c8ba1",
       "digestId": "sha256:4751de2c32c3ff6cc5c5cb637950fbb963fe287b90940ffafeecea45778c8ba1",
       "sizeBytes": 70,
       "command": "mkdir /data/olddir \u0026\u0026 touch /data/olddir/z",

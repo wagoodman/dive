@@ -2,7 +2,7 @@
   "layer": [
     {
       "index": 0,
-      "id": "blobs",
+      "id": "sha256:2e112031b4b923a873c8b3d685d48037e4d5ccd967b658743d93a6e56c3064b9",
       "digestId": "sha256:2e112031b4b923a873c8b3d685d48037e4d5ccd967b658743d93a6e56c3064b9",
       "sizeBytes": 4261550,
       "command": "ADD busybox.tar.xz / # buildkit",
@@ -4411,7 +4411,7 @@
     },
     {
       "index": 1,
-      "id": "blobs",
+      "id": "sha256:b5233acb40ee809c25225c27adc564291c88e6568401482d31c7530f0adf7bf5",
       "digestId": "sha256:b5233acb40ee809c25225c27adc564291c88e6568401482d31c7530f0adf7bf5",
       "sizeBytes": 10169,
       "command": "ADD README.md /somefile.txt # buildkit",
@@ -4430,7 +4430,7 @@
     },
     {
       "index": 2,
-      "id": "blobs",
+      "id": "sha256:a13e34bacfb27d2997e7dd941d8c989c44fe60e44afb7ffc73a0f2ef0fdda515",
       "digestId": "sha256:a13e34bacfb27d2997e7dd941d8c989c44fe60e44afb7ffc73a0f2ef0fdda515",
       "sizeBytes": 0,
       "command": "RUN /bin/sh -c mkdir -p /root/example/really/nested # buildkit",
@@ -4509,7 +4509,7 @@
     },
     {
       "index": 3,
-      "id": "blobs",
+      "id": "sha256:3031c0509e8328c76699618109bf52fc7de544c48a7c81901f4dc4cfef64a790",
       "digestId": "sha256:3031c0509e8328c76699618109bf52fc7de544c48a7c81901f4dc4cfef64a790",
       "sizeBytes": 10169,
       "command": "RUN /bin/sh -c cp /somefile.txt /root/example/somefile1.txt # buildkit",
@@ -4558,7 +4558,7 @@
     },
     {
       "index": 4,
-      "id": "blobs",
+      "id": "sha256:d342c122b31c266c00c5bfa7d26afc7add7894c01d8ca136936725dc7127b0b3",
       "digestId": "sha256:d342c122b31c266c00c5bfa7d26afc7add7894c01d8ca136936725dc7127b0b3",
       "sizeBytes": 10169,
       "command": "RUN /bin/sh -c chmod 444 /root/example/somefile1.txt # buildkit",
@@ -4607,7 +4607,7 @@
     },
     {
       "index": 5,
-      "id": "blobs",
+      "id": "sha256:0829d7d7c7533dfc6621a33eefcadfd6a0bb46aee864707604c1c946247cfc66",
       "digestId": "sha256:0829d7d7c7533dfc6621a33eefcadfd6a0bb46aee864707604c1c946247cfc66",
       "sizeBytes": 10169,
       "command": "RUN /bin/sh -c cp /somefile.txt /root/example/somefile2.txt # buildkit",
@@ -4656,7 +4656,7 @@
     },
     {
       "index": 6,
-      "id": "blobs",
+      "id": "sha256:6ed8c8c6b87a129d5923c3ffc069dc30388e52d51b94b96c071e0acd800a470e",
       "digestId": "sha256:6ed8c8c6b87a129d5923c3ffc069dc30388e52d51b94b96c071e0acd800a470e",
       "sizeBytes": 10169,
       "command": "RUN /bin/sh -c cp /somefile.txt /root/example/somefile3.txt # buildkit",
@@ -4705,7 +4705,7 @@
     },
     {
       "index": 7,
-      "id": "blobs",
+      "id": "sha256:234c2d3f7286a73740b75a9177daa92527c5bca1fb8503f36c59a6110400d889",
       "digestId": "sha256:234c2d3f7286a73740b75a9177daa92527c5bca1fb8503f36c59a6110400d889",
       "sizeBytes": 10169,
       "command": "RUN /bin/sh -c mv /root/example/somefile3.txt /root/saved.txt # buildkit",
@@ -4764,7 +4764,7 @@
     },
     {
       "index": 8,
-      "id": "blobs",
+      "id": "sha256:014519b01ca15d1f716f2f53f874f36d1bff95eb1f2428b5dcb33b9c485c1ff7",
       "digestId": "sha256:014519b01ca15d1f716f2f53f874f36d1bff95eb1f2428b5dcb33b9c485c1ff7",
       "sizeBytes": 10169,
       "command": "RUN /bin/sh -c cp /root/saved.txt /root/.saved.txt # buildkit",
@@ -4803,7 +4803,7 @@
     },
     {
       "index": 9,
-      "id": "blobs",
+      "id": "sha256:93880e455d5aaa2af218dbcdd730dd6bd98743227738fdc64af837a768fa5ec3",
       "digestId": "sha256:93880e455d5aaa2af218dbcdd730dd6bd98743227738fdc64af837a768fa5ec3",
       "sizeBytes": 0,
       "command": "RUN /bin/sh -c rm -rf /root/example/ # buildkit",
@@ -4842,7 +4842,7 @@
     },
     {
       "index": 10,
-      "id": "blobs",
+      "id": "sha256:ac5c23ff42cb8be0b34b800bc2666a130ae6d853747d00fe4f8c17747432fdf4",
       "digestId": "sha256:ac5c23ff42cb8be0b34b800bc2666a130ae6d853747d00fe4f8c17747432fdf4",
       "sizeBytes": 0,
       "command": "ADD .scripts/ /root/.data/ # buildkit",
@@ -4871,7 +4871,7 @@
     },
     {
       "index": 11,
-      "id": "blobs",
+      "id": "sha256:2f7025a8dd04f290d91ff47e1eedba90d76b1f58770e252b217eddd256933448",
       "digestId": "sha256:2f7025a8dd04f290d91ff47e1eedba90d76b1f58770e252b217eddd256933448",
       "sizeBytes": 10169,
       "command": "RUN /bin/sh -c cp /root/saved.txt /tmp/saved.again1.txt # buildkit",
@@ -4910,7 +4910,7 @@
     },
     {
       "index": 12,
-      "id": "blobs",
+      "id": "sha256:3806a7198fa7bc58ee31957786b96d643a77005a1fcd47680cbeced5dd4ceabf",
       "digestId": "sha256:3806a7198fa7bc58ee31957786b96d643a77005a1fcd47680cbeced5dd4ceabf",
       "sizeBytes": 10169,
       "command": "RUN /bin/sh -c cp /root/saved.txt /root/.data/saved.again2.txt # buildkit",
@@ -4959,7 +4959,7 @@
     },
     {
       "index": 13,
-      "id": "blobs",
+      "id": "sha256:bcd0d0bb27f99ff222277301a9fef50783b8ce911c40caa43c73491c472b562b",
       "digestId": "sha256:bcd0d0bb27f99ff222277301a9fef50783b8ce911c40caa43c73491c472b562b",
       "sizeBytes": 10169,
       "command": "RUN /bin/sh -c chmod +x /root/saved.txt # buildkit",
@@ -5005,12 +5005,12 @@
       {
         "count": 2,
         "sizeBytes": 20338,
-        "file": "/root/saved.txt"
+        "file": "/root/example/somefile1.txt"
       },
       {
         "count": 2,
         "sizeBytes": 20338,
-        "file": "/root/example/somefile1.txt"
+        "file": "/root/saved.txt"
       },
       {
         "count": 2,

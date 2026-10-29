@@ -2,7 +2,7 @@
   "layer": [
     {
       "index": 0,
-      "id": "blobs",
+      "id": "sha256:f24a24ad53be6ba66bfa5b6c9d940932cf625484b85e04a9f9f8ff6f884d3b25",
       "digestId": "sha256:f24a24ad53be6ba66bfa5b6c9d940932cf625484b85e04a9f9f8ff6f884d3b25",
       "sizeBytes": 1400,
       "command": "install tool",
@@ -111,7 +111,7 @@
     },
     {
       "index": 1,
-      "id": "blobs",
+      "id": "sha256:bad1f1177061781678cf49d805b87489c0eab316855aba5003aa51cab9ce2674",
       "digestId": "sha256:bad1f1177061781678cf49d805b87489c0eab316855aba5003aa51cab9ce2674",
       "sizeBytes": 11,
       "command": "relink tool",

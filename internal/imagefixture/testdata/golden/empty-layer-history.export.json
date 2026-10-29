@@ -2,7 +2,7 @@
   "layer": [
     {
       "index": 0,
-      "id": "blobs",
+      "id": "sha256:b7547447ccc3e2af716f3b642f93dc17516074949fd27195ae27822b2536d699",
       "digestId": "sha256:b7547447ccc3e2af716f3b642f93dc17516074949fd27195ae27822b2536d699",
       "sizeBytes": 2,
       "command": "#(nop) ADD file:aaaa in / ",
@@ -31,7 +31,7 @@
     },
     {
       "index": 1,
-      "id": "blobs",
+      "id": "sha256:3d81d4a1c52e69def6922fab9d1d417a8692976725266ed72fa595710399457e",
       "digestId": "sha256:3d81d4a1c52e69def6922fab9d1d417a8692976725266ed72fa595710399457e",
       "sizeBytes": 3,
       "command": "echo 22 \u003e /a/two",
@@ -60,7 +60,7 @@
     },
     {
       "index": 2,
-      "id": "blobs",
+      "id": "sha256:e28e30679923415e5a963186e0c3f806d477590f672d39d04590a6240861ee3d",
       "digestId": "sha256:e28e30679923415e5a963186e0c3f806d477590f672d39d04590a6240861ee3d",
       "sizeBytes": 4,
       "command": "RUN |1 VERSION=1 /bin/sh -c echo 333 \u003e /a/three # buildkit",

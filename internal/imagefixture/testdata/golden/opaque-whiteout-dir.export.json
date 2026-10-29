@@ -2,7 +2,7 @@
   "layer": [
     {
       "index": 0,
-      "id": "blobs",
+      "id": "sha256:5342be2411b72591aa5adede2d6bc2c12e9d503f68e4025303e2c597a26c7fb7",
       "digestId": "sha256:5342be2411b72591aa5adede2d6bc2c12e9d503f68e4025303e2c597a26c7fb7",
       "sizeBytes": 605,
       "command": "make etc",
@@ -81,7 +81,7 @@
     },
     {
       "index": 1,
-      "id": "blobs",
+      "id": "sha256:cded74b9ab296ad2fed6fbce46909738002ae42dd45a8d9b743a401a4c037893",
       "digestId": "sha256:cded74b9ab296ad2fed6fbce46909738002ae42dd45a8d9b743a401a4c037893",
       "sizeBytes": 50,
       "command": "rm -rf /etc/app \u0026\u0026 mkdir /etc/app \u0026\u0026 touch /etc/app/new.conf",

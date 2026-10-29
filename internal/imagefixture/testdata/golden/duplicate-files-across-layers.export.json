@@ -2,7 +2,7 @@
   "layer": [
     {
       "index": 0,
-      "id": "blobs",
+      "id": "sha256:48bbba249071b265ac049d2d8b2953d06c71dca7a3667b301b9db65a23e37cac",
       "digestId": "sha256:48bbba249071b265ac049d2d8b2953d06c71dca7a3667b301b9db65a23e37cac",
       "sizeBytes": 14000,
       "command": "fill cache",
@@ -71,7 +71,7 @@
     },
     {
       "index": 1,
-      "id": "blobs",
+      "id": "sha256:6256fcb66874c3aace61a2efa94659b251e1d86ff2f30db05080b02ce4dd2a76",
       "digestId": "sha256:6256fcb66874c3aace61a2efa94659b251e1d86ff2f30db05080b02ce4dd2a76",
       "sizeBytes": 16000,
       "command": "refill cache",
@@ -140,7 +140,7 @@
     },
     {
       "index": 2,
-      "id": "blobs",
+      "id": "sha256:a414d46b8a4905ea1c4e6a16c9064ccd4121bfd0b40f3dc0012320d0d51e599d",
       "digestId": "sha256:a414d46b8a4905ea1c4e6a16c9064ccd4121bfd0b40f3dc0012320d0d51e599d",
       "sizeBytes": 8000,
       "command": "refill big",
@@ -179,7 +179,7 @@
     },
     {
       "index": 3,
-      "id": "blobs",
+      "id": "sha256:19d69913c6695d1b2132df02a822b2d4fc3313d2471d35315d144e1af24332bd",
       "digestId": "sha256:19d69913c6695d1b2132df02a822b2d4fc3313d2471d35315d144e1af24332bd",
       "sizeBytes": 0,
       "command": "rm /var/cache/big.bin",
@@ -235,12 +235,12 @@
       {
         "count": 2,
         "sizeBytes": 1000,
-        "file": "/var/cache/tie-b"
+        "file": "/var/cache/tie-a"
       },
       {
         "count": 2,
         "sizeBytes": 1000,
-        "file": "/var/cache/tie-a"
+        "file": "/var/cache/tie-b"
       }
     ]
   }

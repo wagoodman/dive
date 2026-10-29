@@ -21,7 +21,7 @@
           "message": "0.9"
         }
       },
-      "report": "Analysis:\n  efficiency:        98.44 %\n  wastedBytes:       32025 bytes (32 kB)\n  userWastedPercent: 48.35 %\n\nInefficient Files:\n  Count  Wasted Space  File Path\n  2      13 kB         /root/saved.txt\n  2      13 kB         /root/example/somefile1.txt\n  2      6.4 kB        /root/example/somefile3.txt\n\nEvaluation:\n  FAIL  highestUserWastedPercent (too many bytes wasted, relative to the user bytes added (%-user-wasted-bytes=0.48 \u003e threshold=0.1))\n  SKIP  highestWastedBytes (disabled)\n  PASS  lowestEfficiency (0.9)\n\nFAIL [pass:1 fail:1 skip:1]"
+      "report": "Analysis:\n  efficiency:        98.44 %\n  wastedBytes:       32025 bytes (32 kB)\n  userWastedPercent: 48.35 %\n\nInefficient Files:\n  Count  Wasted Space  File Path\n  2      13 kB         /root/example/somefile1.txt\n  2      13 kB         /root/saved.txt\n  2      6.4 kB        /root/example/somefile3.txt\n\nEvaluation:\n  FAIL  highestUserWastedPercent (too many bytes wasted, relative to the user bytes added (%-user-wasted-bytes=0.48 \u003e threshold=0.1))\n  SKIP  highestWastedBytes (disabled)\n  PASS  lowestEfficiency (0.9)\n\nFAIL [pass:1 fail:1 skip:1]"
     },
     "dive-ci": {
       "pass": true,
@@ -39,7 +39,7 @@
           "message": "0.95"
         }
       },
-      "report": "Analysis:\n  efficiency:        98.44 %\n  wastedBytes:       32025 bytes (32 kB)\n  userWastedPercent: 48.35 %\n\nInefficient Files:\n  Count  Wasted Space  File Path\n  2      13 kB         /root/saved.txt\n  2      13 kB         /root/example/somefile1.txt\n  2      6.4 kB        /root/example/somefile3.txt\n\nEvaluation:\n  PASS  highestUserWastedPercent (0.5)\n  PASS  highestWastedBytes (20Mb)\n  PASS  lowestEfficiency (0.95)\n\nPASS [pass:3]"
+      "report": "Analysis:\n  efficiency:        98.44 %\n  wastedBytes:       32025 bytes (32 kB)\n  userWastedPercent: 48.35 %\n\nInefficient Files:\n  Count  Wasted Space  File Path\n  2      13 kB         /root/example/somefile1.txt\n  2      13 kB         /root/saved.txt\n  2      6.4 kB        /root/example/somefile3.txt\n\nEvaluation:\n  PASS  highestUserWastedPercent (0.5)\n  PASS  highestWastedBytes (20Mb)\n  PASS  lowestEfficiency (0.95)\n\nPASS [pass:3]"
     }
   }
 }

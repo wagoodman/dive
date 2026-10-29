@@ -12,7 +12,7 @@ import (
 
 	"github.com/wagoodman/dive/cmd/dive/cli/internal/command/ci"
 	"github.com/wagoodman/dive/cmd/dive/cli/internal/options"
-	"github.com/wagoodman/dive/dive/image/docker"
+	"github.com/wagoodman/dive/dive"
 	"github.com/wagoodman/dive/internal/imagefixture"
 )
 
@@ -28,7 +28,6 @@ type evalGolden struct {
 }
 
 type ciGolden struct {
-	Error string `json:"error,omitempty"`
 	// floats are strings since a single layer image has a NaN user wasted percent
 	Efficiency        string                `json:"efficiency,omitempty"`
 	SizeBytes         uint64                `json:"sizeBytes,omitempty"`
@@ -38,9 +37,8 @@ type ciGolden struct {
 	Evaluations       map[string]evalGolden `json:"evaluations,omitempty"`
 }
 
-// Test_CIGoldens records CI evaluation results of every image fixture with the current (pre-stereoscope) parser, with
-// the default rules and with .data/.dive-ci, as the parity contract for the stereoscope implementation.
-// Regenerate with UPDATE_GOLDEN=true.
+// Test_CIGoldens checks CI evaluation results of every image fixture, loaded through stereoscope, with the default
+// rules and with .data/.dive-ci. Regenerate with UPDATE_GOLDEN=true.
 func Test_CIGoldens(t *testing.T) {
 	lipgloss.SetColorProfile(termenv.Ascii)
 
@@ -59,28 +57,24 @@ func Test_CIGoldens(t *testing.T) {
 
 	for _, name := range imagefixture.Names() {
 		t.Run(name, func(t *testing.T) {
-			var golden ciGolden
-			analysis, err := docker.TestAnalysisFromArchiveE(t, imagefixture.Path(t, name))
-			if err != nil {
-				golden.Error = err.Error()
-			} else {
-				golden = ciGolden{
-					Efficiency:        strconv.FormatFloat(analysis.Efficiency, 'g', -1, 64),
-					SizeBytes:         analysis.SizeBytes,
-					UserSizeBytes:     analysis.UserSizeByes,
-					WastedBytes:       analysis.WastedBytes,
-					WastedUserPercent: strconv.FormatFloat(analysis.WastedUserPercent, 'g', -1, 64),
-					Evaluations:       map[string]evalGolden{},
+			analysis, err := dive.Analyze(context.Background(), name, imagefixture.Load(t, name))
+			require.NoError(t, err)
+			golden := ciGolden{
+				Efficiency:        strconv.FormatFloat(analysis.Efficiency, 'g', -1, 64),
+				SizeBytes:         analysis.SizeBytes,
+				UserSizeBytes:     analysis.UserSizeBytes,
+				WastedBytes:       analysis.WastedBytes,
+				WastedUserPercent: strconv.FormatFloat(analysis.WastedUserPercent, 'g', -1, 64),
+				Evaluations:       map[string]evalGolden{},
+			}
+			for setName, rules := range ruleSets {
+				evaluator := ci.NewEvaluator(rules)
+				eval := evaluator.Evaluate(context.Background(), ci.NewStats(analysis))
+				g := evalGolden{Pass: eval.Pass, Rules: map[string]ruleGolden{}, Report: eval.Report}
+				for key, result := range evaluator.Results {
+					g.Rules[key] = ruleGolden{Status: result.StatusString(), Message: result.Message()}
 				}
-				for setName, rules := range ruleSets {
-					evaluator := ci.NewEvaluator(rules)
-					eval := evaluator.Evaluate(context.Background(), ci.NewStatsFromImageAnalysis(analysis))
-					g := evalGolden{Pass: eval.Pass, Rules: map[string]ruleGolden{}, Report: eval.Report}
-					for key, result := range evaluator.Results {
-						g.Rules[key] = ruleGolden{Status: result.StatusString(), Message: result.Message()}
-					}
-					golden.Evaluations[setName] = g
-				}
+				golden.Evaluations[setName] = g
 			}
 			payload, err := json.MarshalIndent(golden, "", "  ")
 			require.NoError(t, err)

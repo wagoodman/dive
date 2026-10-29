@@ -2,7 +2,7 @@
   "layer": [
     {
       "index": 0,
-      "id": "blobs",
+      "id": "sha256:d4d749fde194329d7ce71e6b279a7bde62d1176bff623339e65b0e2e2b17a6ba",
       "digestId": "sha256:d4d749fde194329d7ce71e6b279a7bde62d1176bff623339e65b0e2e2b17a6ba",
       "sizeBytes": 9,
       "command": "touch deep",
@@ -13,36 +13,6 @@
           "linkName": "",
           "size": 5,
           "fileMode": 420,
-          "uid": 0,
-          "gid": 0,
-          "isDir": false
-        },
-        {
-          "path": "",
-          "typeFlag": 0,
-          "linkName": "",
-          "size": 0,
-          "fileMode": 0,
-          "uid": 0,
-          "gid": 0,
-          "isDir": false
-        },
-        {
-          "path": "",
-          "typeFlag": 0,
-          "linkName": "",
-          "size": 0,
-          "fileMode": 0,
-          "uid": 0,
-          "gid": 0,
-          "isDir": false
-        },
-        {
-          "path": "",
-          "typeFlag": 0,
-          "linkName": "",
-          "size": 0,
-          "fileMode": 0,
           "uid": 0,
           "gid": 0,
           "isDir": false
@@ -61,7 +31,7 @@
     },
     {
       "index": 1,
-      "id": "blobs",
+      "id": "sha256:9b9fa2c0649e983f06c319e3ea6c1abd92794fe195adfc6d1283a02bbebab0d9",
       "digestId": "sha256:9b9fa2c0649e983f06c319e3ea6c1abd92794fe195adfc6d1283a02bbebab0d9",
       "sizeBytes": 6,
       "command": "touch other",
@@ -72,26 +42,6 @@
           "linkName": "",
           "size": 6,
           "fileMode": 420,
-          "uid": 0,
-          "gid": 0,
-          "isDir": false
-        },
-        {
-          "path": "",
-          "typeFlag": 0,
-          "linkName": "",
-          "size": 0,
-          "fileMode": 0,
-          "uid": 0,
-          "gid": 0,
-          "isDir": false
-        },
-        {
-          "path": "",
-          "typeFlag": 0,
-          "linkName": "",
-          "size": 0,
-          "fileMode": 0,
           "uid": 0,
           "gid": 0,
           "isDir": false

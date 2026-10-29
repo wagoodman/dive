@@ -2,8 +2,8 @@
   "layer": [
     {
       "index": 0,
-      "id": "blobs",
-      "digestId": "",
+      "id": "sha256:b7547447ccc3e2af716f3b642f93dc17516074949fd27195ae27822b2536d699",
+      "digestId": "sha256:b7547447ccc3e2af716f3b642f93dc17516074949fd27195ae27822b2536d699",
       "sizeBytes": 2,
       "command": "(missing)",
       "fileList": [
@@ -31,8 +31,8 @@
     },
     {
       "index": 1,
-      "id": "blobs",
-      "digestId": "",
+      "id": "sha256:3d81d4a1c52e69def6922fab9d1d417a8692976725266ed72fa595710399457e",
+      "digestId": "sha256:3d81d4a1c52e69def6922fab9d1d417a8692976725266ed72fa595710399457e",
       "sizeBytes": 3,
       "command": "(missing)",
       "fileList": [
