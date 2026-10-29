@@ -1,8 +1,6 @@
 package viewmodel
 
-import (
-	"github.com/wagoodman/dive/dive/v1/image"
-)
+import "github.com/wagoodman/dive/dive/image"
 
 type LayerSetState struct {
 	LayerIndex        int

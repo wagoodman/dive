@@ -2,10 +2,11 @@ package docker
 
 import (
 	"github.com/stretchr/testify/require"
-	"github.com/wagoodman/dive/dive/v1/image"
 	"golang.org/x/net/context"
 	"os"
 	"testing"
+
+	"github.com/wagoodman/dive/dive/image"
 )
 
 func TestLoadArchive(t testing.TB, tarPath string) (*ImageArchive, error) {

@@ -1,9 +1,10 @@
 package docker
 
 import (
-	"github.com/wagoodman/dive/dive/v1/filetree"
-	"github.com/wagoodman/dive/dive/v1/image"
 	"strings"
+
+	"github.com/wagoodman/dive/dive/filetree"
+	"github.com/wagoodman/dive/dive/image"
 )
 
 // Layer represents a Docker image layer and metadata

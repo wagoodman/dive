@@ -6,8 +6,6 @@ import (
 	"compress/gzip"
 	"encoding/json"
 	"fmt"
-	"github.com/wagoodman/dive/dive/v1/filetree"
-	"github.com/wagoodman/dive/dive/v1/image"
 	"io"
 	"os"
 	"path"
@@ -15,6 +13,9 @@ import (
 	"strings"
 
 	"github.com/klauspost/compress/zstd"
+
+	"github.com/wagoodman/dive/dive/filetree"
+	"github.com/wagoodman/dive/dive/image"
 )
 
 type ImageArchive struct {

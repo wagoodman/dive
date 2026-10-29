@@ -1,7 +1,7 @@
 package image
 
 import (
-	"github.com/wagoodman/dive/dive/v1/filetree"
+	"github.com/wagoodman/dive/dive/filetree"
 )
 
 type Image struct {

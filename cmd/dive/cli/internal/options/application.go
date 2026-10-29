@@ -5,26 +5,18 @@ import (
 )
 
 type Application struct {
-	Development Development `yaml:"dev" mapstructure:"dev"`
-	Analysis    Analysis    `yaml:",inline" mapstructure:",squash"`
-	CI          CI          `yaml:",inline" mapstructure:",squash"`
-	Export      Export      `yaml:",inline" mapstructure:",squash"`
-	UI          UI          `yaml:",inline" mapstructure:",squash"`
+	Analysis Analysis `yaml:",inline" mapstructure:",squash"`
+	CI       CI       `yaml:",inline" mapstructure:",squash"`
+	Export   Export   `yaml:",inline" mapstructure:",squash"`
+	UI       UI       `yaml:",inline" mapstructure:",squash"`
 }
 
 func DefaultApplication() Application {
 	return Application{
-		Development: DefaultDevelopment(),
-		Analysis:    DefaultAnalysis(),
-		CI:          DefaultCI(),
-		Export:      DefaultExport(),
-		UI:          DefaultUI(),
-	}
-}
-
-func DefaultDevelopment() Development {
-	return Development{
-		UseStereoscope: false,
+		Analysis: DefaultAnalysis(),
+		CI:       DefaultCI(),
+		Export:   DefaultExport(),
+		UI:       DefaultUI(),
 	}
 }
 
@@ -37,8 +29,4 @@ func (c Application) V1Preferences() v1.Preferences {
 		FiletreePaneWidth:          c.UI.Filetree.PaneWidth,
 		FiletreeDiffHide:           nil,
 	}
-}
-
-type Development struct {
-	UseStereoscope bool `yaml:"use-stereoscope" mapstructure:"use-stereoscope"`
 }

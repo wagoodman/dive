@@ -15,6 +15,7 @@ import (
 	"github.com/wagoodman/go-partybus"
 	"io"
 	"os"
+	"strings"
 )
 
 var _ clio.UI = (*V1UI)(nil)
@@ -27,24 +28,24 @@ type V1UI struct {
 	subscription partybus.Unsubscribable
 	quiet        bool
 	verbosity    int
-	format       v1Format
+	format       format
 }
 
-type v1Format struct {
+type format struct {
 	Title        lipgloss.Style
 	Aux          lipgloss.Style
 	Line         lipgloss.Style
 	Notification lipgloss.Style
 }
 
-func NewV1UI(cfg v1.Preferences, out io.Writer, quiet bool, verbosity int) clio.UI {
+func NewV1UI(cfg v1.Preferences, out io.Writer, quiet bool, verbosity int) *V1UI {
 	return &V1UI{
 		cfg:       cfg,
 		out:       out,
 		err:       os.Stderr,
 		quiet:     quiet,
 		verbosity: verbosity,
-		format: v1Format{
+		format: format{
 			Title:        lipgloss.NewStyle().Bold(true).Width(30),
 			Aux:          lipgloss.NewStyle().Faint(true),
 			Notification: lipgloss.NewStyle().Foreground(lipgloss.Color("#A77BCA")),
@@ -64,6 +65,29 @@ func (n *V1UI) Setup(subscription partybus.Unsubscribable) error {
 
 	n.subscription = subscription
 	return nil
+}
+
+var _ termenv.Environ = (*environWithoutCI)(nil)
+
+type environWithoutCI struct {
+}
+
+func (e environWithoutCI) Environ() []string {
+	var out []string
+	for _, s := range os.Environ() {
+		if strings.HasPrefix(s, "CI=") {
+			continue
+		}
+		out = append(out, s)
+	}
+	return out
+}
+
+func (e environWithoutCI) Getenv(s string) string {
+	if s == "CI" {
+		return ""
+	}
+	return os.Getenv(s)
 }
 
 func (n *V1UI) Handle(e partybus.Event) error {

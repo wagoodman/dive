@@ -2,10 +2,11 @@ package image
 
 import (
 	"fmt"
-	"github.com/wagoodman/dive/dive/v1/filetree"
 	"strings"
 
 	"github.com/dustin/go-humanize"
+
+	"github.com/wagoodman/dive/dive/filetree"
 )
 
 const (

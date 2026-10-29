@@ -2,10 +2,11 @@ package dive
 
 import (
 	"fmt"
-	"github.com/wagoodman/dive/dive/v1/image"
-	docker2 "github.com/wagoodman/dive/dive/v1/image/docker"
-	"github.com/wagoodman/dive/dive/v1/image/podman"
 	"strings"
+
+	"github.com/wagoodman/dive/dive/image"
+	"github.com/wagoodman/dive/dive/image/docker"
+	"github.com/wagoodman/dive/dive/image/podman"
 )
 
 const (
@@ -61,11 +62,11 @@ func DeriveImageSource(image string) (ImageSource, string) {
 func GetImageResolver(r ImageSource) (image.Resolver, error) {
 	switch r {
 	case SourceDockerEngine:
-		return docker2.NewResolverFromEngine(), nil
+		return docker.NewResolverFromEngine(), nil
 	case SourcePodmanEngine:
 		return podman.NewResolverFromEngine(), nil
 	case SourceDockerArchive:
-		return docker2.NewResolverFromArchive(), nil
+		return docker.NewResolverFromArchive(), nil
 	}
 
 	return nil, fmt.Errorf("unable to determine image resolver")

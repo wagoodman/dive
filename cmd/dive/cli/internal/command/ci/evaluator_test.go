@@ -3,12 +3,13 @@ package ci
 import (
 	"context"
 	"github.com/stretchr/testify/require"
-	"github.com/wagoodman/dive/dive/v1/image/docker"
 	"go.uber.org/atomic"
 	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/wagoodman/dive/dive/image/docker"
 )
 
 var repoRootCache atomic.String
