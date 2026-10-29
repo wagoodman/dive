@@ -2,7 +2,7 @@ package view
 
 import (
 	"github.com/awesome-gocui/gocui"
-	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1"
+	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/tui"
 )
 
 type View interface {
@@ -21,7 +21,7 @@ type Views struct {
 	Debug        *Debug
 }
 
-func NewViews(g *gocui.Gui, cfg v1.Config) (*Views, error) {
+func NewViews(g *gocui.Gui, cfg tui.Config) (*Views, error) {
 	layer, err := newLayerView(g, cfg)
 	if err != nil {
 		return nil, err

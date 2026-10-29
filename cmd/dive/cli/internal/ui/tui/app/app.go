@@ -4,10 +4,10 @@ import (
 	"context"
 	"errors"
 	"github.com/awesome-gocui/gocui"
-	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1"
-	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1/key"
-	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1/layout"
-	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1/layout/compound"
+	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/tui"
+	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/tui/key"
+	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/tui/layout"
+	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/tui/layout/compound"
 	"time"
 )
 
@@ -20,7 +20,7 @@ type app struct {
 }
 
 // Run is the UI entrypoint.
-func Run(ctx context.Context, c v1.Config) error {
+func Run(ctx context.Context, c tui.Config) error {
 	var err error
 
 	// it appears there is a race condition where termbox.Init() will
@@ -52,7 +52,7 @@ func Run(ctx context.Context, c v1.Config) error {
 	return nil
 }
 
-func newApp(ctx context.Context, gui *gocui.Gui, cfg v1.Config) (*app, error) {
+func newApp(ctx context.Context, gui *gocui.Gui, cfg tui.Config) (*app, error) {
 	var err error
 	var c *controller
 	var globalHelpKeys []*key.Binding

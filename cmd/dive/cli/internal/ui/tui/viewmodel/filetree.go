@@ -8,9 +8,9 @@ import (
 
 	"github.com/lunixbochs/vtclean"
 
-	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1"
-	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1/filetree"
-	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1/format"
+	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/tui"
+	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/tui/filetree"
+	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/tui/format"
 	"github.com/wagoodman/dive/internal/log"
 )
 
@@ -39,7 +39,7 @@ type FileTreeViewModel struct {
 }
 
 // NewFileTreeViewModel creates a new view object attached the global [gocui] screen object.
-func NewFileTreeViewModel(cfg v1.Config, initialLayer int) (treeViewModel *FileTreeViewModel, err error) {
+func NewFileTreeViewModel(cfg tui.Config, initialLayer int) (treeViewModel *FileTreeViewModel, err error) {
 	treeViewModel = new(FileTreeViewModel)
 
 	comparer := filetree.NewComparer(cfg.Analysis.Image)

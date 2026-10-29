@@ -8,17 +8,17 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/wagoodman/go-partybus"
 
-	v1 "github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1"
+	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/tui"
 	"github.com/wagoodman/dive/internal/bus/event"
 )
 
 func TestNew_fallsBackWithoutTTY(t *testing.T) {
 	// go test never gives the test binary a terminal on stdin/stderr
-	_, ok := New(v1.DefaultPreferences(), &bytes.Buffer{}, false, 0).(*LineUI)
+	_, ok := New(tui.DefaultPreferences(), &bytes.Buffer{}, false, 0).(*LineUI)
 	assert.True(t, ok, "expected the line based UI without a TTY")
 
 	t.Setenv("CI", "true")
-	_, ok = New(v1.DefaultPreferences(), &bytes.Buffer{}, false, 0).(*LineUI)
+	_, ok = New(tui.DefaultPreferences(), &bytes.Buffer{}, false, 0).(*LineUI)
 	assert.True(t, ok, "expected the line based UI with CI set")
 }
 
@@ -27,7 +27,7 @@ func TestWriteEvents_reportMatchesLineUI(t *testing.T) {
 	e := partybus.Event{Type: event.Report, Value: report}
 
 	var lineOut bytes.Buffer
-	require.NoError(t, NewLineUI(v1.DefaultPreferences(), &lineOut, false, 1).Handle(e))
+	require.NoError(t, NewLineUI(tui.DefaultPreferences(), &lineOut, false, 1).Handle(e))
 
 	var progressOut bytes.Buffer
 	require.NoError(t, writeEvents(&progressOut, &bytes.Buffer{}, e))

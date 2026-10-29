@@ -1,7 +1,7 @@
-package v1
+package tui
 
 import (
-	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1/key"
+	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/tui/key"
 	"github.com/wagoodman/dive/dive"
 )
 

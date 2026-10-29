@@ -2,7 +2,7 @@ package options
 
 import (
 	"github.com/anchore/clio"
-	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1"
+	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/tui"
 	"github.com/wagoodman/dive/internal/log"
 )
 
@@ -17,7 +17,7 @@ type UIDiff struct {
 }
 
 func DefaultUIDiff() UIDiff {
-	prefs := v1.DefaultPreferences()
+	prefs := tui.DefaultPreferences()
 	return UIDiff{
 		Hide: prefs.FiletreeDiffHide,
 	}

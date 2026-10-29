@@ -18,7 +18,7 @@ import (
 	"github.com/anchore/bubbly/bubbles/frame"
 	"github.com/anchore/clio"
 	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/handler"
-	v1 "github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1"
+	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/tui"
 	"github.com/wagoodman/dive/internal/bus"
 	"github.com/wagoodman/dive/internal/bus/event"
 	"github.com/wagoodman/dive/internal/bus/event/parser"
@@ -28,7 +28,7 @@ import (
 // New returns the UI for a command run: the bubbletea progress UI when stderr is an interactive terminal, otherwise
 // the plain line based UI (no TTY, piped stdin, --quiet, -v, NO_TTY or CI set). Either one hands the terminal to the
 // gocui TUI on an ExploreAnalysis event.
-func New(prefs v1.Preferences, out io.Writer, quiet bool, verbosity int) clio.UI {
+func New(prefs tui.Preferences, out io.Writer, quiet bool, verbosity int) clio.UI {
 	lc := clio.LoggingConfig{Quiet: quiet, Verbosity: verbosity}
 	if quiet || isCI() || !lc.AllowUI(os.Stdin) {
 		return NewLineUI(prefs, out, quiet, verbosity)
@@ -51,7 +51,7 @@ var _ interface {
 } = (*progressUI)(nil)
 
 type progressUI struct {
-	prefs          v1.Preferences
+	prefs          tui.Preferences
 	out            io.Writer
 	err            io.Writer
 	program        *tea.Program
@@ -64,7 +64,7 @@ type progressUI struct {
 	frame   tea.Model
 }
 
-func newProgressUI(prefs v1.Preferences, out io.Writer, handlers ...bubbly.EventHandler) *progressUI {
+func newProgressUI(prefs tui.Preferences, out io.Writer, handlers ...bubbly.EventHandler) *progressUI {
 	return &progressUI{
 		prefs:   prefs,
 		out:     out,

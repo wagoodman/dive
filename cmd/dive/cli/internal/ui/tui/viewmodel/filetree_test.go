@@ -12,8 +12,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1"
-	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1/filetree"
+	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/tui"
+	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/tui/filetree"
 	"github.com/wagoodman/dive/dive"
 	"github.com/wagoodman/dive/internal/imagefixture"
 )
@@ -68,9 +68,9 @@ func initializeTestViewModel(t *testing.T) *FileTreeViewModel {
 	result, err := dive.Analyze(context.Background(), "test-docker-image", img)
 	require.NoError(t, err, "unable to analyze test data")
 
-	vm, err := NewFileTreeViewModel(v1.Config{
+	vm, err := NewFileTreeViewModel(tui.Config{
 		Analysis:    result,
-		Preferences: v1.DefaultPreferences(),
+		Preferences: tui.DefaultPreferences(),
 	}, 0)
 
 	require.NoError(t, err, "unable to create viewmodel")

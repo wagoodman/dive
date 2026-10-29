@@ -5,7 +5,7 @@ import (
 	"github.com/anchore/clio"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/muesli/termenv"
-	v1 "github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1"
+	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/tui"
 	"github.com/wagoodman/dive/internal/bus/event"
 	"github.com/wagoodman/dive/internal/bus/event/parser"
 	"github.com/wagoodman/dive/internal/log"
@@ -17,7 +17,7 @@ import (
 var _ clio.UI = (*LineUI)(nil)
 
 type LineUI struct {
-	cfg v1.Preferences
+	cfg tui.Preferences
 	out io.Writer
 	err io.Writer
 
@@ -34,7 +34,7 @@ type format struct {
 	Notification lipgloss.Style
 }
 
-func NewLineUI(cfg v1.Preferences, out io.Writer, quiet bool, verbosity int) *LineUI {
+func NewLineUI(cfg tui.Preferences, out io.Writer, quiet bool, verbosity int) *LineUI {
 	return &LineUI{
 		cfg:       cfg,
 		out:       out,

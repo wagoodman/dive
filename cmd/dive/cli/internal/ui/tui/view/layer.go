@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"github.com/anchore/go-logger"
 	"github.com/awesome-gocui/gocui"
-	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1"
-	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1/format"
-	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1/key"
-	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1/viewmodel"
+	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/tui"
+	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/tui/format"
+	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/tui/key"
+	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/tui/viewmodel"
 	"github.com/wagoodman/dive/internal/log"
 )
 
@@ -29,7 +29,7 @@ type Layer struct {
 }
 
 // newLayerView creates a new view object attached the global [gocui] screen object.
-func newLayerView(gui *gocui.Gui, cfg v1.Config) (c *Layer, err error) {
+func newLayerView(gui *gocui.Gui, cfg tui.Config) (c *Layer, err error) {
 	c = new(Layer)
 
 	c.logger = log.Nested("ui", "layer")

@@ -3,9 +3,9 @@ package app
 import (
 	"context"
 	"fmt"
-	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1"
-	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1/view"
-	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1/viewmodel"
+	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/tui"
+	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/tui/view"
+	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/tui/viewmodel"
 	"regexp"
 
 	"github.com/awesome-gocui/gocui"
@@ -14,11 +14,11 @@ import (
 type controller struct {
 	gui    *gocui.Gui
 	views  *view.Views
-	config v1.Config
+	config tui.Config
 	ctx    context.Context // TODO: storing context in the controller is not ideal
 }
 
-func newController(ctx context.Context, g *gocui.Gui, cfg v1.Config) (*controller, error) {
+func newController(ctx context.Context, g *gocui.Gui, cfg tui.Config) (*controller, error) {
 	views, err := view.NewViews(g, cfg)
 	if err != nil {
 		return nil, err

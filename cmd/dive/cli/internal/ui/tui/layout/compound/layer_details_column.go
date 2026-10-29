@@ -3,7 +3,7 @@ package compound
 import (
 	"fmt"
 	"github.com/awesome-gocui/gocui"
-	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1/view"
+	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/tui/view"
 	"github.com/wagoodman/dive/internal/log"
 	"github.com/wagoodman/dive/internal/utils"
 )

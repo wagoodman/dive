@@ -3,16 +3,16 @@ package view
 import (
 	"fmt"
 	"github.com/anchore/go-logger"
-	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1"
-	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1/format"
-	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1/key"
-	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1/viewmodel"
+	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/tui"
+	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/tui/format"
+	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/tui/key"
+	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/tui/viewmodel"
 	"github.com/wagoodman/dive/internal/log"
 	"github.com/wagoodman/dive/internal/utils"
 	"regexp"
 
 	"github.com/awesome-gocui/gocui"
-	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1/filetree"
+	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/tui/filetree"
 )
 
 type ViewOptionChangeListener func() error
@@ -39,7 +39,7 @@ type FileTree struct {
 }
 
 // newFileTreeView creates a new view object attached the global [gocui] screen object.
-func newFileTreeView(gui *gocui.Gui, cfg v1.Config, initial int) (v *FileTree, err error) {
+func newFileTreeView(gui *gocui.Gui, cfg tui.Config, initial int) (v *FileTree, err error) {
 	v = new(FileTree)
 	v.logger = log.Nested("ui", "filetree")
 	v.listeners = make([]ViewOptionChangeListener, 0)

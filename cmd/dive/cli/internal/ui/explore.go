@@ -10,15 +10,15 @@ import (
 	"github.com/anchore/go-logger/adapter/discard"
 	"github.com/wagoodman/go-partybus"
 
-	v1 "github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1"
-	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1/app"
+	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/tui"
+	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/tui/app"
 	"github.com/wagoodman/dive/internal/bus/event/parser"
 	"github.com/wagoodman/dive/internal/log"
 )
 
 // runExplore runs the gocui TUI for an ExploreAnalysis event and blocks until the user quits. This is the only place
 // that reads the ExploreAnalysis payload, so a payload change only touches this function (and the parser).
-func runExplore(e partybus.Event, prefs v1.Preferences) error {
+func runExplore(e partybus.Event, prefs tui.Preferences) error {
 	analysis, done, err := parser.ParseExploreAnalysis(e)
 	// the publisher waits on this before cleaning up the image
 	defer done()
@@ -32,7 +32,7 @@ func runExplore(e partybus.Event, prefs v1.Preferences) error {
 	return app.Run(
 		// TODO: this is not plumbed through from the command object...
 		context.Background(),
-		v1.Config{
+		tui.Config{
 			Analysis:    analysis,
 			Preferences: prefs,
 		},
