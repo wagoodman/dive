@@ -180,6 +180,6 @@ func finish(mon *payload.GenericProgress, err error) {
 		return
 	}
 	mon.SetError(err)
-	mon.Manual.SetTotal(1)
+	mon.SetTotal(1)
 	mon.Manual.Set(1)
 }

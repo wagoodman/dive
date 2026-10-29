@@ -277,11 +277,7 @@ func (node *FileNode) Path() string {
 	if node.path == "" {
 		var path []string
 		curNode := node
-		for {
-			if curNode.Parent == nil {
-				break
-			}
-
+		for curNode.Parent != nil {
 			name := curNode.Name
 			if curNode == node {
 				// white out prefixes are fictitious on leaf nodes
@@ -293,7 +289,7 @@ func (node *FileNode) Path() string {
 		}
 		node.path = "/" + strings.Join(path, "/")
 	}
-	return strings.Replace(node.path, "//", "/", -1)
+	return strings.ReplaceAll(node.path, "//", "/")
 }
 
 // deriveDiffType determines a DiffType to the current FileNode. Note: the DiffType of a node is always the DiffType of
