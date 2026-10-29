@@ -1,0 +1,247 @@
+{
+  "layer": [
+    {
+      "index": 0,
+      "id": "blobs",
+      "digestId": "sha256:48bbba249071b265ac049d2d8b2953d06c71dca7a3667b301b9db65a23e37cac",
+      "sizeBytes": 14000,
+      "command": "fill cache",
+      "fileList": [
+        {
+          "path": "var/cache/big.bin",
+          "typeFlag": 48,
+          "linkName": "",
+          "size": 10000,
+          "fileMode": 420,
+          "uid": 0,
+          "gid": 0,
+          "isDir": false
+        },
+        {
+          "path": "var/cache/medium.bin",
+          "typeFlag": 48,
+          "linkName": "",
+          "size": 3000,
+          "fileMode": 420,
+          "uid": 0,
+          "gid": 0,
+          "isDir": false
+        },
+        {
+          "path": "var/cache/tie-a",
+          "typeFlag": 48,
+          "linkName": "",
+          "size": 500,
+          "fileMode": 420,
+          "uid": 0,
+          "gid": 0,
+          "isDir": false
+        },
+        {
+          "path": "var/cache/tie-b",
+          "typeFlag": 48,
+          "linkName": "",
+          "size": 500,
+          "fileMode": 420,
+          "uid": 0,
+          "gid": 0,
+          "isDir": false
+        },
+        {
+          "path": "var/cache",
+          "typeFlag": 53,
+          "linkName": "",
+          "size": 0,
+          "fileMode": 2147484141,
+          "uid": 0,
+          "gid": 0,
+          "isDir": true
+        },
+        {
+          "path": "var",
+          "typeFlag": 53,
+          "linkName": "",
+          "size": 0,
+          "fileMode": 2147484141,
+          "uid": 0,
+          "gid": 0,
+          "isDir": true
+        }
+      ]
+    },
+    {
+      "index": 1,
+      "id": "blobs",
+      "digestId": "sha256:6256fcb66874c3aace61a2efa94659b251e1d86ff2f30db05080b02ce4dd2a76",
+      "sizeBytes": 16000,
+      "command": "refill cache",
+      "fileList": [
+        {
+          "path": "var/cache/big.bin",
+          "typeFlag": 48,
+          "linkName": "",
+          "size": 12000,
+          "fileMode": 420,
+          "uid": 0,
+          "gid": 0,
+          "isDir": false
+        },
+        {
+          "path": "var/cache/medium.bin",
+          "typeFlag": 48,
+          "linkName": "",
+          "size": 3000,
+          "fileMode": 420,
+          "uid": 0,
+          "gid": 0,
+          "isDir": false
+        },
+        {
+          "path": "var/cache/tie-a",
+          "typeFlag": 48,
+          "linkName": "",
+          "size": 500,
+          "fileMode": 420,
+          "uid": 0,
+          "gid": 0,
+          "isDir": false
+        },
+        {
+          "path": "var/cache/tie-b",
+          "typeFlag": 48,
+          "linkName": "",
+          "size": 500,
+          "fileMode": 420,
+          "uid": 0,
+          "gid": 0,
+          "isDir": false
+        },
+        {
+          "path": "var/cache",
+          "typeFlag": 53,
+          "linkName": "",
+          "size": 0,
+          "fileMode": 2147484141,
+          "uid": 0,
+          "gid": 0,
+          "isDir": true
+        },
+        {
+          "path": "var",
+          "typeFlag": 53,
+          "linkName": "",
+          "size": 0,
+          "fileMode": 2147484141,
+          "uid": 0,
+          "gid": 0,
+          "isDir": true
+        }
+      ]
+    },
+    {
+      "index": 2,
+      "id": "blobs",
+      "digestId": "sha256:a414d46b8a4905ea1c4e6a16c9064ccd4121bfd0b40f3dc0012320d0d51e599d",
+      "sizeBytes": 8000,
+      "command": "refill big",
+      "fileList": [
+        {
+          "path": "var/cache/big.bin",
+          "typeFlag": 48,
+          "linkName": "",
+          "size": 8000,
+          "fileMode": 420,
+          "uid": 0,
+          "gid": 0,
+          "isDir": false
+        },
+        {
+          "path": "var/cache",
+          "typeFlag": 53,
+          "linkName": "",
+          "size": 0,
+          "fileMode": 2147484141,
+          "uid": 0,
+          "gid": 0,
+          "isDir": true
+        },
+        {
+          "path": "var",
+          "typeFlag": 53,
+          "linkName": "",
+          "size": 0,
+          "fileMode": 2147484141,
+          "uid": 0,
+          "gid": 0,
+          "isDir": true
+        }
+      ]
+    },
+    {
+      "index": 3,
+      "id": "blobs",
+      "digestId": "sha256:19d69913c6695d1b2132df02a822b2d4fc3313d2471d35315d144e1af24332bd",
+      "sizeBytes": 0,
+      "command": "rm /var/cache/big.bin",
+      "fileList": [
+        {
+          "path": "var/cache/.wh.big.bin",
+          "typeFlag": 48,
+          "linkName": "",
+          "size": 0,
+          "fileMode": 420,
+          "uid": 0,
+          "gid": 0,
+          "isDir": false
+        },
+        {
+          "path": "var/cache",
+          "typeFlag": 53,
+          "linkName": "",
+          "size": 0,
+          "fileMode": 2147484141,
+          "uid": 0,
+          "gid": 0,
+          "isDir": true
+        },
+        {
+          "path": "var",
+          "typeFlag": 53,
+          "linkName": "",
+          "size": 0,
+          "fileMode": 2147484141,
+          "uid": 0,
+          "gid": 0,
+          "isDir": true
+        }
+      ]
+    }
+  ],
+  "image": {
+    "sizeBytes": 38000,
+    "inefficientBytes": 38000,
+    "efficiencyScore": 0.10526315789473684,
+    "fileReference": [
+      {
+        "count": 4,
+        "sizeBytes": 30000,
+        "file": "/var/cache/big.bin"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 6000,
+        "file": "/var/cache/medium.bin"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 1000,
+        "file": "/var/cache/tie-b"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 1000,
+        "file": "/var/cache/tie-a"
+      }
+    ]
+  }
+}

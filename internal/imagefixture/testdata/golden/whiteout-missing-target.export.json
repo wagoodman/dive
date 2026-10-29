@@ -1,0 +1,88 @@
+{
+  "layer": [
+    {
+      "index": 0,
+      "id": "blobs",
+      "digestId": "sha256:00b2db1d4c896daf224daca373bc1f4dcdd1c41f7f3f4cc9e6d27cb12cbe8910",
+      "sizeBytes": 100,
+      "command": "touch /opt/a",
+      "fileList": [
+        {
+          "path": "opt/a",
+          "typeFlag": 48,
+          "linkName": "",
+          "size": 100,
+          "fileMode": 420,
+          "uid": 0,
+          "gid": 0,
+          "isDir": false
+        },
+        {
+          "path": "opt",
+          "typeFlag": 53,
+          "linkName": "",
+          "size": 0,
+          "fileMode": 2147484141,
+          "uid": 0,
+          "gid": 0,
+          "isDir": true
+        }
+      ]
+    },
+    {
+      "index": 1,
+      "id": "blobs",
+      "digestId": "sha256:718a31968b21568f0fc6c5d62a1b61a303e9732fefe573d694f38a1fdb9391de",
+      "sizeBytes": 200,
+      "command": "rm -f /opt/never-existed \u0026\u0026 touch /opt/a /opt/b",
+      "fileList": [
+        {
+          "path": "opt/.wh.never-existed",
+          "typeFlag": 48,
+          "linkName": "",
+          "size": 0,
+          "fileMode": 420,
+          "uid": 0,
+          "gid": 0,
+          "isDir": false
+        },
+        {
+          "path": "opt/a",
+          "typeFlag": 48,
+          "linkName": "",
+          "size": 150,
+          "fileMode": 420,
+          "uid": 0,
+          "gid": 0,
+          "isDir": false
+        },
+        {
+          "path": "opt/b",
+          "typeFlag": 48,
+          "linkName": "",
+          "size": 50,
+          "fileMode": 420,
+          "uid": 0,
+          "gid": 0,
+          "isDir": false
+        },
+        {
+          "path": "opt",
+          "typeFlag": 53,
+          "linkName": "",
+          "size": 0,
+          "fileMode": 2147484141,
+          "uid": 0,
+          "gid": 0,
+          "isDir": true
+        }
+      ]
+    }
+  ],
+  "image": {
+    "sizeBytes": 300,
+    "inefficientBytes": 0,
+    "efficiencyScore": 0.99,
+    "fileReference": []
+  }
+}

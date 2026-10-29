@@ -1,0 +1,44 @@
+{
+  "efficiency": "1",
+  "sizeBytes": 5,
+  "userSizeBytes": 3,
+  "wastedUserPercent": "0",
+  "evaluations": {
+    "default": {
+      "pass": true,
+      "rules": {
+        "highestUserWastedPercent": {
+          "status": "PASS",
+          "message": "0.1"
+        },
+        "highestWastedBytes": {
+          "status": "SKIP",
+          "message": "disabled"
+        },
+        "lowestEfficiency": {
+          "status": "PASS",
+          "message": "0.9"
+        }
+      },
+      "report": "Analysis:\n  efficiency:        100.00 %\n  wastedBytes:       0 bytes \n  userWastedPercent: 0 %\n\nInefficient Files: (None)\n\nEvaluation:\n  PASS  highestUserWastedPercent (0.1)\n  SKIP  highestWastedBytes (disabled)\n  PASS  lowestEfficiency (0.9)\n\nPASS [pass:2 skip:1]"
+    },
+    "dive-ci": {
+      "pass": true,
+      "rules": {
+        "highestUserWastedPercent": {
+          "status": "PASS",
+          "message": "0.5"
+        },
+        "highestWastedBytes": {
+          "status": "PASS",
+          "message": "20Mb"
+        },
+        "lowestEfficiency": {
+          "status": "PASS",
+          "message": "0.95"
+        }
+      },
+      "report": "Analysis:\n  efficiency:        100.00 %\n  wastedBytes:       0 bytes \n  userWastedPercent: 0 %\n\nInefficient Files: (None)\n\nEvaluation:\n  PASS  highestUserWastedPercent (0.5)\n  PASS  highestWastedBytes (20Mb)\n  PASS  lowestEfficiency (0.95)\n\nPASS [pass:3]"
+    }
+  }
+}

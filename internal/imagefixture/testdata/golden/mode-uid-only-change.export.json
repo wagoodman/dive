@@ -1,0 +1,124 @@
+{
+  "layer": [
+    {
+      "index": 0,
+      "id": "blobs",
+      "digestId": "sha256:9151ce97bbde20ce325b7f3212e484c412125b86a5e64843e7f56f9dd5125062",
+      "sizeBytes": 29,
+      "command": "make app",
+      "fileList": [
+        {
+          "path": "app/owned",
+          "typeFlag": 48,
+          "linkName": "",
+          "size": 6,
+          "fileMode": 420,
+          "uid": 0,
+          "gid": 0,
+          "isDir": false
+        },
+        {
+          "path": "app/run.sh",
+          "typeFlag": 48,
+          "linkName": "",
+          "size": 18,
+          "fileMode": 420,
+          "uid": 0,
+          "gid": 0,
+          "isDir": false
+        },
+        {
+          "path": "app/same",
+          "typeFlag": 48,
+          "linkName": "",
+          "size": 5,
+          "fileMode": 420,
+          "uid": 0,
+          "gid": 0,
+          "isDir": false
+        },
+        {
+          "path": "app",
+          "typeFlag": 53,
+          "linkName": "",
+          "size": 0,
+          "fileMode": 2147484141,
+          "uid": 0,
+          "gid": 0,
+          "isDir": true
+        }
+      ]
+    },
+    {
+      "index": 1,
+      "id": "blobs",
+      "digestId": "sha256:fe124a5fc969dc90a0c7bc0fe7a86610a8fa762faf469101cdfb169891c0cf98",
+      "sizeBytes": 29,
+      "command": "chmod +x /app/run.sh \u0026\u0026 chown 1000:1000 /app/owned",
+      "fileList": [
+        {
+          "path": "app/owned",
+          "typeFlag": 48,
+          "linkName": "",
+          "size": 6,
+          "fileMode": 420,
+          "uid": 1000,
+          "gid": 1000,
+          "isDir": false
+        },
+        {
+          "path": "app/run.sh",
+          "typeFlag": 48,
+          "linkName": "",
+          "size": 18,
+          "fileMode": 493,
+          "uid": 0,
+          "gid": 0,
+          "isDir": false
+        },
+        {
+          "path": "app/same",
+          "typeFlag": 48,
+          "linkName": "",
+          "size": 5,
+          "fileMode": 420,
+          "uid": 0,
+          "gid": 0,
+          "isDir": false
+        },
+        {
+          "path": "app",
+          "typeFlag": 53,
+          "linkName": "",
+          "size": 0,
+          "fileMode": 2147484141,
+          "uid": 0,
+          "gid": 0,
+          "isDir": true
+        }
+      ]
+    }
+  ],
+  "image": {
+    "sizeBytes": 58,
+    "inefficientBytes": 58,
+    "efficiencyScore": 0.5,
+    "fileReference": [
+      {
+        "count": 2,
+        "sizeBytes": 36,
+        "file": "/app/run.sh"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 12,
+        "file": "/app/owned"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 10,
+        "file": "/app/same"
+      }
+    ]
+  }
+}
