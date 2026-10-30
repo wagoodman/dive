@@ -464,11 +464,16 @@ uri = "unix:///run/user/1000/podman/podman.sock"
 	require.NoError(t, os.MkdirAll(filepath.Join(runtimeDir, "podman"), 0o700))
 	require.NoError(t, os.WriteFile(filepath.Join(runtimeDir, "podman", "podman.sock"), nil, 0o600))
 
+	// podman 5 on macOS puts the machine's API socket under $TMPDIR
+	machineSock := filepath.Join(t.TempDir(), "podman-machine-default-api.sock")
+	require.NoError(t, os.WriteFile(machineSock, nil, 0o600))
+
 	tests := []struct {
 		name          string
 		containerHost string
 		configs       []string
 		runtimeDir    string
+		machineSocket string
 		want          string
 		wantErr       string
 	}{
@@ -476,12 +481,14 @@ uri = "unix:///run/user/1000/podman/podman.sock"
 		{name: "CONTAINER_HOST ssh", containerHost: "ssh://core@build:22/run/podman/podman.sock", runtimeDir: runtimeDir, wantErr: "ssh"},
 		{name: "config unix destination over an active ssh one", configs: []string{activeSSH}, want: "unix:///run/user/1000/podman/podman.sock"},
 		{name: "config with only ssh", configs: []string{sshOnly}, runtimeDir: t.TempDir(), wantErr: "no podman socket"},
-		{name: "rootless default socket", configs: []string{sshOnly}, runtimeDir: runtimeDir, want: "unix://" + filepath.Join(runtimeDir, "podman", "podman.sock")},
+		{name: "rootless default socket", configs: []string{sshOnly}, runtimeDir: runtimeDir, machineSocket: machineSock, want: "unix://" + filepath.Join(runtimeDir, "podman", "podman.sock")},
+		{name: "macOS machine with only ssh in config", configs: []string{sshOnly}, runtimeDir: t.TempDir(), machineSocket: machineSock, want: "unix://" + machineSock},
+		{name: "machine socket missing (machine stopped)", configs: []string{sshOnly}, runtimeDir: t.TempDir(), machineSocket: filepath.Join(t.TempDir(), "gone.sock"), wantErr: "no podman socket"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Setenv("CONTAINER_HOST", tt.containerHost)
-			got, err := podmanHost(tt.configs, tt.runtimeDir)
+			got, err := podmanHost(tt.configs, tt.runtimeDir, func() string { return tt.machineSocket })
 			if tt.wantErr != "" {
 				require.ErrorContains(t, err, tt.wantErr)
 				return

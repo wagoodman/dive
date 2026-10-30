@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"net/url"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"strings"
 
 	"github.com/adrg/xdg"
 	"github.com/moby/moby/client"
@@ -23,7 +25,7 @@ var podmanConfigs = []string{
 // podman.GetClient does, minus its ssh fallback: that connection skips host key verification unless known_hosts has an
 // exact unhashed entry for the host (never for a host with a port), and a pull over it sends registry credentials.
 func newPodmanClient() (client.APIClient, error) {
-	host, err := podmanHost(podmanConfigs, xdg.RuntimeDir)
+	host, err := podmanHost(podmanConfigs, xdg.RuntimeDir, podmanMachineSocket)
 	if err != nil {
 		return nil, err
 	}
@@ -31,8 +33,8 @@ func newPodmanClient() (client.APIClient, error) {
 }
 
 // podmanHost resolves the podman API address: CONTAINER_HOST, then a unix destination in containers.conf, then the
-// rootless and rootful default sockets. ssh addresses are refused.
-func podmanHost(configs []string, runtimeDir string) (string, error) {
+// rootless and rootful default sockets, then the podman machine's API socket. ssh addresses are refused.
+func podmanHost(configs []string, runtimeDir string, machineSocket func() string) (string, error) {
 	host := os.Getenv("CONTAINER_HOST")
 	if host == "" {
 		for _, p := range configs {
@@ -51,12 +53,31 @@ func podmanHost(configs []string, runtimeDir string) (string, error) {
 		}
 	}
 	if host == "" {
-		return "", errors.New("no podman socket found (dive does not connect to podman over ssh), set CONTAINER_HOST=unix://<path to the podman socket>")
+		// off linux podman runs in a machine, whose containers.conf entry is ssh only
+		if p := machineSocket(); p != "" {
+			if _, err := os.Stat(p); err == nil {
+				host = "unix://" + p
+			}
+		}
+	}
+	if host == "" {
+		return "", errors.New("no podman socket found (is the podman machine running? dive does not connect to podman over ssh), set CONTAINER_HOST=unix://<path to the podman socket>")
 	}
 	if u, err := url.Parse(host); err == nil && u.Scheme == "ssh" {
 		return "", fmt.Errorf("refusing podman connection %q: dive does not connect to podman over ssh, since the host key would not be verified; set CONTAINER_HOST=unix://<path to a podman socket> (e.g. one forwarded with `ssh -L`)", host)
 	}
 	return host, nil
+}
+
+// podmanMachineSocket asks podman for the default machine's API socket, which is how podman is reached on macOS.
+// Empty when podman or the machine isn't there.
+func podmanMachineSocket() string {
+	out, err := exec.Command("podman", "machine", "inspect", "--format", "{{.ConnectionInfo.PodmanSocket.Path}}").Output()
+	if err != nil {
+		return ""
+	}
+	path, _, _ := strings.Cut(strings.TrimSpace(string(out)), "\n")
+	return path
 }
 
 // podmanConfigSocket returns the unix destination of a containers.conf, the active service first.

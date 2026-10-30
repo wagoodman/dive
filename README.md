@@ -92,7 +92,7 @@ For every other source a single colon is read as an image name and tag, so `dive
 Source | Reads the image from
 -------|---------------------
 `docker` | the Docker engine (the default). Images missing locally are pulled through the docker API, with credentials from your docker config. `DOCKER_HOST`, `DOCKER_CONTEXT` and the current docker context are honored
-`podman` | Podman. On linux the local store is read directly (no socket needed, see `containers-storage`, and a short name like `myapp` also finds podman's `localhost/myapp`), falling back to the podman socket. Elsewhere the podman machine socket is used
+`podman` | Podman. On linux the local store is read directly (no socket needed, see `containers-storage`, and a short name like `myapp` also finds podman's `localhost/myapp`), falling back to the podman socket. On macOS the running podman machine's API socket is used (found through `podman machine inspect`); `CONTAINER_HOST=unix://...` overrides it, ssh connections are refused
 `docker-archive` | a `docker save` tarball on disk (`docker-tar` is an alias)
 `oci-archive` | an OCI image layout tarball on disk
 `oci-dir` | an OCI image layout directory on disk
