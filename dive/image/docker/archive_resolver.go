@@ -19,7 +19,26 @@ func (r *archiveResolver) Name() string {
 	return "docker-archive"
 }
 
+// maxArchiveSize bounds how large a docker image archive may be before we
+// refuse to process it, guarding against resource-exhaustion from malformed
+// or adversarial archives.
+const maxArchiveSize = 10 << 30 // 10 GiB
+
 func (r *archiveResolver) Fetch(ctx context.Context, path string) (*image.Image, error) {
+	info, err := os.Stat(path)
+	if err != nil {
+		return nil, err
+	}
+	if !info.Mode().IsRegular() {
+		return nil, fmt.Errorf("invalid archive: %q is not a regular file", path)
+	}
+	if info.Size() <= 0 {
+		return nil, fmt.Errorf("invalid archive: %q is empty", path)
+	}
+	if info.Size() > maxArchiveSize {
+		return nil, fmt.Errorf("invalid archive: %q exceeds maximum allowed size of %d bytes", path, maxArchiveSize)
+	}
+
 	reader, err := os.Open(path)
 	if err != nil {
 		return nil, err
