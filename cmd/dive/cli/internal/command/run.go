@@ -9,6 +9,7 @@ import (
 	"github.com/anchore/clio"
 	"github.com/anchore/stereoscope/pkg/image"
 	"github.com/dustin/go-humanize"
+	"github.com/spf13/cobra"
 
 	"github.com/wagoodman/dive/cmd/dive/cli/internal/command/ci"
 	"github.com/wagoodman/dive/cmd/dive/cli/internal/command/export"
@@ -41,6 +42,23 @@ func progressUI(opts options.Application, state *clio.State) clio.UI {
 func lineUI(opts options.Application, state *clio.State) clio.UI {
 	return ui.NewLineUI(opts.TUIPreferences(), os.Stdout, state.Config.Log.Quiet, state.Config.Log.Verbosity)
 }
+
+// escaped wraps a command's RunE so its error prints safely. Load errors carry text a registry or daemon controls
+// (response bodies, pull messages), and clio prints the error raw.
+func escaped(runE func(*cobra.Command, []string) error) func(*cobra.Command, []string) error {
+	return func(cmd *cobra.Command, args []string) error {
+		if err := runE(cmd, args); err != nil {
+			return escapedError{err}
+		}
+		return nil
+	}
+}
+
+// escapedError keeps the wrapped error visible to errors.Is / errors.As
+type escapedError struct{ error }
+
+func (e escapedError) Error() string { return ui.Escape(e.error.Error()) }
+func (e escapedError) Unwrap() error { return e.error }
 
 // run loads the image behind input, analyzes it, then exports the analysis (--json), evaluates it (--ci) or hands
 // it to the TUI.

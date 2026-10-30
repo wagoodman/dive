@@ -29,7 +29,7 @@ func Build(app clio.Application) *cobra.Command {
 		Use:                "build [any valid `docker build` arguments]",
 		Short:              "Builds and analyzes a docker image from a Dockerfile (this is a thin wrapper for the `docker build` command).",
 		DisableFlagParsing: true,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: escaped(func(cmd *cobra.Command, args []string) error {
 			// the build subprocess writes to the terminal, so no UI may take it over
 			if err := setUI(app, opts.Application, lineUI); err != nil {
 				return fmt.Errorf("failed to set UI: %w", err)
@@ -42,7 +42,7 @@ func Build(app clio.Application) *cobra.Command {
 
 			// the ref has a scheme, so the configured source doesn't apply to it
 			return run(cmd.Context(), opts.Application, ref)
-		},
+		}),
 	}, opts)
 }
 

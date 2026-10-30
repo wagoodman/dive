@@ -31,11 +31,11 @@ the amount of wasted space and identifies the offending files from the image.`,
 			opts.Analysis.Image = args[0]
 			return nil
 		},
-		RunE: func(cmd *cobra.Command, _ []string) error {
+		RunE: escaped(func(cmd *cobra.Command, _ []string) error {
 			if err := setUI(app, opts.Application, progressUI); err != nil {
 				return fmt.Errorf("failed to set UI: %w", err)
 			}
 			return run(cmd.Context(), opts.Application, opts.Analysis.Image)
-		},
+		}),
 	}, opts)
 }

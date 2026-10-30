@@ -149,23 +149,29 @@ func (n *LineUI) Teardown(_ bool) error {
 }
 
 // notificationText is the text of a notification event, safe to print. Notifications carry image derived strings
-// (paths, image config fields), so control characters other than newlines and tabs are escaped (as "\x1b") to keep
-// them from driving the terminal.
+// (paths, image config fields).
 func notificationText(e partybus.Event) (string, error) {
 	_, text, err := parser.ParseNotification(e)
 	if err != nil {
 		return "", err
 	}
+	return Escape(text), nil
+}
+
+// Escape makes untrusted text (image paths, registry and daemon messages) safe to print. Control characters other
+// than newlines and tabs, and format characters (bidi overrides, zero width), are escaped as "\x1b" or "\u202e" so
+// they can't drive the terminal or disguise the text.
+func Escape(text string) string {
 	var b strings.Builder
 	for _, r := range text {
-		if unicode.IsControl(r) && r != '\n' && r != '\t' {
+		if (unicode.IsControl(r) && r != '\n' && r != '\t') || unicode.Is(unicode.Cf, r) {
 			q := strconv.QuoteRune(r)
 			b.WriteString(q[1 : len(q)-1])
 			continue
 		}
 		b.WriteRune(r)
 	}
-	return b.String(), nil
+	return b.String()
 }
 
 // drain unsubscribes and returns the notifications and reports still queued for the UI. On an interrupt clio stops
