@@ -252,7 +252,8 @@ func providers(src, ref, goos string, platform *image.Platform, tmp *file.TempDi
 		}
 		return []image.Provider{podmanDaemon}, nil
 	case DockerArchive:
-		return []image.Provider{dockerArchive}, nil
+		// main's own parser read OCI archives as docker-archive too
+		return []image.Provider{dockerArchive, ociArchive}, nil
 	case OCIArchive:
 		return []image.Provider{ociArchive}, nil
 	case OCIDir:
