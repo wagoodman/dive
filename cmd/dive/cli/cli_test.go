@@ -47,7 +47,10 @@ func TestMain(m *testing.M) {
 
 	v := m.Run()
 
-	snapsPkg.Clean(m)
+	if _, err := snapsPkg.Clean(m); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		v = 1
+	}
 
 	os.Exit(v)
 }
