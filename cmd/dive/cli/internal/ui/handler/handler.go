@@ -32,9 +32,9 @@ type Handler struct {
 
 	bubbly.EventHandler
 
-	onNewTask *sync.Once
-	// taskIDs are the task tree row IDs handed out so far (only touched from the bubbletea update loop)
-	taskIDs map[string]bool
+	// taskIDs maps every task row ID handed out so far to the ID of its root task's tree (only touched from the
+	// bubbletea update loop)
+	taskIDs map[string]string
 }
 
 func DefaultHandlerConfig() HandlerConfig {
@@ -50,8 +50,7 @@ func New(cfg HandlerConfig) *Handler {
 		EventHandler: d,
 		Running:      &sync.WaitGroup{},
 		Config:       cfg,
-		onNewTask:    &sync.Once{},
-		taskIDs:      make(map[string]bool),
+		taskIDs:      make(map[string]string),
 	}
 
 	// register all supported event types with the respective handler functions

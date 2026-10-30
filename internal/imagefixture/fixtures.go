@@ -292,6 +292,11 @@ func Path(t testing.TB, name string) string {
 	if !ok {
 		t.Fatalf("unknown image fixture %q", name)
 	}
+	return writeSpec(t, name, spec)
+}
+
+func writeSpec(t testing.TB, name string, spec Spec) string {
+	t.Helper()
 	path := filepath.Join(t.TempDir(), name+".tar")
 	f, err := os.Create(path)
 	if err != nil {

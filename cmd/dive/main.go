@@ -23,11 +23,14 @@ package main
 import (
 	"fmt"
 	"os"
+	"os/signal"
+	"path/filepath"
+	"time"
 
 	"github.com/anchore/clio"
 
 	"github.com/wagoodman/dive/cmd/dive/cli"
-	"github.com/wagoodman/dive/dive/source"
+	"github.com/wagoodman/dive/internal/source"
 )
 
 // applicationName is the non-capitalized name of the application (do not change this)
@@ -46,6 +49,10 @@ var (
 )
 
 func main() {
+	// stereoscope sends os.Args[0] as the registry User-Agent, keep the local install path (and username) out of it.
+	// Nothing else reads more than the base name.
+	os.Args[0] = filepath.Base(os.Args[0])
+
 	app := cli.Application(
 		clio.Identification{
 			Name:           applicationName,
@@ -59,8 +66,12 @@ func main() {
 	app.Run()
 
 	// on an interrupt clio returns here without waiting for the command, which then never cleans up its image.
-	// (on an error exit clio calls os.Exit instead, but the command has already finished and cleaned up then)
-	if err := source.Cleanup(); err != nil {
+	// (on an error exit clio calls os.Exit instead, but the command has already finished and cleaned up then). A
+	// second interrupt while Run is still running makes its deferred os.Exit(1) skip this, which can leave temp dirs
+	// behind. clio has stopped listening for signals by now, so ignore them for the bounded wait, otherwise another
+	// ctrl-c would kill dive mid cleanup.
+	signal.Ignore(os.Interrupt)
+	if err := source.Cleanup(5 * time.Second); err != nil {
 		fmt.Fprintf(os.Stderr, "unable to clean up temp dirs: %v\n", err)
 	}
 }

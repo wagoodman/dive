@@ -6,9 +6,9 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"slices"
 	"strings"
 
-	"github.com/scylladb/go-set/strset"
 	"github.com/spf13/afero"
 
 	"github.com/wagoodman/dive/internal/log"
@@ -21,14 +21,14 @@ const (
 )
 
 // Build runs `docker build` or `podman build` (engine is Docker or Podman) with the user's build args, attached to
-// the current tty. It returns the built image ID and a reference that Load resolves to that image: the docker daemon
-// for docker, and for podman containers-storage on linux with the podman socket as the fallback.
-func Build(ctx context.Context, engine string, args []string) (id, ref string, err error) {
+// the current tty. It returns a reference that Load resolves to the built image: the docker daemon for docker, and
+// for podman containers-storage on linux with the podman socket as the fallback.
+func Build(ctx context.Context, engine string, args []string) (string, error) {
 	fs := afero.NewOsFs()
 
 	iidfile, err := afero.TempFile(fs, "", "dive.*.iid")
 	if err != nil {
-		return "", "", err
+		return "", err
 	}
 	defer fs.Remove(iidfile.Name()) // nolint:errcheck
 	iidfile.Close()
@@ -40,13 +40,13 @@ func Build(ctx context.Context, engine string, args []string) (id, ref string, e
 		if !isFileFlagsAreSet(args, "-f", "--file") {
 			containerfile, err := tryFindContainerfile(fs, args)
 			if err != nil {
-				return "", "", err
+				return "", err
 			}
 			allArgs = append(allArgs, "-f", containerfile)
 		}
 	case Podman:
 	default:
-		return "", "", fmt.Errorf("cannot build with source %q (supported: %s, %s)", engine, Docker, Podman)
+		return "", fmt.Errorf("cannot build with source %q (supported: %s, %s)", engine, Docker, Podman)
 	}
 	allArgs = utils.CleanArgs(append(allArgs, args...))
 
@@ -57,30 +57,29 @@ func Build(ctx context.Context, engine string, args []string) (id, ref string, e
 	cmd.Stderr = os.Stderr
 	cmd.Stdin = os.Stdin
 	if err := cmd.Run(); err != nil {
-		return "", "", fmt.Errorf("%s build failed: %w", engine, err)
+		return "", fmt.Errorf("%s build failed: %w", engine, err)
 	}
 
 	raw, err := afero.ReadFile(fs, iidfile.Name())
 	if err != nil {
-		return "", "", err
+		return "", err
 	}
-	id = strings.TrimSpace(string(raw))
+	id := strings.TrimSpace(string(raw))
 	if id == "" {
-		return "", "", fmt.Errorf("%s build did not report an image ID", engine)
+		return "", fmt.Errorf("%s build did not report an image ID", engine)
 	}
 
 	if engine == Podman {
 		// containers-storage only resolves a bare hex ID, not "sha256:<hex>" (the podman socket takes either)
-		return id, Podman + "://" + strings.TrimPrefix(id, "sha256:"), nil
+		return Podman + "://" + strings.TrimPrefix(id, "sha256:"), nil
 	}
-	return id, Docker + "://" + id, nil
+	return Docker + "://" + id, nil
 }
 
 // isFileFlagsAreSet checks if any of the given flags is present in the argument list with a value after it.
 func isFileFlagsAreSet(args []string, flags ...string) bool {
-	flagSet := strset.New(flags...)
 	for i, arg := range args {
-		if flagSet.Has(arg) && i+1 < len(args) {
+		if slices.Contains(flags, arg) && i+1 < len(args) {
 			return true
 		}
 	}

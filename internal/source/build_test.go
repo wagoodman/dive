@@ -263,13 +263,12 @@ func TestBuild(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.engine+" "+tt.wantRef, func(t *testing.T) {
 			fakeEngine(t, tt.engine, "sha256:"+hex)
-			id, ref, err := Build(context.Background(), tt.engine, tt.args)
+			ref, err := Build(context.Background(), tt.engine, tt.args)
 			if tt.wantErr {
 				require.Error(t, err)
 				return
 			}
 			require.NoError(t, err)
-			assert.Equal(t, "sha256:"+hex, id)
 			assert.Equal(t, tt.wantRef, ref)
 
 			// the ref must resolve back to the engine and the ID

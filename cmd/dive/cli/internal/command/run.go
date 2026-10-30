@@ -7,7 +7,6 @@ import (
 	"os"
 
 	"github.com/anchore/clio"
-	"github.com/anchore/stereoscope/pkg/filetree/filenode"
 	"github.com/anchore/stereoscope/pkg/image"
 	"github.com/dustin/go-humanize"
 
@@ -16,10 +15,10 @@ import (
 	"github.com/wagoodman/dive/cmd/dive/cli/internal/options"
 	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui"
 	"github.com/wagoodman/dive/dive"
-	"github.com/wagoodman/dive/dive/source"
 	"github.com/wagoodman/dive/internal/bus"
 	"github.com/wagoodman/dive/internal/bus/event/payload"
 	"github.com/wagoodman/dive/internal/log"
+	"github.com/wagoodman/dive/internal/source"
 )
 
 func setUI(app clio.Application, opts options.Application, ux func(options.Application, *clio.State) clio.UI) error {
@@ -31,9 +30,11 @@ func setUI(app clio.Application, opts options.Application, ux func(options.Appli
 	return state.UI.Replace(ux(opts, state))
 }
 
-// progressUI is the bubbletea progress UI where the terminal allows it, the line UI otherwise
+// progressUI is the bubbletea progress UI where the terminal allows it and the output isn't for scripts (--ci,
+// --json), the line UI otherwise
 func progressUI(opts options.Application, state *clio.State) clio.UI {
-	return ui.New(opts.TUIPreferences(), os.Stdout, state.Config.Log.Quiet, state.Config.Log.Verbosity)
+	plain := opts.CI.Enabled || opts.Export.JsonPath != ""
+	return ui.New(opts.TUIPreferences(), os.Stdout, state.Config.Log.Quiet, state.Config.Log.Verbosity, plain)
 }
 
 // lineUI never takes over the terminal, for commands that share it with a subprocess (dive build)
@@ -44,7 +45,7 @@ func lineUI(opts options.Application, state *clio.State) clio.UI {
 // run loads the image behind input, analyzes it, then exports the analysis (--json), evaluates it (--ci) or hands
 // it to the TUI.
 func run(ctx context.Context, opts options.Application, input string) (err error) {
-	_, ref := source.Parse(input, opts.Analysis.ContainerEngine)
+	_, ref := source.Parse(input, opts.Analysis.Source)
 
 	img, err := load(ctx, input, ref, opts.Analysis)
 	if err != nil {
@@ -82,15 +83,17 @@ func load(ctx context.Context, input, ref string, opts options.Analysis) (*image
 	log.WithFields("image", ref).Info("fetching")
 	mon := bus.StartTask(payload.GenericTask{
 		Title: payload.Title{
+			// the progress UI shows stereoscope's own "Loading image" row under this one
 			Default:      "Loading image",
-			WhileRunning: "Loading image",
-			OnSuccess:    "Fetched image",
+			WhileRunning: "Resolving image",
+			OnSuccess:    "Resolved image",
+			OnFail:       "Failed to load image",
 		},
 		ID:      ref,
 		Context: ref,
 	})
 
-	img, err := source.Load(ctx, input, source.Config{Source: opts.ContainerEngine, Platform: opts.Platform})
+	img, err := source.Load(ctx, input, source.Config{Source: opts.Source, Platform: opts.Platform})
 	finish(mon, err)
 	return img, err
 }
@@ -102,10 +105,9 @@ func analyze(ctx context.Context, ref string, img *image.Image) (*dive.Analysis,
 	var fileSize uint64
 	for _, l := range img.Layers {
 		fileSize += uint64(l.Metadata.Size)
-		_ = dive.WalkTree(l.Tree, func(*filenode.FileNode, bool) error {
-			files++
-			return nil
-		})
+		// every node but the root, no walk needed for a count
+		t := l.Tree.TreeReader()
+		files += len(t.Nodes()) - len(t.Roots())
 	}
 	fileSizeStr := humanize.Bytes(fileSize)
 	filesStr := humanize.Comma(int64(files))
@@ -119,6 +121,7 @@ func analyze(ctx context.Context, ref string, img *image.Image) (*dive.Analysis,
 			Default:      "Analyzing image",
 			WhileRunning: "Analyzing image",
 			OnSuccess:    "Analyzed image",
+			OnFail:       "Failed to analyze image",
 		},
 		ID:      ref,
 		Context: fmt.Sprintf("[layers:%d files:%s size:%s]", len(img.Layers), filesStr, fileSizeStr),
@@ -136,6 +139,7 @@ func exportTo(analysis *dive.Analysis, path string) error {
 			Default:      "Exporting details",
 			WhileRunning: "Exporting details",
 			OnSuccess:    "Exported details",
+			OnFail:       "Failed to export details",
 		},
 		ID:      analysis.Ref,
 		Context: fmt.Sprintf("[file: %s]", path),
@@ -157,6 +161,7 @@ func evaluate(ctx context.Context, analysis *dive.Analysis, rules []ci.Rule) boo
 			Default:      "Evaluating image",
 			WhileRunning: "Evaluating image",
 			OnSuccess:    "Evaluated image",
+			OnFail:       "Failed evaluation",
 		},
 		ID:      analysis.Ref,
 		Context: fmt.Sprintf("[rules: %d]", len(rules)),

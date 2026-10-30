@@ -1,6 +1,7 @@
 package command
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
@@ -8,10 +9,10 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/wagoodman/dive/cmd/dive/cli/internal/options"
-	"github.com/wagoodman/dive/dive/source"
 	"github.com/wagoodman/dive/internal/bus"
 	"github.com/wagoodman/dive/internal/bus/event/payload"
 	"github.com/wagoodman/dive/internal/log"
+	"github.com/wagoodman/dive/internal/source"
 )
 
 type buildOptions struct {
@@ -34,7 +35,7 @@ func Build(app clio.Application) *cobra.Command {
 				return fmt.Errorf("failed to set UI: %w", err)
 			}
 
-			ref, err := build(cmd, opts.Analysis.ContainerEngine, args)
+			ref, err := build(cmd.Context(), opts.Analysis.Source, args)
 			if err != nil {
 				return fmt.Errorf("cannot build image: %w", err)
 			}
@@ -45,7 +46,7 @@ func Build(app clio.Application) *cobra.Command {
 	}, opts)
 }
 
-func build(cmd *cobra.Command, engine string, args []string) (string, error) {
+func build(ctx context.Context, engine string, args []string) (string, error) {
 	// only docker and podman can build (source.Build refuses the rest), auto builds with docker
 	if engine, _ = source.Normalize(engine); engine == source.Auto {
 		engine = source.Docker
@@ -59,11 +60,12 @@ func build(cmd *cobra.Command, engine string, args []string) (string, error) {
 			Default:      "Building image",
 			WhileRunning: "Building image",
 			OnSuccess:    "Built image",
+			OnFail:       "Failed to build image",
 		},
 		Context: "... " + strings.Join(args, " "),
 	})
 
-	_, ref, err := source.Build(cmd.Context(), engine, args)
+	ref, err := source.Build(ctx, engine, args)
 	finish(mon, err)
 	return ref, err
 }

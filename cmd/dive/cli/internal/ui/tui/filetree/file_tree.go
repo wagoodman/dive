@@ -9,15 +9,14 @@ import (
 )
 
 const (
-	newLine              = "\n"
-	noBranchSpace        = "    "
-	branchSpace          = "│   "
-	middleItem           = "├─"
-	lastItem             = "└─"
-	whiteoutPrefix       = ".wh."
-	doubleWhiteoutPrefix = ".wh..wh.."
-	uncollapsedItem      = "─ "
-	collapsedItem        = "⊕ "
+	newLine         = "\n"
+	noBranchSpace   = "    "
+	branchSpace     = "│   "
+	middleItem      = "├─"
+	lastItem        = "└─"
+	whiteoutPrefix  = ".wh."
+	uncollapsedItem = "─ "
+	collapsedItem   = "⊕ "
 )
 
 // FileTree represents a set of files, directories, and their relations.
@@ -231,20 +230,10 @@ func (tree *FileTree) AddPath(filepath string, data FileInfo) (*FileNode, []*Fil
 		if node.Children[name] != nil {
 			node = node.Children[name]
 		} else {
-			// don't add paths that should be deleted
-			if strings.HasPrefix(name, doubleWhiteoutPrefix) {
-				return nil, addedNodes, nil
-			}
-
 			// don't attach the payload. The payload is destined for the
 			// Path's end node, not any intermediary node.
 			node = node.AddChild(name, FileInfo{})
 			addedNodes = append(addedNodes, node)
-
-			if node == nil {
-				// the child could not be added
-				return node, addedNodes, fmt.Errorf("could not add child node: '%s' (path:'%s')", name, filepath)
-			}
 		}
 
 		// attach payload to the last specified node
@@ -272,7 +261,7 @@ type compareMark struct {
 }
 
 // CompareAndMark marks the FileNodes in the owning (lower) tree with DiffType annotations when compared to the given (upper) tree.
-// The hasher is only asked for the content hash of files present in both trees (nil means the fixed test hash).
+// The hasher is only asked for the content hash of files present in both trees (nil compares metadata only).
 func (tree *FileTree) CompareAndMark(upper *FileTree, hash ContentHasher) ([]PathError, error) {
 	// always compare relative to the original, unaltered tree.
 	originalTree := tree

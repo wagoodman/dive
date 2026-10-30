@@ -81,25 +81,28 @@ With the `--source` option, you can select where to fetch the container image fr
 ```bash
 dive <your-image> --source <source>
 ```
-or prefix the image with a scheme, either `<source>://` or `<source>:` (the form other anchore tools use):
+or prefix the image with a `<source>://` scheme:
 ```bash
 dive <source>://<your-image>
-dive <source>:<your-image>
 ```
+The file based sources also take the `<source>:<path>` form other anchore tools use (e.g. `dive oci-dir:./layout`).
+For every other source a single colon is read as an image name and tag, so `dive docker:dind` analyzes the
+`docker:dind` image.
 
 Source | Reads the image from
 -------|---------------------
 `docker` | the Docker engine (the default). Images missing locally are pulled through the docker API, with credentials from your docker config. `DOCKER_HOST`, `DOCKER_CONTEXT` and the current docker context are honored
-`podman` | Podman. On linux the local store is read directly (no socket needed, see `containers-storage`), falling back to the podman socket. Elsewhere the podman machine socket is used
+`podman` | Podman. On linux the local store is read directly (no socket needed, see `containers-storage`, and a short name like `myapp` also finds podman's `localhost/myapp`), falling back to the podman socket. Elsewhere the podman machine socket is used
 `docker-archive` | a `docker save` tarball on disk (`docker-tar` is an alias)
 `oci-archive` | an OCI image layout tarball on disk
 `oci-dir` | an OCI image layout directory on disk
-`registry` | a registry, without a container engine (credentials from your docker config)
+`registry` | a registry, without a container engine (credentials from your docker config). Registries on private IP addresses are refused, since they would be reached over plain http
 `containerd` | the containerd daemon (`CONTAINERD_NAMESPACE` selects the namespace)
 `containers-storage` | the local podman/buildah store (linux only, see below)
-`auto` | detect it: files on disk first, then docker, podman, containerd and containers-storage, then a registry pull. Only valid for `--source`, not as a scheme
+`auto` | detect it: files on disk first, then docker, podman, containerd and containers-storage, then a registry pull. The source it picked is reported, since an image no local engine has quietly comes from a registry (Docker Hub for a short name). Only valid for `--source`, not as a scheme
 
-For a multi-platform image, `--platform` picks the variant to analyze (e.g. `--platform linux/arm64`).
+For a multi-platform image, `--platform` picks the variant to analyze (e.g. `--platform linux/arm64`). A `docker save`
+tarball holds a single platform, dive reports when it doesn't match.
 
 `containers-storage` support is compiled in only with the `containers_image_openpgp` build tag, which the linux
 release builds (and the docker image) have. Without it the source reports that it isn't available. To build it

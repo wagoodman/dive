@@ -2,32 +2,15 @@ package app
 
 import (
 	"archive/tar"
-	"context"
 	"os"
 	"path/filepath"
 	"testing"
 
-	"github.com/anchore/stereoscope"
-	"github.com/anchore/stereoscope/pkg/image"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/wagoodman/dive/internal/imagefixture"
 )
-
-func loadSpec(t *testing.T, spec imagefixture.Spec) *image.Image {
-	t.Helper()
-	p := filepath.Join(t.TempDir(), "image.tar")
-	f, err := os.Create(p)
-	require.NoError(t, err)
-	require.NoError(t, spec.Write(f))
-	require.NoError(t, f.Close())
-
-	img, err := stereoscope.GetImageFromSource(context.Background(), p, image.DockerTarballSource)
-	require.NoError(t, err)
-	t.Cleanup(func() { _ = img.Cleanup() })
-	return img
-}
 
 // dirs runs the test with a fresh cwd (base/dst) next to a dir that must stay untouched (base/outside)
 func dirs(t *testing.T) (base, outside string) {
@@ -57,7 +40,7 @@ func TestExtract(t *testing.T) {
 	require.NoError(t, err)
 	assert.Len(t, got, 6405)
 
-	// only the selected layer, only under the selected path
+	// the tree as of the selected layer (root/saved.txt is added by a later one), only under the selected path
 	_, err = os.Stat(filepath.Join("root", "saved.txt"))
 	assert.ErrorIs(t, err, os.ErrNotExist)
 	_, err = os.Stat("somefile.txt")
@@ -65,7 +48,7 @@ func TestExtract(t *testing.T) {
 }
 
 func TestExtract_SelectsPathNotPrefix(t *testing.T) {
-	img := loadSpec(t, imagefixture.Spec{Layers: [][]imagefixture.Entry{{
+	img := imagefixture.LoadSpec(t, imagefixture.Spec{Layers: [][]imagefixture.Entry{{
 		{Name: "app/", Type: tar.TypeDir},
 		{Name: "app/a.txt", Content: "a"},
 		{Name: "application/", Type: tar.TypeDir},
@@ -89,7 +72,7 @@ func TestExtract_SelectsPathNotPrefix(t *testing.T) {
 }
 
 func TestExtract_DoesNotEscape(t *testing.T) {
-	img := loadSpec(t, imagefixture.Spec{Layers: [][]imagefixture.Entry{{
+	img := imagefixture.LoadSpec(t, imagefixture.Spec{Layers: [][]imagefixture.Entry{{
 		{Name: "../escape.txt", Content: "escape"},
 		{Name: "/abs.txt", Content: "abs"},
 		{Name: "ok/../../up.txt", Content: "up"},
@@ -125,4 +108,51 @@ func TestExtract_DoesNotEscape(t *testing.T) {
 
 	// entries that are safe still land
 	assert.Equal(t, "fine", readFile(t, "fine.txt"))
+}
+
+func TestExtract_SquashedTree(t *testing.T) {
+	img := imagefixture.LoadSpec(t, imagefixture.Spec{Layers: [][]imagefixture.Entry{
+		{
+			{Name: "app/", Type: tar.TypeDir},
+			{Name: "app/a.txt", Content: "a"},
+			{Name: "app/gone.txt", Content: "gone"},
+		},
+		{
+			{Name: "app/", Type: tar.TypeDir},
+			{Name: "app/b.txt", Content: "b"},
+			{Name: "app/.wh.gone.txt"},
+		},
+	}})
+	dirs(t)
+
+	// layer 1 shows a.txt from layer 0 too, and not what it removed
+	require.NoError(t, extract(img, 1, "/app", "."))
+	assert.Equal(t, "a", readFile(t, filepath.Join("app", "a.txt")))
+	assert.Equal(t, "b", readFile(t, filepath.Join("app", "b.txt")))
+	for _, name := range []string{"gone.txt", ".wh.gone.txt"} {
+		_, err := os.Lstat(filepath.Join("app", name))
+		assert.ErrorIs(t, err, os.ErrNotExist, name)
+	}
+
+	// nothing there is reported, not silently ignored
+	assert.ErrorContains(t, extract(img, 1, "/nope", "."), "no regular files to extract")
+}
+
+func TestExtract_KeepsExistingFiles(t *testing.T) {
+	img := imagefixture.LoadSpec(t, imagefixture.Spec{Layers: [][]imagefixture.Entry{{
+		{Name: "config.yaml", Content: "from the image"},
+		{Name: "new.txt", Content: "new"},
+	}}})
+	dirs(t)
+	// someone else's read-only file, which only dir write permission would let us unlink
+	require.NoError(t, os.WriteFile("config.yaml", []byte("mine"), 0o444))
+
+	err := extract(img, 0, "/", ".")
+	assert.ErrorContains(t, err, `"config.yaml" exists, not overwritten`)
+
+	assert.Equal(t, "mine", readFile(t, "config.yaml"))
+	fi, err := os.Stat("config.yaml")
+	require.NoError(t, err)
+	assert.Equal(t, os.FileMode(0o444), fi.Mode().Perm())
+	assert.Equal(t, "new", readFile(t, "new.txt"))
 }

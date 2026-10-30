@@ -1,24 +1,24 @@
 package app
 
 import (
-	"context"
 	"fmt"
-	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/tui"
-	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/tui/view"
-	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/tui/viewmodel"
 	"regexp"
 
 	"github.com/awesome-gocui/gocui"
+
+	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/tui"
+	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/tui/view"
+	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/tui/viewmodel"
+	"github.com/wagoodman/dive/internal/bus"
 )
 
 type controller struct {
 	gui    *gocui.Gui
 	views  *view.Views
 	config tui.Config
-	ctx    context.Context // TODO: storing context in the controller is not ideal
 }
 
-func newController(ctx context.Context, g *gocui.Gui, cfg tui.Config) (*controller, error) {
+func newController(g *gocui.Gui, cfg tui.Config) (*controller, error) {
 	views, err := view.NewViews(g, cfg)
 	if err != nil {
 		return nil, err
@@ -28,7 +28,6 @@ func newController(ctx context.Context, g *gocui.Gui, cfg tui.Config) (*controll
 		gui:    g,
 		views:  views,
 		config: cfg,
-		ctx:    ctx,
 	}
 
 	// layer view cursor down event should trigger an update in the file tree
@@ -61,7 +60,11 @@ func newController(ctx context.Context, g *gocui.Gui, cfg tui.Config) (*controll
 
 func (c *controller) onFileTreeViewExtract(p string) error {
 	// files land relative to the current working directory, the same as before
-	return extract(c.config.Analysis.Image, c.views.LayerDetails.CurrentLayer.Index, p, ".")
+	if err := extract(c.config.Analysis.Image, c.views.LayerDetails.CurrentLayer.Index, p, "."); err != nil {
+		// an extract problem is not a reason to end the session, it is reported once the TUI exits
+		bus.Notify(fmt.Sprintf("extract of %s: %v", p, err))
+	}
+	return nil
 }
 
 func (c *controller) onFileTreeViewOptionChange() error {

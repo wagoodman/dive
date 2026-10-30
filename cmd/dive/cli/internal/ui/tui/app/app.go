@@ -3,15 +3,20 @@ package app
 import (
 	"context"
 	"errors"
+	"time"
+
 	"github.com/awesome-gocui/gocui"
+
 	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/tui"
 	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/tui/key"
 	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/tui/layout"
 	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/tui/layout/compound"
-	"time"
 )
 
 const debug = false
+
+// outputMode is swapped for gocui's simulated screen in tests
+var outputMode = gocui.OutputNormal
 
 type app struct {
 	gui        *gocui.Gui
@@ -19,7 +24,7 @@ type app struct {
 	layout     *layout.Manager
 }
 
-// Run is the UI entrypoint.
+// Run is the UI entrypoint. It returns when the user quits or ctx is done.
 func Run(ctx context.Context, c tui.Config) error {
 	var err error
 
@@ -30,13 +35,13 @@ func Run(ctx context.Context, c tui.Config) error {
 	// enough sleep will prevent this behavior (todo: remove this hack)
 	time.Sleep(100 * time.Millisecond)
 
-	g, err := gocui.NewGui(gocui.OutputNormal, true)
+	g, err := gocui.NewGui(outputMode, true)
 	if err != nil {
 		return err
 	}
 	defer g.Close()
 
-	_, err = newApp(ctx, g, c)
+	_, err = newApp(g, c)
 	if err != nil {
 		return err
 	}
@@ -46,18 +51,29 @@ func Run(ctx context.Context, c tui.Config) error {
 		return err
 	}
 
+	// a signal that isn't a key press (the terminal is in raw mode, ctrl-c is a key) cancels ctx
+	stopped := make(chan struct{})
+	defer close(stopped)
+	go func() {
+		select {
+		case <-ctx.Done():
+			g.Update(func(*gocui.Gui) error { return gocui.ErrQuit })
+		case <-stopped:
+		}
+	}()
+
 	if err := g.MainLoop(); err != nil && !errors.Is(err, gocui.ErrQuit) {
 		return err
 	}
 	return nil
 }
 
-func newApp(ctx context.Context, gui *gocui.Gui, cfg tui.Config) (*app, error) {
+func newApp(gui *gocui.Gui, cfg tui.Config) (*app, error) {
 	var err error
 	var c *controller
 	var globalHelpKeys []*key.Binding
 
-	c, err = newController(ctx, gui, cfg)
+	c, err = newController(gui, cfg)
 	if err != nil {
 		return nil, err
 	}

@@ -1,15 +1,14 @@
 package export
 
 import (
-	"archive/tar"
 	"encoding/json"
 	"os"
 	"strings"
 
-	"github.com/anchore/stereoscope/pkg/file"
 	"github.com/anchore/stereoscope/pkg/filetree/filenode"
 
 	"github.com/wagoodman/dive/dive"
+	"github.com/wagoodman/dive/internal/layertree"
 	"github.com/wagoodman/dive/internal/log"
 )
 
@@ -52,8 +51,8 @@ type FileReference struct {
 	Path       string `json:"file"`
 }
 
-// NewExport exports an analysis to the JSON shape. Each layer lists the
-// entries of its own tar (whiteouts included, implicit parent directories left out) children before parents.
+// NewExport exports an analysis to the JSON shape. Each layer lists the entries of its own tar (whiteouts included,
+// opaque whiteout markers and implicit parent directories left out), children before parents.
 func NewExport(analysis *dive.Analysis) *Export {
 	data := Export{
 		Layer: make([]Layer, len(analysis.Layers)),
@@ -65,35 +64,25 @@ func NewExport(analysis *dive.Analysis) *Export {
 		},
 	}
 
-	catalog := analysis.Image.FileCatalog
+	img := analysis.Image
 	for idx, l := range analysis.Layers {
 		fileList := make([]FileInfo, 0)
-		err := dive.WalkTree(analysis.Image.Layers[idx].Tree, func(n *filenode.FileNode, _ bool) error {
-			if n.Reference == nil {
+		err := layertree.Walk(img.Layers[idx].Tree, layertree.OpaqueMarker, func(n *filenode.FileNode, _ bool) error {
+			hdr, ok := layertree.Header(img, n.Reference)
+			if !ok {
 				return nil
 			}
-			entry, err := catalog.Get(*n.Reference)
-			if err != nil {
-				return nil
-			}
-			fi := FileInfo{
-				Path:     strings.TrimPrefix(entry.Path, "/"),
-				TypeFlag: tarTypeFlag(entry.Type),
-				Linkname: entry.LinkDestination,
-				Size:     entry.Size(),
-				Mode:     entry.Mode(),
-				Uid:      entry.UserID,
-				Gid:      entry.GroupID,
-				IsDir:    entry.IsDir(),
-			}
-			// prefer the header as written: stereoscope describes an in-layer hardlink as the file it names
-			if hdr := dive.TarHeader(entry.Metadata); hdr != nil {
-				fi.TypeFlag = hdr.Typeflag
-				fi.Linkname = hdr.Linkname
-				fi.Size = hdr.Size
-				fi.Mode = hdr.FileInfo().Mode()
-			}
-			fileList = append(fileList, fi)
+			fi := hdr.FileInfo()
+			fileList = append(fileList, FileInfo{
+				Path:     strings.TrimPrefix(string(n.Reference.RealPath), "/"),
+				TypeFlag: hdr.Typeflag,
+				Linkname: hdr.Linkname,
+				Size:     hdr.Size,
+				Mode:     fi.Mode(),
+				Uid:      hdr.Uid,
+				Gid:      hdr.Gid,
+				IsDir:    fi.IsDir(),
+			})
 			return nil
 		})
 		if err != nil {
@@ -118,26 +107,6 @@ func NewExport(analysis *dive.Analysis) *Export {
 	}
 
 	return &data
-}
-
-// tarTypeFlag maps a stereoscope file type back to the tar typeflag it was read from.
-func tarTypeFlag(t file.Type) byte {
-	switch t {
-	case file.TypeHardLink:
-		return tar.TypeLink
-	case file.TypeSymLink:
-		return tar.TypeSymlink
-	case file.TypeCharacterDevice:
-		return tar.TypeChar
-	case file.TypeBlockDevice:
-		return tar.TypeBlock
-	case file.TypeDirectory:
-		return tar.TypeDir
-	case file.TypeFIFO:
-		return tar.TypeFifo
-	default:
-		return tar.TypeReg
-	}
 }
 
 func (exp *Export) Marshal() ([]byte, error) {

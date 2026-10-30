@@ -90,7 +90,6 @@ func (v *LayerDetails) Render() error {
 
 		lines = append(lines, []string{
 			format.Header("Tags:   ") + tags,
-			format.Header("Id:     ") + v.CurrentLayer.Id,
 			format.Header("Size:   ") + humanize.Bytes(v.CurrentLayer.Size),
 			format.Header("Digest: ") + v.CurrentLayer.Digest,
 			format.Header("Command:"),

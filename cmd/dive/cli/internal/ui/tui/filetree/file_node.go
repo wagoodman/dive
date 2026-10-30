@@ -89,11 +89,6 @@ func (node *FileNode) Copy(parent *FileNode) *FileNode {
 
 // AddChild creates a new node relative to the current FileNode.
 func (node *FileNode) AddChild(name string, data FileInfo) (child *FileNode) {
-	// never allow processing of purely whiteout flag files (for now)
-	if strings.HasPrefix(name, doubleWhiteoutPrefix) {
-		return nil
-	}
-
 	child = NewNode(node, name, data)
 	if node.Children[name] != nil {
 		// tree node already exists, replace the payload, keep the children

@@ -206,30 +206,6 @@ func TestAddPath(t *testing.T) {
 
 }
 
-func TestAddWhiteoutPath(t *testing.T) {
-	tree := NewFileTree()
-	node, _, err := tree.AddPath("usr/local/lib/python3.7/site-packages/pip/.wh..wh..opq", FileInfo{})
-	if err != nil {
-		t.Errorf("expected no error but got: %v", err)
-	}
-	if node != nil {
-		t.Errorf("expected node to be nil, but got: %v", node)
-	}
-	expected :=
-		`└── usr
-    └── local
-        └── lib
-            └── python3.7
-                └── site-packages
-                    └── pip
-`
-	actual := tree.String(false)
-
-	if expected != actual {
-		t.Errorf("Expected tree string:\n--->%s<---\nGot:\n--->%s<---", expected, actual)
-	}
-}
-
 func TestRemovePath(t *testing.T) {
 	tree := NewFileTree()
 	_, _, err := tree.AddPath("/etc/nginx/nginx.conf", FileInfo{})
@@ -347,7 +323,7 @@ func TestCompareWithNoChanges(t *testing.T) {
 		fakeData := FileInfo{
 			Path:     value,
 			TypeFlag: 1,
-			hash:     123,
+			Size:     123,
 		}
 		_, _, err := lowerTree.AddPath(value, fakeData)
 		if err != nil {
@@ -390,7 +366,7 @@ func TestCompareWithAdds(t *testing.T) {
 		_, _, err := lowerTree.AddPath(value, FileInfo{
 			Path:     value,
 			TypeFlag: 1,
-			hash:     123,
+			Size:     123,
 		})
 		if err != nil {
 			t.Errorf("could not setup test: %v", err)
@@ -401,7 +377,7 @@ func TestCompareWithAdds(t *testing.T) {
 		_, _, err := upperTree.AddPath(value, FileInfo{
 			Path:     value,
 			TypeFlag: 1,
-			hash:     123,
+			Size:     123,
 		})
 		if err != nil {
 			t.Errorf("could not setup test: %v", err)
@@ -459,7 +435,7 @@ func TestCompareWithChanges(t *testing.T) {
 		_, _, err := lowerTree.AddPath(value, FileInfo{
 			Path:     value,
 			TypeFlag: 1,
-			hash:     123,
+			Size:     123,
 		})
 		if err != nil {
 			t.Errorf("could not setup test: %v", err)
@@ -467,7 +443,7 @@ func TestCompareWithChanges(t *testing.T) {
 		_, _, err = upperTree.AddPath(value, FileInfo{
 			Path:     value,
 			TypeFlag: 1,
-			hash:     456,
+			Size:     456,
 		})
 		if err != nil {
 			t.Errorf("could not setup test: %v", err)
@@ -479,7 +455,7 @@ func TestCompareWithChanges(t *testing.T) {
 	_, _, err := lowerTree.AddPath(chmodPath, FileInfo{
 		Path:     chmodPath,
 		TypeFlag: 1,
-		hash:     123,
+		Size:     123,
 		Mode:     0,
 	})
 	if err != nil {
@@ -489,7 +465,7 @@ func TestCompareWithChanges(t *testing.T) {
 	_, _, err = upperTree.AddPath(chmodPath, FileInfo{
 		Path:     chmodPath,
 		TypeFlag: 1,
-		hash:     123,
+		Size:     123,
 		Mode:     1,
 	})
 	if err != nil {
@@ -503,7 +479,7 @@ func TestCompareWithChanges(t *testing.T) {
 	_, _, err = lowerTree.AddPath(chmodPath, FileInfo{
 		Path:     chownPath,
 		TypeFlag: 1,
-		hash:     123,
+		Size:     123,
 		Mode:     1,
 		Gid:      0,
 		Uid:      0,
@@ -515,7 +491,7 @@ func TestCompareWithChanges(t *testing.T) {
 	_, _, err = upperTree.AddPath(chmodPath, FileInfo{
 		Path:     chownPath,
 		TypeFlag: 1,
-		hash:     123,
+		Size:     123,
 		Mode:     1,
 		Gid:      12,
 		Uid:      12,
@@ -573,7 +549,7 @@ func TestCompareWithRemoves(t *testing.T) {
 		fakeData := FileInfo{
 			Path:     value,
 			TypeFlag: 1,
-			hash:     123,
+			Size:     123,
 		}
 		_, _, err := lowerTree.AddPath(value, fakeData)
 		if err != nil {
@@ -585,7 +561,7 @@ func TestCompareWithRemoves(t *testing.T) {
 		fakeData := FileInfo{
 			Path:     value,
 			TypeFlag: 1,
-			hash:     123,
+			Size:     123,
 		}
 		_, _, err := upperTree.AddPath(value, fakeData)
 		if err != nil {
@@ -643,7 +619,7 @@ func TestRemoveOnIterate(t *testing.T) {
 		fakeData := FileInfo{
 			Path:     value,
 			TypeFlag: 1,
-			hash:     123,
+			Size:     123,
 		}
 		node, _, err := tree.AddPath(value, fakeData)
 		if err == nil && stringInSlice(node.Path(), []string{"/etc"}) {

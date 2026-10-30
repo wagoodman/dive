@@ -30,4 +30,6 @@ type Title struct {
 	Default      string
 	WhileRunning string
 	OnSuccess    string
+	// OnFail is optional, Default is shown for a failed task without it
+	OnFail string
 }

@@ -24,9 +24,10 @@ type Stats struct {
 // NewStats reads the CI stats of a stereoscope based analysis.
 func NewStats(analysis *dive.Analysis) Stats {
 	stats := Stats{
-		Efficiency:        analysis.Efficiency,
-		WastedBytes:       analysis.WastedBytes,
-		WastedUserPercent: analysis.WastedUserPercent,
+		Efficiency:  analysis.Efficiency,
+		WastedBytes: analysis.WastedBytes,
+		// the raw ratio, NaN or Inf without user bytes, is what the user wasted percent rule has always seen
+		WastedUserPercent: float64(analysis.WastedBytes) / float64(analysis.UserSizeBytes),
 	}
 	for _, ineff := range analysis.Inefficiencies {
 		stats.InefficientFiles = append(stats.InefficientFiles, ReferenceFile{

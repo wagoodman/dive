@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/anchore/stereoscope/pkg/image"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/muesli/termenv"
 	"github.com/stretchr/testify/require"
@@ -14,7 +15,17 @@ import (
 	"github.com/wagoodman/dive/cmd/dive/cli/internal/options"
 	"github.com/wagoodman/dive/dive"
 	"github.com/wagoodman/dive/internal/imagefixture"
+	"github.com/wagoodman/dive/internal/source"
 )
+
+// loadFixture reads the fixture through dive's own source resolution, the way the CLI does
+func loadFixture(t *testing.T, name string) *image.Image {
+	t.Helper()
+	img, err := source.Load(context.Background(), imagefixture.Reference(t, name), source.Config{})
+	require.NoError(t, err)
+	t.Cleanup(func() { require.NoError(t, img.Cleanup()) })
+	return img
+}
 
 type ruleGolden struct {
 	Status  string `json:"status"`
@@ -57,14 +68,14 @@ func Test_CIGoldens(t *testing.T) {
 
 	for _, name := range imagefixture.Names() {
 		t.Run(name, func(t *testing.T) {
-			analysis, err := dive.Analyze(context.Background(), name, imagefixture.Load(t, name))
+			analysis, err := dive.Analyze(context.Background(), name, loadFixture(t, name))
 			require.NoError(t, err)
 			golden := ciGolden{
 				Efficiency:        strconv.FormatFloat(analysis.Efficiency, 'g', -1, 64),
 				SizeBytes:         analysis.SizeBytes,
 				UserSizeBytes:     analysis.UserSizeBytes,
 				WastedBytes:       analysis.WastedBytes,
-				WastedUserPercent: strconv.FormatFloat(analysis.WastedUserPercent, 'g', -1, 64),
+				WastedUserPercent: strconv.FormatFloat(ci.NewStats(analysis).WastedUserPercent, 'g', -1, 64),
 				Evaluations:       map[string]evalGolden{},
 			}
 			for setName, rules := range ruleSets {

@@ -1,7 +1,6 @@
 package dive
 
 import (
-	"archive/tar"
 	"context"
 	"fmt"
 	"sort"
@@ -12,14 +11,19 @@ import (
 	"github.com/anchore/stereoscope/pkg/filetree/filenode"
 	"github.com/anchore/stereoscope/pkg/image"
 	"github.com/anchore/stereoscope/pkg/tree/node"
+
+	"github.com/wagoodman/dive/internal/layertree"
 )
 
 // Analysis is the result of analyzing an image: the stereoscope image itself plus layer and efficiency stats.
+//
+// The image is borrowed, not owned: it is the caller's image, and anything that reads file contents through it
+// (Image.FileCatalog, Image.OpenReference) only works until the caller runs Image.Cleanup().
 type Analysis struct {
-	// Ref is the image reference the user asked for
+	// Ref is a label for the image, as passed to Analyze
 	Ref   string
 	Image *image.Image
-	// Layers is in build order, one per entry in Image.Layers
+	// Layers is in build order, Layers[i] describes Image.Layers[i]
 	Layers []Layer
 	// Efficiency is 1.0 for an image without duplicated or removed files, lower otherwise
 	Efficiency float64
@@ -29,7 +33,7 @@ type Analysis struct {
 	UserSizeBytes uint64
 	// WastedBytes is the sum of Inefficiencies sizes
 	WastedBytes uint64
-	// WastedUserPercent is WastedBytes / UserSizeBytes (NaN or Inf when there are no user bytes)
+	// WastedUserPercent is WastedBytes / UserSizeBytes, 0 when there are no user bytes
 	WastedUserPercent float64
 	// Inefficiencies is sorted by size, largest first, ties by path
 	Inefficiencies []Inefficiency
@@ -54,14 +58,14 @@ type Inefficiency struct {
 	SizeBytes uint64
 }
 
-// Analyze derives layer info and efficiency stats from an already read stereoscope image.
-func Analyze(_ context.Context, ref string, img *image.Image) (*Analysis, error) {
+// Analyze derives layer info and efficiency stats from an already read stereoscope image. ref only labels the result.
+func Analyze(ctx context.Context, ref string, img *image.Image) (*Analysis, error) {
 	if img == nil {
 		return nil, fmt.Errorf("no image to analyze")
 	}
 
 	layers := layerInfo(img)
-	efficiency, inefficiencies, err := imageEfficiency(img)
+	efficiency, inefficiencies, err := imageEfficiency(ctx, img)
 	if err != nil {
 		return nil, err
 	}
@@ -77,6 +81,11 @@ func Analyze(_ context.Context, ref string, img *image.Image) (*Analysis, error)
 		wastedBytes += ineff.SizeBytes
 	}
 
+	var wastedUserPercent float64
+	if userSizeBytes != 0 {
+		wastedUserPercent = float64(wastedBytes) / float64(userSizeBytes)
+	}
+
 	return &Analysis{
 		Ref:               ref,
 		Image:             img,
@@ -85,7 +94,7 @@ func Analyze(_ context.Context, ref string, img *image.Image) (*Analysis, error)
 		SizeBytes:         sizeBytes,
 		UserSizeBytes:     userSizeBytes,
 		WastedBytes:       wastedBytes,
-		WastedUserPercent: float64(wastedBytes) / float64(userSizeBytes),
+		WastedUserPercent: wastedUserPercent,
 		Inefficiencies:    inefficiencies,
 	}, nil
 }
@@ -128,13 +137,17 @@ type pathEfficiency struct {
 //
 // It walks the leaf paths of every layer's own tree. A whiteout counts as an occurrence of the path it removes,
 // sized from the squashed tree of the layers below it: a removed directory is the size of everything under it,
-// a removed file is 0 (its earlier occurrence already carries the size).
-func imageEfficiency(img *image.Image) (float64, []Inefficiency, error) {
+// a removed file is 0 (its earlier occurrence already carries the size). Opaque whiteout markers are ignored, so
+// the lower files they hide are not counted as removed.
+func imageEfficiency(ctx context.Context, img *image.Image) (float64, []Inefficiency, error) {
 	byPath := make(map[file.Path]*pathEfficiency)
 	var order []file.Path
 
 	for i, l := range img.Layers {
-		err := WalkTree(l.Tree, func(n *filenode.FileNode, leaf bool) error {
+		if err := ctx.Err(); err != nil {
+			return 0, nil, err
+		}
+		err := layertree.Walk(l.Tree, layertree.OpaqueMarker, func(n *filenode.FileNode, leaf bool) error {
 			if !leaf {
 				return nil
 			}
@@ -227,56 +240,8 @@ func removedSize(img *image.Image, lower filetree.Reader, target file.Path) (int
 // fileSize is the size the tar header recorded for ref, so a hardlink is 0 bytes (stereoscope describes an
 // in-layer hardlink as the file it names, with that file's size).
 func fileSize(img *image.Image, ref *file.Reference) int64 {
-	if ref == nil {
-		return 0
-	}
-	entry, err := img.FileCatalog.Get(*ref)
-	if err != nil || entry.FileInfo == nil {
-		return 0
-	}
-	if hdr := TarHeader(entry.Metadata); hdr != nil {
+	if hdr, ok := layertree.Header(img, ref); ok {
 		return hdr.Size
 	}
-	return entry.Size()
-}
-
-// TarHeader returns the layer tar header a file was read from, or nil when the metadata has none (e.g. squashfs).
-func TarHeader(m file.Metadata) *tar.Header {
-	if m.FileInfo == nil {
-		return nil
-	}
-	hdr, _ := m.Sys().(*tar.Header)
-	return hdr
-}
-
-// WalkTree visits every node of a layer tree depth first, children (in path order) before their parent, skipping
-// the root. Opaque whiteout markers (".wh..wh..opq") are skipped and don't make their parent a non-leaf.
-func WalkTree(tr filetree.Reader, fn func(n *filenode.FileNode, leaf bool) error) error {
-	t := tr.TreeReader()
-	var visit func(n node.Node, isRoot bool) error
-	visit = func(n node.Node, isRoot bool) error {
-		var children node.Nodes
-		for _, child := range t.Children(n) {
-			if child.(*filenode.FileNode).RealPath.IsDirWhiteout() {
-				continue
-			}
-			children = append(children, child)
-		}
-		sort.Sort(children)
-		for _, child := range children {
-			if err := visit(child, false); err != nil {
-				return err
-			}
-		}
-		if isRoot {
-			return nil
-		}
-		return fn(n.(*filenode.FileNode), len(children) == 0)
-	}
-	for _, root := range t.Roots() {
-		if err := visit(root, true); err != nil {
-			return err
-		}
-	}
-	return nil
+	return 0
 }

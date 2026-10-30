@@ -1,13 +1,10 @@
 package ui
 
 import (
-	"context"
 	"fmt"
 	"io"
-	"os"
 
 	"github.com/anchore/go-logger"
-	"github.com/anchore/go-logger/adapter/discard"
 	"github.com/wagoodman/go-partybus"
 
 	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/tui"
@@ -16,38 +13,42 @@ import (
 	"github.com/wagoodman/dive/internal/log"
 )
 
-// runExplore runs the gocui TUI for an ExploreAnalysis event and blocks until the user quits. This is the only place
-// that reads the ExploreAnalysis payload, so a payload change only touches this function (and the parser).
+// runExplore runs the gocui TUI for an ExploreAnalysis event and blocks until the user quits or the command's context
+// is done. This is the only place that reads the ExploreAnalysis payload, so a payload change only touches this
+// function (and the parser).
 func runExplore(e partybus.Event, prefs tui.Preferences) error {
-	analysis, done, err := parser.ParseExploreAnalysis(e)
+	analysis, ctx, done, err := parser.ParseExploreAnalysis(e)
 	// the publisher waits on this before cleaning up the image
 	defer done()
 	if err != nil {
 		return fmt.Errorf("unable to explore analysis: %w", err)
 	}
+	if ctx.Err() != nil {
+		// interrupted before the TUI got the terminal
+		return nil
+	}
 
 	// ensure the logger will not interfere with the UI
-	discardConsoleLogs()
+	restore := muteConsoleLogs()
+	defer restore()
 
-	return app.Run(
-		// TODO: this is not plumbed through from the command object...
-		context.Background(),
-		tui.Config{
-			Analysis:    analysis,
-			Preferences: prefs,
-		},
-	)
+	return app.Run(ctx, tui.Config{
+		Analysis:    analysis,
+		Preferences: prefs,
+	})
 }
 
-// discardConsoleLogs stops log lines from drawing over a UI. dive and stereoscope log through one logger, so muting
-// its console output covers both. A logger that also writes to a file is left alone.
-func discardConsoleLogs() {
+// muteConsoleLogs stops log lines from drawing over a UI and returns the func that brings them back. dive and
+// stereoscope log through clio's logger, which also reports the command's final error once the UI is gone, so the
+// restore has to run when the UI hands the terminal back. A configured log file shares the writer with stderr, so it
+// misses the lines in between too.
+func muteConsoleLogs() (restore func()) {
 	c, ok := log.Get().(logger.Controller)
 	if !ok {
-		log.Set(discard.New())
-		return
+		// clio's logrus logger and the discard default both are controllers, there is nothing else to mute
+		return func() {}
 	}
-	if c.GetOutput() == os.Stderr {
-		c.SetOutput(io.Discard)
-	}
+	out := c.GetOutput()
+	c.SetOutput(io.Discard)
+	return func() { c.SetOutput(out) }
 }

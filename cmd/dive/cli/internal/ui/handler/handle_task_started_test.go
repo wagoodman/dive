@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"errors"
+	"strings"
 	"testing"
 	"time"
 
@@ -27,7 +29,18 @@ func TestHandler_handleTaskStarted(t *testing.T) {
 		return p
 	}
 	title := func(name string) payload.Title {
-		return payload.Title{Default: name, WhileRunning: name + "ing", OnSuccess: name + "ed"}
+		return payload.Title{Default: name, WhileRunning: name + "ing", OnSuccess: name + "ed", OnFail: "Failed to " + name}
+	}
+	failed := func() progress.StagedProgressable {
+		// how dive's commands finish a failed task
+		p := &payload.GenericProgress{
+			AtomicStage: progress.NewAtomicStage(""),
+			Manual:      progress.NewManual(-1),
+		}
+		p.SetError(errors.New("boom"))
+		p.SetTotal(1)
+		p.Manual.Set(1)
+		return p
 	}
 
 	tests := []struct {
@@ -65,6 +78,16 @@ func TestHandler_handleTaskStarted(t *testing.T) {
 			},
 		},
 		{
+			name: "failed task",
+			events: []partybus.Event{
+				{
+					Type:   event.TaskStarted,
+					Source: payload.GenericTask{Title: title("Evaluat"), ID: "img", Context: "[rules: 3]"},
+					Value:  failed(),
+				},
+			},
+		},
+		{
 			name: "sub task and hidden task",
 			events: []partybus.Event{
 				{
@@ -90,23 +113,36 @@ func TestHandler_handleTaskStarted(t *testing.T) {
 			h := New(DefaultHandlerConfig())
 			h.WindowSize = tea.WindowSizeMsg{Width: 100, Height: 80}
 
-			var model tea.Model
-			for _, e := range tt.events {
-				models, cmd := h.Handle(e)
-				if model == nil {
-					require.Len(t, models, 1, "the first task creates the task tree")
-					model = models[0]
-				} else {
-					require.Empty(t, models, "later tasks reuse the task tree")
+			// the frame's view of the models, in the order they were added
+			var models []tea.Model
+			update := func(msg tea.Msg) {
+				for i, m := range models {
+					models[i], _ = m.Update(msg)
 				}
+			}
+			for _, e := range tt.events {
+				newModels, cmd := h.Handle(e)
 				require.NotNil(t, cmd)
-				model, _ = model.Update(cmd())
+				if len(newModels) > 0 {
+					require.Len(t, newModels, 1, "a root task gets its own tree")
+					models = append(models, newModels...)
+					continue
+				}
+				// a sub task row is a message for its root's tree
+				update(cmd())
 			}
 
 			// an ID-less tick reaches every row
-			model, _ = model.Update(taskprogress.TickMsg{Time: time.Now()})
+			update(taskprogress.TickMsg{Time: time.Now()})
 
-			got := model.View()
+			var views []string
+			for _, m := range models {
+				// the frame leaves out models with nothing to show (a hidden finished task)
+				if v := m.View(); v != "" {
+					views = append(views, v)
+				}
+			}
+			got := strings.Join(views, "\n")
 			t.Log(got)
 			snaps.MatchSnapshot(t, got)
 		})

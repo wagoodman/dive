@@ -24,11 +24,21 @@ func TestAnalysis_PostLoad(t *testing.T) {
 		t.Run(tt.image+" "+tt.engine, func(t *testing.T) {
 			a := DefaultAnalysis()
 			a.Image = tt.image
-			a.ContainerEngine = tt.engine
+			a.Source = tt.engine
 			require.NoError(t, a.PostLoad())
 			// the reference is kept exactly as given, source.Parse splits it later
 			assert.Equal(t, tt.image, a.Image)
-			assert.Equal(t, tt.wantEngine, a.ContainerEngine)
+			assert.Equal(t, tt.wantEngine, a.Source)
 		})
 	}
+}
+
+func TestAnalysis_PostLoad_platform(t *testing.T) {
+	a := DefaultAnalysis()
+	a.Platform = "linux/arm64"
+	require.NoError(t, a.PostLoad())
+
+	// caught before any image is loaded
+	a.Platform = "a/b/c/d"
+	require.ErrorContains(t, a.PostLoad(), "invalid platform")
 }

@@ -2,11 +2,18 @@ package source
 
 import (
 	"context"
+	"encoding/pem"
+	"io"
+	"log"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/anchore/stereoscope/pkg/file"
+	cliconfig "github.com/docker/cli/cli/config"
 	ddocker "github.com/docker/cli/cli/context/docker"
 	ctxstore "github.com/docker/cli/cli/context/store"
 	"github.com/moby/moby/client"
@@ -50,18 +57,21 @@ func TestParse(t *testing.T) {
 		{"containers-storage://alpine", Docker, ContainersStorage, "alpine"},
 		{"registry://localhost:5000/img:tag", Docker, Registry, "localhost:5000/img:tag"},
 
-		// stereoscope ":" schemes
-		{"docker:alpine", Podman, Docker, "alpine"},
-		{"podman:alpine:3.20", Docker, Podman, "alpine:3.20"},
+		// stereoscope ":" schemes, for the file based sources only
 		{"docker-archive:img.tar", Docker, DockerArchive, "img.tar"},
 		{"docker-tar:img.tar", Docker, DockerArchive, "img.tar"},
 		{"oci-archive:img.tar", Docker, OCIArchive, "img.tar"},
 		{"oci-dir:/abs/layout", Docker, OCIDir, "/abs/layout"},
-		{"registry:alpine", Docker, Registry, "alpine"},
-		{"oci-registry:alpine", Docker, Registry, "alpine"},
-		{"containerd:alpine", Docker, Containerd, "alpine"},
-		{"containers-storage:localhost/img:latest", Docker, ContainersStorage, "localhost/img:latest"},
-		{"registry:localhost:5000/img:tag", Docker, Registry, "localhost:5000/img:tag"},
+
+		// any other source name before a ":" is an image named like that source, with a tag
+		{"docker:dind", Podman, Podman, "docker:dind"},
+		{"docker:27-cli", Docker, Docker, "docker:27-cli"},
+		{"registry:2.8", Docker, Docker, "registry:2.8"},
+		{"registry:latest", Docker, Docker, "registry:latest"},
+		{"podman:alpine", Docker, Docker, "podman:alpine"},
+		{"containerd:alpine", Docker, Docker, "containerd:alpine"},
+		{"oci-registry:alpine", Docker, Docker, "oci-registry:alpine"},
+		{"containers-storage:latest", Podman, Podman, "containers-storage:latest"},
 
 		// "auto" is a --source value, not a scheme
 		{"auto://alpine", Docker, Docker, "auto://alpine"},
@@ -115,7 +125,8 @@ func TestProviders(t *testing.T) {
 		wantErr   bool
 	}{
 		{src: Docker, goos: "linux", want: []string{"docker"}},
-		{src: Podman, goos: "linux", want: []string{"containers-storage", "podman"}},
+		// the short name is also tried as podman's localhost/ name
+		{src: Podman, goos: "linux", want: []string{"containers-storage", "containers-storage", "podman"}},
 		{src: Podman, goos: "darwin", want: []string{"podman"}},
 		{src: Podman, goos: "windows", want: []string{"podman"}},
 		{src: DockerArchive, goos: "linux", want: []string{"docker-archive"}},
@@ -181,6 +192,57 @@ func TestLoad(t *testing.T) {
 	}
 }
 
+func TestLoad_interrupted(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	// auto has a provider list to walk. A cancelled load stops before the first, so no provider reports an error
+	// (and nothing is pulled)
+	img, err := Load(ctx, "dive-test/does-not-exist:never", Config{Source: Auto})
+	require.ErrorIs(t, err, context.Canceled)
+	assert.Nil(t, img)
+	ps, perr := providers(Auto, "alpine", "linux", nil, file.NewTempDirGenerator("dive-test"))
+	require.NoError(t, perr)
+	for _, p := range ps {
+		assert.NotContains(t, err.Error(), p.Name()+":")
+	}
+}
+
+func TestProviders_plainHTTPRegistry(t *testing.T) {
+	tmp := file.NewTempDirGenerator("dive-test")
+	for _, ref := range []string{"10.0.5.20:5000/app", "192.168.1.2/app:1", "172.16.0.9:443/team/app", "build.localhost:5000/app", "build.localhost/app"} {
+		_, err := providers(Registry, ref, "linux", nil, tmp)
+		assert.ErrorContains(t, err, "plain http", ref)
+
+		// auto never gets as far as a registry pull for these
+		ps, err := providers(Auto, ref, "linux", nil, tmp)
+		require.NoError(t, err)
+		assert.NotEqual(t, "oci-registry", ps[len(ps)-1].Name(), ref)
+	}
+	for _, ref := range []string{"alpine", "ghcr.io/org/app:1", "localhost:5000/app", "127.0.0.1:5000/app", "[::1]:5000/app", "[::1]/app"} {
+		_, err := providers(Registry, ref, "linux", nil, tmp)
+		assert.NoError(t, err, ref)
+	}
+}
+
+func TestLocalName(t *testing.T) {
+	tests := []struct {
+		ref, want string
+		ok        bool
+	}{
+		{"myapp", "localhost/myapp", true},
+		{"myapp:1.0", "localhost/myapp:1.0", true},
+		{"team/myapp", "localhost/team/myapp", true},
+		{"localhost/myapp", "", false},
+		{"quay.io/team/myapp", "", false},
+		{"registry:5000/myapp", "", false},
+	}
+	for _, tt := range tests {
+		got, ok := localName(tt.ref)
+		assert.Equal(t, tt.ok, ok, tt.ref)
+		assert.Equal(t, tt.want, got, tt.ref)
+	}
+}
+
 func TestCleanup(t *testing.T) {
 	path := imagefixture.Path(t, "oci-save-gzip")
 	tmp := t.TempDir()
@@ -195,13 +257,41 @@ func TestCleanup(t *testing.T) {
 	require.NoError(t, err)
 	require.NotEmpty(t, entries, "expected the image to hold temp dirs")
 
-	require.NoError(t, Cleanup())
+	require.NoError(t, Cleanup(time.Second))
 	entries, err = os.ReadDir(tmp)
 	require.NoError(t, err)
 	assert.Empty(t, entries)
 
 	// the owner cleaning up afterwards is fine
 	require.NoError(t, img.Cleanup())
+}
+
+func TestCleanup_waitsForLoad(t *testing.T) {
+	// stands in for a Load still running
+	loading.Add(1)
+	done := make(chan struct{})
+	go func() {
+		assert.NoError(t, Cleanup(10*time.Second))
+		close(done)
+	}()
+	select {
+	case <-done:
+		t.Fatal("Cleanup returned while a load was still running")
+	case <-time.After(100 * time.Millisecond):
+	}
+	loading.Done()
+	select {
+	case <-done:
+	case <-time.After(5 * time.Second):
+		t.Fatal("Cleanup did not return after the load finished")
+	}
+
+	// a load that never returns only holds Cleanup up for the wait
+	loading.Add(1)
+	defer loading.Done()
+	start := time.Now()
+	require.NoError(t, Cleanup(50*time.Millisecond))
+	assert.Less(t, time.Since(start), 5*time.Second)
 }
 
 func TestDockerHost(t *testing.T) {
@@ -257,13 +347,13 @@ func TestDockerHost(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Setenv("DOCKER_HOST", tt.dockerHost)
 			t.Setenv("DOCKER_CONTEXT", tt.dockerContext)
-			got, err := dockerHost(newConfigDir(t, tt.currentContext, contexts))
+			ep, _, err := dockerEndpoint(newConfigDir(t, tt.currentContext, contexts))
 			if tt.wantErr {
 				require.Error(t, err)
 				return
 			}
 			require.NoError(t, err)
-			assert.Equal(t, tt.want, got)
+			assert.Equal(t, tt.want, ep.Host)
 		})
 	}
 }
@@ -273,6 +363,131 @@ func TestDockerHost_badConfig(t *testing.T) {
 	t.Setenv("DOCKER_CONTEXT", "")
 	dir := t.TempDir()
 	require.NoError(t, os.WriteFile(filepath.Join(dir, "config.json"), []byte("{not json"), 0o600))
-	_, err := dockerHost(dir)
+	_, _, err := dockerEndpoint(dir)
 	require.Error(t, err)
+}
+
+func TestNewDockerClient_TLS(t *testing.T) {
+	// a TLS only daemon, a client that skips TLS gets a 400 from it
+	srv := httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Api-Version", "1.44")
+		w.WriteHeader(http.StatusOK)
+	}))
+	srv.Config.ErrorLog = log.New(io.Discard, "", 0)
+	srv.StartTLS()
+	defer srv.Close()
+	host := "tcp://" + srv.Listener.Addr().String()
+	ca := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: srv.Certificate().Raw})
+
+	newConfigDir := func(t *testing.T, withCA bool) string {
+		dir := t.TempDir()
+		st := ctxstore.New(filepath.Join(dir, "contexts"), ctxstore.NewConfig(
+			func() any { return &ddocker.EndpointMeta{} },
+			ctxstore.EndpointTypeGetter(ddocker.DockerEndpoint, func() any { return &ddocker.EndpointMeta{} }),
+		))
+		require.NoError(t, st.CreateOrUpdate(ctxstore.Metadata{
+			Name:      "secure",
+			Endpoints: map[string]any{ddocker.DockerEndpoint: ddocker.EndpointMeta{Host: host}},
+		}))
+		require.NoError(t, st.CreateOrUpdate(ctxstore.Metadata{
+			Name:      "plain",
+			Endpoints: map[string]any{ddocker.DockerEndpoint: ddocker.EndpointMeta{Host: host}},
+		}))
+		require.NoError(t, st.ResetTLSMaterial("secure", &ctxstore.ContextTLSData{
+			Endpoints: map[string]ctxstore.EndpointTLSData{ddocker.DockerEndpoint: {Files: map[string][]byte{"ca.pem": ca}}},
+		}))
+		if withCA {
+			require.NoError(t, os.WriteFile(filepath.Join(dir, "ca.pem"), ca, 0o600))
+		}
+		return dir
+	}
+
+	tests := []struct {
+		name    string
+		env     map[string]string
+		withCA  bool
+		wantErr bool
+	}{
+		{name: "context TLS material", env: map[string]string{"DOCKER_CONTEXT": "secure"}},
+		{name: "context without TLS material", env: map[string]string{"DOCKER_CONTEXT": "plain"}, wantErr: true},
+		{name: "DOCKER_TLS_VERIFY with config dir CA", env: map[string]string{"DOCKER_HOST": host, "DOCKER_TLS_VERIFY": "1"}, withCA: true},
+		{name: "DOCKER_TLS_VERIFY without a CA", env: map[string]string{"DOCKER_HOST": host, "DOCKER_TLS_VERIFY": "1"}, wantErr: true},
+		{name: "DOCKER_TLS unverified", env: map[string]string{"DOCKER_HOST": host, "DOCKER_TLS": "1"}},
+		{name: "DOCKER_HOST without TLS", env: map[string]string{"DOCKER_HOST": host}, wantErr: true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			for _, k := range []string{"DOCKER_HOST", "DOCKER_CONTEXT", "DOCKER_TLS", "DOCKER_TLS_VERIFY", "DOCKER_CERT_PATH"} {
+				t.Setenv(k, tt.env[k])
+			}
+			// cliconfig.Dir() reads DOCKER_CONFIG once per process
+			prev := cliconfig.Dir()
+			cliconfig.SetDir(newConfigDir(t, tt.withCA))
+			t.Cleanup(func() { cliconfig.SetDir(prev) })
+
+			c, err := newDockerClient()
+			if err == nil {
+				defer c.Close()
+				ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+				defer cancel()
+				_, err = c.Ping(ctx, client.PingOptions{})
+			}
+			if tt.wantErr {
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+		})
+	}
+}
+
+func TestPodmanHost(t *testing.T) {
+	writeConf := func(t *testing.T, content string) string {
+		p := filepath.Join(t.TempDir(), "containers.conf")
+		require.NoError(t, os.WriteFile(p, []byte(content), 0o600))
+		return p
+	}
+	sshOnly := writeConf(t, `[engine]
+active_service = "remote"
+[engine.service_destinations.remote]
+uri = "ssh://core@build:22/run/podman/podman.sock"
+identity = "/home/me/.ssh/id_ed25519"
+`)
+	activeSSH := writeConf(t, `[engine]
+active_service = "remote"
+[engine.service_destinations.remote]
+uri = "ssh://core@build:22/run/podman/podman.sock"
+[engine.service_destinations.local]
+uri = "unix:///run/user/1000/podman/podman.sock"
+`)
+	runtimeDir := t.TempDir()
+	require.NoError(t, os.MkdirAll(filepath.Join(runtimeDir, "podman"), 0o700))
+	require.NoError(t, os.WriteFile(filepath.Join(runtimeDir, "podman", "podman.sock"), nil, 0o600))
+
+	tests := []struct {
+		name          string
+		containerHost string
+		configs       []string
+		runtimeDir    string
+		want          string
+		wantErr       string
+	}{
+		{name: "CONTAINER_HOST unix", containerHost: "unix:///tmp/podman.sock", configs: []string{activeSSH}, want: "unix:///tmp/podman.sock"},
+		{name: "CONTAINER_HOST ssh", containerHost: "ssh://core@build:22/run/podman/podman.sock", runtimeDir: runtimeDir, wantErr: "ssh"},
+		{name: "config unix destination over an active ssh one", configs: []string{activeSSH}, want: "unix:///run/user/1000/podman/podman.sock"},
+		{name: "config with only ssh", configs: []string{sshOnly}, runtimeDir: t.TempDir(), wantErr: "no podman socket"},
+		{name: "rootless default socket", configs: []string{sshOnly}, runtimeDir: runtimeDir, want: "unix://" + filepath.Join(runtimeDir, "podman", "podman.sock")},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Setenv("CONTAINER_HOST", tt.containerHost)
+			got, err := podmanHost(tt.configs, tt.runtimeDir)
+			if tt.wantErr != "" {
+				require.ErrorContains(t, err, tt.wantErr)
+				return
+			}
+			require.NoError(t, err)
+			assert.Equal(t, tt.want, got)
+		})
+	}
 }

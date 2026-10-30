@@ -13,3 +13,7 @@
  ⠋ Building                        [step 2/3]  
    └── ⠋ Pushing                         
 ---
+
+[TestHandler_handleTaskStarted/failed_task - 1]
+ ✘ Failed to Evaluat                                                                    [rules: 3]
+---

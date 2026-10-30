@@ -75,3 +75,19 @@ func TestAnalyze_Efficiency(t *testing.T) {
 		})
 	}
 }
+
+func TestAnalyze_SingleLayer(t *testing.T) {
+	// the only layer is the base, so there are no user bytes to be wasted
+	analysis, err := Analyze(context.Background(), "oci-archive-gzip", imagefixture.Load(t, "oci-archive-gzip"))
+	require.NoError(t, err)
+	require.Len(t, analysis.Layers, 1)
+	assert.Zero(t, analysis.UserSizeBytes)
+	assert.Zero(t, analysis.WastedUserPercent)
+}
+
+func TestAnalyze_Cancelled(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	_, err := Analyze(ctx, "legacy-save", imagefixture.Load(t, "legacy-save"))
+	assert.ErrorIs(t, err, context.Canceled)
+}

@@ -15,14 +15,15 @@ import (
 	"github.com/anchore/stereoscope/pkg/filetree/filenode"
 	"github.com/anchore/stereoscope/pkg/image"
 
-	"github.com/wagoodman/dive/dive"
+	"github.com/wagoodman/dive/internal/layertree"
 )
 
-// extract writes the regular files that layer idx has at or under p into dst, each at its image path relative to
-// dst (/etc/hosts lands at dst/etc/hosts). Nothing is written outside dst: entries whose tar name is absolute or
-// climbs out with "..", and paths that would go through a symlink pointing out of dst, are refused, and an
-// existing symlink at a file's own path is never written through. Refused entries are reported, the rest are
-// still written.
+// extract writes the regular files that layer idx shows at or under p (its squashed tree: the file as it is at that
+// layer, whichever layer added it) into dst, each at its image path relative to dst (/etc/hosts lands at
+// dst/etc/hosts). Nothing is written outside dst: entries whose tar name is absolute or climbs out with "..", and
+// paths that would go through a symlink pointing out of dst, are refused. An existing path is never removed,
+// overwritten or written through (a symlink included), it is skipped instead. Refused and skipped entries are
+// reported, the rest are still written.
 func extract(img *image.Image, idx int, p, dst string) error {
 	if idx < 0 || idx >= len(img.Layers) {
 		return fmt.Errorf("invalid layer index: %d", idx)
@@ -39,19 +40,17 @@ func extract(img *image.Image, idx int, p, dst string) error {
 	prefix := strings.TrimSuffix(target, "/") + "/"
 
 	var errs []error
-	err = dive.WalkTree(img.Layers[idx].Tree, func(n *filenode.FileNode, _ bool) error {
+	var found bool
+	err = layertree.Walk(img.Layers[idx].SquashedTree, nil, func(n *filenode.FileNode, _ bool) error {
 		realPath := string(n.RealPath)
-		if (realPath != target && !strings.HasPrefix(realPath, prefix)) || n.Reference == nil {
+		if (realPath != target && !strings.HasPrefix(realPath, prefix)) || n.RealPath.IsWhiteout() {
 			return nil
 		}
-		entry, err := img.FileCatalog.Get(*n.Reference)
-		if err != nil {
+		hdr, ok := layertree.Header(img, n.Reference)
+		if !ok || hdr.Typeflag != tar.TypeReg {
 			return nil
 		}
-		hdr := dive.TarHeader(entry.Metadata)
-		if hdr == nil || hdr.Typeflag != tar.TypeReg {
-			return nil
-		}
+		found = true
 		if !filepath.IsLocal(filepath.FromSlash(hdr.Name)) {
 			errs = append(errs, fmt.Errorf("refusing to extract %q: not a relative path", hdr.Name))
 			return nil
@@ -61,6 +60,9 @@ func extract(img *image.Image, idx int, p, dst string) error {
 		}
 		return nil
 	})
+	if err == nil && !found {
+		err = fmt.Errorf("no regular files to extract at %q", target)
+	}
 	return errors.Join(append(errs, err)...)
 }
 
@@ -75,11 +77,12 @@ func extractFile(img *image.Image, root *os.Root, ref file.Reference, rel string
 	if err := root.MkdirAll(filepath.Dir(name), 0o755); err != nil {
 		return err
 	}
-	// never follow a symlink that is already at this path, even one that stays inside the root
-	if fi, err := root.Lstat(name); err == nil && fi.Mode()&fs.ModeSymlink != 0 {
-		return fmt.Errorf("%q is a symlink", rel)
+	// O_EXCL fails on anything already at the path, a symlink included (it is never followed), so nobody's file is
+	// replaced
+	out, err := root.OpenFile(name, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0o666)
+	if errors.Is(err, fs.ErrExist) {
+		return fmt.Errorf("%q exists, not overwritten", rel)
 	}
-	out, err := root.Create(name)
 	if err != nil {
 		return err
 	}
