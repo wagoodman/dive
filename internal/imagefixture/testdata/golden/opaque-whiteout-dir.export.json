@@ -1,0 +1,128 @@
+{
+  "layer": [
+    {
+      "index": 0,
+      "id": "sha256:5342be2411b72591aa5adede2d6bc2c12e9d503f68e4025303e2c597a26c7fb7",
+      "digestId": "sha256:5342be2411b72591aa5adede2d6bc2c12e9d503f68e4025303e2c597a26c7fb7",
+      "sizeBytes": 605,
+      "command": "make etc",
+      "fileList": [
+        {
+          "path": "etc/app/a.conf",
+          "typeFlag": 48,
+          "linkName": "",
+          "size": 100,
+          "fileMode": 420,
+          "uid": 0,
+          "gid": 0,
+          "isDir": false
+        },
+        {
+          "path": "etc/app/b.conf",
+          "typeFlag": 48,
+          "linkName": "",
+          "size": 200,
+          "fileMode": 420,
+          "uid": 0,
+          "gid": 0,
+          "isDir": false
+        },
+        {
+          "path": "etc/app/sub/c.conf",
+          "typeFlag": 48,
+          "linkName": "",
+          "size": 300,
+          "fileMode": 420,
+          "uid": 0,
+          "gid": 0,
+          "isDir": false
+        },
+        {
+          "path": "etc/app/sub",
+          "typeFlag": 53,
+          "linkName": "",
+          "size": 0,
+          "fileMode": 2147484141,
+          "uid": 0,
+          "gid": 0,
+          "isDir": true
+        },
+        {
+          "path": "etc/app",
+          "typeFlag": 53,
+          "linkName": "",
+          "size": 0,
+          "fileMode": 2147484141,
+          "uid": 0,
+          "gid": 0,
+          "isDir": true
+        },
+        {
+          "path": "etc/keep.conf",
+          "typeFlag": 48,
+          "linkName": "",
+          "size": 5,
+          "fileMode": 420,
+          "uid": 0,
+          "gid": 0,
+          "isDir": false
+        },
+        {
+          "path": "etc",
+          "typeFlag": 53,
+          "linkName": "",
+          "size": 0,
+          "fileMode": 2147484141,
+          "uid": 0,
+          "gid": 0,
+          "isDir": true
+        }
+      ]
+    },
+    {
+      "index": 1,
+      "id": "sha256:cded74b9ab296ad2fed6fbce46909738002ae42dd45a8d9b743a401a4c037893",
+      "digestId": "sha256:cded74b9ab296ad2fed6fbce46909738002ae42dd45a8d9b743a401a4c037893",
+      "sizeBytes": 50,
+      "command": "rm -rf /etc/app \u0026\u0026 mkdir /etc/app \u0026\u0026 touch /etc/app/new.conf",
+      "fileList": [
+        {
+          "path": "etc/app/new.conf",
+          "typeFlag": 48,
+          "linkName": "",
+          "size": 50,
+          "fileMode": 420,
+          "uid": 0,
+          "gid": 0,
+          "isDir": false
+        },
+        {
+          "path": "etc/app",
+          "typeFlag": 53,
+          "linkName": "",
+          "size": 0,
+          "fileMode": 2147484141,
+          "uid": 0,
+          "gid": 0,
+          "isDir": true
+        },
+        {
+          "path": "etc",
+          "typeFlag": 53,
+          "linkName": "",
+          "size": 0,
+          "fileMode": 2147484141,
+          "uid": 0,
+          "gid": 0,
+          "isDir": true
+        }
+      ]
+    }
+  ],
+  "image": {
+    "sizeBytes": 655,
+    "inefficientBytes": 0,
+    "efficiencyScore": 1,
+    "fileReference": []
+  }
+}

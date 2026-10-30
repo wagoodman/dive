@@ -1,0 +1,174 @@
+{
+  "layer": [
+    {
+      "index": 0,
+      "id": "sha256:f24a24ad53be6ba66bfa5b6c9d940932cf625484b85e04a9f9f8ff6f884d3b25",
+      "digestId": "sha256:f24a24ad53be6ba66bfa5b6c9d940932cf625484b85e04a9f9f8ff6f884d3b25",
+      "sizeBytes": 1400,
+      "command": "install tool",
+      "fileList": [
+        {
+          "path": "lib",
+          "typeFlag": 50,
+          "linkName": "usr/lib",
+          "size": 0,
+          "fileMode": 134218239,
+          "uid": 0,
+          "gid": 0,
+          "isDir": false
+        },
+        {
+          "path": "usr/bin/dangling",
+          "typeFlag": 50,
+          "linkName": "/nowhere",
+          "size": 0,
+          "fileMode": 134218239,
+          "uid": 0,
+          "gid": 0,
+          "isDir": false
+        },
+        {
+          "path": "usr/bin/tool",
+          "typeFlag": 48,
+          "linkName": "",
+          "size": 1000,
+          "fileMode": 420,
+          "uid": 0,
+          "gid": 0,
+          "isDir": false
+        },
+        {
+          "path": "usr/bin/tool-abs",
+          "typeFlag": 50,
+          "linkName": "/usr/bin/tool",
+          "size": 0,
+          "fileMode": 134218239,
+          "uid": 0,
+          "gid": 0,
+          "isDir": false
+        },
+        {
+          "path": "usr/bin/tool-hard",
+          "typeFlag": 49,
+          "linkName": "usr/bin/tool",
+          "size": 0,
+          "fileMode": 420,
+          "uid": 0,
+          "gid": 0,
+          "isDir": false
+        },
+        {
+          "path": "usr/bin/tool-rel",
+          "typeFlag": 50,
+          "linkName": "tool",
+          "size": 0,
+          "fileMode": 134218239,
+          "uid": 0,
+          "gid": 0,
+          "isDir": false
+        },
+        {
+          "path": "usr/bin",
+          "typeFlag": 53,
+          "linkName": "",
+          "size": 0,
+          "fileMode": 2147484141,
+          "uid": 0,
+          "gid": 0,
+          "isDir": true
+        },
+        {
+          "path": "usr/lib/libx.so",
+          "typeFlag": 48,
+          "linkName": "",
+          "size": 400,
+          "fileMode": 420,
+          "uid": 0,
+          "gid": 0,
+          "isDir": false
+        },
+        {
+          "path": "usr/lib",
+          "typeFlag": 53,
+          "linkName": "",
+          "size": 0,
+          "fileMode": 2147484141,
+          "uid": 0,
+          "gid": 0,
+          "isDir": true
+        },
+        {
+          "path": "usr",
+          "typeFlag": 53,
+          "linkName": "",
+          "size": 0,
+          "fileMode": 2147484141,
+          "uid": 0,
+          "gid": 0,
+          "isDir": true
+        }
+      ]
+    },
+    {
+      "index": 1,
+      "id": "sha256:bad1f1177061781678cf49d805b87489c0eab316855aba5003aa51cab9ce2674",
+      "digestId": "sha256:bad1f1177061781678cf49d805b87489c0eab316855aba5003aa51cab9ce2674",
+      "sizeBytes": 11,
+      "command": "relink tool",
+      "fileList": [
+        {
+          "path": "usr/bin/libx-hard",
+          "typeFlag": 49,
+          "linkName": "usr/lib/libx.so",
+          "size": 0,
+          "fileMode": 420,
+          "uid": 0,
+          "gid": 0,
+          "isDir": false
+        },
+        {
+          "path": "usr/bin/tool-rel",
+          "typeFlag": 48,
+          "linkName": "",
+          "size": 11,
+          "fileMode": 420,
+          "uid": 0,
+          "gid": 0,
+          "isDir": false
+        },
+        {
+          "path": "usr/bin",
+          "typeFlag": 53,
+          "linkName": "",
+          "size": 0,
+          "fileMode": 2147484141,
+          "uid": 0,
+          "gid": 0,
+          "isDir": true
+        },
+        {
+          "path": "usr",
+          "typeFlag": 53,
+          "linkName": "",
+          "size": 0,
+          "fileMode": 2147484141,
+          "uid": 0,
+          "gid": 0,
+          "isDir": true
+        }
+      ]
+    }
+  ],
+  "image": {
+    "sizeBytes": 1411,
+    "inefficientBytes": 11,
+    "efficiencyScore": 0.9922041105598866,
+    "fileReference": [
+      {
+        "count": 2,
+        "sizeBytes": 11,
+        "file": "/usr/bin/tool-rel"
+      }
+    ]
+  }
+}

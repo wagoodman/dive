@@ -84,7 +84,7 @@ PASS [pass:3]
 ---
 
 [Test_LoadImage/from_archive - 1]
-Loading image                 /Users/wagoodman/code/dive/.data/test-docker-image.tar
+Loading image                 <repo>/.data/test-docker-image.tar
 Analyzing image               [layers:14 files:451 size:1.2 MB]
 Evaluating image              [rules: 3]
 
@@ -95,8 +95,8 @@ Analysis:
 
 Inefficient Files:
   Count  Wasted Space  File Path
-  2      13 kB         /root/saved.txt
   2      13 kB         /root/example/somefile1.txt
+  2      13 kB         /root/saved.txt
   2      6.4 kB        /root/example/somefile3.txt
 
 Evaluation:
@@ -109,7 +109,7 @@ PASS [pass:3]
 ---
 
 [Test_LoadImage/from_archive_(flag) - 1]
-Loading image                 /Users/wagoodman/code/dive/.data/test-docker-image.tar
+Loading image                 <repo>/.data/test-docker-image.tar
 Analyzing image               [layers:14 files:451 size:1.2 MB]
 Evaluating image              [rules: 3]
 
@@ -120,8 +120,8 @@ Analysis:
 
 Inefficient Files:
   Count  Wasted Space  File Path
-  2      13 kB         /root/saved.txt
   2      13 kB         /root/example/somefile1.txt
+  2      13 kB         /root/saved.txt
   2      6.4 kB        /root/example/somefile3.txt
 
 Evaluation:
@@ -134,7 +134,7 @@ PASS [pass:3]
 ---
 
 [Test_FetchFailure/nonexistent_image - 1]
-Loading image                 docker:wagoodman/nonexistent/image:tag
+Loading image                 wagoodman/nonexistent/image:tag
 
 ---
 

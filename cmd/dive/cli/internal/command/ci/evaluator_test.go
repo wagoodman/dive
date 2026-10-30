@@ -3,19 +3,15 @@ package ci
 import (
 	"context"
 	"github.com/stretchr/testify/require"
-	"go.uber.org/atomic"
-	"os/exec"
-	"path/filepath"
-	"strings"
 	"testing"
 
-	"github.com/wagoodman/dive/dive/image/docker"
+	"github.com/wagoodman/dive/dive"
+	"github.com/wagoodman/dive/internal/imagefixture"
 )
 
-var repoRootCache atomic.String
-
 func Test_Evaluator(t *testing.T) {
-	result := docker.TestAnalysisFromArchive(t, repoPath(t, ".data/test-docker-image.tar"))
+	result, err := dive.Analyze(context.Background(), "test-docker-image", imagefixture.Load(t, "test-docker-image"))
+	require.NoError(t, err)
 
 	validTests := []struct {
 		name           string
@@ -82,7 +78,7 @@ func Test_Evaluator(t *testing.T) {
 			require.NoError(t, err)
 
 			evaluator := NewEvaluator(rules)
-			eval := evaluator.Evaluate(context.TODO(), result)
+			eval := evaluator.Evaluate(context.TODO(), NewStats(result))
 
 			if test.expectedPass != eval.Pass {
 				t.Errorf("expected pass=%v, got %v", test.expectedPass, eval.Pass)
@@ -173,26 +169,4 @@ func Test_Evaluator_Misconfigurations(t *testing.T) {
 			}
 		})
 	}
-}
-
-func repoPath(t testing.TB, path string) string {
-	t.Helper()
-	root := repoRoot(t)
-	return filepath.Join(root, path)
-}
-
-func repoRoot(t testing.TB) string {
-	val := repoRootCache.Load()
-	if val != "" {
-		return val
-	}
-	t.Helper()
-	// use git to find the root of the repo
-	out, err := exec.Command("git", "rev-parse", "--show-toplevel").Output()
-	if err != nil {
-		t.Fatalf("failed to get repo root: %v", err)
-	}
-	val = strings.TrimSpace(string(out))
-	repoRootCache.Store(val)
-	return val
 }

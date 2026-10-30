@@ -6,6 +6,7 @@ permit:
   - ISC
   - WTFPL
   - Unlicense
+  - CC0-1.0
 
 ignore-packages:
   # crypto/internal/boring is released under the openSSL license as a part of the Golang Standard Library

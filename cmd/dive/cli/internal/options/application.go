@@ -1,7 +1,7 @@
 package options
 
 import (
-	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/v1"
+	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/tui"
 )
 
 type Application struct {
@@ -20,8 +20,8 @@ func DefaultApplication() Application {
 	}
 }
 
-func (c Application) V1Preferences() v1.Preferences {
-	return v1.Preferences{
+func (c Application) TUIPreferences() tui.Preferences {
+	return tui.Preferences{
 		KeyBindings:                c.UI.Keybinding.Config,
 		ShowFiletreeAttributes:     c.UI.Filetree.ShowAttributes,
 		ShowAggregatedLayerChanges: c.UI.Layer.ShowAggregatedChanges,

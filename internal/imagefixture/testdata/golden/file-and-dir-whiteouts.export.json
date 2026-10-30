@@ -1,0 +1,173 @@
+{
+  "layer": [
+    {
+      "index": 0,
+      "id": "sha256:05506ffceda6a1ffdd71181736b4b54baa4f26d8c9dc87875b0703155b1c2f02",
+      "digestId": "sha256:05506ffceda6a1ffdd71181736b4b54baa4f26d8c9dc87875b0703155b1c2f02",
+      "sizeBytes": 1505,
+      "command": "make data",
+      "fileList": [
+        {
+          "path": "data/keep.txt",
+          "typeFlag": 48,
+          "linkName": "",
+          "size": 5,
+          "fileMode": 420,
+          "uid": 0,
+          "gid": 0,
+          "isDir": false
+        },
+        {
+          "path": "data/olddir/nested/y",
+          "typeFlag": 48,
+          "linkName": "",
+          "size": 600,
+          "fileMode": 420,
+          "uid": 0,
+          "gid": 0,
+          "isDir": false
+        },
+        {
+          "path": "data/olddir/nested",
+          "typeFlag": 53,
+          "linkName": "",
+          "size": 0,
+          "fileMode": 2147484141,
+          "uid": 0,
+          "gid": 0,
+          "isDir": true
+        },
+        {
+          "path": "data/olddir/x",
+          "typeFlag": 48,
+          "linkName": "",
+          "size": 500,
+          "fileMode": 420,
+          "uid": 0,
+          "gid": 0,
+          "isDir": false
+        },
+        {
+          "path": "data/olddir",
+          "typeFlag": 53,
+          "linkName": "",
+          "size": 0,
+          "fileMode": 2147484141,
+          "uid": 0,
+          "gid": 0,
+          "isDir": true
+        },
+        {
+          "path": "data/remove.txt",
+          "typeFlag": 48,
+          "linkName": "",
+          "size": 400,
+          "fileMode": 420,
+          "uid": 0,
+          "gid": 0,
+          "isDir": false
+        },
+        {
+          "path": "data",
+          "typeFlag": 53,
+          "linkName": "",
+          "size": 0,
+          "fileMode": 2147484141,
+          "uid": 0,
+          "gid": 0,
+          "isDir": true
+        }
+      ]
+    },
+    {
+      "index": 1,
+      "id": "sha256:44dacff139cedf673baa0cb99c234c0ffc491e47f202f38e52045cbeef897dc9",
+      "digestId": "sha256:44dacff139cedf673baa0cb99c234c0ffc491e47f202f38e52045cbeef897dc9",
+      "sizeBytes": 0,
+      "command": "rm -rf /data/remove.txt /data/olddir",
+      "fileList": [
+        {
+          "path": "data/.wh.olddir",
+          "typeFlag": 48,
+          "linkName": "",
+          "size": 0,
+          "fileMode": 420,
+          "uid": 0,
+          "gid": 0,
+          "isDir": false
+        },
+        {
+          "path": "data/.wh.remove.txt",
+          "typeFlag": 48,
+          "linkName": "",
+          "size": 0,
+          "fileMode": 420,
+          "uid": 0,
+          "gid": 0,
+          "isDir": false
+        },
+        {
+          "path": "data",
+          "typeFlag": 53,
+          "linkName": "",
+          "size": 0,
+          "fileMode": 2147484141,
+          "uid": 0,
+          "gid": 0,
+          "isDir": true
+        }
+      ]
+    },
+    {
+      "index": 2,
+      "id": "sha256:4751de2c32c3ff6cc5c5cb637950fbb963fe287b90940ffafeecea45778c8ba1",
+      "digestId": "sha256:4751de2c32c3ff6cc5c5cb637950fbb963fe287b90940ffafeecea45778c8ba1",
+      "sizeBytes": 70,
+      "command": "mkdir /data/olddir \u0026\u0026 touch /data/olddir/z",
+      "fileList": [
+        {
+          "path": "data/olddir/z",
+          "typeFlag": 48,
+          "linkName": "",
+          "size": 70,
+          "fileMode": 420,
+          "uid": 0,
+          "gid": 0,
+          "isDir": false
+        },
+        {
+          "path": "data/olddir",
+          "typeFlag": 53,
+          "linkName": "",
+          "size": 0,
+          "fileMode": 2147484141,
+          "uid": 0,
+          "gid": 0,
+          "isDir": true
+        },
+        {
+          "path": "data",
+          "typeFlag": 53,
+          "linkName": "",
+          "size": 0,
+          "fileMode": 2147484141,
+          "uid": 0,
+          "gid": 0,
+          "isDir": true
+        }
+      ]
+    }
+  ],
+  "image": {
+    "sizeBytes": 1575,
+    "inefficientBytes": 400,
+    "efficiencyScore": 0.8504672897196262,
+    "fileReference": [
+      {
+        "count": 2,
+        "sizeBytes": 400,
+        "file": "/data/remove.txt"
+      }
+    ]
+  }
+}

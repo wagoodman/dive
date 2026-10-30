@@ -1,0 +1,19 @@
+
+[TestHandler_handleTaskStarted/task_in_progress - 1]
+ ⠋ Analyzing                       [some stage]                                         [layers:3]
+---
+
+[TestHandler_handleTaskStarted/tasks_sharing_an_ID_all_get_rows - 1]
+ ✔ Loaded                                                                                      img
+ ✔ Analyzed                                                                             [layers:3]
+ ⠋ Evaluating                      [checking]                                           [rules: 3]
+---
+
+[TestHandler_handleTaskStarted/sub_task_and_hidden_task - 1]
+ ⠋ Building                        [step 2/3]  
+   └── ⠋ Pushing                         
+---
+
+[TestHandler_handleTaskStarted/failed_task - 1]
+ ✘ Failed to Evaluat                                                                    [rules: 3]
+---

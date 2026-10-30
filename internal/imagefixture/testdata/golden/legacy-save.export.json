@@ -1,0 +1,188 @@
+{
+  "layer": [
+    {
+      "index": 0,
+      "id": "sha256:66f33cbb294cf96bfd044fb74647a1f02fa2bf7fc5c204c704554d7657a34d92",
+      "digestId": "sha256:66f33cbb294cf96bfd044fb74647a1f02fa2bf7fc5c204c704554d7657a34d92",
+      "sizeBytes": 5059,
+      "command": "#(nop) ADD file:0123456789abcdef in / ",
+      "fileList": [
+        {
+          "path": "bin/sh",
+          "typeFlag": 48,
+          "linkName": "",
+          "size": 2048,
+          "fileMode": 420,
+          "uid": 0,
+          "gid": 0,
+          "isDir": false
+        },
+        {
+          "path": "bin",
+          "typeFlag": 53,
+          "linkName": "",
+          "size": 0,
+          "fileMode": 2147484141,
+          "uid": 0,
+          "gid": 0,
+          "isDir": true
+        },
+        {
+          "path": "etc/os-release",
+          "typeFlag": 48,
+          "linkName": "",
+          "size": 11,
+          "fileMode": 420,
+          "uid": 0,
+          "gid": 0,
+          "isDir": false
+        },
+        {
+          "path": "etc",
+          "typeFlag": 53,
+          "linkName": "",
+          "size": 0,
+          "fileMode": 2147484141,
+          "uid": 0,
+          "gid": 0,
+          "isDir": true
+        },
+        {
+          "path": "usr/lib/libc.so",
+          "typeFlag": 48,
+          "linkName": "",
+          "size": 3000,
+          "fileMode": 420,
+          "uid": 0,
+          "gid": 0,
+          "isDir": false
+        },
+        {
+          "path": "usr/lib",
+          "typeFlag": 53,
+          "linkName": "",
+          "size": 0,
+          "fileMode": 2147484141,
+          "uid": 0,
+          "gid": 0,
+          "isDir": true
+        },
+        {
+          "path": "usr",
+          "typeFlag": 53,
+          "linkName": "",
+          "size": 0,
+          "fileMode": 2147484141,
+          "uid": 0,
+          "gid": 0,
+          "isDir": true
+        }
+      ]
+    },
+    {
+      "index": 1,
+      "id": "sha256:380a61f3f20d316156cb78d9cae23150769754cf7180c7fdbcdc533616355615",
+      "digestId": "sha256:380a61f3f20d316156cb78d9cae23150769754cf7180c7fdbcdc533616355615",
+      "sizeBytes": 17,
+      "command": "COPY app /app # buildkit",
+      "fileList": [
+        {
+          "path": "app/config.yaml",
+          "typeFlag": 48,
+          "linkName": "",
+          "size": 11,
+          "fileMode": 420,
+          "uid": 0,
+          "gid": 0,
+          "isDir": false
+        },
+        {
+          "path": "app/main.txt",
+          "typeFlag": 48,
+          "linkName": "",
+          "size": 6,
+          "fileMode": 420,
+          "uid": 0,
+          "gid": 0,
+          "isDir": false
+        },
+        {
+          "path": "app",
+          "typeFlag": 53,
+          "linkName": "",
+          "size": 0,
+          "fileMode": 2147484141,
+          "uid": 0,
+          "gid": 0,
+          "isDir": true
+        }
+      ]
+    },
+    {
+      "index": 2,
+      "id": "sha256:3006e0d6acbeeb4f3edcbcc05397c1cfcb872ead32bcea984fb20afc694f1e8a",
+      "digestId": "sha256:3006e0d6acbeeb4f3edcbcc05397c1cfcb872ead32bcea984fb20afc694f1e8a",
+      "sizeBytes": 13,
+      "command": "echo 'hello, world' \u003e /app/main.txt \u0026\u0026 rm /etc/os-release",
+      "fileList": [
+        {
+          "path": "app/main.txt",
+          "typeFlag": 48,
+          "linkName": "",
+          "size": 13,
+          "fileMode": 420,
+          "uid": 0,
+          "gid": 0,
+          "isDir": false
+        },
+        {
+          "path": "app",
+          "typeFlag": 53,
+          "linkName": "",
+          "size": 0,
+          "fileMode": 2147484141,
+          "uid": 0,
+          "gid": 0,
+          "isDir": true
+        },
+        {
+          "path": "etc/.wh.os-release",
+          "typeFlag": 48,
+          "linkName": "",
+          "size": 0,
+          "fileMode": 420,
+          "uid": 0,
+          "gid": 0,
+          "isDir": false
+        },
+        {
+          "path": "etc",
+          "typeFlag": 53,
+          "linkName": "",
+          "size": 0,
+          "fileMode": 2147484141,
+          "uid": 0,
+          "gid": 0,
+          "isDir": true
+        }
+      ]
+    }
+  ],
+  "image": {
+    "sizeBytes": 5089,
+    "inefficientBytes": 30,
+    "efficiencyScore": 0.9952839457653763,
+    "fileReference": [
+      {
+        "count": 2,
+        "sizeBytes": 19,
+        "file": "/app/main.txt"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 11,
+        "file": "/etc/os-release"
+      }
+    ]
+  }
+}

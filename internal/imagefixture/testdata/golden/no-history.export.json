@@ -1,0 +1,68 @@
+{
+  "layer": [
+    {
+      "index": 0,
+      "id": "sha256:b7547447ccc3e2af716f3b642f93dc17516074949fd27195ae27822b2536d699",
+      "digestId": "sha256:b7547447ccc3e2af716f3b642f93dc17516074949fd27195ae27822b2536d699",
+      "sizeBytes": 2,
+      "command": "(missing)",
+      "fileList": [
+        {
+          "path": "a/one",
+          "typeFlag": 48,
+          "linkName": "",
+          "size": 2,
+          "fileMode": 420,
+          "uid": 0,
+          "gid": 0,
+          "isDir": false
+        },
+        {
+          "path": "a",
+          "typeFlag": 53,
+          "linkName": "",
+          "size": 0,
+          "fileMode": 2147484141,
+          "uid": 0,
+          "gid": 0,
+          "isDir": true
+        }
+      ]
+    },
+    {
+      "index": 1,
+      "id": "sha256:3d81d4a1c52e69def6922fab9d1d417a8692976725266ed72fa595710399457e",
+      "digestId": "sha256:3d81d4a1c52e69def6922fab9d1d417a8692976725266ed72fa595710399457e",
+      "sizeBytes": 3,
+      "command": "(missing)",
+      "fileList": [
+        {
+          "path": "a/two",
+          "typeFlag": 48,
+          "linkName": "",
+          "size": 3,
+          "fileMode": 420,
+          "uid": 0,
+          "gid": 0,
+          "isDir": false
+        },
+        {
+          "path": "a",
+          "typeFlag": 53,
+          "linkName": "",
+          "size": 0,
+          "fileMode": 2147484141,
+          "uid": 0,
+          "gid": 0,
+          "isDir": true
+        }
+      ]
+    }
+  ],
+  "image": {
+    "sizeBytes": 5,
+    "inefficientBytes": 0,
+    "efficiencyScore": 1,
+    "fileReference": []
+  }
+}

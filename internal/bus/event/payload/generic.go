@@ -1,23 +1,8 @@
 package payload
 
 import (
-	"context"
 	"github.com/wagoodman/go-progress"
 )
-
-type genericProgressKey struct{}
-
-func SetGenericProgressToContext(ctx context.Context, mon *GenericProgress) context.Context {
-	return context.WithValue(ctx, genericProgressKey{}, mon)
-}
-
-func GetGenericProgressFromContext(ctx context.Context) *GenericProgress {
-	mon, ok := ctx.Value(genericProgressKey{}).(*GenericProgress)
-	if !ok {
-		return nil
-	}
-	return mon
-}
 
 type GenericTask struct {
 	// required fields
@@ -45,4 +30,6 @@ type Title struct {
 	Default      string
 	WhileRunning string
 	OnSuccess    string
+	// OnFail is optional, Default is shown for a failed task without it
+	OnFail string
 }

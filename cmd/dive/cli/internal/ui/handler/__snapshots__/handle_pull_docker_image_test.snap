@@ -1,0 +1,12 @@
+
+[Test_dockerPullStatusFormatter_Render/pulling - 1]
+3 Layers▕▅▃ ▏[12 B / 30 B]
+---
+
+[Test_dockerPullStatusFormatter_Render/download_complete - 1]
+3 Layers▕█▃ ▏[30 B] Extracting...
+---
+
+[Test_dockerPullStatusFormatter_Render/complete - 1]
+3 Layers▕███▏[30 B] Extracting...
+---

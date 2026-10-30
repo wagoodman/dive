@@ -1,0 +1,10 @@
+
+[TestHandler_handleReadImage/read_image_with_layers_in_progress - 1]
+ ⠋ Parsing image                   ━━━━━━━━━━━━━━━━━━━━                                                sha256:image-id
+   ├── ⠋ layer 1 0123456789ab            [1,234 files]  
+   └── ⠋ layer 2 0123456789ab            [0 files]  
+---
+
+[TestHandler_handleReadImage/read_image_complete - 1]
+ ✔ Parsed image                                                                                        sha256:image-id
+---

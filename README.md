@@ -81,15 +81,36 @@ With the `--source` option, you can select where to fetch the container image fr
 ```bash
 dive <your-image> --source <source>
 ```
-or
+or prefix the image with a `<source>://` scheme:
 ```bash
 dive <source>://<your-image>
 ```
+The file based sources also take the `<source>:<path>` form other anchore tools use (e.g. `dive oci-dir:./layout`).
+For every other source a single colon is read as an image name and tag, so `dive docker:dind` analyzes the
+`docker:dind` image.
 
-With valid `source` options as such:
-- `docker`: Docker engine (the default option)
-- `docker-archive`: A Docker Tar Archive from disk
-- `podman`: Podman engine (linux only)
+Source | Reads the image from
+-------|---------------------
+`docker` | the Docker engine (the default). Images missing locally are pulled through the docker API, with credentials from your docker config. `DOCKER_HOST`, `DOCKER_CONTEXT` and the current docker context are honored
+`podman` | Podman. On linux the local store is read directly (no socket needed, see `containers-storage`, and a short name like `myapp` also finds podman's `localhost/myapp`), falling back to the podman socket. On macOS the running podman machine's API socket is used (found through `podman machine inspect`); `CONTAINER_HOST=unix://...` overrides it, ssh connections are refused
+`docker-archive` | a `docker save` tarball on disk, or an OCI archive (`docker-tar` is an alias)
+`oci-archive` | an OCI image layout tarball on disk
+`oci-dir` | an OCI image layout directory on disk
+`registry` | a registry, without a container engine (credentials from your docker config). Registries on private IP addresses are refused, since they would be reached over plain http
+`containerd` | the containerd daemon (`CONTAINERD_NAMESPACE` selects the namespace)
+`containers-storage` | the local podman/buildah store (linux only, see below)
+`auto` | detect it: files on disk first, then docker, podman, containerd and containers-storage, then a registry pull. The source it picked is reported, since an image no local engine has quietly comes from a registry (Docker Hub for a short name). Only valid for `--source`, not as a scheme
+
+For a multi-platform image, `--platform` picks the variant to analyze (e.g. `--platform linux/arm64`). A `docker save`
+tarball holds a single platform, dive reports when it doesn't match.
+
+`containers-storage` support is compiled in only with the `containers_image_openpgp` build tag, which the linux
+release builds (and the docker image) have. Without it the source reports that it isn't available. To build it
+yourself: `go build -tags containers_image_openpgp,exclude_graphdriver_btrfs ./cmd/dive`.
+
+**JSON export**
+
+`--json <path>` skips the UI and writes the analysis to a file. Each layer's `id` is the layer's diff ID (the same value as `digestId`).
 
 ## Installation
 
@@ -170,7 +191,7 @@ winget install --id wagoodman.dive
 Or download the latest Windows build from the [releases page](https://github.com/wagoodman/dive/releases/latest).
 
 **Go tools**
-Requires Go version 1.10 or higher.
+Requires Go version 1.26 or higher (add `-tags containers_image_openpgp,exclude_graphdriver_btrfs` on linux for `containers-storage` support).
 
 ```bash
 go install github.com/wagoodman/dive@latest
@@ -280,9 +301,12 @@ Key Binding                                | Description
 
 No configuration is necessary, however, you can create a config file and override values:
 ```yaml
-# supported options are "docker" and "podman"
+# where to load an image without a scheme from: docker, podman, docker-archive, oci-archive, oci-dir, registry,
+# containerd, containers-storage or auto
 container-engine: docker
-# continue with analysis even if there are errors parsing the image archive
+# platform to select from a multi-platform image (e.g. linux/arm64), empty means the source's default
+platform: ""
+# deprecated and has no effect (kept so existing configs still load), same for the --ignore-errors flag
 ignore-errors: false
 log:
   enabled: true

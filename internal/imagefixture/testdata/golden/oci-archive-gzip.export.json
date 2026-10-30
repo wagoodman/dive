@@ -1,0 +1,49 @@
+{
+  "layer": [
+    {
+      "index": 0,
+      "id": "sha256:647d0dc8142b90c28f82008211ad2e503d9a9799993e6f29dd35d67ce3732892",
+      "digestId": "sha256:647d0dc8142b90c28f82008211ad2e503d9a9799993e6f29dd35d67ce3732892",
+      "sizeBytes": 2048,
+      "command": "#(nop) ADD file:fedcba9876543210 in / ",
+      "fileList": [
+        {
+          "path": "bin/busybox",
+          "typeFlag": 48,
+          "linkName": "",
+          "size": 2048,
+          "fileMode": 420,
+          "uid": 0,
+          "gid": 0,
+          "isDir": false
+        },
+        {
+          "path": "bin/ls",
+          "typeFlag": 50,
+          "linkName": "busybox",
+          "size": 0,
+          "fileMode": 134218239,
+          "uid": 0,
+          "gid": 0,
+          "isDir": false
+        },
+        {
+          "path": "bin",
+          "typeFlag": 53,
+          "linkName": "",
+          "size": 0,
+          "fileMode": 2147484141,
+          "uid": 0,
+          "gid": 0,
+          "isDir": true
+        }
+      ]
+    }
+  ],
+  "image": {
+    "sizeBytes": 2048,
+    "inefficientBytes": 0,
+    "efficiencyScore": 1,
+    "fileReference": []
+  }
+}

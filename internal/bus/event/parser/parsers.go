@@ -1,8 +1,9 @@
 package parser
 
 import (
+	"context"
 	"fmt"
-	"github.com/wagoodman/dive/dive/image"
+	"github.com/wagoodman/dive/dive"
 	"github.com/wagoodman/dive/internal/bus/event"
 	"github.com/wagoodman/dive/internal/bus/event/payload"
 	"github.com/wagoodman/go-partybus"
@@ -54,17 +55,30 @@ func ParseTaskStarted(e partybus.Event) (progress.StagedProgressable, *payload.G
 	return mon, &source, nil
 }
 
-func ParseExploreAnalysis(e partybus.Event) (image.Analysis, image.ContentReader, error) {
+// ParseExploreAnalysis returns the analysis to explore, the context the UI should quit with (never nil) and the func to
+// call once the UI is done with the analysis (never nil).
+func ParseExploreAnalysis(e partybus.Event) (*dive.Analysis, context.Context, func(), error) {
 	if err := checkEventType(e.Type, event.ExploreAnalysis); err != nil {
-		return image.Analysis{}, nil, err
+		return nil, context.Background(), func() {}, err
 	}
 
 	ex, ok := e.Value.(payload.Explore)
 	if !ok {
-		return image.Analysis{}, nil, newPayloadErr(e.Type, "Value", e.Value)
+		return nil, context.Background(), func() {}, newPayloadErr(e.Type, "Value", e.Value)
+	}
+	done := ex.Done
+	if done == nil {
+		done = func() {}
+	}
+	ctx := ex.Context
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	if ex.Analysis == nil {
+		return nil, ctx, done, newPayloadErr(e.Type, "Value", e.Value)
 	}
 
-	return ex.Analysis, ex.Content, nil
+	return ex.Analysis, ctx, done, nil
 }
 
 func ParseReport(e partybus.Event) (string, string, error) {

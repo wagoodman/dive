@@ -11,6 +11,7 @@ import (
 func Test_JsonOutput(t *testing.T) {
 
 	t.Run("json output", func(t *testing.T) {
+		requireDocker(t)
 		dest := t.TempDir()
 		file := filepath.Join(dest, "output.json")
 		rootCmd := getTestCommand(t, "busybox:1.37.0@sha256:ad9fa4d07136a83e69a54ef00102f579d04eba431932de3b0f098cc5d5948f9f --json "+file)
