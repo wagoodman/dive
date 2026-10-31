@@ -22,6 +22,7 @@ type Views struct {
 }
 
 func NewViews(g *gocui.Gui, cfg tui.Config) (*Views, error) {
+	cfg.Preferences.Colors.Apply()
 	layer, err := newLayerView(g, cfg)
 	if err != nil {
 		return nil, err

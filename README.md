@@ -363,6 +363,16 @@ layer:
   # Enable showing all changes from this layer and every previous layer
   show-aggregated-changes: false
 
+colors:
+  # Customize TUI colors (e.g. bright-white, green, red, yellow, blue, cyan, magenta, bold, reverse)
+  selected: bright-white
+  added: green
+  removed: red
+  modified: yellow
+  unmodified: ""
+  layer: yellow
+  header: bold
+
 ```
 
 dive will search for configs in the following locations:

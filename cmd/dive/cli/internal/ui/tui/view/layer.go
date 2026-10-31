@@ -341,7 +341,7 @@ func (v *Layer) Render() error {
 			if idx == v.vm.LayerIndex {
 				_, err = fmt.Fprintln(v.body, compareBar+" "+format.Selected(layerStr))
 			} else {
-				_, err = fmt.Fprintln(v.body, compareBar+" "+layerStr)
+				_, err = fmt.Fprintln(v.body, compareBar+" "+format.Layer(layerStr))
 			}
 
 			if err != nil {

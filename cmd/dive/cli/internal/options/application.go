@@ -28,5 +28,6 @@ func (c Application) TUIPreferences() tui.Preferences {
 		CollapseFiletreeDirectory:  c.UI.Filetree.CollapseDir,
 		FiletreePaneWidth:          c.UI.Filetree.PaneWidth,
 		FiletreeDiffHide:           nil,
+		Colors:                     c.UI.Colors.ToTUIColors(),
 	}
 }

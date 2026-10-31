@@ -26,6 +26,7 @@ type app struct {
 
 // Run is the UI entrypoint. It returns when the user quits or ctx is done.
 func Run(ctx context.Context, c tui.Config) error {
+	c.Preferences.Colors.Apply()
 	var err error
 
 	// it appears there is a race condition where termbox.Init() will

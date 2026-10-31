@@ -4,11 +4,11 @@ import (
 	"archive/tar"
 	"fmt"
 	"strings"
+	"sync"
 
 	"github.com/dustin/go-humanize"
 	"github.com/fatih/color"
 	"github.com/phayes/permbits"
-
 	"github.com/wagoodman/dive/internal/log"
 )
 
@@ -16,11 +16,42 @@ const (
 	AttributeFormat = "%s%s %11s %10s "
 )
 
-var diffTypeColor = map[DiffType]*color.Color{
-	Added:      color.New(color.FgGreen),
-	Removed:    color.New(color.FgRed),
-	Modified:   color.New(color.FgYellow),
-	Unmodified: color.New(color.Reset),
+var (
+	diffTypeColorMu sync.RWMutex
+	diffTypeColor   = map[DiffType]*color.Color{
+		Added:      color.New(color.FgGreen),
+		Removed:    color.New(color.FgRed),
+		Modified:   color.New(color.FgYellow),
+		Unmodified: color.New(color.Reset),
+	}
+)
+
+// SetDiffTypeColor sets the color for a specific DiffType.
+func SetDiffTypeColor(dt DiffType, c *color.Color) {
+	if c != nil {
+		diffTypeColorMu.Lock()
+		defer diffTypeColorMu.Unlock()
+		diffTypeColor[dt] = c
+	}
+}
+
+// DiffTypeColor returns the current color for a specific DiffType.
+func DiffTypeColor(dt DiffType) *color.Color {
+	diffTypeColorMu.RLock()
+	defer diffTypeColorMu.RUnlock()
+	return diffTypeColor[dt]
+}
+
+// ResetDiffTypeColors resets all diff type colors to defaults.
+func ResetDiffTypeColors() {
+	diffTypeColorMu.Lock()
+	defer diffTypeColorMu.Unlock()
+	diffTypeColor = map[DiffType]*color.Color{
+		Added:      color.New(color.FgGreen),
+		Removed:    color.New(color.FgRed),
+		Modified:   color.New(color.FgYellow),
+		Unmodified: color.New(color.Reset),
+	}
 }
 
 // FileNode represents a single file, its relation to files beneath it, the tree it exists in, and the metadata of the given file.
@@ -128,7 +159,7 @@ func (node *FileNode) String() string {
 	if node.Data.FileInfo.TypeFlag == tar.TypeSymlink || node.Data.FileInfo.TypeFlag == tar.TypeLink {
 		display += " → " + node.Data.FileInfo.Linkname
 	}
-	return diffTypeColor[node.Data.DiffType].Sprint(display)
+	return DiffTypeColor(node.Data.DiffType).Sprint(display)
 }
 
 // MetadatString returns the FileNode metadata in a columnar string.
