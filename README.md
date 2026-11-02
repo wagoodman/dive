@@ -297,6 +297,17 @@ Key Binding                                | Description
 <kbd>PageUp</kbd> or <kbd>U</kbd>          | Filetree view: scroll up a page
 <kbd>PageDown</kbd> or <kbd>D</kbd>        | Filetree view: scroll down a page
 
+> [!NOTE]
+> On some systems <kbd>Ctrl + Space</kbd> is consumed by the OS or by an input method editor
+> before any terminal application sees it, so collapse-all appears to do nothing. Microsoft
+> Pinyin and other Windows IMEs use it to toggle input mode, and macOS binds it to switching
+> input sources when more than one is configured. dive never receives the keypress in that
+> case, so it cannot be intercepted from inside the TUI. Either free up the shortcut in your
+> OS/IME settings, or rebind the action in the config file (see UI Configuration below), for
+> example `toggle-collapse-all-dir: ctrl+g`.
+>
+> See also: https://github.com/wagoodman/dive/issues/512
+
 ## UI Configuration
 
 No configuration is necessary, however, you can create a config file and override values:
