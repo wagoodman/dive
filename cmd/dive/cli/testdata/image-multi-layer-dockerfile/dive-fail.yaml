@@ -1,3 +1,4 @@
 ci: true
 rules:
   lowest-efficiency-threshold: '0.9'
+  highest-user-wasted-percent: '0.1'
