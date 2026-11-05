@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/dustin/go-humanize"
+	"math"
 	"strconv"
 	"strings"
 )
@@ -101,7 +102,7 @@ func NewLowestEfficiencyRule(configValue string) (Rule, error) {
 			ciKeyLowestEfficiencyThreshold, configValue, err)
 	}
 
-	if threshold < 0 || threshold > 1 {
+	if math.IsNaN(threshold) || threshold < 0 || threshold > 1 {
 		return nil, fmt.Errorf("%s config value is outside allowed range (0-1), given '%f'",
 			ciKeyLowestEfficiencyThreshold, threshold)
 	}
@@ -166,7 +167,7 @@ func NewHighestUserWastedPercentRule(configValue string) (Rule, error) {
 			configValue, err)
 	}
 
-	if threshold < 0 || threshold > 1 {
+	if math.IsNaN(threshold) || threshold < 0 || threshold > 1 {
 		return nil, fmt.Errorf("highestUserWastedPercent config value is outside allowed range (0-1), given '%f'",
 			threshold)
 	}
