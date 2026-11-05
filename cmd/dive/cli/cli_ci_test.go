@@ -52,3 +52,19 @@ func Test_CI_LegacyRules(t *testing.T) {
 	assert.Contains(t, all, "highest-wasted-bytes: '20MB'", "missing highest-wasted-bytes legacy rule")
 	assert.Contains(t, all, "highest-user-wasted-percent: '0.2'", "missing highest-user-wasted-percent legacy rule")
 }
+
+func Test_CI_RejectNaNThresholds(t *testing.T) {
+	for _, flags := range []string{
+		"--lowestEfficiency NaN --highestUserWastedPercent disabled",
+		"--lowestEfficiency disabled --highestUserWastedPercent NaN",
+	} {
+		t.Run(flags, func(t *testing.T) {
+			t.Setenv("DIVE_CONFIG", "-")
+			rootCmd := getTestCommand(t, "docker-archive:"+repoPath(t, ".data/test-docker-image.tar")+
+				" --ci --highestWastedBytes disabled "+flags)
+			Capture().All().WithSuppress().Run(t, func() {
+				require.ErrorContains(t, rootCmd.Execute(), "outside allowed range")
+			})
+		})
+	}
+}
