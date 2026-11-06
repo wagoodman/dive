@@ -1,7 +1,9 @@
 package filetree
 
 import (
+	"archive/tar"
 	"fmt"
+	"os"
 	"testing"
 )
 
@@ -650,4 +652,53 @@ func TestRemoveOnIterate(t *testing.T) {
 		t.Errorf("Expected tree string:\n--->%s<---\nGot:\n--->%s<---", expected, actual)
 	}
 
+}
+
+func TestCompareWithDirReplacedBySymlink(t *testing.T) {
+	lowerTree := NewFileTree()
+	upperTree := NewFileTree()
+
+	lower := map[string]FileInfo{
+		"/bin":       {TypeFlag: tar.TypeDir, IsDir: true, Mode: os.ModeDir | 0o755},
+		"/bin/sh":    {TypeFlag: tar.TypeReg, Size: 123},
+		"/bin/ls":    {TypeFlag: tar.TypeReg, Size: 456},
+		"/usr":       {TypeFlag: tar.TypeDir, IsDir: true, Mode: os.ModeDir | 0o755},
+		"/usr/bin":   {TypeFlag: tar.TypeDir, IsDir: true, Mode: os.ModeDir | 0o755},
+		"/usr/bin/a": {TypeFlag: tar.TypeReg, Size: 1},
+	}
+	for p, fi := range lower {
+		fi.Path = p
+		if _, _, err := lowerTree.AddPath(p, fi); err != nil {
+			t.Fatalf("could not setup test: %v", err)
+		}
+	}
+	// the upper layer replaces the /bin dir with a symlink to /usr/bin
+	if _, _, err := upperTree.AddPath("/bin", FileInfo{Path: "/bin", TypeFlag: tar.TypeSymlink, Linkname: "usr/bin", Mode: os.ModeSymlink | 0o777}); err != nil {
+		t.Fatalf("could not setup test: %v", err)
+	}
+
+	failedPaths, err := lowerTree.CompareAndMark(upperTree, nil)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(failedPaths) > 0 {
+		t.Fatalf("expected no filepath errors, got %v", failedPaths)
+	}
+
+	bin, err := lowerTree.GetNode("/bin")
+	if err != nil {
+		t.Fatalf("expected /bin to exist: %v", err)
+	}
+	if bin.Data.FileInfo.TypeFlag != tar.TypeSymlink {
+		t.Errorf("expected /bin to be a symlink, got type %v", bin.Data.FileInfo.TypeFlag)
+	}
+	if len(bin.Children) != 0 {
+		t.Errorf("expected /bin symlink to have no children, got %d", len(bin.Children))
+	}
+	if err := AssertDiffType(bin, Modified); err != nil {
+		t.Error(err)
+	}
+	if _, err := lowerTree.GetNode("/usr/bin/a"); err != nil {
+		t.Errorf("expected /usr/bin/a to be untouched: %v", err)
+	}
 }

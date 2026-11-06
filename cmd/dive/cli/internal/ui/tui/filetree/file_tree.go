@@ -297,6 +297,17 @@ func (tree *FileTree) CompareAndMark(upper *FileTree, hash ContentHasher) ([]Pat
 
 		// the file exists in the lower layer
 		lowerNode, _ := tree.GetNode(upperNode.Path())
+
+		// a non-dir (e.g. a symlink) replacing a dir hides everything the lower dir held. An implicit parent dir
+		// has an empty FileInfo (TypeFlag 0) but always has children, so it is never mistaken for one.
+		if upperNode.IsLeaf() && !upperNode.Data.FileInfo.IsDir && upperNode.Data.FileInfo.TypeFlag != 0 {
+			for _, child := range lowerNode.Children {
+				if err := child.Remove(); err != nil {
+					failed = append(failed, NewPathError(child.Path(), ActionRemove, err))
+				}
+			}
+		}
+
 		diffType := lowerNode.compare(upperNode, hash)
 		modifications = append(modifications, compareMark{lowerNode: lowerNode, upperNode: upperNode, tentative: diffType, final: -1})
 
