@@ -54,12 +54,12 @@ func (tree *FileTree) renderStringTreeBetween(startRow, stopRow int, showAttribu
 	var params = make([]renderParams, 0)
 	var result string
 
-	// visit from the front of the list
+	// a stack of nodes to visit, the next node to visit is at the end
 	var paramsToVisit = []renderParams{{node: tree.Root, spaces: []bool{}, showCollapsed: false, isLast: false}}
 	for currentRow := 0; len(paramsToVisit) > 0 && currentRow <= stopRow; currentRow++ {
-		// pop the first node
-		var currentParams renderParams
-		currentParams, paramsToVisit = paramsToVisit[0], paramsToVisit[1:]
+		// pop the next node
+		currentParams := paramsToVisit[len(paramsToVisit)-1]
+		paramsToVisit = paramsToVisit[:len(paramsToVisit)-1]
 
 		// take note of the next nodes to visit later
 		sorter := GetSortOrderStrategy(tree.SortOrder)
@@ -93,8 +93,10 @@ func (tree *FileTree) renderStringTreeBetween(startRow, stopRow int, showAttribu
 				isLast:        isLast,
 			})
 		}
-		// keep the child nodes to visit later
-		paramsToVisit = append(childParams, paramsToVisit...)
+		// keep the child nodes to visit later, in reverse so the first child is visited next
+		for idx := len(childParams) - 1; idx >= 0; idx-- {
+			paramsToVisit = append(paramsToVisit, childParams[idx])
+		}
 
 		// never process the root node
 		if currentParams.node == tree.Root {
@@ -124,10 +126,6 @@ func (tree *FileTree) renderStringTreeBetween(startRow, stopRow int, showAttribu
 func (tree *FileTree) VisibleSize() int {
 	var size int
 
-	visitor := func(node *FileNode) error {
-		size++
-		return nil
-	}
 	visitEvaluator := func(node *FileNode) bool {
 		if node.Data.FileInfo.IsDir {
 			// we won't visit a collapsed dir, but we need to count it
@@ -138,10 +136,20 @@ func (tree *FileTree) VisibleSize() int {
 		}
 		return !node.Data.ViewInfo.Hidden
 	}
-	err := tree.VisitDepthParentFirst(visitor, visitEvaluator)
-	if err != nil {
-		log.WithFields("error", err).Debug("unable to determine visible tree size")
+	// the count doesn't depend on the order, so walk the children without sorting them at every level
+	var visit func(node *FileNode)
+	visit = func(node *FileNode) {
+		if !visitEvaluator(node) {
+			return
+		}
+		if node != tree.Root {
+			size++
+		}
+		for _, child := range node.Children {
+			visit(child)
+		}
 	}
+	visit(tree.Root)
 
 	// don't include root
 	size--

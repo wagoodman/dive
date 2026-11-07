@@ -2,6 +2,7 @@ package filetree
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 )
 
@@ -123,6 +124,35 @@ func TestStringBetween(t *testing.T) {
 		t.Errorf("Expected tree string:\n--->%s<---\nGot:\n--->%s<---", expected, actual)
 	}
 
+}
+
+func TestVisibleSize(t *testing.T) {
+	tree := NewFileTree()
+	for _, p := range []string{"/etc/nginx/nginx.conf", "/etc/hosts", "/var/run/systemd", "/var/log/a.log", "/tmp/nonsense"} {
+		if _, _, err := tree.AddPath(p, FileInfo{}); err != nil {
+			t.Fatalf("could not setup test: %v", err)
+		}
+	}
+	for _, p := range []string{"/etc", "/etc/nginx", "/var", "/var/run", "/var/log", "/tmp"} {
+		node, err := tree.GetNode(p)
+		if err != nil {
+			t.Fatalf("could not setup test: %v", err)
+		}
+		node.Data.FileInfo.IsDir = true
+	}
+	nginx, _ := tree.GetNode("/etc/nginx")
+	nginx.Data.ViewInfo.Collapsed = true
+	varLog, _ := tree.GetNode("/var/log")
+	varLog.Data.ViewInfo.Hidden = true
+
+	// the index of the last row: a collapsed dir is a row (its contents are not), a hidden node and its contents are not
+	rows := strings.Count(tree.String(false), "\n")
+	if rows != 8 {
+		t.Fatalf("expected 8 rows, got %d:\n%s", rows, tree.String(false))
+	}
+	if actual := tree.VisibleSize(); actual != rows-1 {
+		t.Errorf("expected visible size %d, got %d", rows-1, actual)
+	}
 }
 
 func TestRejectPurelyRelativePath(t *testing.T) {
