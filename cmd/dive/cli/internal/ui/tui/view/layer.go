@@ -232,7 +232,8 @@ func (v *Layer) SetOrigin(x, y int) error {
 
 // SetCursor resets the cursor and orients the file tree view based on the given layer index.
 func (v *Layer) SetCursor(layer int) error {
-	v.vm.LayerIndex = layer
+	// clamp here so every caller (paging especially) stays on a real layer
+	v.vm.LayerIndex = max(0, min(layer, len(v.vm.Layers)-1))
 	err := v.notifyLayerChangeListeners()
 	if err != nil {
 		return err
