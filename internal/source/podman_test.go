@@ -54,3 +54,29 @@ func TestPodmanProvider_macMachineSocket(t *testing.T) {
 	t.Cleanup(func() { require.NoError(t, img.Cleanup()) })
 	assert.Len(t, img.Layers, 3)
 }
+
+// regression for #310: `dive podman://<image>` pulls an image podman doesn't have yet instead of failing with
+// "no such image"
+func TestLoad_podmanPullsMissingImage(t *testing.T) {
+	for _, tt := range []struct{ name, input, source string }{
+		{name: "scheme", input: "podman://quay.io/podman/stable:latest"},
+		{name: "source", input: "quay.io/podman/stable:latest", source: Podman},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			sock := filepath.Join(dockerHostShortTempDir(t), "podman.sock")
+			d := newDockerHostDaemon(t)
+			d.minAPI, d.maxAPI = 24, 41
+			d.missing = true
+			dockerHostServeUnix(t, sock, d)
+			dockerHostUseConfig(t, t.TempDir(), "", nil)
+			t.Setenv("CONTAINER_HOST", "unix://"+sock)
+
+			img, err := Load(context.Background(), tt.input, Config{Source: tt.source})
+			require.NoError(t, err)
+			t.Cleanup(func() { require.NoError(t, img.Cleanup()) })
+
+			assert.Len(t, img.Layers, 3)
+			assert.Equal(t, []string{"quay.io/podman/stable:latest"}, d.pulls)
+		})
+	}
+}

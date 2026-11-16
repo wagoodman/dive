@@ -44,6 +44,7 @@ type dockerHostDaemon struct {
 
 	mu       sync.Mutex
 	pulled   bool
+	pulls    []string // "fromImage:tag" of each pull
 	versions []string // the API version of every versioned request
 }
 
@@ -88,6 +89,7 @@ func (d *dockerHostDaemon) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	switch {
 	case r.Method == http.MethodPost && rest == "images/create":
 		d.pulled = true
+		d.pulls = append(d.pulls, r.URL.Query().Get("fromImage")+":"+r.URL.Query().Get("tag"))
 		_, _ = w.Write([]byte(`{"status":"Pulling fs layer","id":"abc"}` + "\n" + `{"status":"Status: Downloaded newer image"}` + "\n"))
 	case !present && r.Method == http.MethodGet && strings.HasPrefix(rest, "images/"):
 		fail(http.StatusNotFound, "No such image")
