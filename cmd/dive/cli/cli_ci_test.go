@@ -29,6 +29,22 @@ func Test_CI_DefaultCIConfig(t *testing.T) {
 	assert.Contains(t, combined, "PASS  highestUserWastedPercent (0.6)")
 }
 
+func Test_CI_FlagsAndEnvOverrideCIConfig(t *testing.T) {
+	t.Setenv("DIVE_CONFIG", "-")
+	t.Setenv("DIVE_RULES_HIGHEST_USER_WASTED_PERCENT", "0.7")
+
+	// the .dive-ci in the working dir sets all three rules, the flag and env var outrank it
+	rootCmd := getTestCommand(t, "docker-archive:"+repoPath(t, ".data/test-docker-image.tar")+" --ci --lowestEfficiency 0.5")
+	cd(t, "testdata/default-ci-config")
+	combined := Capture().WithStdout().WithStderr().Run(t, func() {
+		require.NoError(t, rootCmd.Execute())
+	})
+
+	assert.Contains(t, combined, "PASS  lowestEfficiency (0.5)")
+	assert.Contains(t, combined, "PASS  highestWastedBytes (19Mb)")
+	assert.Contains(t, combined, "PASS  highestUserWastedPercent (0.7)")
+}
+
 func Test_CI_Fail(t *testing.T) {
 	requireDocker(t)
 	t.Setenv("DIVE_CONFIG", "./testdata/image-multi-layer-dockerfile/dive-fail.yaml")
