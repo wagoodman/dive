@@ -85,22 +85,6 @@ func (v *ImageDetails) Render() error {
 		return nil
 	}
 
-	analysisTemplate := "%5s  %12s  %-s\n"
-	inefficiencyReport := fmt.Sprintf(format.Header(analysisTemplate), "Count", "Wasted Space", "Path")
-
-	var wastedSpace uint64
-	// inefficiencies are already sorted largest first
-	for _, data := range v.inefficiencies {
-		wastedSpace += data.SizeBytes
-
-		inefficiencyReport += fmt.Sprintf(analysisTemplate, strconv.Itoa(data.Count), humanize.Bytes(data.SizeBytes), data.Path)
-	}
-
-	imageNameStr := fmt.Sprintf("%s %s", format.Header("Image name:"), v.imageName)
-	imageSizeStr := fmt.Sprintf("%s %s", format.Header("Total Image size:"), humanize.Bytes(v.imageSize))
-	efficiencyStr := fmt.Sprintf("%s %d %%", format.Header("Image efficiency score:"), int(100.0*v.efficiency))
-	wastedSpaceStr := fmt.Sprintf("%s %s", format.Header("Potential wasted space:"), humanize.Bytes(wastedSpace))
-
 	width, _ := v.body.Size()
 
 	imageHeaderStr := format.RenderHeader("Image Details", width, v.gui.CurrentView() == v.body)
@@ -111,16 +95,38 @@ func (v *ImageDetails) Render() error {
 		log.WithFields("error", err).Debug("unable to write to buffer")
 	}
 
+	// the body only depends on the image (gocui wraps it at draw time), so it's written once. This keeps
+	// renders cheap for images with lots of inefficiencies and keeps the scroll position between renders.
+	if v.body.LinesHeight() > 0 {
+		return nil
+	}
+
+	analysisTemplate := "%5s  %12s  %-s\n"
+	var inefficiencyReport strings.Builder
+	_, _ = fmt.Fprintf(&inefficiencyReport, format.Header(analysisTemplate), "Count", "Wasted Space", "Path")
+
+	var wastedSpace uint64
+	// inefficiencies are already sorted largest first
+	for _, data := range v.inefficiencies {
+		wastedSpace += data.SizeBytes
+
+		_, _ = fmt.Fprintf(&inefficiencyReport, analysisTemplate, strconv.Itoa(data.Count), humanize.Bytes(data.SizeBytes), data.Path)
+	}
+
+	imageNameStr := fmt.Sprintf("%s %s", format.Header("Image name:"), v.imageName)
+	imageSizeStr := fmt.Sprintf("%s %s", format.Header("Total Image size:"), humanize.Bytes(v.imageSize))
+	efficiencyStr := fmt.Sprintf("%s %d %%", format.Header("Image efficiency score:"), int(100.0*v.efficiency))
+	wastedSpaceStr := fmt.Sprintf("%s %s", format.Header("Potential wasted space:"), humanize.Bytes(wastedSpace))
+
 	var lines = []string{
 		imageNameStr,
 		imageSizeStr,
 		wastedSpaceStr,
 		efficiencyStr,
 		" ", // to avoid an empty line so CursorDown can work as expected
-		inefficiencyReport,
+		inefficiencyReport.String(),
 	}
 
-	v.body.Clear()
 	_, err = fmt.Fprintln(v.body, strings.Join(lines, "\n"))
 	if err != nil {
 		log.WithFields("error", err).Debug("unable to write to buffer")
