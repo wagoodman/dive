@@ -179,6 +179,28 @@ func assertPath(t *testing.T, vm *FileTreeViewModel, expected string, msg string
 	assert.Equal(t, expected, n.Path(), msg)
 }
 
+func TestFileTreeCursorLeft(t *testing.T) {
+	vm := initializeTestViewModel(t)
+
+	width, height := 100, 100
+	vm.Setup(0, height)
+	require.NoError(t, vm.Update(nil, width, height))
+
+	// /bin -> its first child
+	require.True(t, vm.CursorDown())
+	n := vm.CurrentNode(nil)
+	require.NotNil(t, n)
+	assert.Equal(t, "/bin", n.Parent.Path())
+
+	require.NoError(t, vm.CursorLeft(nil))
+	assertPath(t, vm, "/bin", "left to parent")
+	assert.Equal(t, 0, vm.TreeIndex)
+
+	// a top level entry has no parent row to move to, so the cursor stays put
+	require.NoError(t, vm.CursorLeft(nil))
+	assertPath(t, vm, "/bin", "left at top level")
+}
+
 func TestFileTreeDirCollapseAll(t *testing.T) {
 	vm := initializeTestViewModel(t)
 

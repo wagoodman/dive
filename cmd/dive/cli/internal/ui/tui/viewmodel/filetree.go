@@ -172,7 +172,6 @@ func (vm *FileTreeViewModel) CurrentNode(filterRegex *regexp.Regexp) *filetree.F
 // CursorLeft moves the cursor up until we reach the Parent Node or top of the tree
 func (vm *FileTreeViewModel) CursorLeft(filterRegex *regexp.Regexp) error {
 	var visitor func(*filetree.FileNode) error
-	var evaluator func(*filetree.FileNode) bool
 	var dfsCounter, newIndex int
 	oldIndex := vm.TreeIndex
 	currentNode := vm.getAbsPositionNode(filterRegex)
@@ -190,16 +189,7 @@ func (vm *FileTreeViewModel) CursorLeft(filterRegex *regexp.Regexp) error {
 		return nil
 	}
 
-	evaluator = func(curNode *filetree.FileNode) bool {
-		regexMatch := true
-		if filterRegex != nil {
-			match := filterRegex.Find([]byte(curNode.Path()))
-			regexMatch = match != nil
-		}
-		return !curNode.Parent.Data.ViewInfo.Collapsed && !curNode.Data.ViewInfo.Hidden && regexMatch
-	}
-
-	err := vm.ModelTree.VisitDepthParentFirst(visitor, evaluator)
+	err := vm.ModelTree.VisitDepthParentFirst(visitor, visibleRowEvaluator(filterRegex))
 	if err != nil {
 		return fmt.Errorf("unable to propagate tree on cursorLeft: %w", err)
 	}
@@ -304,11 +294,9 @@ func (vm *FileTreeViewModel) PageUp() error {
 
 // getAbsPositionNode determines the selected screen cursor's location in the file tree, returning the selected FileNode.
 func (vm *FileTreeViewModel) getAbsPositionNode(filterRegex *regexp.Regexp) (node *filetree.FileNode) {
-	var visitor func(*filetree.FileNode) error
-	var evaluator func(*filetree.FileNode) bool
 	var dfsCounter int
 
-	visitor = func(curNode *filetree.FileNode) error {
+	visitor := func(curNode *filetree.FileNode) error {
 		if dfsCounter == vm.TreeIndex {
 			node = curNode
 		}
@@ -316,25 +304,27 @@ func (vm *FileTreeViewModel) getAbsPositionNode(filterRegex *regexp.Regexp) (nod
 		return nil
 	}
 
-	evaluator = func(curNode *filetree.FileNode) bool {
-		regexMatch := true
-		if filterRegex != nil {
-			match := filterRegex.Find([]byte(curNode.Path()))
-			regexMatch = match != nil
-		}
-		parentCollapsed := false
-		if curNode.Parent != nil {
-			parentCollapsed = curNode.Parent.Data.ViewInfo.Collapsed
-		}
-		return !parentCollapsed && !curNode.Data.ViewInfo.Hidden && regexMatch
-	}
-
-	err := vm.ModelTree.VisitDepthParentFirst(visitor, evaluator)
+	err := vm.ModelTree.VisitDepthParentFirst(visitor, visibleRowEvaluator(filterRegex))
 	if err != nil {
 		log.WithFields("error", err).Debug("unable to propagate tree on getAbsPositionNode")
 	}
 
 	return node
+}
+
+// visibleRowEvaluator selects the nodes that take up a row in the rendered tree, so cursor indexes map to nodes
+// consistently across all navigation operations.
+func visibleRowEvaluator(filterRegex *regexp.Regexp) filetree.VisitEvaluator {
+	return func(curNode *filetree.FileNode) bool {
+		regexMatch := true
+		if filterRegex != nil {
+			match := filterRegex.Find([]byte(curNode.Path()))
+			regexMatch = match != nil
+		}
+		// the tree root is evaluated too and has no parent
+		parentCollapsed := curNode.Parent != nil && curNode.Parent.Data.ViewInfo.Collapsed
+		return !parentCollapsed && !curNode.Data.ViewInfo.Hidden && regexMatch
+	}
 }
 
 // ToggleCollapse will collapse/expand the selected FileNode.
