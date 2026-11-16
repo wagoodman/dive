@@ -1,6 +1,7 @@
 package filetree
 
 import (
+	"archive/tar"
 	"fmt"
 	"testing"
 )
@@ -312,6 +313,24 @@ func TestCopy(t *testing.T) {
 		t.Errorf("Expected tree string:\n--->%s<---\nGot:\n--->%s<---", expected, actual)
 	}
 
+}
+
+func TestStringEscapesControlChars(t *testing.T) {
+	tree := NewFileTree()
+	_, _, err := tree.AddPath("/a\nb", FileInfo{})
+	checkError(t, err, "could not setup test")
+	_, _, err = tree.AddPath("/c", FileInfo{TypeFlag: tar.TypeSymlink, Linkname: "\x1b[31mred"})
+	checkError(t, err, "could not setup test")
+
+	// one row per node, nothing raw reaches the terminal
+	expected :=
+		`├── a\nb
+└── c → \x1b[31mred
+`
+	actual := tree.String(false)
+	if expected != actual {
+		t.Errorf("Expected tree string:\n--->%s<---\nGot:\n--->%s<---", expected, actual)
+	}
 }
 
 func TestCopyLeavesSourceParents(t *testing.T) {

@@ -3,7 +3,9 @@ package filetree
 import (
 	"archive/tar"
 	"fmt"
+	"strconv"
 	"strings"
+	"unicode"
 
 	"github.com/dustin/go-humanize"
 	"github.com/fatih/color"
@@ -127,7 +129,25 @@ func (node *FileNode) String() string {
 	if node.Data.FileInfo.TypeFlag == tar.TypeSymlink || node.Data.FileInfo.TypeFlag == tar.TypeLink {
 		display += " → " + node.Data.FileInfo.Linkname
 	}
-	return diffTypeColor[node.Data.DiffType].Sprint(display)
+	return diffTypeColor[node.Data.DiffType].Sprint(escapeControl(display))
+}
+
+// escapeControl replaces control characters with their Go escape (e.g. a newline becomes `\n`), so a hostile file
+// name can't span rows or send escape sequences to the terminal.
+func escapeControl(s string) string {
+	if !strings.ContainsFunc(s, unicode.IsControl) {
+		return s
+	}
+	var b strings.Builder
+	for _, r := range s {
+		if unicode.IsControl(r) {
+			q := strconv.QuoteRune(r)
+			b.WriteString(q[1 : len(q)-1])
+			continue
+		}
+		b.WriteRune(r)
+	}
+	return b.String()
 }
 
 // MetadatString returns the FileNode metadata in a columnar string.
