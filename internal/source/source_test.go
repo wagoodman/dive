@@ -364,8 +364,11 @@ func TestDockerHost_badConfig(t *testing.T) {
 	t.Setenv("DOCKER_CONTEXT", "")
 	dir := t.TempDir()
 	require.NoError(t, os.WriteFile(filepath.Join(dir, "config.json"), []byte("{not json"), 0o600))
-	_, _, err := dockerEndpoint(dir)
-	require.Error(t, err)
+	// like the docker cli, a bad config falls back to the default host instead of failing
+	ep, fromEnv, err := dockerEndpoint(dir)
+	require.NoError(t, err)
+	assert.Equal(t, client.DefaultDockerHost, ep.Host)
+	assert.True(t, fromEnv)
 }
 
 func TestNewDockerClient_TLS(t *testing.T) {
