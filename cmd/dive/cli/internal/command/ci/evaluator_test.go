@@ -152,6 +152,20 @@ func Test_Evaluator_Misconfigurations(t *testing.T) {
 			expectError:   true,
 		},
 		{
+			name:          "invalid_efficiency_nan",
+			efficiency:    "NaN", // fail!
+			wastedBytes:   "50kB",
+			wastedPercent: "0.5",
+			expectError:   true,
+		},
+		{
+			name:          "invalid_wasted_percent_nan",
+			efficiency:    "0.9",
+			wastedBytes:   "50kB",
+			wastedPercent: "nan", // fail!
+			expectError:   true,
+		},
+		{
 			name:          "invalid_wasted_percent_format",
 			efficiency:    "0.9",
 			wastedBytes:   "50kB",
