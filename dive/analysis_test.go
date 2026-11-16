@@ -1,6 +1,7 @@
 package dive
 
 import (
+	"archive/tar"
 	"context"
 	"testing"
 
@@ -74,6 +75,24 @@ func TestAnalyze_Efficiency(t *testing.T) {
 			assert.Equal(t, wasted, analysis.WastedBytes)
 		})
 	}
+}
+
+func TestAnalyze_EmptyPathsAreNotWaste(t *testing.T) {
+	// empty files and dirs repeated in every layer have no bytes to waste
+	layer := []imagefixture.Entry{
+		{Name: "etc/", Type: tar.TypeDir},
+		{Name: "etc/empty.conf"},
+		{Name: "var/empty/", Type: tar.TypeDir},
+	}
+	img := imagefixture.LoadSpec(t, imagefixture.Spec{
+		Format: imagefixture.OCISave,
+		Layers: [][]imagefixture.Entry{layer, layer, layer},
+	})
+	analysis, err := Analyze(context.Background(), "spec", img)
+	require.NoError(t, err)
+	assert.Empty(t, analysis.Inefficiencies)
+	assert.Zero(t, analysis.WastedBytes)
+	assert.Equal(t, 1.0, analysis.Efficiency)
 }
 
 func TestAnalyze_SingleLayer(t *testing.T) {

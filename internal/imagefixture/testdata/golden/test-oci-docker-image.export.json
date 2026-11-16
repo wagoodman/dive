@@ -5016,11 +5016,6 @@
         "count": 2,
         "sizeBytes": 10169,
         "file": "/root/example/somefile3.txt"
-      },
-      {
-        "count": 11,
-        "sizeBytes": 0,
-        "file": "/etc"
       }
     ]
   }

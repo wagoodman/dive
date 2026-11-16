@@ -193,7 +193,8 @@ func imageEfficiency(ctx context.Context, img *image.Image) (float64, []Ineffici
 		data := byPath[p]
 		minimum += data.min
 		discovered += data.cumulative
-		if data.count > 1 {
+		// a path with no bytes in any layer wastes nothing, however often it repeats
+		if data.count > 1 && data.cumulative > 0 {
 			inefficiencies = append(inefficiencies, Inefficiency{Path: string(p), Count: data.count, SizeBytes: uint64(data.cumulative)})
 		}
 	}
