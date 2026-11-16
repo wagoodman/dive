@@ -55,6 +55,21 @@ func Test_CI_LegacyRules(t *testing.T) {
 	assert.Contains(t, all, "highest-user-wasted-percent: '0.2'", "missing highest-user-wasted-percent legacy rule")
 }
 
+func Test_CI_FlagOverridesEnv(t *testing.T) {
+	t.Setenv("DIVE_CONFIG", "-")
+	t.Setenv("CI", "true")
+
+	// this gate would fail if CI mode were on
+	file := filepath.Join(t.TempDir(), "output.json")
+	rootCmd := getTestCommand(t, "docker-archive:"+repoPath(t, ".data/test-docker-image.tar")+" --ci=false --lowestEfficiency 0.999 --json "+file)
+	combined := Capture().WithStdout().WithStderr().Run(t, func() {
+		require.NoError(t, rootCmd.Execute())
+	})
+
+	assert.FileExists(t, file)
+	assert.NotContains(t, combined, "lowestEfficiency")
+}
+
 func Test_CI_WithJsonExport(t *testing.T) {
 	// exporting must not skip the gate, CI=true turns CI mode on in pipelines that also export
 	file := filepath.Join(t.TempDir(), "output.json")

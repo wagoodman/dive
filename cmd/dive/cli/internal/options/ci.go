@@ -25,7 +25,8 @@ type CI struct {
 
 func DefaultCI() CI {
 	return CI{
-		Enabled:    false,
+		// the CI env var only sets the default, so --ci, DIVE_CI and the config file can still override it
+		Enabled:    truthy(os.Getenv("CI")),
 		ConfigPath: defaultCIConfigPath,
 		Rules:      DefaultCIRules(),
 	}
@@ -42,11 +43,6 @@ func (c *CI) AddFlags(flags clio.FlagSet) {
 }
 
 func (c *CI) PostLoad() error {
-	enabledFromEnv := truthy(os.Getenv("CI"))
-	if !c.Enabled && enabledFromEnv {
-		c.Enabled = true
-	}
-
 	if c.ConfigPath != "" {
 		if fileExists(c.ConfigPath) {
 			// if a config file is provided, load it and override any values provided in the application config.
