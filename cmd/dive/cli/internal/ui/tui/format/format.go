@@ -6,6 +6,7 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/lunixbochs/vtclean"
+	"github.com/mattn/go-runewidth"
 )
 
 const (
@@ -77,7 +78,7 @@ func RenderNoHeader(width int, selected bool) string {
 func RenderHeader(title string, width int, selected bool) string {
 	if selected {
 		body := Header(fmt.Sprintf("%s%s ", selectStr, title))
-		bodyLen := len(vtclean.Clean(body, false))
+		bodyLen := runewidth.StringWidth(vtclean.Clean(body, false))
 		repeatCount := width - bodyLen - 2
 		if repeatCount < 0 {
 			repeatCount = 0
@@ -87,7 +88,7 @@ func RenderHeader(title string, width int, selected bool) string {
 		// return fmt.Sprintf("%s%s%s%s\n", Selected(selectedLeftBracketStr), body, Selected(selectedRightBracketStr), strings.Repeat(selectedFillStr, width-bodyLen-2))
 	}
 	body := Header(fmt.Sprintf(" %s ", title))
-	bodyLen := len(vtclean.Clean(body, false))
+	bodyLen := runewidth.StringWidth(vtclean.Clean(body, false))
 	repeatCount := width - bodyLen - 2
 	if repeatCount < 0 {
 		repeatCount = 0
