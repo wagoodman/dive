@@ -25,11 +25,13 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"syscall"
 	"time"
 
 	"github.com/anchore/clio"
 
 	"github.com/wagoodman/dive/cmd/dive/cli"
+	"github.com/wagoodman/dive/internal/bus"
 	"github.com/wagoodman/dive/internal/source"
 )
 
@@ -53,6 +55,11 @@ func main() {
 	// Nothing else reads more than the base name.
 	os.Args[0] = filepath.Base(os.Args[0])
 
+	// clio stops the run on SIGINT but then exits 0, which lets `dive --ci img && deploy` deploy. Keep the first
+	// signal here so the exit code says the run was stopped.
+	stoppedBy := make(chan os.Signal, 1)
+	signal.Notify(stoppedBy, os.Interrupt)
+
 	app := cli.Application(
 		clio.Identification{
 			Name:           applicationName,
@@ -73,5 +80,15 @@ func main() {
 	signal.Ignore(os.Interrupt)
 	if err := source.Cleanup(5 * time.Second); err != nil {
 		fmt.Fprintf(os.Stderr, "unable to clean up temp dirs: %v\n", err)
+	}
+
+	// shell convention for a process stopped by a signal. ctrl-c in the progress UI is a key press, not a SIGINT.
+	select {
+	case s := <-stoppedBy:
+		os.Exit(128 + int(s.(syscall.Signal)))
+	default:
+	}
+	if bus.Interrupted() {
+		os.Exit(128 + int(syscall.SIGINT))
 	}
 }

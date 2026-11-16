@@ -16,6 +16,7 @@ import (
 	"github.com/anchore/bubbly"
 	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/tui"
 	"github.com/wagoodman/dive/dive"
+	"github.com/wagoodman/dive/internal/bus"
 	"github.com/wagoodman/dive/internal/bus/event"
 	"github.com/wagoodman/dive/internal/bus/event/payload"
 )
@@ -100,6 +101,8 @@ func TestProgressUI_interruptSkipsTUI(t *testing.T) {
 
 	m.program.Send(tea.KeyMsg{Type: tea.KeyCtrlC})
 	require.Eventually(t, m.interrupted.Load, time.Second, 10*time.Millisecond)
+	// main exits 130 on this, like a ctrl-c outside raw mode
+	assert.True(t, bus.Interrupted())
 
 	// the explore event queued behind the ctrl-c releases the publisher without starting gocui (which would need a
 	// terminal here)
