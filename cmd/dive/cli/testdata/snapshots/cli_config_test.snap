@@ -92,7 +92,7 @@ keybinding:
   toggle-removed-files: 'ctrl+r'
 
   # toggle visibility of modified files (file view) (env: DIVE_KEYBINDING_TOGGLE_MODIFIED_FILES)
-  toggle-modified-files: 'ctrl+m'
+  toggle-modified-files: 'ctrl+n'
 
   # toggle visibility of unmodified files (file view) (env: DIVE_KEYBINDING_TOGGLE_UNMODIFIED_FILES)
   toggle-unmodified-files: 'ctrl+u'

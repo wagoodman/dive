@@ -291,7 +291,7 @@ Key Binding                                | Description
 <kbd>Ctrl + Space</kbd>                    | Filetree view: collapse/uncollapse all directories
 <kbd>Ctrl + A</kbd>                        | Filetree view: show/hide added files
 <kbd>Ctrl + R</kbd>                        | Filetree view: show/hide removed files
-<kbd>Ctrl + M</kbd>                        | Filetree view: show/hide modified files
+<kbd>Ctrl + N</kbd>                        | Filetree view: show/hide modified files
 <kbd>Ctrl + U</kbd>                        | Filetree view: show/hide unmodified files
 <kbd>Ctrl + B</kbd>                        | Filetree view: show/hide file attributes
 <kbd>Ctrl + O</kbd>                        | Filetree view: toggle sort order
@@ -341,7 +341,7 @@ keybinding:
   toggle-collapse-all-dir: ctrl+space
   toggle-added-files: ctrl+a
   toggle-removed-files: ctrl+r
-  toggle-modified-files: ctrl+m
+  toggle-modified-files: ctrl+n
   toggle-unmodified-files: ctrl+u
   toggle-filetree-attributes: ctrl+b
   toggle-sort-order: ctrl+o
