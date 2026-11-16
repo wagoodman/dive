@@ -3,6 +3,7 @@ package dive
 import (
 	"archive/tar"
 	"context"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -30,18 +31,25 @@ func TestAnalyze_Efficiency(t *testing.T) {
 			},
 		},
 		{
-			// a removed file is wasted at its original size. A removed dir is one occurrence sized as everything
-			// under it (x + nested/y = 1100), which lowers the score but is never listed as waste
+			// a removed file is wasted at its original size, and so is every file under a removed dir, even when
+			// the dir is made again later
 			fixture:    "file-and-dir-whiteouts",
-			efficiency: 2275.0 / 2675.0,
+			efficiency: 75.0 / 1575.0,
 			inefficiencies: []Inefficiency{
+				{Path: "/data/olddir/nested/y", Count: 2, SizeBytes: 600},
+				{Path: "/data/olddir/x", Count: 2, SizeBytes: 500},
 				{Path: "/data/remove.txt", Count: 2, SizeBytes: 400},
 			},
 		},
 		{
-			// opaque whiteouts are ignored, so the hidden lower files are not waste
+			// an opaque dir removes the lower files it hides
 			fixture:    "opaque-whiteout-dir",
-			efficiency: 1,
+			efficiency: 55.0 / 655.0,
+			inefficiencies: []Inefficiency{
+				{Path: "/etc/app/sub/c.conf", Count: 2, SizeBytes: 300},
+				{Path: "/etc/app/b.conf", Count: 2, SizeBytes: 200},
+				{Path: "/etc/app/a.conf", Count: 2, SizeBytes: 100},
+			},
 		},
 		{
 			// a whiteout of a path no lower layer has is skipped, the rest of the layer still counts
@@ -93,6 +101,62 @@ func TestAnalyze_EmptyPathsAreNotWaste(t *testing.T) {
 	assert.Empty(t, analysis.Inefficiencies)
 	assert.Zero(t, analysis.WastedBytes)
 	assert.Equal(t, 1.0, analysis.Efficiency)
+}
+
+func TestAnalyze_RemovedDirs(t *testing.T) {
+	base := []imagefixture.Entry{
+		{Name: "data/", Type: tar.TypeDir},
+		{Name: "data/tmp/", Type: tar.TypeDir},
+		{Name: "data/tmp/a", Content: strings.Repeat("a", 1000)},
+		{Name: "data/tmp/b", Content: strings.Repeat("b", 1000)},
+	}
+	tests := []struct {
+		name  string
+		upper []imagefixture.Entry
+		// wasted maps each removed path to its wasted bytes
+		wasted map[string]uint64
+	}{
+		{
+			name:   "dir whiteout",
+			upper:  []imagefixture.Entry{{Name: "data/", Type: tar.TypeDir}, {Name: "data/.wh.tmp"}},
+			wasted: map[string]uint64{"/data/tmp/a": 1000, "/data/tmp/b": 1000},
+		},
+		{
+			name: "opaque dir keeps what the layer adds back",
+			upper: []imagefixture.Entry{
+				{Name: "data/", Type: tar.TypeDir},
+				{Name: "data/tmp/", Type: tar.TypeDir},
+				{Name: "data/tmp/.wh..wh..opq"},
+				{Name: "data/tmp/a", Content: "A"},
+			},
+			wasted: map[string]uint64{"/data/tmp/a": 1001, "/data/tmp/b": 1000},
+		},
+		{
+			name: "dir replaced by a symlink",
+			upper: []imagefixture.Entry{
+				{Name: "data/", Type: tar.TypeDir},
+				{Name: "data/tmp", Type: tar.TypeSymlink, Linkname: "/tmp"},
+			},
+			wasted: map[string]uint64{"/data/tmp/a": 1000, "/data/tmp/b": 1000},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			img := imagefixture.LoadSpec(t, imagefixture.Spec{
+				Format: imagefixture.OCISave,
+				Layers: [][]imagefixture.Entry{base, tt.upper},
+			})
+			analysis, err := Analyze(context.Background(), "spec", img)
+			require.NoError(t, err)
+
+			got := map[string]uint64{}
+			for _, ineff := range analysis.Inefficiencies {
+				got[ineff.Path] = ineff.SizeBytes
+			}
+			assert.Equal(t, tt.wasted, got)
+			assert.Less(t, analysis.Efficiency, 1.0)
+		})
+	}
 }
 
 func TestAnalyze_SingleLayer(t *testing.T) {

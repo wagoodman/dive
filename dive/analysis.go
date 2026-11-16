@@ -135,55 +135,62 @@ type pathEfficiency struct {
 //  1. files duplicated across layers discount the score, weighted by file size
 //  2. removed files discount the score, weighted by the original file size
 //
-// It walks the leaf paths of every layer's own tree. A whiteout counts as an occurrence of the path it removes,
-// sized from the squashed tree of the layers below it: a removed directory is the size of everything under it,
-// a removed file is 0 (its earlier occurrence already carries the size). Opaque whiteout markers are ignored, so
-// the lower files they hide are not counted as removed.
+// It walks the leaf paths of every layer's own tree. A path a layer removes counts as a 0 byte occurrence of that
+// path (its earlier occurrence already carries the size). Removal is anything that makes a path seen in a lower
+// layer disappear from this layer's squashed tree: a whiteout of the file or of a parent dir, an opaque dir, or a
+// file or link put in place of a parent dir.
 func imageEfficiency(ctx context.Context, img *image.Image) (float64, []Inefficiency, error) {
 	byPath := make(map[file.Path]*pathEfficiency)
 	var order []file.Path
+
+	record := func(p file.Path, size int64) {
+		data, ok := byPath[p]
+		if !ok {
+			data = &pathEfficiency{min: size}
+			byPath[p] = data
+			order = append(order, p)
+		}
+		data.count++
+		data.cumulative += size
+		data.min = min(data.min, size)
+	}
 
 	for i, l := range img.Layers {
 		if err := ctx.Err(); err != nil {
 			return 0, nil, err
 		}
-		err := layertree.Walk(l.Tree, layertree.OpaqueMarker, func(n *filenode.FileNode, leaf bool) error {
-			if !leaf {
-				return nil
-			}
+		// paths of this layer that may hide lower paths: whiteout targets, opaque dirs and non-dirs
+		var roots []file.Path
+		err := layertree.Walk(l.Tree, nil, func(n *filenode.FileNode, leaf bool) error {
 			p := n.RealPath
-			var size int64
 			if p.IsWhiteout() {
+				// for an opaque marker this is the dir it sits in
 				target, err := p.UnWhiteoutPath()
 				if err != nil {
 					return err
 				}
-				var found bool
-				if i > 0 {
-					size, found = removedSize(img, img.Layers[i-1].SquashedTree, target)
-				}
-				if !found {
-					// nothing below this layer has the path, so the whiteout removes nothing
-					return nil
-				}
-				p = target
-			} else {
-				size = fileSize(img, n.Reference)
+				roots = append(roots, target)
+				return nil
 			}
-
-			data, ok := byPath[p]
-			if !ok {
-				data = &pathEfficiency{min: size}
-				byPath[p] = data
-				order = append(order, p)
+			if !leaf {
+				return nil
 			}
-			data.count++
-			data.cumulative += size
-			data.min = min(data.min, size)
+			if n.FileType != file.TypeDirectory {
+				roots = append(roots, p)
+			}
+			record(p, fileSize(img, n.Reference))
 			return nil
 		})
 		if err != nil {
 			return 0, nil, fmt.Errorf("unable to walk layer %d: %w", i, err)
+		}
+		if i == 0 {
+			continue
+		}
+		for _, p := range removedPaths(img.Layers[i-1].SquashedTree, l.SquashedTree, roots) {
+			if _, ok := byPath[p]; ok {
+				record(p, 0)
+			}
 		}
 	}
 
@@ -214,28 +221,31 @@ func imageEfficiency(ctx context.Context, img *image.Image) (float64, []Ineffici
 	return score, inefficiencies, nil
 }
 
-// removedSize sizes what a whiteout of target removes from the lower squashed tree, reporting false when the lower
-// tree has no such path. Only directories have a size here: a removed file's bytes are already counted by the layer
-// that added it.
-func removedSize(img *image.Image, lower filetree.Reader, target file.Path) (int64, bool) {
-	t := lower.TreeReader()
-	n := t.Node(filenode.IDByPath(target))
-	if n == nil {
-		return 0, false
-	}
-	if n.(*filenode.FileNode).FileType != file.TypeDirectory {
-		return 0, true
-	}
-	var size int64
-	var sum func(node.Node)
-	sum = func(cur node.Node) {
-		size += fileSize(img, cur.(*filenode.FileNode).Reference)
-		for _, child := range t.Children(cur) {
-			sum(child)
+// removedPaths lists the paths at or under roots in the lower squashed tree that are gone from the upper one.
+func removedPaths(lower, upper filetree.Reader, roots []file.Path) []file.Path {
+	lt, ut := lower.TreeReader(), upper.TreeReader()
+	seen := make(map[file.Path]bool)
+	var removed []file.Path
+	var visit func(node.Node)
+	visit = func(n node.Node) {
+		p := n.(*filenode.FileNode).RealPath
+		if seen[p] {
+			return
+		}
+		seen[p] = true
+		if ut.Node(n.ID()) == nil {
+			removed = append(removed, p)
+		}
+		for _, child := range lt.Children(n) {
+			visit(child)
 		}
 	}
-	sum(n)
-	return size, true
+	for _, root := range roots {
+		if n := lt.Node(filenode.IDByPath(root)); n != nil {
+			visit(n)
+		}
+	}
+	return removed
 }
 
 // fileSize is the size the tar header recorded for ref, so a hardlink is 0 bytes (stereoscope describes an

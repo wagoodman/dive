@@ -160,9 +160,19 @@
   ],
   "image": {
     "sizeBytes": 1575,
-    "inefficientBytes": 400,
-    "efficiencyScore": 0.8504672897196262,
+    "inefficientBytes": 1500,
+    "efficiencyScore": 0.047619047619047616,
     "fileReference": [
+      {
+        "count": 2,
+        "sizeBytes": 600,
+        "file": "/data/olddir/nested/y"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 500,
+        "file": "/data/olddir/x"
+      },
       {
         "count": 2,
         "sizeBytes": 400,

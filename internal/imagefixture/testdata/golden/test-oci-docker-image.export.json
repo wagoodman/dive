@@ -4999,11 +4999,11 @@
   ],
   "image": {
     "sizeBytes": 4363240,
-    "inefficientBytes": 50845,
-    "efficiencyScore": 0.9930406165921993,
+    "inefficientBytes": 61014,
+    "efficiencyScore": 0.98834696234908,
     "fileReference": [
       {
-        "count": 2,
+        "count": 3,
         "sizeBytes": 20338,
         "file": "/root/example/somefile1.txt"
       },
@@ -5011,6 +5011,11 @@
         "count": 2,
         "sizeBytes": 20338,
         "file": "/root/saved.txt"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 10169,
+        "file": "/root/example/somefile2.txt"
       },
       {
         "count": 2,
