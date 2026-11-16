@@ -36,9 +36,12 @@ func TestPodmanProvider_macMachineSocket(t *testing.T) {
 
 	// nothing else may point at a socket: no CONTAINER_HOST, containers.conf or rootless socket
 	t.Setenv("CONTAINER_HOST", "")
-	prev := podmanConfigs
-	podmanConfigs = nil
-	t.Cleanup(func() { podmanConfigs = prev })
+	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
+	for _, f := range podmanConfigs() {
+		if _, err := os.Stat(f); err == nil {
+			t.Skip("a system containers.conf could point at another socket")
+		}
+	}
 	t.Cleanup(xdg.Reload)
 	t.Setenv("XDG_RUNTIME_DIR", t.TempDir())
 	xdg.Reload()

@@ -499,3 +499,37 @@ uri = "unix:///run/user/1000/podman/podman.sock"
 		})
 	}
 }
+
+func TestPodmanConfigSocket_severalUnixDestinations(t *testing.T) {
+	p := filepath.Join(t.TempDir(), "containers.conf")
+	require.NoError(t, os.WriteFile(p, []byte(`[engine.service_destinations.c]
+uri = "unix:///run/c.sock"
+[engine.service_destinations.a]
+uri = "unix:///run/a.sock"
+[engine.service_destinations.b]
+uri = "unix:///run/b.sock"
+[engine.service_destinations.d]
+uri = "unix:///run/d.sock"
+`), 0o600))
+	// without an active service the first by name wins, every time
+	for range 50 {
+		require.Equal(t, "unix:///run/a.sock", podmanConfigSocket(p))
+	}
+}
+
+func TestPodmanConfigs(t *testing.T) {
+	home := t.TempDir()
+	t.Setenv("XDG_CONFIG_HOME", home)
+	dropIns := filepath.Join(home, "containers", "containers.conf.d")
+	require.NoError(t, os.MkdirAll(dropIns, 0o700))
+	for _, name := range []string{"20-b.conf", "10-a.conf", "ignored.txt"} {
+		require.NoError(t, os.WriteFile(filepath.Join(dropIns, name), nil, 0o600))
+	}
+
+	got := podmanConfigs()
+	assert.Equal(t, []string{
+		filepath.Join(home, "containers", "containers.conf"),
+		filepath.Join(dropIns, "10-a.conf"),
+		filepath.Join(dropIns, "20-b.conf"),
+	}, got[len(got)-3:])
+}
