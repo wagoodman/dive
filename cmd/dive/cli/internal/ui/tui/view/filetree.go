@@ -496,7 +496,6 @@ func (v *FileTree) Layout(g *gocui.Gui, minX, minY, maxX, maxY int) error {
 }
 
 func (v *FileTree) RequestedSize(available int) *int {
-	// var requestedWidth = int(float64(available) * (1.0 - v.requestedWidthRatio))
-	// return &requestedWidth
-	return nil
+	requestedWidth := int(float64(available) * v.requestedWidthRatio)
+	return &requestedWidth
 }
