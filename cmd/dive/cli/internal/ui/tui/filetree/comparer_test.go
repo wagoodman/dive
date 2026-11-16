@@ -366,7 +366,18 @@ func TestFileInfo_Compare(t *testing.T) {
 	assert.Equal(t, Modified, link.Compare(retargeted, noHash(t)))
 	assert.Equal(t, Unmodified, link.Compare(link, noHash(t)), "links have no content to read")
 
+	// a setcap only changes the xattrs
+	capped := reg
+	capped.xattrs = xattrs(&tar.Header{PAXRecords: map[string]string{
+		"SCHILY.xattr.security.capability": "\x01\x00\x00\x02",
+		"mtime":                            "1",
+	}})
+	assert.Equal(t, map[string]string{"security.capability": "\x01\x00\x00\x02"}, capped.xattrs)
+	assert.Equal(t, Modified, reg.Compare(capped, noHash(t)))
+	assert.Equal(t, Modified, capped.Compare(reg, noHash(t)))
+
 	same := func(FileInfo) (uint64, bool) { return 1, true }
 	assert.Equal(t, Unmodified, reg.Compare(reg, same))
+	assert.Equal(t, Unmodified, capped.Compare(capped, same))
 	assert.Equal(t, Modified, reg.Compare(reg, func(FileInfo) (uint64, bool) { return 0, false }))
 }

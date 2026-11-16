@@ -2,6 +2,7 @@ package filetree
 
 import (
 	"archive/tar"
+	"maps"
 	"os"
 	"strings"
 
@@ -21,6 +22,8 @@ type FileInfo struct {
 	Uid      int
 	Gid      int
 	IsDir    bool
+	// xattrs are the extended attributes (e.g. file capabilities) from the tar PAX records, nil when there are none
+	xattrs map[string]string
 	// implicit marks a dir that has no entry of its own, it only exists as the parent of other entries
 	implicit bool
 	// ref points at the file in the image catalog, it is how content is read (and hashed) lazily
@@ -45,8 +48,23 @@ func newFileInfo(img *image.Image, ref *file.Reference) FileInfo {
 		Uid:      hdr.Uid,
 		Gid:      hdr.Gid,
 		IsDir:    fi.IsDir(),
+		xattrs:   xattrs(hdr),
 		ref:      ref,
 	}
+}
+
+// xattrs picks the extended attributes out of a tar header's PAX records
+func xattrs(hdr *tar.Header) map[string]string {
+	var x map[string]string
+	for k, v := range hdr.PAXRecords {
+		if name, ok := strings.CutPrefix(k, "SCHILY.xattr."); ok {
+			if x == nil {
+				x = make(map[string]string)
+			}
+			x[name] = v
+		}
+	}
+	return x
 }
 
 // Copy duplicates a FileInfo
@@ -85,7 +103,8 @@ func (data *FileInfo) Compare(other FileInfo, hash ContentHasher) DiffType {
 		data.Uid != other.Uid ||
 		data.Gid != other.Gid ||
 		data.Size != other.Size ||
-		data.Linkname != other.Linkname {
+		data.Linkname != other.Linkname ||
+		!maps.Equal(data.xattrs, other.xattrs) {
 		return Modified
 	}
 	if hash == nil || !data.hasContent() {
