@@ -257,3 +257,16 @@ func TestLoad_dockerHostTLSVerify(t *testing.T) {
 	_, err = Load(context.Background(), "docker://tomcat:9-jdk21-openjdk-slim-bullseye", Config{})
 	require.Error(t, err)
 }
+
+// regression for #359: an image the docker daemon already has is read from it, not pulled from Docker Hub again
+func TestLoad_dockerUsesLocalImage(t *testing.T) {
+	dir := dockerHostShortTempDir(t)
+	sock := filepath.Join(dir, "docker.sock")
+	d := newDockerHostDaemon(t)
+	dockerHostServeUnix(t, sock, d)
+	dockerHostUseConfig(t, filepath.Join(dir, ".docker"), "", nil)
+	t.Setenv("DOCKER_HOST", "unix://"+sock)
+
+	dockerHostLoad(t, "charity1475/app:latest")
+	assert.False(t, d.pulled, "a local image was pulled again")
+}
