@@ -1,7 +1,7 @@
 {
   "efficiency": "1",
   "sizeBytes": 2048,
-  "wastedUserPercent": "NaN",
+  "wastedUserPercent": "0",
   "evaluations": {
     "default": {
       "pass": true,

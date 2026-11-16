@@ -39,7 +39,7 @@ type evalGolden struct {
 }
 
 type ciGolden struct {
-	// floats are strings since a single layer image has a NaN user wasted percent
+	// floats are strings so they compare exactly
 	Efficiency        string                `json:"efficiency,omitempty"`
 	SizeBytes         uint64                `json:"sizeBytes,omitempty"`
 	UserSizeBytes     uint64                `json:"userSizeBytes,omitempty"`
