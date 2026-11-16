@@ -2,8 +2,18 @@ package source
 
 import (
 	"context"
+	"crypto/ecdsa"
+	"crypto/elliptic"
+	"crypto/rand"
+	"crypto/tls"
+	"crypto/x509"
+	"crypto/x509/pkix"
 	"encoding/json"
+	"encoding/pem"
 	"fmt"
+	"io"
+	"log"
+	"math/big"
 	"net"
 	"net/http"
 	"net/http/httptest"
@@ -13,6 +23,7 @@ import (
 	"strings"
 	"sync"
 	"testing"
+	"time"
 
 	cliconfig "github.com/docker/cli/cli/config"
 	ddocker "github.com/docker/cli/cli/context/docker"
@@ -194,4 +205,55 @@ func TestLoad_dockerAPIVersionNegotiation(t *testing.T) {
 	for _, v := range d.versions {
 		assert.Equal(t, "1.52", v)
 	}
+}
+
+// regression for #545: DOCKER_HOST=tcp://...:2376 with DOCKER_TLS_VERIFY=1 and no DOCKER_CERT_PATH, against a
+// --tlsverify daemon that wants a client cert. The ca.pem, cert.pem and key.pem in ~/.docker are what the docker
+// cli uses there (dive used to look in a literal "~/.docker").
+func TestLoad_dockerHostTLSVerify(t *testing.T) {
+	// client cert the daemon trusts
+	key, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	require.NoError(t, err)
+	tmpl := &x509.Certificate{
+		SerialNumber: big.NewInt(1),
+		Subject:      pkix.Name{CommonName: "client"},
+		NotBefore:    time.Now().Add(-time.Hour),
+		NotAfter:     time.Now().Add(time.Hour),
+		KeyUsage:     x509.KeyUsageDigitalSignature,
+		ExtKeyUsage:  []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth},
+	}
+	der, err := x509.CreateCertificate(rand.Reader, tmpl, tmpl, &key.PublicKey, key)
+	require.NoError(t, err)
+	clientCert, err := x509.ParseCertificate(der)
+	require.NoError(t, err)
+	clientCAs := x509.NewCertPool()
+	clientCAs.AddCert(clientCert)
+
+	srv := httptest.NewUnstartedServer(newDockerHostDaemon(t))
+	srv.TLS = &tls.Config{ClientAuth: tls.RequireAndVerifyClientCert, ClientCAs: clientCAs, MinVersion: tls.VersionTLS12}
+	srv.Config.ErrorLog = log.New(io.Discard, "", 0)
+	srv.StartTLS()
+	t.Cleanup(srv.Close)
+
+	configDir := t.TempDir()
+	dockerHostUseConfig(t, configDir, "", nil)
+	keyDER, err := x509.MarshalECPrivateKey(key)
+	require.NoError(t, err)
+	for name, b := range map[string]*pem.Block{
+		"ca.pem":   {Type: "CERTIFICATE", Bytes: srv.Certificate().Raw},
+		"cert.pem": {Type: "CERTIFICATE", Bytes: der},
+		"key.pem":  {Type: "EC PRIVATE KEY", Bytes: keyDER},
+	} {
+		require.NoError(t, os.WriteFile(filepath.Join(configDir, name), pem.EncodeToMemory(b), 0o600))
+	}
+	t.Setenv("DOCKER_HOST", "tcp://"+srv.Listener.Addr().String())
+	t.Setenv("DOCKER_TLS_VERIFY", "1")
+
+	dockerHostLoad(t, "tomcat:9-jdk21-openjdk-slim-bullseye")
+
+	// the daemon really does refuse a client without the cert
+	require.NoError(t, os.Remove(filepath.Join(configDir, "cert.pem")))
+	require.NoError(t, os.Remove(filepath.Join(configDir, "key.pem")))
+	_, err = Load(context.Background(), "docker://tomcat:9-jdk21-openjdk-slim-bullseye", Config{})
+	require.Error(t, err)
 }
