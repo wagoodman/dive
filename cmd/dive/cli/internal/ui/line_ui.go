@@ -108,9 +108,7 @@ func (n *LineUI) Handle(e partybus.Event) error {
 		// unlike the status lines this is nothing the logger says too, so it prints under -v as well
 		fmt.Fprintln(n.err, n.format.Notification.Render(text))
 	case event.Report:
-		if n.quiet {
-			return nil
-		}
+		// the report is the command's output, quiet only silences status on stderr
 		_, text, err := parser.ParseReport(e)
 		if err != nil {
 			log.WithFields("error", err, "event", fmt.Sprintf("%#v", e)).Warn("failed to parse event")

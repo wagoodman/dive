@@ -113,3 +113,12 @@ func TestLineUI_teardownDrainsNotifications(t *testing.T) {
 	require.NoError(t, u.Teardown(true))
 	assert.Contains(t, errOut.String(), "extract of /etc: boom")
 }
+
+func TestLineUI_quietStillPrintsReport(t *testing.T) {
+	var out, errOut bytes.Buffer
+	u := NewLineUI(tui.DefaultPreferences(), &out, true, 0)
+	u.err = &errOut
+	require.NoError(t, u.Handle(partybus.Event{Type: event.Report, Value: "FAIL [pass:1 fail:1 skip:1]"}))
+	assert.Equal(t, "FAIL [pass:1 fail:1 skip:1]\n", out.String())
+	assert.Empty(t, errOut.String())
+}
