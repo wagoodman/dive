@@ -2,18 +2,18 @@
 [Test_Archive_CI/fail - 1]
 Analysis:
   efficiency:        97.38 %
-  wastedBytes:       38430 bytes (38 kB)
-  userWastedPercent: 58.02 %
+  wastedBytes:       32025 bytes (32 kB)
+  userWastedPercent: 48.35 %
 
 Inefficient Files:
   Count  Wasted Space  File Path
   3      13 kB         /root/example/somefile1.txt
-  2      13 kB         /root/saved.txt
   2      6.4 kB        /root/example/somefile2.txt
   2      6.4 kB        /root/example/somefile3.txt
+  2      6.4 kB        /root/saved.txt
 
 Evaluation:
-  FAIL  highestUserWastedPercent (too many bytes wasted, relative to the user bytes added (%-user-wasted-bytes=0.58 > threshold=0.1))
+  FAIL  highestUserWastedPercent (too many bytes wasted, relative to the user bytes added (%-user-wasted-bytes=0.48 > threshold=0.1))
   SKIP  highestWastedBytes (disabled)
   PASS  lowestEfficiency (0.9)
 

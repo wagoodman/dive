@@ -19,15 +19,15 @@ func TestAnalyze_Efficiency(t *testing.T) {
 		inefficiencies []Inefficiency
 	}{
 		{
-			// every copy counts toward the waste, the final whiteout of big.bin adds an occurrence of 0 bytes,
-			// and equal sizes are ordered by path
+			// every copy but the one left in the image is waste, all of big.bin since it ends up removed, and
+			// equal sizes are ordered by path
 			fixture:    "duplicate-files-across-layers",
 			efficiency: 4000.0 / 38000.0,
 			inefficiencies: []Inefficiency{
 				{Path: "/var/cache/big.bin", Count: 4, SizeBytes: 30000},
-				{Path: "/var/cache/medium.bin", Count: 2, SizeBytes: 6000},
-				{Path: "/var/cache/tie-a", Count: 2, SizeBytes: 1000},
-				{Path: "/var/cache/tie-b", Count: 2, SizeBytes: 1000},
+				{Path: "/var/cache/medium.bin", Count: 2, SizeBytes: 3000},
+				{Path: "/var/cache/tie-a", Count: 2, SizeBytes: 500},
+				{Path: "/var/cache/tie-b", Count: 2, SizeBytes: 500},
 			},
 		},
 		{
@@ -54,18 +54,15 @@ func TestAnalyze_Efficiency(t *testing.T) {
 		{
 			// a whiteout of a path no lower layer has is skipped, the rest of the layer still counts
 			fixture:    "whiteout-missing-target",
-			efficiency: 150.0 / 300.0,
+			efficiency: 200.0 / 300.0,
 			inefficiencies: []Inefficiency{
-				{Path: "/opt/a", Count: 2, SizeBytes: 250},
+				{Path: "/opt/a", Count: 2, SizeBytes: 100},
 			},
 		},
 		{
-			// hardlinks are 0 bytes, as in the tar header
+			// hardlinks are 0 bytes, as in the tar header, and a file over a symlink leaves no bytes behind
 			fixture:    "hardlink-and-symlink",
-			efficiency: 1400.0 / 1411.0,
-			inefficiencies: []Inefficiency{
-				{Path: "/usr/bin/tool-rel", Count: 2, SizeBytes: 11},
-			},
+			efficiency: 1,
 		},
 	}
 	for _, tt := range tests {
@@ -81,6 +78,58 @@ func TestAnalyze_Efficiency(t *testing.T) {
 				wasted += ineff.SizeBytes
 			}
 			assert.Equal(t, wasted, analysis.WastedBytes)
+		})
+	}
+}
+
+func TestAnalyze_WasteIsWhatTheFinalImageCannotReach(t *testing.T) {
+	data := func(content string) []imagefixture.Entry {
+		return []imagefixture.Entry{{Name: "data", Content: content}}
+	}
+	tests := []struct {
+		name          string
+		layers        [][]imagefixture.Entry
+		wasted        uint64
+		efficiency    float64
+		wastedPercent float64
+	}{
+		{
+			name:          "rewritten unchanged",
+			layers:        [][]imagefixture.Entry{data(strings.Repeat("a", 1000)), data(strings.Repeat("a", 1000))},
+			wasted:        1000,
+			efficiency:    0.5,
+			wastedPercent: 1,
+		},
+		{
+			name:          "grown",
+			layers:        [][]imagefixture.Entry{data(strings.Repeat("a", 10)), data(strings.Repeat("a", 100))},
+			wasted:        10,
+			efficiency:    100.0 / 110.0,
+			wastedPercent: 0.1,
+		},
+		{
+			name: "removed then added back",
+			layers: [][]imagefixture.Entry{
+				data(strings.Repeat("a", 1000)),
+				{{Name: ".wh.data"}},
+				data(strings.Repeat("b", 1000)),
+			},
+			wasted:        1000,
+			efficiency:    0.5,
+			wastedPercent: 1,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			img := imagefixture.LoadSpec(t, imagefixture.Spec{Format: imagefixture.OCISave, Layers: tt.layers})
+			analysis, err := Analyze(context.Background(), "spec", img)
+			require.NoError(t, err)
+
+			require.Len(t, analysis.Inefficiencies, 1)
+			assert.Equal(t, tt.wasted, analysis.Inefficiencies[0].SizeBytes)
+			assert.Equal(t, tt.wasted, analysis.WastedBytes)
+			assert.InDelta(t, tt.efficiency, analysis.Efficiency, 1e-12)
+			assert.InDelta(t, tt.wastedPercent, analysis.WastedUserPercent, 1e-12)
 		})
 	}
 }
@@ -129,7 +178,7 @@ func TestAnalyze_RemovedDirs(t *testing.T) {
 				{Name: "data/tmp/.wh..wh..opq"},
 				{Name: "data/tmp/a", Content: "A"},
 			},
-			wasted: map[string]uint64{"/data/tmp/a": 1001, "/data/tmp/b": 1000},
+			wasted: map[string]uint64{"/data/tmp/a": 1000, "/data/tmp/b": 1000},
 		},
 		{
 			name: "dir replaced by a symlink",

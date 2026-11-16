@@ -49,12 +49,12 @@ type Layer struct {
 	Size    uint64
 }
 
-// Inefficiency is a path that shows up in more than one layer (duplicated, overwritten or removed).
+// Inefficiency is a path that wastes bytes because a later layer overwrote or removed it.
 type Inefficiency struct {
 	Path string
-	// Count is how many layers the path shows up in (as a file or a whiteout)
+	// Count is how many layers the path shows up in (added or removed)
 	Count int
-	// SizeBytes is the cumulative size of every occurrence
+	// SizeBytes is the bytes wasted on the path: every copy layers added minus the copy left in the final image
 	SizeBytes uint64
 }
 
@@ -126,19 +126,24 @@ func layerInfo(img *image.Image) []Layer {
 }
 
 type pathEfficiency struct {
-	count      int
+	// count is how many layers add or remove the path
+	count int
+	// cumulative is the size of every copy layers added
 	cumulative int64
-	min        int64
+	// final is the size of the copy the final image holds, 0 once removed
+	final int64
 }
 
-// imageEfficiency scores the image and lists paths found in more than one layer. Loosely:
-//  1. files duplicated across layers discount the score, weighted by file size
-//  2. removed files discount the score, weighted by the original file size
+// imageEfficiency scores the image and lists the paths that waste bytes.
 //
-// It walks the leaf paths of every layer's own tree. A path a layer removes counts as a 0 byte occurrence of that
-// path (its earlier occurrence already carries the size). Removal is anything that makes a path seen in a lower
-// layer disappear from this layer's squashed tree: a whiteout of the file or of a parent dir, an opaque dir, or a
-// file or link put in place of a parent dir.
+// waste is defined per path as cumulative - final: every byte layers added for the path minus the bytes the final
+// image still holds there. An overwritten copy, a removed file and a file removed and added back again each waste
+// exactly the bytes that are stuck in lower layers yet unreachable in the image. The score is the share of all
+// added bytes that are not wasted.
+//
+// It walks the leaf paths of every layer's own tree. A path a layer removes is an occurrence that sets its final
+// size to 0. Removal is anything that makes a path seen in a lower layer disappear from this layer's squashed tree:
+// a whiteout of the file or of a parent dir, an opaque dir, or a file or link put in place of a parent dir.
 func imageEfficiency(ctx context.Context, img *image.Image) (float64, []Inefficiency, error) {
 	byPath := make(map[file.Path]*pathEfficiency)
 	var order []file.Path
@@ -146,13 +151,13 @@ func imageEfficiency(ctx context.Context, img *image.Image) (float64, []Ineffici
 	record := func(p file.Path, size int64) {
 		data, ok := byPath[p]
 		if !ok {
-			data = &pathEfficiency{min: size}
+			data = &pathEfficiency{}
 			byPath[p] = data
 			order = append(order, p)
 		}
 		data.count++
 		data.cumulative += size
-		data.min = min(data.min, size)
+		data.final = size
 	}
 
 	for i, l := range img.Layers {
@@ -188,21 +193,22 @@ func imageEfficiency(ctx context.Context, img *image.Image) (float64, []Ineffici
 			continue
 		}
 		for _, p := range removedPaths(img.Layers[i-1].SquashedTree, l.SquashedTree, roots) {
-			if _, ok := byPath[p]; ok {
-				record(p, 0)
+			if data, ok := byPath[p]; ok {
+				data.count++
+				data.final = 0
 			}
 		}
 	}
 
-	var minimum, discovered int64
+	var wasted, discovered int64
 	var inefficiencies []Inefficiency
 	for _, p := range order {
 		data := byPath[p]
-		minimum += data.min
+		waste := data.cumulative - data.final
+		wasted += waste
 		discovered += data.cumulative
-		// a path with no bytes in any layer wastes nothing, however often it repeats
-		if data.count > 1 && data.cumulative > 0 {
-			inefficiencies = append(inefficiencies, Inefficiency{Path: string(p), Count: data.count, SizeBytes: uint64(data.cumulative)})
+		if waste > 0 {
+			inefficiencies = append(inefficiencies, Inefficiency{Path: string(p), Count: data.count, SizeBytes: uint64(waste)})
 		}
 	}
 
@@ -216,7 +222,7 @@ func imageEfficiency(ctx context.Context, img *image.Image) (float64, []Ineffici
 
 	score := 1.0
 	if discovered != 0 {
-		score = float64(minimum) / float64(discovered)
+		score = float64(discovered-wasted) / float64(discovered)
 	}
 	return score, inefficiencies, nil
 }

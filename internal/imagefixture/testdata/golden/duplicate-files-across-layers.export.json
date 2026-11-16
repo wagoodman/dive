@@ -219,7 +219,7 @@
   ],
   "image": {
     "sizeBytes": 38000,
-    "inefficientBytes": 38000,
+    "inefficientBytes": 34000,
     "efficiencyScore": 0.10526315789473684,
     "fileReference": [
       {
@@ -229,17 +229,17 @@
       },
       {
         "count": 2,
-        "sizeBytes": 6000,
+        "sizeBytes": 3000,
         "file": "/var/cache/medium.bin"
       },
       {
         "count": 2,
-        "sizeBytes": 1000,
+        "sizeBytes": 500,
         "file": "/var/cache/tie-a"
       },
       {
         "count": 2,
-        "sizeBytes": 1000,
+        "sizeBytes": 500,
         "file": "/var/cache/tie-b"
       }
     ]

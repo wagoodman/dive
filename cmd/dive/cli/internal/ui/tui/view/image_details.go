@@ -81,7 +81,7 @@ func (v *ImageDetails) Setup(body, header *gocui.View) error {
 // 3. a list of inefficient file allocations
 func (v *ImageDetails) Render() error {
 	analysisTemplate := "%5s  %12s  %-s\n"
-	inefficiencyReport := fmt.Sprintf(format.Header(analysisTemplate), "Count", "Total Space", "Path")
+	inefficiencyReport := fmt.Sprintf(format.Header(analysisTemplate), "Count", "Wasted Space", "Path")
 
 	var wastedSpace uint64
 	// inefficiencies are already sorted largest first

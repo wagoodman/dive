@@ -37,7 +37,7 @@ func Test_Evaluator(t *testing.T) {
 			name:          "allPass",
 			efficiency:    "0.9",
 			wastedBytes:   "50kB",
-			wastedPercent: "0.6",
+			wastedPercent: "0.5",
 			expectedPass:  true,
 			expectedResult: map[string]RuleStatus{
 				"lowestEfficiency":         RulePassed,
@@ -61,7 +61,7 @@ func Test_Evaluator(t *testing.T) {
 			name:          "mixedResults",
 			efficiency:    "0.9",
 			wastedBytes:   "1B",
-			wastedPercent: "0.6",
+			wastedPercent: "0.5",
 			expectedPass:  false,
 			expectedResult: map[string]RuleStatus{
 				"lowestEfficiency":         RulePassed,

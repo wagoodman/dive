@@ -170,18 +170,18 @@
   ],
   "image": {
     "sizeBytes": 5089,
-    "inefficientBytes": 30,
-    "efficiencyScore": 0.9952839457653763,
+    "inefficientBytes": 17,
+    "efficiencyScore": 0.9966594615838082,
     "fileReference": [
-      {
-        "count": 2,
-        "sizeBytes": 19,
-        "file": "/app/main.txt"
-      },
       {
         "count": 2,
         "sizeBytes": 11,
         "file": "/etc/os-release"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 6,
+        "file": "/app/main.txt"
       }
     ]
   }

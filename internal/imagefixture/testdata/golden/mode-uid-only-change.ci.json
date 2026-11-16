@@ -2,15 +2,15 @@
   "efficiency": "0.5",
   "sizeBytes": 58,
   "userSizeBytes": 29,
-  "wastedBytes": 58,
-  "wastedUserPercent": "2",
+  "wastedBytes": 29,
+  "wastedUserPercent": "1",
   "evaluations": {
     "default": {
       "pass": false,
       "rules": {
         "highestUserWastedPercent": {
           "status": "FAIL",
-          "message": "too many bytes wasted, relative to the user bytes added (%-user-wasted-bytes=2.00 \u003e threshold=0.1)"
+          "message": "too many bytes wasted, relative to the user bytes added (%-user-wasted-bytes=1.00 \u003e threshold=0.1)"
         },
         "highestWastedBytes": {
           "status": "SKIP",
@@ -21,14 +21,14 @@
           "message": "image efficiency is too low (efficiency=0.50 \u003c threshold=0.9)"
         }
       },
-      "report": "Analysis:\n  efficiency:        50.00 %\n  wastedBytes:       58 bytes (58 B)\n  userWastedPercent: 200.00 %\n\nInefficient Files:\n  Count  Wasted Space  File Path\n  2      36 B          /app/run.sh\n  2      12 B          /app/owned\n  2      10 B          /app/same\n\nEvaluation:\n  FAIL  highestUserWastedPercent (too many bytes wasted, relative to the user bytes added (%-user-wasted-bytes=2.00 \u003e threshold=0.1))\n  SKIP  highestWastedBytes (disabled)\n  FAIL  lowestEfficiency (image efficiency is too low (efficiency=0.50 \u003c threshold=0.9))\n\nFAIL [fail:2 skip:1]"
+      "report": "Analysis:\n  efficiency:        50.00 %\n  wastedBytes:       29 bytes (29 B)\n  userWastedPercent: 100.00 %\n\nInefficient Files:\n  Count  Wasted Space  File Path\n  2      18 B          /app/run.sh\n  2      6 B           /app/owned\n  2      5 B           /app/same\n\nEvaluation:\n  FAIL  highestUserWastedPercent (too many bytes wasted, relative to the user bytes added (%-user-wasted-bytes=1.00 \u003e threshold=0.1))\n  SKIP  highestWastedBytes (disabled)\n  FAIL  lowestEfficiency (image efficiency is too low (efficiency=0.50 \u003c threshold=0.9))\n\nFAIL [fail:2 skip:1]"
     },
     "dive-ci": {
       "pass": false,
       "rules": {
         "highestUserWastedPercent": {
           "status": "FAIL",
-          "message": "too many bytes wasted, relative to the user bytes added (%-user-wasted-bytes=2.00 \u003e threshold=0.5)"
+          "message": "too many bytes wasted, relative to the user bytes added (%-user-wasted-bytes=1.00 \u003e threshold=0.5)"
         },
         "highestWastedBytes": {
           "status": "PASS",
@@ -39,7 +39,7 @@
           "message": "image efficiency is too low (efficiency=0.50 \u003c threshold=0.95)"
         }
       },
-      "report": "Analysis:\n  efficiency:        50.00 %\n  wastedBytes:       58 bytes (58 B)\n  userWastedPercent: 200.00 %\n\nInefficient Files:\n  Count  Wasted Space  File Path\n  2      36 B          /app/run.sh\n  2      12 B          /app/owned\n  2      10 B          /app/same\n\nEvaluation:\n  FAIL  highestUserWastedPercent (too many bytes wasted, relative to the user bytes added (%-user-wasted-bytes=2.00 \u003e threshold=0.5))\n  PASS  highestWastedBytes (20Mb)\n  FAIL  lowestEfficiency (image efficiency is too low (efficiency=0.50 \u003c threshold=0.95))\n\nFAIL [pass:1 fail:2]"
+      "report": "Analysis:\n  efficiency:        50.00 %\n  wastedBytes:       29 bytes (29 B)\n  userWastedPercent: 100.00 %\n\nInefficient Files:\n  Count  Wasted Space  File Path\n  2      18 B          /app/run.sh\n  2      6 B           /app/owned\n  2      5 B           /app/same\n\nEvaluation:\n  FAIL  highestUserWastedPercent (too many bytes wasted, relative to the user bytes added (%-user-wasted-bytes=1.00 \u003e threshold=0.5))\n  PASS  highestWastedBytes (20Mb)\n  FAIL  lowestEfficiency (image efficiency is too low (efficiency=0.50 \u003c threshold=0.95))\n\nFAIL [pass:1 fail:2]"
     }
   }
 }

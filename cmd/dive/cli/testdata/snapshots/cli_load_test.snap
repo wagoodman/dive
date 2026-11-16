@@ -90,15 +90,15 @@ Evaluating image              [rules: 3]
 
 Analysis:
   efficiency:        97.38 %
-  wastedBytes:       38430 bytes (38 kB)
-  userWastedPercent: 58.02 %
+  wastedBytes:       32025 bytes (32 kB)
+  userWastedPercent: 48.35 %
 
 Inefficient Files:
   Count  Wasted Space  File Path
   3      13 kB         /root/example/somefile1.txt
-  2      13 kB         /root/saved.txt
   2      6.4 kB        /root/example/somefile2.txt
   2      6.4 kB        /root/example/somefile3.txt
+  2      6.4 kB        /root/saved.txt
 
 Evaluation:
   PASS  highestUserWastedPercent (0.90)
@@ -116,15 +116,15 @@ Evaluating image              [rules: 3]
 
 Analysis:
   efficiency:        97.38 %
-  wastedBytes:       38430 bytes (38 kB)
-  userWastedPercent: 58.02 %
+  wastedBytes:       32025 bytes (32 kB)
+  userWastedPercent: 48.35 %
 
 Inefficient Files:
   Count  Wasted Space  File Path
   3      13 kB         /root/example/somefile1.txt
-  2      13 kB         /root/saved.txt
   2      6.4 kB        /root/example/somefile2.txt
   2      6.4 kB        /root/example/somefile3.txt
+  2      6.4 kB        /root/saved.txt
 
 Evaluation:
   PASS  highestUserWastedPercent (0.90)
