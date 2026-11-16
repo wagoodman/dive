@@ -48,6 +48,11 @@ func (c *CI) PostLoad() error {
 		return nil
 	}
 
+	// only the default file is optional, a path the user gave has to exist
+	if c.ConfigPath != "" && c.ConfigPath != defaultCIConfigPath && !fileExists(c.ConfigPath) {
+		return fmt.Errorf("CI config file does not exist: %s", c.ConfigPath)
+	}
+
 	if c.ConfigPath != "" {
 		if fileExists(c.ConfigPath) {
 			// if a config file is provided, load it and override any values provided in the application config.

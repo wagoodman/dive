@@ -42,6 +42,19 @@ func TestCI_PostLoad_rulesOnlyInCIMode(t *testing.T) {
 	require.Error(t, c.Rules.PostLoad())
 }
 
+func TestCI_PostLoad_missingConfigPath(t *testing.T) {
+	c := DefaultCI()
+	c.Enabled = true
+	c.ConfigPath = filepath.Join(t.TempDir(), "nope.yaml")
+	require.ErrorContains(t, c.PostLoad(), "does not exist")
+
+	// the default .dive-ci is optional
+	t.Chdir(t.TempDir())
+	c = DefaultCI()
+	c.Enabled = true
+	require.NoError(t, c.PostLoad())
+}
+
 func TestCI_PostLoad_keepsExplicitDisable(t *testing.T) {
 	// CI=true only sets the default, a loaded ci=false (flag, DIVE_CI or config) has to stick
 	t.Setenv("CI", "true")
