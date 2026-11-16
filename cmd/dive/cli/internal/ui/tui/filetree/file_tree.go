@@ -322,6 +322,15 @@ func (tree *FileTree) CompareAndMark(upper *FileTree, hash ContentHasher) ([]Pat
 			}
 		}
 
+		// a dir replaced by a file or link has nothing below it anymore
+		if pair.lowerNode.Data.FileInfo.IsDir && !pair.upperNode.Data.FileInfo.IsDir {
+			for _, child := range pair.lowerNode.Children {
+				if err := child.Remove(); err != nil {
+					return failed, err
+				}
+			}
+		}
+
 		// persist the upper's payload on the owning tree, unless the upper only implies a dir that is already there
 		if !pair.upperNode.Data.FileInfo.implicit || !pair.lowerNode.Data.FileInfo.IsDir {
 			pair.lowerNode.Data.FileInfo = *pair.upperNode.Data.FileInfo.Copy()

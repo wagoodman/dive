@@ -252,6 +252,29 @@ func TestComparer_Marks(t *testing.T) {
 	}
 }
 
+func TestComparer_DirReplacedByLink(t *testing.T) {
+	img := imagefixture.LoadSpec(t, imagefixture.Spec{Layers: [][]imagefixture.Entry{
+		{
+			{Name: "bin/", Type: tar.TypeDir},
+			{Name: "bin/sh", Content: "sh"},
+			{Name: "bin/ls", Content: "ls"},
+			{Name: "usr/", Type: tar.TypeDir},
+			{Name: "usr/bin/", Type: tar.TypeDir},
+		},
+		{
+			{Name: "bin", Type: tar.TypeSymlink, Linkname: "usr/bin"},
+		},
+	}})
+	tree, err := NewComparer(img).GetTree(NewTreeIndexKey(0, 0, 1, 1))
+	require.NoError(t, err)
+
+	bin, err := tree.GetNode("/bin")
+	require.NoError(t, err)
+	assert.Equal(t, Modified, bin.Data.DiffType)
+	assert.Equal(t, byte(tar.TypeSymlink), bin.Data.FileInfo.TypeFlag)
+	assert.Empty(t, bin.Children, "the old dir contents are gone")
+}
+
 func TestComparer_ImplicitDirKeepsLowerMetadata(t *testing.T) {
 	// layer 1 adds files under dirs it has no entry for
 	img := imagefixture.LoadSpec(t, imagefixture.Spec{Layers: [][]imagefixture.Entry{
