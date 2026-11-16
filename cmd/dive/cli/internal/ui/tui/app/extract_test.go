@@ -29,22 +29,28 @@ func readFile(t *testing.T, p string) string {
 	return string(b)
 }
 
+// also a regression for #687: extract wrote nothing from docker 25+ saves (OCI layout, blobs/sha256/<digest> layers)
 func TestExtract(t *testing.T) {
-	img := imagefixture.Load(t, "test-docker-image")
-	dirs(t)
+	// same Dockerfile, but the OCI save was built with a different README (somefile1.txt is a copy of it)
+	for fixture, size := range map[string]int{"test-docker-image": 6405, "test-oci-docker-image": 10169} {
+		t.Run(fixture, func(t *testing.T) {
+			img := imagefixture.Load(t, fixture)
+			dirs(t)
 
-	// layer 4 adds root/example/somefile1.txt (the chmod one)
-	require.NoError(t, extract(img, 4, "/root", "."))
+			// layer 4 adds root/example/somefile1.txt (the chmod one)
+			require.NoError(t, extract(img, 4, "/root", "."))
 
-	got, err := os.ReadFile(filepath.Join("root", "example", "somefile1.txt"))
-	require.NoError(t, err)
-	assert.Len(t, got, 6405)
+			got, err := os.ReadFile(filepath.Join("root", "example", "somefile1.txt"))
+			require.NoError(t, err)
+			assert.Len(t, got, size)
 
-	// the tree as of the selected layer (root/saved.txt is added by a later one), only under the selected path
-	_, err = os.Stat(filepath.Join("root", "saved.txt"))
-	assert.ErrorIs(t, err, os.ErrNotExist)
-	_, err = os.Stat("somefile.txt")
-	assert.ErrorIs(t, err, os.ErrNotExist)
+			// the tree as of the selected layer (root/saved.txt is added by a later one), only under the selected path
+			_, err = os.Stat(filepath.Join("root", "saved.txt"))
+			assert.ErrorIs(t, err, os.ErrNotExist)
+			_, err = os.Stat("somefile.txt")
+			assert.ErrorIs(t, err, os.ErrNotExist)
+		})
+	}
 }
 
 func TestExtract_SelectsPathNotPrefix(t *testing.T) {
