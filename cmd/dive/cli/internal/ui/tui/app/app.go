@@ -28,6 +28,11 @@ type app struct {
 func Run(ctx context.Context, c tui.Config) error {
 	var err error
 
+	// there is nothing to show (the layer and tree views need a selected layer)
+	if len(c.Analysis.Layers) == 0 {
+		return errors.New("image has no layers")
+	}
+
 	// it appears there is a race condition where termbox.Init() will
 	// block nearly indefinitely when running as the first process in
 	// a Docker container when started within ~25ms of container startup.

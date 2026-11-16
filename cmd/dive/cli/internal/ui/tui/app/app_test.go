@@ -14,6 +14,21 @@ import (
 	"github.com/wagoodman/dive/internal/imagefixture"
 )
 
+func TestRun_noLayers(t *testing.T) {
+	outputMode = gocui.OutputSimulator
+	t.Cleanup(func() { outputMode = gocui.OutputNormal })
+
+	img := imagefixture.LoadSpec(t, imagefixture.Spec{})
+	analysis, err := dive.Analyze(context.Background(), "empty", img)
+	require.NoError(t, err)
+
+	opts := options.DefaultApplication()
+	require.NoError(t, opts.UI.Keybinding.PostLoad())
+
+	err = Run(context.Background(), tui.Config{Analysis: analysis, Preferences: opts.TUIPreferences()})
+	require.EqualError(t, err, "image has no layers")
+}
+
 func TestRun_quitsOnCancel(t *testing.T) {
 	outputMode = gocui.OutputSimulator
 	t.Cleanup(func() { outputMode = gocui.OutputNormal })
