@@ -1,11 +1,13 @@
 package viewmodel
 
 import (
+	"archive/tar"
 	"context"
 	"flag"
 	"os"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -396,4 +398,88 @@ func TestFileTreeHideTypeWithFilter(t *testing.T) {
 	}
 
 	runTestCase(t, vm, width, height, regex)
+}
+
+// regression for #306: kaniko built and Windows images flooded the TUI with "path error at layer index ...: unable
+// to remove/add ..." and refused to start without --ignore-errors. The layers here whiteout paths no lower layer
+// has (as in the Windows images), repeat the same whiteout in later layers (as kaniko does for apt's auxfiles) and
+// carry a character device.
+func TestFileTreeWhiteoutsOfMissingPaths(t *testing.T) {
+	dir := func(name string) imagefixture.Entry { return imagefixture.Entry{Name: name, Type: tar.TypeDir} }
+	file := func(name string) imagefixture.Entry { return imagefixture.Entry{Name: name, Content: name} }
+	whiteout := func(name string) imagefixture.Entry { return imagefixture.Entry{Name: name} }
+	aptLists := []imagefixture.Entry{dir("var/"), dir("var/lib/"), dir("var/lib/apt/"), dir("var/lib/apt/lists/")}
+	scm := []imagefixture.Entry{dir("Files/"), dir("Files/Windows/"), dir("Files/Windows/System32/"), dir("Files/Windows/System32/LogFiles/"), dir("Files/Windows/System32/LogFiles/Scm/")}
+
+	layers := [][]imagefixture.Entry{
+		append(append(slices.Clone(aptLists),
+			dir("var/lib/apt/lists/auxfiles/"),
+			file("var/lib/apt/lists/auxfiles/a"),
+			file("var/lib/apt/lists/lock"),
+			dir("dev/"),
+			imagefixture.Entry{Name: "dev/null", Type: tar.TypeChar, Mode: 0o666},
+			dir("Hives/"),
+			file("Hives/DefaultUser_Delta"),
+		), scm...),
+		append(append(slices.Clone(aptLists),
+			whiteout("var/lib/apt/lists/.wh.auxfiles"),
+		), append(slices.Clone(scm),
+			whiteout("Files/Windows/System32/LogFiles/Scm/.wh.scm.evm"),
+			file("Files/Windows/System32/LogFiles/Scm/new.evm"),
+		)...),
+		append(slices.Clone(aptLists), whiteout("var/lib/apt/lists/.wh.auxfiles"), file("var/lib/apt/lists/two")),
+		append(slices.Clone(aptLists), whiteout("var/lib/apt/lists/.wh.auxfiles"), file("var/lib/apt/lists/three")),
+	}
+	img := imagefixture.LoadSpec(t, imagefixture.Spec{Format: imagefixture.OCISave, Compression: imagefixture.Gzip, Layers: layers})
+	analysis, err := dive.Analyze(context.Background(), "spec", img)
+	require.NoError(t, err)
+
+	vm, err := NewFileTreeViewModel(tui.Config{Analysis: analysis, Preferences: tui.DefaultPreferences()}, 0)
+	require.NoError(t, err)
+
+	// every layer selection the TUI can make builds a tree
+	for _, mode := range []LayerCompareMode{CompareSingleLayer, CompareAllLayers} {
+		for idx := range layers {
+			state := LayerSetState{LayerIndex: idx, CompareMode: mode}
+			require.NoError(t, vm.SetTreeByLayer(state.GetCompareIndexes()), "layer %d mode %d", idx, mode)
+		}
+	}
+
+	marks := func(t *testing.T, bottomStop, topStart, topStop int, want map[string]filetree.DiffType, absent ...string) {
+		t.Helper()
+		require.NoError(t, vm.SetTreeByLayer(0, bottomStop, topStart, topStop))
+		for p, d := range want {
+			n, err := vm.ModelTree.GetNode(p)
+			if assert.NoError(t, err, p) {
+				assert.Equal(t, d, n.Data.DiffType, p)
+			}
+		}
+		for _, p := range absent {
+			_, err := vm.ModelTree.GetNode(p)
+			assert.Error(t, err, p)
+		}
+	}
+
+	// the valid whiteout removes auxfiles, the one with no target is skipped and its sibling still counts
+	marks(t, 0, 1, 1, map[string]filetree.DiffType{
+		"/var/lib/apt/lists/auxfiles":                  filetree.Removed,
+		"/var/lib/apt/lists/auxfiles/a":                filetree.Removed,
+		"/var/lib/apt/lists/lock":                      filetree.Unmodified,
+		"/Files/Windows/System32/LogFiles/Scm/new.evm": filetree.Added,
+		"/dev/null":                filetree.Unmodified,
+		"/Hives/DefaultUser_Delta": filetree.Unmodified,
+	}, "/Files/Windows/System32/LogFiles/Scm/scm.evm")
+
+	// the repeated whiteout has nothing left to remove
+	marks(t, 1, 2, 2, map[string]filetree.DiffType{
+		"/var/lib/apt/lists/two":  filetree.Added,
+		"/var/lib/apt/lists/lock": filetree.Unmodified,
+	}, "/var/lib/apt/lists/auxfiles")
+
+	// aggregated: everything after the base layer at once
+	marks(t, 0, 1, 3, map[string]filetree.DiffType{
+		"/var/lib/apt/lists/auxfiles": filetree.Removed,
+		"/var/lib/apt/lists/two":      filetree.Added,
+		"/var/lib/apt/lists/three":    filetree.Added,
+	})
 }
