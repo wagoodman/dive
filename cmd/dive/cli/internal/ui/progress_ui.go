@@ -3,6 +3,7 @@
 package ui
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -62,6 +63,8 @@ type progressUI struct {
 	stopped      bool
 	subscription partybus.Unsubscribable
 	restoreLogs  func()
+	// runErr is why the program stopped on its own (it failed to start), set before exited is closed
+	runErr error
 	// interrupted is set by ctrl-c in the bubbletea loop and read by the event loop
 	interrupted atomic.Bool
 
@@ -101,7 +104,8 @@ func (m *progressUI) Setup(subscription partybus.Unsubscribable) error {
 		defer m.running.Done()
 		defer close(m.exited)
 		if _, err := m.program.Run(); err != nil {
-			log.Errorf("unable to start UI: %+v", err)
+			// logs are muted until teardown, which returns this as the command's error
+			m.runErr = fmt.Errorf("unable to start UI: %w", err)
 			bus.ExitWithInterrupt()
 		}
 	}()
@@ -226,7 +230,14 @@ func (m *progressUI) Teardown(force bool) error {
 	m.eventsLock.Lock()
 	events := m.finalizeEvents
 	m.eventsLock.Unlock()
-	return writeEvents(m.out, m.err, events...)
+	err := writeEvents(m.out, m.err, events...)
+
+	select {
+	case <-m.exited:
+		err = errors.Join(m.runErr, err)
+	default:
+	}
+	return err
 }
 
 // flushMsg is closed once bubbletea handles it, which is after every event sent before it

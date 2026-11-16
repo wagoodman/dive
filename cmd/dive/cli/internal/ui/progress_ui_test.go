@@ -2,10 +2,12 @@ package ui
 
 import (
 	"bytes"
+	"errors"
 	"strings"
 	"sync"
 	"sync/atomic"
 	"testing"
+	"testing/iotest"
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -134,6 +136,18 @@ func TestProgressUI_notificationPrintsWhileRunning(t *testing.T) {
 	assert.Equal(t, 1, strings.Count(out, "auto detected"))
 	assert.Contains(t, out, `\x1b]0;pwned\a`)
 	assert.NotContains(t, out, "\x1b]0;pwned")
+}
+
+func TestProgressUI_startFailureIsTheCommandError(t *testing.T) {
+	m := newProgressUI(tui.DefaultPreferences(), &bytes.Buffer{})
+	m.err = &bytes.Buffer{}
+	m.in = iotest.ErrReader(errors.New("no tty"))
+	require.NoError(t, m.Setup(nil))
+
+	<-m.exited
+	err := m.Teardown(true)
+	require.Error(t, err, "a UI that never started must not exit 0")
+	assert.Contains(t, err.Error(), "no tty")
 }
 
 func TestDrain(t *testing.T) {
