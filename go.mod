@@ -21,7 +21,7 @@ require (
 	github.com/google/go-containerregistry v0.22.1
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 	github.com/google/uuid v1.6.0
-	github.com/klauspost/compress v1.20.0
+	github.com/klauspost/compress v1.20.2
 	github.com/lunixbochs/vtclean v1.0.0
 	github.com/moby/moby/client v0.6.0
 	github.com/muesli/termenv v0.16.0
