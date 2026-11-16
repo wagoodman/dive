@@ -24,8 +24,10 @@ type Analysis struct {
 	Image string `yaml:"image" mapstructure:"-"`
 	// Source is the image source for references without a scheme. The config key predates the sources that aren't
 	// container engines (archives, registries) and stays for compatibility
-	Source   string `yaml:"container-engine" mapstructure:"container-engine"`
-	Platform string `yaml:"platform" mapstructure:"platform"`
+	Source string `yaml:"container-engine" mapstructure:"container-engine"`
+	// LegacySource is the "source" key configs used before "container-engine"
+	LegacySource string `yaml:"-" mapstructure:"source"`
+	Platform     string `yaml:"platform" mapstructure:"platform"`
 	// IgnoreErrors is deprecated and unused
 	IgnoreErrors     bool     `yaml:"ignore-errors" mapstructure:"ignore-errors"`
 	AvailableSources []string `yaml:"-" mapstructure:"-"`
@@ -56,6 +58,11 @@ func (c *Analysis) AddFlags(flags clio.FlagSet) {
 }
 
 func (c *Analysis) PostLoad() error {
+	// container-engine wins when both are set
+	if c.LegacySource != "" && c.Source == defaultSource {
+		log.Warn("the 'source' config key is deprecated, please rename it to 'container-engine'")
+		c.Source = c.LegacySource
+	}
 	if _, ok := source.Normalize(c.Source); !ok {
 		return fmt.Errorf("invalid image source %q (valid options: %s)", c.Source, strings.Join(c.AvailableSources, ", "))
 	}

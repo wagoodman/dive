@@ -31,6 +31,25 @@ func TestAnalysis_PostLoad(t *testing.T) {
 	}
 }
 
+func TestAnalysis_PostLoad_legacySource(t *testing.T) {
+	a := DefaultAnalysis()
+	a.LegacySource = "podman"
+	require.NoError(t, a.PostLoad())
+	assert.Equal(t, "podman", a.Source)
+
+	// container-engine wins over the legacy key
+	a = DefaultAnalysis()
+	a.Source = "docker-archive"
+	a.LegacySource = "podman"
+	require.NoError(t, a.PostLoad())
+	assert.Equal(t, "docker-archive", a.Source)
+
+	// the legacy value is validated like any other
+	a = DefaultAnalysis()
+	a.LegacySource = "nope"
+	require.ErrorContains(t, a.PostLoad(), "invalid image source")
+}
+
 func TestAnalysis_PostLoad_invalidSource(t *testing.T) {
 	a := DefaultAnalysis()
 	a.Source = "nope"
