@@ -39,6 +39,20 @@ func (c *CIRules) AddFlags(flags clio.FlagSet) {
 	flags.StringVarP(&c.HighestUserWastedPercentString, "highestUserWastedPercent", "", "(only valid with --ci given) highest allowable percentage of bytes wasted (as a ratio between 0-1), otherwise CI validation will fail.")
 }
 
+// ruleKey names one rule in each of its spellings, camel is also the flag name
+type ruleKey struct {
+	snake, camel string
+	value        *string
+}
+
+func (c *CIRules) keys() []ruleKey {
+	return []ruleKey{
+		{snake: "lowest-efficiency", camel: "lowestEfficiency", value: &c.LowestEfficiencyThresholdString},
+		{snake: "highest-wasted-bytes", camel: "highestWastedBytes", value: &c.HighestWastedBytesString},
+		{snake: "highest-user-wasted-percent", camel: "highestUserWastedPercent", value: &c.HighestUserWastedPercentString},
+	}
+}
+
 func (c CIRules) hasLegacyOptionsInUse() bool {
 	return c.LegacyLowestEfficiencyThresholdString != "" || c.LegacyHighestWastedBytesString != "" || c.LegacyHighestUserWastedPercentString != ""
 }

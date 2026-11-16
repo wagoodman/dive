@@ -42,6 +42,32 @@ func TestCI_PostLoad_rulesOnlyInCIMode(t *testing.T) {
 	require.Error(t, c.Rules.PostLoad())
 }
 
+// loadRulesFile runs a CI mode PostLoad against a rules file with the given contents
+func loadRulesFile(t *testing.T, contents string) CI {
+	t.Helper()
+	path := filepath.Join(t.TempDir(), ".dive-ci")
+	require.NoError(t, os.WriteFile(path, []byte(contents), 0o600))
+	c := DefaultCI()
+	c.Enabled = true
+	c.ConfigPath = path
+	require.NoError(t, c.PostLoad())
+	require.NoError(t, c.Rules.PostLoad())
+	return c
+}
+
+func TestCI_PostLoad_ruleFileKeys(t *testing.T) {
+	c := loadRulesFile(t, `rules:
+  lowest-efficiency: 0.99
+  highestWastedBytes: 10MB
+  highest-user-wasted-percent: disabled
+  highestUserWastedPercent: 0.5
+`)
+	assert.Equal(t, "0.99", c.Rules.LowestEfficiencyThresholdString)
+	assert.Equal(t, "10MB", c.Rules.HighestWastedBytesString)
+	// snake-case wins when both spellings are given
+	assert.Equal(t, "disabled", c.Rules.HighestUserWastedPercentString)
+}
+
 func TestCI_PostLoad_missingConfigPath(t *testing.T) {
 	c := DefaultCI()
 	c.Enabled = true

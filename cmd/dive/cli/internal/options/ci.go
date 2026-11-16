@@ -7,6 +7,8 @@ import (
 
 	"github.com/anchore/clio"
 	"gopkg.in/yaml.v3"
+
+	"github.com/wagoodman/dive/internal/log"
 )
 
 var _ interface {
@@ -62,36 +64,30 @@ func (c *CI) PostLoad() error {
 			if err != nil {
 				return fmt.Errorf("failed to read CI config file %s: %w", c.ConfigPath, err)
 			}
-			def := DefaultCIRules()
-			r := legacyRuleFile{
-				LowestEfficiencyThresholdString: def.LowestEfficiencyThresholdString,
-				HighestWastedBytesString:        def.HighestWastedBytesString,
-				HighestUserWastedPercentString:  def.HighestUserWastedPercentString,
+			var file struct {
+				Rules map[string]string `yaml:"rules"`
 			}
-			wrapper := struct {
-				Rules *legacyRuleFile `yaml:"rules"`
-			}{
-				Rules: &r,
-			}
-			if err := yaml.Unmarshal(yamlFile, &wrapper); err != nil {
+			if err := yaml.Unmarshal(yamlFile, &file); err != nil {
 				return fmt.Errorf("failed to unmarshal CI config file %s: %w", c.ConfigPath, err)
 			}
-			// TODO: should this be a deprecated use warning in the future?
-			c.Rules = CIRules{
-				LowestEfficiencyThresholdString: r.LowestEfficiencyThresholdString,
-				HighestWastedBytesString:        r.HighestWastedBytesString,
-				HighestUserWastedPercentString:  r.HighestUserWastedPercentString,
+			rules := DefaultCIRules()
+			for _, r := range rules.keys() {
+				// the file has always used camelCase keys, snake-case (like the app config) wins when both are set
+				for _, key := range []string{r.camel, r.snake} {
+					if v, ok := file.Rules[key]; ok {
+						*r.value = v
+					}
+					delete(file.Rules, key)
+				}
 			}
+			for key := range file.Rules {
+				log.Warnf("unknown rule %q in CI config file %s", key, c.ConfigPath)
+			}
+			c.Rules = rules
 		}
 	}
 
 	return nil
-}
-
-type legacyRuleFile struct {
-	LowestEfficiencyThresholdString string `yaml:"lowestEfficiency"`
-	HighestWastedBytesString        string `yaml:"highestWastedBytes"`
-	HighestUserWastedPercentString  string `yaml:"highestUserWastedPercent"`
 }
 
 func fileExists(path string) bool {
