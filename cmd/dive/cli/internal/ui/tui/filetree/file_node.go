@@ -82,7 +82,6 @@ func (node *FileNode) Copy(parent *FileNode) *FileNode {
 	newNode.Data.DiffType = node.Data.DiffType
 	for name, child := range node.Children {
 		newNode.Children[name] = child.Copy(newNode)
-		child.Parent = newNode
 	}
 	return newNode
 }
