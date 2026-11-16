@@ -57,8 +57,7 @@ func (c *Analysis) AddFlags(flags clio.FlagSet) {
 
 func (c *Analysis) PostLoad() error {
 	if _, ok := source.Normalize(c.Source); !ok {
-		log.Warnf("invalid image source: %s (valid options: %s), using default %q", c.Source, strings.Join(c.AvailableSources, ", "), defaultSource)
-		c.Source = defaultSource
+		return fmt.Errorf("invalid image source %q (valid options: %s)", c.Source, strings.Join(c.AvailableSources, ", "))
 	}
 	if c.Platform != "" {
 		if _, err := image.NewPlatform(c.Platform); err != nil {
