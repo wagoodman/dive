@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"slices"
+	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -380,6 +381,27 @@ func TestFileTreeNavigateWithEmptyFilterResult(t *testing.T) {
 	require.NoError(t, vm.CursorLeft())
 	require.NoError(t, vm.CursorRight())
 	require.NoError(t, vm.ToggleCollapse())
+}
+
+func TestFileTreeCursorDownStopsAtLastRow(t *testing.T) {
+	vm := initializeTestViewModel(t)
+
+	width, height := 100, 1000
+	vm.Setup(0, height)
+
+	require.NoError(t, vm.ToggleCollapseAll())
+	require.NoError(t, vm.Update(nil, width, height))
+	rows := len(strings.Split(strings.TrimSuffix(vm.ViewTree.String(false), "\n"), "\n"))
+	for vm.CursorDown() {
+	}
+	assert.Equal(t, rows-1, vm.TreeIndex)
+	assert.NotNil(t, vm.CurrentNode())
+
+	// every collapsed dir is unmodified in the first layer, so nothing is left to select
+	vm.ToggleShowDiffType(filetree.Unmodified)
+	require.NoError(t, vm.Update(nil, width, height))
+	vm.ResetCursor()
+	assert.False(t, vm.CursorDown(), "cursor moved past the end of an empty tree")
 }
 
 func TestFileTreeHideAddedRemovedModified(t *testing.T) {

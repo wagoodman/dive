@@ -130,8 +130,8 @@ func (tree *FileTree) VisibleSize() int {
 	}
 	visitEvaluator := func(node *FileNode) bool {
 		if node.Data.FileInfo.IsDir {
-			// we won't visit a collapsed dir, but we need to count it
-			if node.Data.ViewInfo.Collapsed {
+			// we won't visit a collapsed dir, but we need to count it (unless it's hidden)
+			if node.Data.ViewInfo.Collapsed && !node.Data.ViewInfo.Hidden {
 				size++
 			}
 			return !node.Data.ViewInfo.Collapsed && !node.Data.ViewInfo.Hidden
