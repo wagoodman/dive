@@ -12,7 +12,6 @@ import (
 	"github.com/spf13/afero"
 
 	"github.com/wagoodman/dive/internal/log"
-	"github.com/wagoodman/dive/internal/utils"
 )
 
 const (
@@ -48,7 +47,8 @@ func Build(ctx context.Context, engine string, args []string) (string, error) {
 	default:
 		return "", fmt.Errorf("cannot build with source %q (supported: %s, %s)", engine, Docker, Podman)
 	}
-	allArgs = utils.CleanArgs(append(allArgs, args...))
+	// user args go through untouched: an empty or space padded value is meaningful to the build
+	allArgs = append(allArgs, args...)
 
 	log.WithFields("cmd", strings.Join(append([]string{engine}, allArgs...), " ")).Trace("executing")
 	cmd := exec.CommandContext(ctx, engine, allArgs...)

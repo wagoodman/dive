@@ -235,16 +235,23 @@ func create(t testing.TB, fs afero.Fs, path, contents string) {
 	require.NoError(t, err, "Failed to write file: %s", path)
 }
 
-// fakeEngine puts an executable named engine on PATH that writes id to the --iidfile it is given
-func fakeEngine(t *testing.T, engine, id string) {
+// fakeEngine puts an executable named engine on PATH that writes id to the --iidfile it is given. It returns a func
+// reporting the args the engine was last run with (one per line).
+func fakeEngine(t *testing.T, engine, id string) func() []string {
 	t.Helper()
 	if runtime.GOOS == "windows" {
 		t.Skip("fake engine is a shell script")
 	}
 	dir := t.TempDir()
-	script := "#!/bin/sh\nwhile [ $# -gt 0 ]; do\n  if [ \"$1\" = \"--iidfile\" ]; then printf '" + id + "\\n' > \"$2\"; fi\n  shift\ndone\n"
+	argsFile := filepath.Join(dir, "args")
+	script := "#!/bin/sh\nprintf '%s\\n' \"$@\" > '" + argsFile + "'\nwhile [ $# -gt 0 ]; do\n  if [ \"$1\" = \"--iidfile\" ]; then printf '" + id + "\\n' > \"$2\"; fi\n  shift\ndone\n"
 	require.NoError(t, os.WriteFile(filepath.Join(dir, engine), []byte(script), 0o755))
 	t.Setenv("PATH", dir)
+	return func() []string {
+		b, err := os.ReadFile(argsFile)
+		require.NoError(t, err)
+		return strings.Split(strings.TrimSuffix(string(b), "\n"), "\n")
+	}
 }
 
 func TestBuild(t *testing.T) {
@@ -277,4 +284,14 @@ func TestBuild(t *testing.T) {
 			assert.Equal(t, strings.TrimPrefix(tt.wantRef, tt.engine+"://"), r)
 		})
 	}
+}
+
+func TestBuild_passesArgsUntouched(t *testing.T) {
+	args := fakeEngine(t, Podman, "sha256:abc")
+	_, err := Build(context.Background(), Podman, []string{"--label", "", "--build-arg", "PAD= ", "-t", "x", "."})
+	require.NoError(t, err)
+	got := args()
+	// "build --iidfile <file>" come first
+	require.Greater(t, len(got), 3)
+	assert.Equal(t, []string{"--label", "", "--build-arg", "PAD= ", "-t", "x", "."}, got[3:])
 }
