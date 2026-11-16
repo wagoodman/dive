@@ -58,7 +58,19 @@ func main() {
 	// clio stops the run on SIGINT but then exits 0, which lets `dive --ci img && deploy` deploy. Keep the first
 	// signal here so the exit code says the run was stopped.
 	stoppedBy := make(chan os.Signal, 1)
-	signal.Notify(stoppedBy, os.Interrupt)
+	signal.Notify(stoppedBy, os.Interrupt, syscall.SIGTERM)
+
+	// clio only traps SIGINT. SIGTERM (docker stop, CI job cancel, systemd) would kill dive with the image copy still
+	// in TMPDIR, so it takes the same path as an interrupt.
+	term := make(chan os.Signal, 1)
+	signal.Notify(term, syscall.SIGTERM)
+	go func() {
+		<-term
+		if p, err := os.FindProcess(os.Getpid()); err == nil {
+			// not supported on windows, where SIGTERM stands for a closing console
+			_ = p.Signal(os.Interrupt)
+		}
+	}()
 
 	app := cli.Application(
 		clio.Identification{
@@ -77,7 +89,7 @@ func main() {
 	// second interrupt while Run is still running makes its deferred os.Exit(1) skip this, which can leave temp dirs
 	// behind. clio has stopped listening for signals by now, so ignore them for the bounded wait, otherwise another
 	// ctrl-c would kill dive mid cleanup.
-	signal.Ignore(os.Interrupt)
+	signal.Ignore(os.Interrupt, syscall.SIGTERM)
 	if err := source.Cleanup(5 * time.Second); err != nil {
 		fmt.Fprintf(os.Stderr, "unable to clean up temp dirs: %v\n", err)
 	}

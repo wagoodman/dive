@@ -79,3 +79,11 @@ func TestMain_interruptExitsNonZero(t *testing.T) {
 	left, _ := filepath.Glob(filepath.Join(tmp, "dive-*"))
 	assert.Empty(t, left, "temp dirs left behind")
 }
+
+func TestMain_terminateCleansUp(t *testing.T) {
+	code, tmp := runStopped(t, syscall.SIGTERM)
+	assert.Equal(t, 143, code)
+
+	left, _ := filepath.Glob(filepath.Join(tmp, "dive-*"))
+	assert.Empty(t, left, "temp dirs left behind")
+}
