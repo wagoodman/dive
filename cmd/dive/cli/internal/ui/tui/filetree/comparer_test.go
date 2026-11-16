@@ -2,6 +2,7 @@ package filetree
 
 import (
 	"archive/tar"
+	"os"
 	"testing"
 
 	"github.com/anchore/stereoscope/pkg/file"
@@ -249,6 +250,45 @@ func TestComparer_Marks(t *testing.T) {
 			assert.Same(t, tree, again)
 		})
 	}
+}
+
+func TestComparer_ImplicitDirKeepsLowerMetadata(t *testing.T) {
+	// layer 1 adds files under dirs it has no entry for
+	img := imagefixture.LoadSpec(t, imagefixture.Spec{Layers: [][]imagefixture.Entry{
+		{
+			{Name: "app/", Type: tar.TypeDir, Mode: 0o700, UID: 1000, GID: 1000},
+			{Name: "app/same.txt", Content: "same"},
+			{Name: "keep/", Type: tar.TypeDir, Mode: 0o750},
+			{Name: "keep/same.txt", Content: "same"},
+		},
+		{
+			{Name: "app/new.txt", Content: "new"},
+			{Name: "keep/same.txt", Content: "same"},
+			{Name: "implied/only.txt", Content: "only"},
+		},
+	}})
+	tree, err := NewComparer(img).GetTree(NewTreeIndexKey(0, 0, 1, 1))
+	require.NoError(t, err)
+
+	assert.Equal(t, map[string]DiffType{
+		"/app":           Modified,
+		"/app/new.txt":   Added,
+		"/keep":          Unmodified,
+		"/keep/same.txt": Unmodified,
+		"/implied":       Added,
+	}, diffTypes(t, tree, "/app", "/app/new.txt", "/keep", "/keep/same.txt", "/implied"))
+
+	app, err := tree.GetNode("/app")
+	require.NoError(t, err)
+	assert.True(t, app.Data.FileInfo.IsDir)
+	assert.Equal(t, os.ModeDir|0o700, app.Data.FileInfo.Mode)
+	assert.Equal(t, 1000, app.Data.FileInfo.Uid)
+
+	// a dir only implied in the image still shows as a dir
+	implied, err := tree.GetNode("/implied")
+	require.NoError(t, err)
+	assert.True(t, implied.Data.FileInfo.IsDir)
+	assert.Equal(t, "d", implied.MetadataString()[:1])
 }
 
 func TestComparer_HashesOnlyWhenNeeded(t *testing.T) {

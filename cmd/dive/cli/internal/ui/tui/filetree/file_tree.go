@@ -322,8 +322,10 @@ func (tree *FileTree) CompareAndMark(upper *FileTree, hash ContentHasher) ([]Pat
 			}
 		}
 
-		// persist the upper's payload on the owning tree
-		pair.lowerNode.Data.FileInfo = *pair.upperNode.Data.FileInfo.Copy()
+		// persist the upper's payload on the owning tree, unless the upper only implies a dir that is already there
+		if !pair.upperNode.Data.FileInfo.implicit || !pair.lowerNode.Data.FileInfo.IsDir {
+			pair.lowerNode.Data.FileInfo = *pair.upperNode.Data.FileInfo.Copy()
+		}
 	}
 	return failed, nil
 }
