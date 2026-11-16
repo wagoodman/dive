@@ -161,3 +161,19 @@ func TestLoad_dockerDesktopContext(t *testing.T) {
 	// the image was local to that daemon, nothing should have been pulled
 	assert.False(t, d.pulled)
 }
+
+// regression for #418: with a rootless docker context current, dive pulled through the docker cli (into the rootless
+// daemon) and then read from /var/run/docker.sock, which never had the image. Pull and save now go through the same
+// API client, and no docker cli is needed.
+func TestLoad_rootlessContextPull(t *testing.T) {
+	dir := dockerHostShortTempDir(t)
+	sock := filepath.Join(dir, "run", "user", "1000", "docker.sock")
+	d := newDockerHostDaemon(t)
+	d.missing = true
+	dockerHostServeUnix(t, sock, d)
+	dockerHostUseConfig(t, filepath.Join(dir, ".docker"), "rootless", map[string]string{"rootless": "unix://" + sock})
+	t.Setenv("PATH", t.TempDir())
+
+	dockerHostLoad(t, "quay.io/openshifttest/alpine:latest")
+	assert.True(t, d.pulled)
+}
