@@ -262,13 +262,13 @@ rules:
   # Expressed as a ratio between 0-1.
   lowestEfficiency: 0.95
 
-  # If the amount of wasted space is at least X or larger than X, mark as failed.
+  # If the amount of wasted space is more than X, mark as failed.
   # Expressed in B, KB, MB, and GB.
   highestWastedBytes: 20MB
 
-  # If the amount of wasted space makes up for X% or more of the image, mark as failed.
+  # If the amount of wasted space makes up more than X% of the image, mark as failed.
   # Note: the base image layer is NOT included in the total image size.
-  # Expressed as a ratio between 0-1; fails if the threshold is met or crossed.
+  # Expressed as a ratio between 0-1.
   highestUserWastedPercent: 0.20
 ```
 You can override the CI config path with the `--ci-config` option.
@@ -277,7 +277,7 @@ You can override the CI config path with the `--ci-config` option.
 
 Key Binding                                | Description
 -------------------------------------------|---------------------------------------------------------
-<kbd>Ctrl + C</kbd> or <kbd>Q</kbd>        | Exit
+<kbd>Ctrl + C</kbd>                        | Exit
 <kbd>Tab</kbd>                             | Switch between the layer and filetree views
 <kbd>Ctrl + F</kbd>                        | Filter files
 <kbd>ESC</kbd>                             | Close filter files
@@ -294,6 +294,9 @@ Key Binding                                | Description
 <kbd>Ctrl + M</kbd>                        | Filetree view: show/hide modified files
 <kbd>Ctrl + U</kbd>                        | Filetree view: show/hide unmodified files
 <kbd>Ctrl + B</kbd>                        | Filetree view: show/hide file attributes
+<kbd>Ctrl + O</kbd>                        | Filetree view: toggle sort order
+<kbd>Ctrl + P</kbd>                        | Filetree view: toggle line wrapping
+<kbd>Ctrl + E</kbd>                        | Filetree view: extract the selected file or directory into the current directory
 <kbd>PageUp</kbd> or <kbd>U</kbd>          | Filetree view: scroll up a page
 <kbd>PageDown</kbd> or <kbd>D</kbd>        | Filetree view: scroll down a page
 
@@ -309,9 +312,12 @@ platform: ""
 # deprecated and has no effect (kept so existing configs still load), same for the --ignore-errors flag
 ignore-errors: false
 log:
-  enabled: true
-  path: ./dive.log
-  level: info
+  # suppress all logging output
+  quiet: false
+  # error, warn, info, debug or trace
+  level: warn
+  # file path to write logs to (no log file is written when empty)
+  file: ./dive.log
 
 # Note: you can specify multiple bindings by separating values with a comma.
 # Note: UI hinting is derived from the first binding
@@ -338,6 +344,9 @@ keybinding:
   toggle-modified-files: ctrl+m
   toggle-unmodified-files: ctrl+u
   toggle-filetree-attributes: ctrl+b
+  toggle-sort-order: ctrl+o
+  toggle-wrap-tree: ctrl+p
+  extract-file: ctrl+e
   page-up: pgup,u
   page-down: pgdn,d
 
@@ -365,10 +374,11 @@ layer:
 
 ```
 
-dive will search for configs in the following locations:
-- `$XDG_CONFIG_HOME/dive/*.yaml`
-- `$XDG_CONFIG_DIRS/dive/*.yaml`
-- `~/.config/dive/*.yaml`
+dive will search for configs in the following locations, merging every file it finds (earlier files take priority):
+- `./.dive.yaml`
+- `./.dive/config.yaml`
 - `~/.dive.yaml`
+- `$XDG_CONFIG_HOME/dive/config.yaml` (usually `~/.config/dive/config.yaml`)
+- `$XDG_CONFIG_DIRS/dive/config.yaml`
 
-`.yml` can be used instead of `.yaml` if desired.
+`.yml` can be used instead of `.yaml` if desired. Only files named `config.yaml` are read from the `dive` config directories. Run `dive config locations` to see the exact paths on your system, or pass a file explicitly with `-c` / `--config` (or `DIVE_CONFIG`).

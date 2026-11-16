@@ -36,7 +36,7 @@ func (c *CI) DescribeFields(descriptions clio.FieldDescriptionSet) {
 
 func (c *CI) AddFlags(flags clio.FlagSet) {
 	flags.BoolVarP(&c.Enabled, "ci", "", "skip the interactive TUI and validate against CI rules (same as env var CI=true)")
-	flags.StringVarP(&c.ConfigPath, "ci-config", "", "if CI=true in the environment, use the given yaml to drive validation rules.")
+	flags.StringVarP(&c.ConfigPath, "ci-config", "", "yaml file with the CI validation rules, used with --ci or CI=true in the environment")
 }
 
 func (c *CI) PostLoad() error {

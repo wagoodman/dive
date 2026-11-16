@@ -103,7 +103,7 @@ keybinding:
   # toggle sort order (file view) (env: DIVE_KEYBINDING_TOGGLE_SORT_ORDER)
   toggle-sort-order: 'ctrl+o'
 
-  # (env: DIVE_KEYBINDING_TOGGLE_WRAP_TREE)
+  # toggle line wrapping of the file tree (file view) (env: DIVE_KEYBINDING_TOGGLE_WRAP_TREE)
   toggle-wrap-tree: 'ctrl+p'
 
   # extract file contents (file view) (env: DIVE_KEYBINDING_EXTRACT_FILE)
