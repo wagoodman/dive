@@ -44,6 +44,11 @@ func (v *Status) SetCurrentView(r Helper) {
 	v.selectedView = r
 }
 
+// CurrentView is the view whose key help is shown
+func (v *Status) CurrentView() Helper {
+	return v.selectedView
+}
+
 func (v *Status) Name() string {
 	return v.name
 }
