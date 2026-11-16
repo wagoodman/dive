@@ -177,3 +177,21 @@ func TestLoad_rootlessContextPull(t *testing.T) {
 	dockerHostLoad(t, "quay.io/openshifttest/alpine:latest")
 	assert.True(t, d.pulled)
 }
+
+// regression for #664: docker 29 refuses API versions below 1.44 ("client version 1.43 is too old"). The client
+// negotiates the version from the daemon's ping instead of sending a fixed one, so it lands on what the daemon
+// supports (1.52 here, below the client's own max).
+func TestLoad_dockerAPIVersionNegotiation(t *testing.T) {
+	dir := dockerHostShortTempDir(t)
+	sock := filepath.Join(dir, "docker.sock")
+	d := newDockerHostDaemon(t)
+	dockerHostServeUnix(t, sock, d)
+	dockerHostUseConfig(t, filepath.Join(dir, ".docker"), "", nil)
+	t.Setenv("DOCKER_HOST", "unix://"+sock)
+
+	dockerHostLoad(t, "alpine:latest")
+	require.NotEmpty(t, d.versions)
+	for _, v := range d.versions {
+		assert.Equal(t, "1.52", v)
+	}
+}
