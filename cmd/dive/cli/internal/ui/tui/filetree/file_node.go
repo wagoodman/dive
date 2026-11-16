@@ -137,8 +137,17 @@ func (node *FileNode) MetadataString() string {
 	}
 
 	dir := "-"
-	if node.Data.FileInfo.IsDir {
+	switch {
+	case node.Data.FileInfo.IsDir:
 		dir = "d"
+	case node.Data.FileInfo.TypeFlag == tar.TypeSymlink:
+		dir = "l"
+	case node.Data.FileInfo.TypeFlag == tar.TypeChar:
+		dir = "c"
+	case node.Data.FileInfo.TypeFlag == tar.TypeBlock:
+		dir = "b"
+	case node.Data.FileInfo.TypeFlag == tar.TypeFifo:
+		dir = "p"
 	}
 
 	fm := permbits.FileMode(node.Data.FileInfo.Mode)

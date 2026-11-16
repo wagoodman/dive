@@ -1,6 +1,7 @@
 package filetree
 
 import (
+	"archive/tar"
 	"testing"
 )
 
@@ -159,6 +160,29 @@ func TestDirSize(t *testing.T) {
 	expected, actual := "----------         0:0      600 B ", node.MetadataString()
 	if expected != actual {
 		t.Errorf("Expected metadata '%s' got '%s'", expected, actual)
+	}
+}
+
+func TestFileTypeDisplay(t *testing.T) {
+	tests := []struct {
+		info     FileInfo
+		typeChar string
+	}{
+		{FileInfo{TypeFlag: tar.TypeReg}, "-"},
+		{FileInfo{TypeFlag: tar.TypeLink, Linkname: "bin/a"}, "-"},
+		{FileInfo{TypeFlag: tar.TypeDir, IsDir: true}, "d"},
+		{FileInfo{TypeFlag: tar.TypeSymlink, Linkname: "../a"}, "l"},
+		{FileInfo{TypeFlag: tar.TypeChar}, "c"},
+		{FileInfo{TypeFlag: tar.TypeBlock}, "b"},
+		{FileInfo{TypeFlag: tar.TypeFifo}, "p"},
+	}
+	for _, tt := range tests {
+		tree := NewFileTree()
+		node, _, err := tree.AddPath("/f", tt.info)
+		checkError(t, err, "unable to setup test")
+		if got := node.MetadataString()[:1]; got != tt.typeChar {
+			t.Errorf("typeflag %q: expected type column %q got %q", tt.info.TypeFlag, tt.typeChar, got)
+		}
 	}
 }
 
