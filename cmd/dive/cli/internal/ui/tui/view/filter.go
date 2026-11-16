@@ -147,11 +147,13 @@ func (v *Filter) Update() error {
 func (v *Filter) Render() error {
 	v.logger.Trace("render()")
 
-	v.gui.Update(func(g *gocui.Gui) error {
-		_, err := fmt.Fprintln(v.header, format.Header(v.labelStr))
-		return err
-	})
-	return nil
+	// nothing to draw into until the layout has created the view
+	if v.header == nil {
+		return nil
+	}
+
+	_, err := fmt.Fprintln(v.header, format.Header(v.labelStr))
+	return err
 }
 
 // KeyHelp indicates all the possible actions a user can take while the current pane is selected.

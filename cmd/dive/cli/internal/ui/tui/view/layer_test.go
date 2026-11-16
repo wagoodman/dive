@@ -51,6 +51,22 @@ func TestLayer_PageDownStopsAtLastLayer(t *testing.T) {
 	require.Equal(t, 13, v.vm.LayerIndex)
 }
 
+func TestLayer_RenderDrawsInOrder(t *testing.T) {
+	// no main loop is running, so anything not drawn by Render itself never shows up
+	v := newTestLayerView(t, 3, 10)
+
+	_, err := v.gui.SetCurrentView(v.body.Name())
+	require.NoError(t, err)
+	require.NoError(t, v.Render())
+	require.Contains(t, v.header.Buffer(), "● Layers")
+
+	_, err = v.gui.SetCurrentView(v.header.Name())
+	require.NoError(t, err)
+	require.NoError(t, v.Render())
+	require.NotContains(t, v.header.Buffer(), "●")
+	require.Contains(t, v.header.Buffer(), "Layers")
+}
+
 func TestLayer_SetCursorClampsToLayers(t *testing.T) {
 	v := newTestLayerView(t, 3, 10)
 

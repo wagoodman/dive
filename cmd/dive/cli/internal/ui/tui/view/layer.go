@@ -302,64 +302,66 @@ func (v *Layer) Update() error {
 func (v *Layer) Render() error {
 	v.logger.Trace("render()")
 
+	// nothing to draw into until the layout has created the view
+	if v.body == nil {
+		return nil
+	}
+
 	// indicate when selected
 	title := "Layers"
 	isSelected := v.gui.CurrentView() == v.body
 
-	v.gui.Update(func(g *gocui.Gui) error {
-		var err error
-		// update header
-		v.header.Clear()
-		width, _ := g.Size()
+	var err error
+	// update header
+	v.header.Clear()
+	width, _ := v.gui.Size()
+	if v.constrainedRealEstate {
+		headerStr := format.RenderNoHeader(width, isSelected)
+		headerStr += "\nLayer"
+		_, err := fmt.Fprintln(v.header, headerStr)
+		if err != nil {
+			return err
+		}
+	} else {
+		headerStr := format.RenderHeader(title, width, isSelected)
+		headerStr += fmt.Sprintf("Cmp"+viewmodel.LayerFormat, "Size", "Command")
+		_, err := fmt.Fprintln(v.header, headerStr)
+		if err != nil {
+			return err
+		}
+	}
+
+	// update contents
+	v.body.Clear()
+	for idx, layer := range v.vm.Layers {
+		var layerStr string
 		if v.constrainedRealEstate {
-			headerStr := format.RenderNoHeader(width, isSelected)
-			headerStr += "\nLayer"
-			_, err := fmt.Fprintln(v.header, headerStr)
-			if err != nil {
-				return err
-			}
+			layerStr = fmt.Sprintf("%-4d", layer.Index)
 		} else {
-			headerStr := format.RenderHeader(title, width, isSelected)
-			headerStr += fmt.Sprintf("Cmp"+viewmodel.LayerFormat, "Size", "Command")
-			_, err := fmt.Fprintln(v.header, headerStr)
-			if err != nil {
-				return err
-			}
+			layerStr = layer.String()
 		}
 
-		// update contents
-		v.body.Clear()
-		for idx, layer := range v.vm.Layers {
-			var layerStr string
-			if v.constrainedRealEstate {
-				layerStr = fmt.Sprintf("%-4d", layer.Index)
-			} else {
-				layerStr = layer.String()
-			}
+		compareBar := v.renderCompareBar(idx)
 
-			compareBar := v.renderCompareBar(idx)
-
-			if idx == v.vm.LayerIndex {
-				_, err = fmt.Fprintln(v.body, compareBar+" "+format.Selected(layerStr))
-			} else {
-				_, err = fmt.Fprintln(v.body, compareBar+" "+layerStr)
-			}
-
-			if err != nil {
-				return err
-			}
+		if idx == v.vm.LayerIndex {
+			_, err = fmt.Fprintln(v.body, compareBar+" "+format.Selected(layerStr))
+		} else {
+			_, err = fmt.Fprintln(v.body, compareBar+" "+layerStr)
 		}
 
-		// Adjust origin, if necessary
-		maxBodyDisplayHeight := int(v.height())
-		if v.vm.LayerIndex > maxBodyDisplayHeight {
-			if err := v.SetOrigin(0, v.vm.LayerIndex-maxBodyDisplayHeight); err != nil {
-				return err
-			}
+		if err != nil {
+			return err
 		}
+	}
 
-		return nil
-	})
+	// Adjust origin, if necessary
+	maxBodyDisplayHeight := int(v.height())
+	if v.vm.LayerIndex > maxBodyDisplayHeight {
+		if err := v.SetOrigin(0, v.vm.LayerIndex-maxBodyDisplayHeight); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 

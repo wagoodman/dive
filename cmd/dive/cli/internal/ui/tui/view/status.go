@@ -97,28 +97,30 @@ func (v *Status) OnLayoutChange() error {
 func (v *Status) Render() error {
 	v.logger.Trace("render()")
 
+	// nothing to draw into until the layout has created the view
+	if v.view == nil {
+		return nil
+	}
+
 	notice := v.notice
 	v.notice = ""
 
-	v.gui.Update(func(g *gocui.Gui) error {
-		v.view.Clear()
+	v.view.Clear()
 
-		help := v.KeyHelp()
-		if v.selectedView != nil {
-			help += v.selectedView.KeyHelp()
-		}
-		if notice != "" {
-			help = format.StatusControlNormal("▏" + notice + " ")
-		}
+	help := v.KeyHelp()
+	if v.selectedView != nil {
+		help += v.selectedView.KeyHelp()
+	}
+	if notice != "" {
+		help = format.StatusControlNormal("▏" + notice + " ")
+	}
 
-		_, err := fmt.Fprintln(v.view, help+format.StatusNormal("▏"+strings.Repeat(" ", 1000)))
-		if err != nil {
-			v.logger.WithFields("error", err).Debug("unable to write to buffer")
-		}
+	_, err := fmt.Fprintln(v.view, help+format.StatusNormal("▏"+strings.Repeat(" ", 1000)))
+	if err != nil {
+		v.logger.WithFields("error", err).Debug("unable to write to buffer")
+	}
 
-		return err
-	})
-	return nil
+	return err
 }
 
 // KeyHelp indicates all the possible global actions a user can take when any pane is selected.

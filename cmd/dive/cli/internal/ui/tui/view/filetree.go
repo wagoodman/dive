@@ -426,30 +426,32 @@ func (v *FileTree) Update() error {
 func (v *FileTree) Render() error {
 	v.logger.Trace("render()")
 
+	// nothing to draw into until the layout has created the view
+	if v.view == nil {
+		return nil
+	}
+
 	title := v.title
 	isSelected := v.gui.CurrentView() == v.view
 
-	v.gui.Update(func(g *gocui.Gui) error {
-		// update the header
-		v.header.Clear()
-		width, _ := g.Size()
-		headerStr := format.RenderHeader(title, width, isSelected)
-		if v.vm.ShowAttributes {
-			headerStr += fmt.Sprintf(filetree.AttributeFormat+" %s", "P", "ermission", "UID:GID", "Size", "Filetree")
-		}
-		_, _ = fmt.Fprintln(v.header, headerStr)
+	// update the header
+	v.header.Clear()
+	width, _ := v.gui.Size()
+	headerStr := format.RenderHeader(title, width, isSelected)
+	if v.vm.ShowAttributes {
+		headerStr += fmt.Sprintf(filetree.AttributeFormat+" %s", "P", "ermission", "UID:GID", "Size", "Filetree")
+	}
+	_, _ = fmt.Fprintln(v.header, headerStr)
 
-		// update the contents
-		v.view.Clear()
-		err := v.vm.Render()
-		if err != nil {
-			return err
-		}
-		_, err = fmt.Fprint(v.view, v.vm.Buffer.String())
-
+	// update the contents
+	v.view.Clear()
+	err := v.vm.Render()
+	if err != nil {
 		return err
-	})
-	return nil
+	}
+	_, err = fmt.Fprint(v.view, v.vm.Buffer.String())
+
+	return err
 }
 
 // KeyHelp indicates all the possible actions a user can take while the current pane is selected.

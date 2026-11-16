@@ -81,22 +81,24 @@ func (v *Debug) OnLayoutChange() error {
 func (v *Debug) Render() error {
 	v.logger.Trace("render()")
 
-	v.gui.Update(func(g *gocui.Gui) error {
-		// update header...
-		v.header.Clear()
-		width, _ := g.Size()
-		headerStr := format.RenderHeader("Debug", width, false)
-		_, _ = fmt.Fprintln(v.header, headerStr)
-
-		// update view...
-		v.view.Clear()
-		_, err := fmt.Fprintln(v.view, "blerg")
-		if err != nil {
-			v.logger.WithFields("error", err).Debug("unable to write to buffer")
-		}
-
+	// nothing to draw into until the layout has created the view
+	if v.view == nil {
 		return nil
-	})
+	}
+
+	// update header...
+	v.header.Clear()
+	width, _ := v.gui.Size()
+	headerStr := format.RenderHeader("Debug", width, false)
+	_, _ = fmt.Fprintln(v.header, headerStr)
+
+	// update view...
+	v.view.Clear()
+	_, err := fmt.Fprintln(v.view, "blerg")
+	if err != nil {
+		v.logger.WithFields("error", err).Debug("unable to write to buffer")
+	}
+
 	return nil
 }
 
