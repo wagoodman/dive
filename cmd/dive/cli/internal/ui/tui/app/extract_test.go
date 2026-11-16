@@ -110,6 +110,25 @@ func TestExtract_DoesNotEscape(t *testing.T) {
 	assert.Equal(t, "fine", readFile(t, "fine.txt"))
 }
 
+// regression for #722: the reported payload, a tar name sharing the selected path's prefix that climbs out of the cwd
+func TestExtract_PrefixSharingNameDoesNotEscape(t *testing.T) {
+	img := imagefixture.LoadSpec(t, imagefixture.Spec{Layers: [][]imagefixture.Entry{{
+		{Name: "etc/", Type: tar.TypeDir},
+		{Name: "etc/motd", Content: "motd"},
+		{Name: "etc/motd/../../../victim/.bashrc", Content: "pwned"},
+	}}})
+	base, _ := dirs(t)
+
+	// the old prefix check wrote base/victim/.bashrc when /etc/motd was selected
+	require.NoError(t, extract(img, 0, "/etc/motd", "."))
+	assert.Equal(t, "motd", readFile(t, filepath.Join("etc", "motd")))
+	// selecting a parent of where the name cleans to reaches it, and it is refused
+	assert.ErrorContains(t, extract(img, 0, "/", "."), "etc/motd/../../../victim/.bashrc")
+
+	_, err := os.Stat(filepath.Join(base, "victim"))
+	assert.ErrorIs(t, err, os.ErrNotExist)
+}
+
 func TestExtract_SquashedTree(t *testing.T) {
 	img := imagefixture.LoadSpec(t, imagefixture.Spec{Layers: [][]imagefixture.Entry{
 		{
