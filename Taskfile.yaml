@@ -293,10 +293,11 @@ tasks:
         {{ .SNAPSHOT_DIR }}/linux-build_linux_amd64_v1/dive '{{ .TEST_IMAGE }}' --ci && \
         {{ .SNAPSHOT_DIR }}/linux-build_linux_amd64_v1/dive --source docker-archive .data/test-kaniko-image.tar --ci --ci-config .data/.dive-ci
       - |
+        set -e
         for alg in uncompressed gzip estargz zstd; do \
           for exporter in docker image; do \
             {{ .SNAPSHOT_DIR }}/linux-build_linux_amd64_v1/dive "test-dive-${exporter}:${alg}" --ci ; \
-          done && \
+          done ; \
           {{ .SNAPSHOT_DIR }}/linux-build_linux_amd64_v1/dive --source docker-archive .data/test-oci-${alg}-image.tar --ci --ci-config .data/.dive-ci; \
         done
 
