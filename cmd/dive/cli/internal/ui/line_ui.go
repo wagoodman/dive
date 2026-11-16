@@ -79,15 +79,16 @@ func (n *LineUI) Handle(e partybus.Event) error {
 		prog, task, err := parser.ParseTaskStarted(e)
 		if err != nil {
 			log.WithFields("error", err, "event", fmt.Sprintf("%#v", e)).Warn("failed to parse event")
+			return nil
 		}
 
 		var aux string
-		stage := prog.Stage()
 		switch {
 		case task.Context != "":
 			aux = task.Context
-		case stage != "":
-			aux = stage
+		case prog != nil && prog.Stage() != "":
+			// the progress is optional in the event
+			aux = prog.Stage()
 		}
 
 		if aux != "" {

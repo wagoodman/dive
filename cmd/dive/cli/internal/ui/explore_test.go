@@ -13,6 +13,7 @@ import (
 
 	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/tui"
 	"github.com/wagoodman/dive/internal/bus/event"
+	"github.com/wagoodman/dive/internal/bus/event/payload"
 	"github.com/wagoodman/dive/internal/log"
 )
 
@@ -112,6 +113,17 @@ func TestLineUI_teardownDrainsNotifications(t *testing.T) {
 	b.Publish(partybus.Event{Type: event.Notification, Value: "extract of /etc: boom"})
 	require.NoError(t, u.Teardown(true))
 	assert.Contains(t, errOut.String(), "extract of /etc: boom")
+}
+
+func TestLineUI_taskStartedWithoutProgress(t *testing.T) {
+	var errOut bytes.Buffer
+	u := NewLineUI(tui.DefaultPreferences(), &bytes.Buffer{}, false, 0)
+	u.err = &errOut
+
+	// unparsable, and parsable but without a progress value
+	require.NoError(t, u.Handle(partybus.Event{Type: event.TaskStarted, Source: "not a task"}))
+	require.NoError(t, u.Handle(partybus.Event{Type: event.TaskStarted, Source: payload.GenericTask{Title: payload.Title{Default: "Loading image"}}}))
+	assert.Contains(t, errOut.String(), "Loading image")
 }
 
 func TestLineUI_quietStillPrintsReport(t *testing.T) {
