@@ -65,14 +65,14 @@ func Test_Build_CI_gate_fail(t *testing.T) {
 func Test_BuildFailure(t *testing.T) {
 
 	t.Run("nonexistent directory", func(t *testing.T) {
+		requireDocker(t)
+		// docker reports the missing context itself
 		rootCmd := getTestCommand(t, "build ./path/does/not/exist")
 		combined := Capture().WithStdout().WithStderr().Run(t, func() {
-			require.ErrorContains(t, rootCmd.Execute(), "could not find Containerfile or Dockerfile")
+			require.ErrorContains(t, rootCmd.Execute(), "docker build failed")
 		})
 
 		assert.Contains(t, combined, "Building image")
-
-		snaps.MatchSnapshot(t, combined)
 	})
 
 	t.Run("invalid dockerfile", func(t *testing.T) {

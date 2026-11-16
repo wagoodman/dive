@@ -14,210 +14,65 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestIsFileFlagsAreSet(t *testing.T) {
+func TestParseBuildArgs(t *testing.T) {
 	tests := []struct {
-		name     string
-		args     []string
-		flags    []string
-		expected bool
+		name        string
+		args        []string
+		wantCtx     string
+		wantHasFile bool
 	}{
-		{
-			name:     "flag present in the middle with value",
-			args:     []string{"arg1", "-f", "dockerfile", "arg2"},
-			flags:    []string{"-f"},
-			expected: true,
-		},
-		{
-			name:     "flag present at the beginning with value",
-			args:     []string{"-f", "dockerfile", "arg1", "arg2"},
-			flags:    []string{"-f"},
-			expected: true,
-		},
-		{
-			name:     "flag present at the end with no value",
-			args:     []string{"arg1", "arg2", "-f"},
-			flags:    []string{"-f"},
-			expected: false,
-		},
-		{
-			name:     "flag not present",
-			args:     []string{"arg1", "arg2", "arg3"},
-			flags:    []string{"-f"},
-			expected: false,
-		},
-		{
-			name:     "one of multiple flags present",
-			args:     []string{"arg1", "--file", "dockerfile", "arg2"},
-			flags:    []string{"-f", "--file"},
-			expected: true,
-		},
-		{
-			name:     "none of multiple flags present",
-			args:     []string{"arg1", "-x", "value", "arg2"},
-			flags:    []string{"-f", "--file"},
-			expected: false,
-		},
-		{
-			name:     "empty args",
-			args:     []string{},
-			flags:    []string{"-f", "--file"},
-			expected: false,
-		},
-		{
-			name:     "empty flags",
-			args:     []string{"arg1", "-f", "value"},
-			flags:    []string{},
-			expected: false,
-		},
-		{
-			name:     "flag with multiple values",
-			args:     []string{"arg1", "-f", "value1", "value2"},
-			flags:    []string{"-f"},
-			expected: true,
-		},
+		{name: "context only", args: []string{"."}, wantCtx: "."},
+		{name: "tag value is not the context", args: []string{"-t", "app", "."}, wantCtx: "."},
+		{name: "context before flags", args: []string{".", "-t", "app"}, wantCtx: "."},
+		{name: "bool flags take no value", args: []string{"--no-cache", "--pull", "-q", "ctx"}, wantCtx: "ctx"},
+		{name: "inline values", args: []string{"--tag=app", "--build-arg=A=b", "ctx"}, wantCtx: "ctx"},
+		{name: "stdin context", args: []string{"-t", "app", "-"}, wantCtx: "-"},
+		{name: "url context", args: []string{"https://github.com/org/repo.git#main"}, wantCtx: "https://github.com/org/repo.git#main"},
+		{name: "no context", args: []string{"-t", "app"}},
+		{name: "-f", args: []string{"-f", "build/Dockerfile", "."}, wantCtx: ".", wantHasFile: true},
+		{name: "--file", args: []string{"--file", "build/Dockerfile", "."}, wantCtx: ".", wantHasFile: true},
+		{name: "--file=", args: []string{"--file=build/Dockerfile", "."}, wantCtx: ".", wantHasFile: true},
+		{name: "-f attached", args: []string{"-fbuild/Dockerfile", "."}, wantCtx: ".", wantHasFile: true},
+		{name: "-f=", args: []string{"-f=build/Dockerfile", "."}, wantCtx: ".", wantHasFile: true},
+		{name: "-f stdin", args: []string{"-f", "-", "."}, wantCtx: ".", wantHasFile: true},
+		{name: "similar long flag", args: []string{"--file-format=json", "."}, wantCtx: "."},
+		{name: "-f as a flag value", args: []string{"--label", "-f", "."}, wantCtx: "."},
 	}
-
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := isFileFlagsAreSet(tt.args, tt.flags...)
-			assert.Equal(t, tt.expected, result, "isFileFlagsAreSet() = %v, want %v", result, tt.expected)
+			ctx, hasFile := parseBuildArgs(tt.args)
+			assert.Equal(t, tt.wantCtx, ctx)
+			assert.Equal(t, tt.wantHasFile, hasFile)
 		})
 	}
 }
 
-func TestTryFindContainerfile(t *testing.T) {
+func TestFindContainerfile(t *testing.T) {
 	tests := []struct {
-		name           string
-		buildArgs      []string
-		setupFs        func(t testing.TB, fs afero.Fs)
-		expectedPath   string
-		expectedErrMsg string
+		name     string
+		buildCtx string
+		files    []string
+		want     string
 	}{
-		{
-			name:      "find Containerfile (uppercase)",
-			buildArgs: []string{"testdir"},
-			setupFs: func(t testing.TB, fs afero.Fs) {
-				create(t, fs, "testdir/Containerfile", "FROM alpine")
-			},
-			expectedPath:   filepath.Join("testdir", "Containerfile"),
-			expectedErrMsg: "",
-		},
-		{
-			name:      "find containerfile (lowercase)",
-			buildArgs: []string{"testdir"},
-			setupFs: func(t testing.TB, fs afero.Fs) {
-				create(t, fs, "testdir/containerfile", "FROM alpine")
-			},
-			expectedPath:   filepath.Join("testdir", "containerfile"),
-			expectedErrMsg: "",
-		},
-		{
-			name:      "find Dockerfile when no Containerfile exists",
-			buildArgs: []string{"testdir"},
-			setupFs: func(t testing.TB, fs afero.Fs) {
-				create(t, fs, "testdir/Dockerfile", "FROM alpine")
-			},
-			expectedPath:   filepath.Join("testdir", "Dockerfile"),
-			expectedErrMsg: "",
-		},
-		{
-			name:      "find dockerfile (lowercase)",
-			buildArgs: []string{"testdir"},
-			setupFs: func(t testing.TB, fs afero.Fs) {
-				create(t, fs, "testdir/dockerfile", "FROM alpine")
-			},
-			expectedPath:   filepath.Join("testdir", "dockerfile"),
-			expectedErrMsg: "",
-		},
-		{
-			name:      "prefer Containerfile over Dockerfile",
-			buildArgs: []string{"testdir"},
-			setupFs: func(t testing.TB, fs afero.Fs) {
-				create(t, fs, "testdir/Containerfile", "FROM alpine")
-				create(t, fs, "testdir/Dockerfile", "FROM ubuntu")
-			},
-			expectedPath:   filepath.Join("testdir", "Containerfile"),
-			expectedErrMsg: "",
-		},
-		{
-			name:           "non-existent directory",
-			buildArgs:      []string{"nonexistentdir"},
-			setupFs:        func(t testing.TB, fs afero.Fs) {},
-			expectedPath:   "",
-			expectedErrMsg: "could not find Containerfile or Dockerfile",
-		},
-		{
-			name:           "empty build args",
-			buildArgs:      []string{},
-			setupFs:        func(t testing.TB, fs afero.Fs) {},
-			expectedPath:   "",
-			expectedErrMsg: "could not find Containerfile or Dockerfile",
-		},
-		{
-			name:      "directory exists but no container files",
-			buildArgs: []string{"testdir"},
-			setupFs: func(t testing.TB, fs afero.Fs) {
-				create(t, fs, "testdir/somefile.txt", "content")
-			},
-			expectedPath:   "",
-			expectedErrMsg: "could not find Containerfile or Dockerfile",
-		},
-		{
-			name:      "find in second directory",
-			buildArgs: []string{"firstdir", "seconddir"},
-			setupFs: func(t testing.TB, fs afero.Fs) {
-				err := fs.MkdirAll("firstdir", 0755)
-				require.NoError(t, err, "Failed to create directory: firstdir")
-				create(t, fs, "seconddir/Dockerfile", "FROM alpine")
-			},
-			expectedPath:   filepath.Join("seconddir", "Dockerfile"),
-			expectedErrMsg: "",
-		},
-		{
-			name:      "find in first directory when both have files",
-			buildArgs: []string{"firstdir", "seconddir"},
-			setupFs: func(t testing.TB, fs afero.Fs) {
-				create(t, fs, "firstdir/Containerfile", "FROM alpine")
-				create(t, fs, "seconddir/Dockerfile", "FROM ubuntu")
-			},
-			expectedPath:   filepath.Join("firstdir", "Containerfile"),
-			expectedErrMsg: "",
-		},
-		{
-			name:      "file argument not a directory",
-			buildArgs: []string{"testfile.txt"},
-			setupFs: func(t testing.TB, fs afero.Fs) {
-				create(t, fs, "testfile.txt", "content")
-			},
-			expectedPath:   "",
-			expectedErrMsg: "could not find Containerfile or Dockerfile",
-		},
-		{
-			name:      "mixed args with valid directory",
-			buildArgs: []string{"testfile.txt", "testdir"},
-			setupFs: func(t testing.TB, fs afero.Fs) {
-				create(t, fs, "testfile.txt", "content")
-				create(t, fs, "testdir/Dockerfile", "FROM alpine")
-			},
-			expectedPath:   filepath.Join("testdir", "Dockerfile"),
-			expectedErrMsg: "",
-		},
+		{name: "Containerfile", buildCtx: "ctx", files: []string{"ctx/Containerfile"}, want: filepath.Join("ctx", "Containerfile")},
+		{name: "containerfile", buildCtx: "ctx", files: []string{"ctx/containerfile"}, want: filepath.Join("ctx", "containerfile")},
+		{name: "Dockerfile", buildCtx: "ctx", files: []string{"ctx/Dockerfile"}, want: filepath.Join("ctx", "Dockerfile")},
+		{name: "dockerfile", buildCtx: "ctx", files: []string{"ctx/dockerfile"}, want: filepath.Join("ctx", "dockerfile")},
+		{name: "Containerfile over Dockerfile", buildCtx: "ctx", files: []string{"ctx/Containerfile", "ctx/Dockerfile"}, want: filepath.Join("ctx", "Containerfile")},
+		{name: "only the context is searched", buildCtx: "ctx", files: []string{"app/Dockerfile", "ctx/main.go"}},
+		{name: "missing context", buildCtx: "nope"},
+		{name: "context is a file", buildCtx: "ctx.txt", files: []string{"ctx.txt"}},
+		{name: "stdin", buildCtx: "-"},
+		{name: "url", buildCtx: "https://github.com/org/repo.git"},
+		{name: "no context"},
 	}
-
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			fs := afero.NewMemMapFs()
-			tt.setupFs(t, fs)
-
-			result, err := tryFindContainerfile(fs, tt.buildArgs)
-
-			if tt.expectedErrMsg != "" {
-				assert.Error(t, err)
-				assert.Contains(t, err.Error(), tt.expectedErrMsg)
-			} else {
-				assert.NoError(t, err)
-				assert.Equal(t, tt.expectedPath, result)
+			for _, f := range tt.files {
+				create(t, fs, f, "FROM alpine")
 			}
+			assert.Equal(t, tt.want, findContainerfile(fs, tt.buildCtx))
 		})
 	}
 }
@@ -264,7 +119,6 @@ func TestBuild(t *testing.T) {
 	}{
 		{engine: Docker, args: []string{"-f", "Dockerfile", "."}, wantRef: "docker://sha256:" + hex},
 		{engine: Podman, args: []string{"."}, wantRef: "podman://" + hex},
-		{engine: Docker, args: []string{t.TempDir()}, wantErr: true}, // no Dockerfile in the context dir
 		{engine: Containerd, args: []string{"."}, wantErr: true},
 	}
 	for _, tt := range tests {
@@ -282,6 +136,36 @@ func TestBuild(t *testing.T) {
 			src, r := Parse(ref, Auto)
 			assert.Equal(t, tt.engine, src)
 			assert.Equal(t, strings.TrimPrefix(tt.wantRef, tt.engine+"://"), r)
+		})
+	}
+}
+
+func TestBuild_dockerfileDetection(t *testing.T) {
+	withContainerfile := t.TempDir()
+	require.NoError(t, os.WriteFile(filepath.Join(withContainerfile, "Containerfile"), []byte("FROM alpine"), 0o600))
+
+	tests := []struct {
+		name string
+		args []string
+		want []string
+	}{
+		{name: "Containerfile in the context", args: []string{"-t", "app", withContainerfile}, want: []string{"-f", filepath.Join(withContainerfile, "Containerfile"), "-t", "app", withContainerfile}},
+		{name: "--file= given", args: []string{"--file=x/Dockerfile", withContainerfile}, want: []string{"--file=x/Dockerfile", withContainerfile}},
+		// docker finds the Dockerfile itself, or reports it missing
+		{name: "nothing in the context", args: []string{t.TempDir()}, want: nil},
+		{name: "stdin", args: []string{"-"}, want: []string{"-"}},
+		{name: "url", args: []string{"https://github.com/org/repo.git"}, want: []string{"https://github.com/org/repo.git"}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			args := fakeEngine(t, Docker, "sha256:abc")
+			_, err := Build(context.Background(), Docker, tt.args)
+			require.NoError(t, err)
+			want := tt.want
+			if want == nil {
+				want = tt.args
+			}
+			assert.Equal(t, want, args()[3:])
 		})
 	}
 }

@@ -91,11 +91,6 @@ PASS [pass:3]
 
 ---
 
-[Test_BuildFailure/nonexistent_directory - 1]
-Building image                ... ./path/does/not/exist
-
----
-
 [Test_BuildFailure/invalid_dockerfile - 1]
 Building image                ... ./testdata/invalid
 #0 building with "desktop-linux" instance using docker driver

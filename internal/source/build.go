@@ -35,13 +35,12 @@ func Build(ctx context.Context, engine string, args []string) (string, error) {
 	allArgs := []string{"build", "--iidfile", iidfile.Name()}
 	switch engine {
 	case Docker:
-		// docker doesn't look for a Containerfile on its own
-		if !isFileFlagsAreSet(args, "-f", "--file") {
-			containerfile, err := tryFindContainerfile(fs, args)
-			if err != nil {
-				return "", err
+		// docker doesn't look for a Containerfile on its own. When none is found (or the context is stdin or a URL)
+		// docker gets to decide
+		if buildCtx, hasFile := parseBuildArgs(args); !hasFile {
+			if containerfile := findContainerfile(fs, buildCtx); containerfile != "" {
+				allArgs = append(allArgs, "-f", containerfile)
 			}
-			allArgs = append(allArgs, "-f", containerfile)
 		}
 	case Podman:
 	default:
@@ -76,37 +75,53 @@ func Build(ctx context.Context, engine string, args []string) (string, error) {
 	return Docker + "://" + id, nil
 }
 
-// isFileFlagsAreSet checks if any of the given flags is present in the argument list with a value after it.
-func isFileFlagsAreSet(args []string, flags ...string) bool {
-	for i, arg := range args {
-		if slices.Contains(flags, arg) && i+1 < len(args) {
-			return true
-		}
-	}
-	return false
+// docker build flags that take no value, every other flag consumes the next arg unless written as --flag=value or -fvalue
+var buildBoolFlags = []string{
+	"--check", "--compress", "--debug", "-D", "--disable-content-trust", "--force-rm", "--load", "--no-cache",
+	"--pull", "--push", "-q", "--quiet", "--rm", "--squash",
 }
 
-// tryFindContainerfile looks through the build args for a directory containing a Containerfile or a Dockerfile
-// (in that order).
-func tryFindContainerfile(fs afero.Fs, buildArgs []string) (string, error) {
-	candidates := []string{
+// parseBuildArgs finds the build context (the last positional arg) in docker build args and whether a Dockerfile was
+// given with -f/--file (in any of its spellings).
+func parseBuildArgs(args []string) (buildCtx string, hasFile bool) {
+	for i := 0; i < len(args); i++ {
+		arg := args[i]
+		switch {
+		case arg == "-" || !strings.HasPrefix(arg, "-"):
+			buildCtx = arg
+		case strings.HasPrefix(arg, "--"):
+			name, _, inline := strings.Cut(arg, "=")
+			hasFile = hasFile || name == "--file"
+			if !inline && !slices.Contains(buildBoolFlags, name) {
+				i++
+			}
+		default:
+			hasFile = hasFile || strings.HasPrefix(arg, "-f")
+			// a short flag longer than "-x" carries its value ("-fDockerfile", "-f=Dockerfile")
+			if len(arg) == 2 && !slices.Contains(buildBoolFlags, arg) {
+				i++
+			}
+		}
+	}
+	return buildCtx, hasFile
+}
+
+// findContainerfile returns the Containerfile or Dockerfile (in that order) in the build context directory, empty
+// when the context isn't a local directory or has neither.
+func findContainerfile(fs afero.Fs, buildCtx string) string {
+	if info, err := fs.Stat(buildCtx); err != nil || !info.IsDir() {
+		return ""
+	}
+	for _, candidate := range []string{
 		defaultContainerfileName,
 		strings.ToLower(defaultContainerfileName),
 		defaultDockerfileName,
 		strings.ToLower(defaultDockerfileName),
-	}
-
-	for _, arg := range buildArgs {
-		fileInfo, err := fs.Stat(arg)
-		if err == nil && fileInfo.IsDir() {
-			for _, candidate := range candidates {
-				filePath := filepath.Join(arg, candidate)
-				if exists, _ := afero.Exists(fs, filePath); exists {
-					return filePath, nil
-				}
-			}
+	} {
+		p := filepath.Join(buildCtx, candidate)
+		if exists, _ := afero.Exists(fs, p); exists {
+			return p
 		}
 	}
-
-	return "", fmt.Errorf("could not find Containerfile or Dockerfile")
+	return ""
 }
