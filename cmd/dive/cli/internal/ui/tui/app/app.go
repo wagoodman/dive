@@ -3,11 +3,13 @@ package app
 import (
 	"context"
 	"errors"
+	"fmt"
 	"os"
 	"time"
 
 	"github.com/awesome-gocui/gocui"
 	"github.com/mattn/go-runewidth"
+	"golang.org/x/term"
 
 	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/tui"
 	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/tui/key"
@@ -19,6 +21,16 @@ const debug = false
 
 // outputMode is swapped for gocui's simulated screen in tests
 var outputMode = gocui.OutputNormal
+
+// termSize is the size of the terminal gocui draws on (it opens /dev/tty too), an error means it can't be checked
+var termSize = func() (int, int, error) {
+	f, err := os.Open("/dev/tty")
+	if err != nil {
+		return 0, 0, err
+	}
+	defer f.Close()
+	return term.GetSize(int(f.Fd()))
+}
 
 type app struct {
 	gui        *gocui.Gui
@@ -33,6 +45,13 @@ func Run(ctx context.Context, c tui.Config) error {
 	// there is nothing to show (the layer and tree views need a selected layer)
 	if len(c.Analysis.Layers) == 0 {
 		return errors.New("image has no layers")
+	}
+
+	// gocui waits for a resize on a terminal without a size, and with the terminal in raw mode ctrl-c can't stop it
+	if outputMode == gocui.OutputNormal {
+		if w, h, err := termSize(); err == nil && (w == 0 || h == 0) {
+			return fmt.Errorf("the terminal has no size (%dx%d), set one (e.g. with `stty rows 40 cols 120`) and try again", w, h)
+		}
 	}
 
 	// it appears there is a race condition where termbox.Init() will

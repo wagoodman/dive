@@ -32,6 +32,16 @@ func TestNarrowAmbiguousWidth(t *testing.T) {
 	require.Equal(t, 2, runewidth.RuneWidth('│'))
 }
 
+func TestRun_noTerminalSize(t *testing.T) {
+	orig := termSize
+	t.Cleanup(func() { termSize = orig })
+	termSize = func() (int, int, error) { return 0, 0, nil }
+
+	// returns before gocui takes the terminal (which would wait for a resize)
+	err := Run(context.Background(), tui.Config{Analysis: &dive.Analysis{Layers: make([]dive.Layer, 1)}})
+	require.ErrorContains(t, err, "the terminal has no size (0x0)")
+}
+
 func TestRun_noLayers(t *testing.T) {
 	outputMode = gocui.OutputSimulator
 	t.Cleanup(func() { outputMode = gocui.OutputNormal })
