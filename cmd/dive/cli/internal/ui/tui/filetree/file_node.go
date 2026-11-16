@@ -115,6 +115,10 @@ func (node *FileNode) Remove() error {
 	}
 	delete(node.Parent.Children, node.Name)
 	node.Tree.Size--
+	// the memoized sizes above this node included it
+	for p := node.Parent; p != nil; p = p.Parent {
+		p.Size = -1
+	}
 	return nil
 }
 

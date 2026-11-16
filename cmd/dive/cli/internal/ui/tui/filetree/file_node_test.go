@@ -163,6 +163,24 @@ func TestDirSize(t *testing.T) {
 	}
 }
 
+func TestDirSizeAfterRemove(t *testing.T) {
+	tree := NewFileTree()
+	_, _, err := tree.AddPath("/etc/nginx/a", FileInfo{Size: 100})
+	checkError(t, err, "unable to setup test")
+	_, _, err = tree.AddPath("/etc/nginx/b", FileInfo{Size: 200})
+	checkError(t, err, "unable to setup test")
+
+	etc, _ := tree.GetNode("/etc")
+	if got := etc.GetSize(); got != 300 {
+		t.Fatalf("Expected size 300 got %d", got)
+	}
+	checkError(t, tree.RemovePath("/etc/nginx/b"), "unable to remove path")
+	// a size memoized before the removal (e.g. by sorting) must not stick
+	if got := etc.GetSize(); got != 100 {
+		t.Errorf("Expected size 100 after removal got %d", got)
+	}
+}
+
 func TestFileTypeDisplay(t *testing.T) {
 	tests := []struct {
 		info     FileInfo
