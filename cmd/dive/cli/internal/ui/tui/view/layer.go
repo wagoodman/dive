@@ -331,7 +331,8 @@ func (v *Layer) Render() error {
 		}
 	}
 
-	// update contents
+	// update contents (Clear resets the origin, so remember the scroll position first)
+	_, oy := v.body.Origin()
 	v.body.Clear()
 	for idx, layer := range v.vm.Layers {
 		var layerStr string
@@ -354,12 +355,12 @@ func (v *Layer) Render() error {
 		}
 	}
 
-	// Adjust origin, if necessary
+	// keep the scroll position, only moving it when the selected layer would leave the pane
 	maxBodyDisplayHeight := int(v.height())
-	if v.vm.LayerIndex > maxBodyDisplayHeight {
-		if err := v.SetOrigin(0, v.vm.LayerIndex-maxBodyDisplayHeight); err != nil {
-			return err
-		}
+	oy = min(oy, v.vm.LayerIndex, max(0, len(v.vm.Layers)-1-maxBodyDisplayHeight))
+	oy = max(oy, v.vm.LayerIndex-maxBodyDisplayHeight, 0)
+	if err := v.SetOrigin(0, oy); err != nil {
+		return err
 	}
 
 	return nil

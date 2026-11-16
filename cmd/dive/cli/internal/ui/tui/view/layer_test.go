@@ -51,6 +51,23 @@ func TestLayer_PageDownStopsAtLastLayer(t *testing.T) {
 	require.Equal(t, 13, v.vm.LayerIndex)
 }
 
+func TestLayer_ScrollsOnlyWhenSelectionLeavesPane(t *testing.T) {
+	// 30 layers in a 10 row pane
+	v := newTestLayerView(t, 30, 10)
+
+	for _, step := range []struct{ layer, origin int }{
+		{layer: 25, origin: 16}, // selection pinned to the bottom row
+		{layer: 20, origin: 16}, // moving up within the pane doesn't scroll
+		{layer: 9, origin: 9},   // selection pinned to the top row
+		{layer: 12, origin: 9},
+		{layer: 0, origin: 0},
+	} {
+		require.NoError(t, v.SetCursor(step.layer))
+		_, oy := v.body.Origin()
+		require.Equal(t, step.origin, oy, "layer %d", step.layer)
+	}
+}
+
 func TestLayer_RenderDrawsInOrder(t *testing.T) {
 	// no main loop is running, so anything not drawn by Render itself never shows up
 	v := newTestLayerView(t, 3, 10)
