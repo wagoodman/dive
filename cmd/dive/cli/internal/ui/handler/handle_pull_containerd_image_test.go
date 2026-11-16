@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/gkampitakis/go-snaps/snaps"
+	"github.com/stretchr/testify/assert"
 	"github.com/wagoodman/go-progress"
 
 	"github.com/anchore/stereoscope/pkg/image/containerd"
@@ -72,4 +73,18 @@ func Test_containerdPullStatusFormatter_Render(t *testing.T) {
 			snaps.MatchSnapshot(t, f.Render(tt.status))
 		})
 	}
+}
+
+func Test_containerdPullStatusFormatter_Render_unknownLayerSize(t *testing.T) {
+	sized := progress.NewManual(10)
+	sized.Set(4)
+	status := mockContainerdPullStatus{
+		layers: []containerd.LayerID{"sha256:1", "sha256:2"},
+		current: map[containerd.LayerID]progress.Progressable{
+			"sha256:1": sized,
+			// what containerd.PullStatus returns for a layer it has no progress for yet
+			"sha256:2": progress.NewManual(-1),
+		},
+	}
+	assert.Contains(t, newContainerdPullStatusFormatter().Render(status), "[4 B / 10 B]")
 }

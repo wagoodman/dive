@@ -151,8 +151,13 @@ func (f dockerPullStatusFormatter) Render(pullStatus dockerPullStatus) string {
 
 	for _, layer := range layers {
 		prog := status[layer].DownloadProgress
-		size += uint64(prog.Size())
-		current += uint64(prog.Current())
+		// a layer without progress yet reports a size of -1
+		if s := prog.Size(); s > 0 {
+			size += uint64(s)
+		}
+		if c := prog.Current(); c > 0 {
+			current += uint64(c)
+		}
 	}
 
 	var progStr, auxInfo string
