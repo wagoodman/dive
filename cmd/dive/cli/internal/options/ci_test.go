@@ -1,6 +1,8 @@
 package options
 
 import (
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -20,6 +22,24 @@ func TestDefaultCI_ciEnv(t *testing.T) {
 			assert.False(t, DefaultCI().Enabled)
 		})
 	}
+}
+
+func TestCI_PostLoad_rulesOnlyInCIMode(t *testing.T) {
+	path := filepath.Join(t.TempDir(), ".dive-ci")
+	require.NoError(t, os.WriteFile(path, []byte("rules:\n  lowestEfficiency: nope\n"), 0o600))
+
+	// a broken rules file is ignored outside of CI mode (TUI, --json)
+	c := DefaultCI()
+	c.Enabled = false
+	c.ConfigPath = path
+	require.NoError(t, c.PostLoad())
+	require.NoError(t, c.Rules.PostLoad())
+
+	c = DefaultCI()
+	c.Enabled = true
+	c.ConfigPath = path
+	require.NoError(t, c.PostLoad())
+	require.Error(t, c.Rules.PostLoad())
 }
 
 func TestCI_PostLoad_keepsExplicitDisable(t *testing.T) {

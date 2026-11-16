@@ -43,6 +43,11 @@ func (c *CI) AddFlags(flags clio.FlagSet) {
 }
 
 func (c *CI) PostLoad() error {
+	// the rules file only matters in CI mode, so a broken one can't break the TUI or --json
+	if !c.Enabled {
+		return nil
+	}
+
 	if c.ConfigPath != "" {
 		if fileExists(c.ConfigPath) {
 			// if a config file is provided, load it and override any values provided in the application config.

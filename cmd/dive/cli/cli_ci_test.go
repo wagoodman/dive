@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"os"
 	"path/filepath"
 	"testing"
 
@@ -68,6 +69,23 @@ func Test_CI_FlagOverridesEnv(t *testing.T) {
 
 	assert.FileExists(t, file)
 	assert.NotContains(t, combined, "lowestEfficiency")
+}
+
+func Test_CI_InvalidRulesFileOutsideCI(t *testing.T) {
+	t.Setenv("DIVE_CONFIG", "-")
+	t.Setenv("CI", "false")
+
+	// a broken .dive-ci in the working dir must not matter when CI mode is off
+	file := filepath.Join(t.TempDir(), "output.json")
+	rootCmd := getTestCommand(t, "docker-archive:"+repoPath(t, ".data/test-docker-image.tar")+" --json "+file)
+	dir := t.TempDir()
+	require.NoError(t, os.WriteFile(filepath.Join(dir, ".dive-ci"), []byte("rules:\n  lowestEfficiency: nope\n"), 0o600))
+	cd(t, dir)
+	Capture().WithSuppress().Run(t, func() {
+		require.NoError(t, rootCmd.Execute())
+	})
+
+	assert.FileExists(t, file)
 }
 
 func Test_CI_WithJsonExport(t *testing.T) {

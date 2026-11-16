@@ -57,6 +57,7 @@ func Test_CIGoldens(t *testing.T) {
 	require.NoError(t, defaultRules.PostLoad())
 
 	fileCfg := options.DefaultCI()
+	fileCfg.Enabled = true
 	fileCfg.ConfigPath = imagefixture.RepoPath(".data/.dive-ci")
 	require.NoError(t, fileCfg.PostLoad())
 	require.NoError(t, fileCfg.Rules.PostLoad())
