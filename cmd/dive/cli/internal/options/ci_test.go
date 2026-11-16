@@ -68,6 +68,19 @@ func TestCI_PostLoad_ruleFileKeys(t *testing.T) {
 	assert.Equal(t, "disabled", c.Rules.HighestUserWastedPercentString)
 }
 
+func TestCI_PostLoad_omittedRules(t *testing.T) {
+	// rules left out of a rules file are skipped rather than run at their default
+	c := loadRulesFile(t, "rules:\n  lowestEfficiency: 0.5\n")
+	assert.Equal(t, "0.5", c.Rules.LowestEfficiencyThresholdString)
+	assert.Equal(t, "disabled", c.Rules.HighestWastedBytesString)
+	assert.Equal(t, "disabled", c.Rules.HighestUserWastedPercentString)
+
+	// a file without rules doesn't change anything
+	c = loadRulesFile(t, "# nothing here\n")
+	assert.Equal(t, DefaultCIRules().LowestEfficiencyThresholdString, c.Rules.LowestEfficiencyThresholdString)
+	assert.Equal(t, DefaultCIRules().HighestUserWastedPercentString, c.Rules.HighestUserWastedPercentString)
+}
+
 func TestCI_PostLoad_missingConfigPath(t *testing.T) {
 	c := DefaultCI()
 	c.Enabled = true

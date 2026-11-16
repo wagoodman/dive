@@ -57,8 +57,8 @@ func (c *CI) PostLoad() error {
 
 	if c.ConfigPath != "" {
 		if fileExists(c.ConfigPath) {
-			// the file (on top of the defaults) replaces the app config rules, but rule flags and env vars still
-			// win over it, the same as they do over any config file
+			// a file with rules is the whole rule set: it replaces the app config rules and the defaults, and rules
+			// it leaves out are skipped. Rule flags and env vars still win over it, as they do over any config file
 			yamlFile, err := os.ReadFile(c.ConfigPath)
 			if err != nil {
 				return fmt.Errorf("failed to read CI config file %s: %w", c.ConfigPath, err)
@@ -69,10 +69,11 @@ func (c *CI) PostLoad() error {
 			if err := yaml.Unmarshal(yamlFile, &file); err != nil {
 				return fmt.Errorf("failed to unmarshal CI config file %s: %w", c.ConfigPath, err)
 			}
-			def := DefaultCIRules()
-			defKeys := def.keys()
-			for i, r := range c.Rules.keys() {
-				v := *defKeys[i].value
+			if len(file.Rules) == 0 {
+				return nil
+			}
+			for _, r := range c.Rules.keys() {
+				v := "disabled"
 				// the file has always used camelCase keys, snake-case (like the app config) wins when both are set
 				for _, key := range []string{r.camel, r.snake} {
 					if fv, ok := file.Rules[key]; ok {
