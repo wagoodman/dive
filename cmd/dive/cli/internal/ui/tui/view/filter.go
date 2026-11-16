@@ -152,6 +152,7 @@ func (v *Filter) Render() error {
 		return nil
 	}
 
+	v.header.Clear()
 	_, err := fmt.Fprintln(v.header, format.Header(v.labelStr))
 	return err
 }
