@@ -42,6 +42,8 @@ type format struct {
 }
 
 func NewLineUI(cfg tui.Preferences, out io.Writer, quiet bool, verbosity int) *LineUI {
+	// these styles are for stderr, so its terminal picks the colors. The default renderer follows stdout (the report).
+	r := lipgloss.NewRenderer(os.Stderr, termenv.WithEnvironment(environWithoutCI{}))
 	return &LineUI{
 		cfg:       cfg,
 		out:       out,
@@ -49,9 +51,9 @@ func NewLineUI(cfg tui.Preferences, out io.Writer, quiet bool, verbosity int) *L
 		quiet:     quiet,
 		verbosity: verbosity,
 		format: format{
-			Title:        lipgloss.NewStyle().Bold(true).Width(30),
-			Aux:          lipgloss.NewStyle().Faint(true),
-			Notification: lipgloss.NewStyle().Foreground(lipgloss.Color("#A77BCA")),
+			Title:        r.NewStyle().Bold(true).Width(30),
+			Aux:          r.NewStyle().Faint(true),
+			Notification: r.NewStyle().Foreground(lipgloss.Color("#A77BCA")),
 		},
 	}
 }

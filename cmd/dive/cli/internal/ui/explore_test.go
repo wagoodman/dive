@@ -3,10 +3,13 @@ package ui
 import (
 	"bytes"
 	"io"
+	"os"
 	"testing"
 
 	"github.com/anchore/go-logger"
 	"github.com/anchore/go-logger/adapter/logrus"
+	"github.com/charmbracelet/lipgloss"
+	"github.com/muesli/termenv"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/wagoodman/go-partybus"
@@ -124,6 +127,22 @@ func TestLineUI_taskStartedWithoutProgress(t *testing.T) {
 	require.NoError(t, u.Handle(partybus.Event{Type: event.TaskStarted, Source: "not a task"}))
 	require.NoError(t, u.Handle(partybus.Event{Type: event.TaskStarted, Source: payload.GenericTask{Title: payload.Title{Default: "Loading image"}}}))
 	assert.Contains(t, errOut.String(), "Loading image")
+}
+
+func TestLineUI_stderrPicksStatusColors(t *testing.T) {
+	// stdout is a color terminal, stderr is not (dive --ci img 2>ci.log)
+	prev := lipgloss.DefaultRenderer()
+	t.Cleanup(func() { lipgloss.SetDefaultRenderer(prev) })
+	stdout := lipgloss.NewRenderer(os.Stdout)
+	stdout.SetColorProfile(termenv.ANSI256)
+	lipgloss.SetDefaultRenderer(stdout)
+
+	var errOut bytes.Buffer
+	u := NewLineUI(tui.DefaultPreferences(), &bytes.Buffer{}, false, 0)
+	u.err = &errOut
+	require.NoError(t, u.Handle(partybus.Event{Type: event.Notification, Value: "heads up"}))
+	require.NoError(t, u.Handle(partybus.Event{Type: event.TaskStarted, Source: payload.GenericTask{Title: payload.Title{Default: "Loading image"}, Context: "img"}}))
+	assert.NotContains(t, errOut.String(), "\x1b[")
 }
 
 func TestLineUI_quietStillPrintsReport(t *testing.T) {
