@@ -234,6 +234,21 @@ func TestFileTreeSelectLayer(t *testing.T) {
 	runTestCase(t, vm, width, height, nil)
 }
 
+func TestFileTreeSortOrderKeptAcrossLayers(t *testing.T) {
+	vm := initializeTestViewModel(t)
+
+	require.NoError(t, vm.ToggleSortOrder())
+	require.Equal(t, filetree.SortOrder(filetree.BySizeDesc), vm.ModelTree.SortOrder)
+
+	require.NoError(t, vm.SetTreeByLayer(0, 0, 1, 1))
+	assert.Equal(t, filetree.SortOrder(filetree.BySizeDesc), vm.ModelTree.SortOrder)
+
+	// toggling back and revisiting a layer must not flip it again
+	require.NoError(t, vm.ToggleSortOrder())
+	require.NoError(t, vm.SetTreeByLayer(0, 0, 0, 0))
+	assert.Equal(t, filetree.SortOrder(filetree.ByName), vm.ModelTree.SortOrder)
+}
+
 func TestFileShowAggregateChanges(t *testing.T) {
 	vm := initializeTestViewModel(t)
 

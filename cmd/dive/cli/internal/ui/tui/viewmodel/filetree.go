@@ -28,6 +28,7 @@ type FileTreeViewModel struct {
 	ShowAttributes              bool
 	unconstrainedShowAttributes bool
 	HiddenDiffTypes             []bool
+	sortOrder                   filetree.SortOrder
 	TreeIndex                   int
 	bufferIndex                 int
 	bufferIndexLowerBound       int
@@ -130,6 +131,8 @@ func (vm *FileTreeViewModel) SetTreeByLayer(bottomTreeStart, bottomTreeStop, top
 		return fmt.Errorf("unable to propagate layer tree: %w", err)
 	}
 
+	// cached trees carry their own sort order, the user's choice applies to all of them
+	newTree.SortOrder = vm.sortOrder
 	vm.ModelTree = newTree
 	return nil
 }
@@ -355,7 +358,8 @@ func (vm *FileTreeViewModel) ToggleCollapseAll() error {
 
 // ToggleSortOrder will toggle the sort order in which files are displayed
 func (vm *FileTreeViewModel) ToggleSortOrder() error {
-	vm.ModelTree.SortOrder = (vm.ModelTree.SortOrder + 1) % filetree.NumSortOrderConventions
+	vm.sortOrder = (vm.sortOrder + 1) % filetree.NumSortOrderConventions
+	vm.ModelTree.SortOrder = vm.sortOrder
 
 	return nil
 }
