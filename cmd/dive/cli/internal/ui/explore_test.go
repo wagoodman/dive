@@ -2,6 +2,7 @@ package ui
 
 import (
 	"bytes"
+	"io"
 	"testing"
 
 	"github.com/anchore/go-logger"
@@ -37,6 +38,28 @@ func TestMuteConsoleLogs_restores(t *testing.T) {
 	// the logger clio reports the final error with is the same one, it has to print again
 	l.Error("cannot load image")
 	assert.Contains(t, buf.String(), "cannot load image")
+}
+
+func TestMuteConsoleLogs_keepsLogFile(t *testing.T) {
+	l, err := logrus.New(logrus.Config{EnableConsole: true, Level: logger.InfoLevel})
+	require.NoError(t, err)
+	var console, file bytes.Buffer
+	l.(logger.Controller).SetOutput(io.MultiWriter(&console, &file))
+
+	prev, prevFile := log.Get(), log.File()
+	log.Set(l)
+	log.SetFile(&file)
+	t.Cleanup(func() {
+		log.Set(prev)
+		log.SetFile(prevFile)
+	})
+
+	restore := muteConsoleLogs()
+	log.Info("while the UI runs")
+	restore()
+
+	assert.Empty(t, console.String())
+	assert.Contains(t, file.String(), "while the UI runs")
 }
 
 func TestLineUI_teardownRestoresLogs(t *testing.T) {
