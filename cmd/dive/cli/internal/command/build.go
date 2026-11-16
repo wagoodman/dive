@@ -82,11 +82,17 @@ func splitBuildArgs(args []string) (diveArgs, buildArgs []string) {
 	return nil, args
 }
 
-func build(ctx context.Context, engine string, args []string) (string, error) {
-	// only docker and podman can build (source.Build refuses the rest), auto builds with docker
-	if engine, _ = source.Normalize(engine); engine == source.Auto {
-		engine = source.Docker
+// buildEngine picks the engine to build with for the configured source. Only docker and podman can build:
+// containers-storage is podman's store, every other source (auto, archives, registry, ...) builds with docker.
+func buildEngine(src string) string {
+	if src, _ = source.Normalize(src); src == source.Podman || src == source.ContainersStorage {
+		return source.Podman
 	}
+	return source.Docker
+}
+
+func build(ctx context.Context, src string, args []string) (string, error) {
+	engine := buildEngine(src)
 
 	log.Info("building image")
 	log.Debugf("└── %s", strings.Join(args, " "))
