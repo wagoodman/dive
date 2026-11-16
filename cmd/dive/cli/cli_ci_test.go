@@ -1,9 +1,11 @@
 package cli
 
 import (
+	"path/filepath"
+	"testing"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func Test_CI_DefaultCIConfig(t *testing.T) {
@@ -51,4 +53,16 @@ func Test_CI_LegacyRules(t *testing.T) {
 	assert.Contains(t, all, "lowest-efficiency: '0.95'", "missing lowest-efficiency legacy rule")
 	assert.Contains(t, all, "highest-wasted-bytes: '20MB'", "missing highest-wasted-bytes legacy rule")
 	assert.Contains(t, all, "highest-user-wasted-percent: '0.2'", "missing highest-user-wasted-percent legacy rule")
+}
+
+func Test_CI_WithJsonExport(t *testing.T) {
+	// exporting must not skip the gate, CI=true turns CI mode on in pipelines that also export
+	file := filepath.Join(t.TempDir(), "output.json")
+	rootCmd := getTestCommand(t, "docker-archive:"+repoPath(t, ".data/test-docker-image.tar")+" --ci --lowestEfficiency 0.999 --json "+file)
+	combined := Capture().WithStdout().WithStderr().Run(t, func() {
+		require.ErrorContains(t, rootCmd.Execute(), "evaluation failed")
+	})
+
+	assert.FileExists(t, file)
+	assert.Contains(t, combined, "FAIL  lowestEfficiency")
 }
