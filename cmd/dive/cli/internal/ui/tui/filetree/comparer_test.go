@@ -259,6 +259,15 @@ func TestComparer_HashesOnlyWhenNeeded(t *testing.T) {
 	assert.Len(t, cmp.hashes, 2)
 }
 
+func TestComparer_LayerAgainstItselfReadsNothing(t *testing.T) {
+	cmp := NewComparer(imagefixture.Load(t, "legacy-save"))
+	// the startup view: layer 0 compared with itself
+	tree, err := cmp.GetTree(NewTreeIndexKey(0, 0, 0, 0))
+	require.NoError(t, err)
+	assert.Empty(t, cmp.hashes)
+	assert.Equal(t, map[string]DiffType{"/bin/sh": Unmodified}, diffTypes(t, tree, "/bin/sh"))
+}
+
 func TestComparer_HashFailureIsModified(t *testing.T) {
 	cmp := NewComparer(imagefixture.Load(t, "mode-uid-only-change"))
 	// a reference the catalog doesn't know can't be read
@@ -268,7 +277,9 @@ func TestComparer_HashFailureIsModified(t *testing.T) {
 	_, ok := cmp.contentHash(f)
 	assert.False(t, ok)
 	assert.Empty(t, cmp.hashes, "a failed read is retried, not cached")
-	assert.Equal(t, Modified, f.Compare(f, cmp.contentHash))
+	other := f
+	other.ref = file.NewFileReference("/nope")
+	assert.Equal(t, Modified, f.Compare(other, cmp.contentHash))
 }
 
 func TestFileInfo_Compare(t *testing.T) {

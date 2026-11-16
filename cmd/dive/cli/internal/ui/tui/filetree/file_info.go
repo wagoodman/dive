@@ -71,6 +71,10 @@ type ContentHasher func(FileInfo) (uint64, bool)
 // Content is only hashed when everything else matches, and an unreadable side counts as Modified. A nil hasher
 // compares metadata only.
 func (data *FileInfo) Compare(other FileInfo, hash ContentHasher) DiffType {
+	// the same catalog entry on both sides (a layer against itself) can't differ, don't read it
+	if data.ref != nil && other.ref != nil && data.ref.ID() == other.ref.ID() {
+		return Unmodified
+	}
 	if data.TypeFlag != other.TypeFlag ||
 		data.Mode != other.Mode ||
 		data.Uid != other.Uid ||
