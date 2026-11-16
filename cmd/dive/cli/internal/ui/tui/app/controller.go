@@ -2,7 +2,9 @@ package app
 
 import (
 	"fmt"
+	"path/filepath"
 	"regexp"
+	"strings"
 
 	"github.com/awesome-gocui/gocui"
 
@@ -64,11 +66,18 @@ func newController(g *gocui.Gui, cfg tui.Config) (*controller, error) {
 
 func (c *controller) onFileTreeViewExtract(p string) error {
 	// files land relative to the current working directory, the same as before
-	if err := extract(c.config.Analysis.Image, c.views.LayerDetails.CurrentLayer.Index, p, "."); err != nil {
-		// an extract problem is not a reason to end the session, it is reported once the TUI exits
-		bus.Notify(fmt.Sprintf("extract of %s: %v", p, err))
+	dst, err := filepath.Abs(".")
+	if err == nil {
+		err = extract(c.config.Analysis.Image, c.views.LayerDetails.CurrentLayer.Index, p, dst)
 	}
-	return nil
+	if err != nil {
+		// an extract problem is not a reason to end the session, the full report is also shown once the TUI exits
+		bus.Notify(fmt.Sprintf("extract of %s: %v", p, err))
+		c.views.Status.Notify(fmt.Sprintf("extract of %s failed: %s", p, strings.ReplaceAll(err.Error(), "\n", "; ")))
+	} else {
+		c.views.Status.Notify(fmt.Sprintf("extracted %s to %s", p, dst))
+	}
+	return c.views.Status.Render()
 }
 
 func (c *controller) onFileTreeViewOptionChange() error {

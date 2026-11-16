@@ -163,6 +163,24 @@ func TestExtract_SquashedTree(t *testing.T) {
 	assert.ErrorContains(t, extract(img, 1, "/nope", "."), "no regular files to extract")
 }
 
+func TestExtract_KeepsMode(t *testing.T) {
+	img := imagefixture.LoadSpec(t, imagefixture.Spec{Layers: [][]imagefixture.Entry{{
+		{Name: "run.sh", Content: "#!/bin/sh", Mode: 0o755},
+		{Name: "private.txt", Content: "private", Mode: 0o600},
+	}}})
+	dirs(t)
+
+	require.NoError(t, extract(img, 0, "/", "."))
+
+	// the umask can only take bits away
+	fi, err := os.Stat("run.sh")
+	require.NoError(t, err)
+	assert.Equal(t, os.FileMode(0o100), fi.Mode().Perm()&0o100, "owner exec bit")
+	fi, err = os.Stat("private.txt")
+	require.NoError(t, err)
+	assert.Equal(t, os.FileMode(0o600), fi.Mode().Perm())
+}
+
 func TestExtract_KeepsExistingFiles(t *testing.T) {
 	img := imagefixture.LoadSpec(t, imagefixture.Spec{Layers: [][]imagefixture.Entry{{
 		{Name: "config.yaml", Content: "from the image"},

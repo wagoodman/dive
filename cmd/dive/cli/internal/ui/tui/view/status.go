@@ -22,6 +22,7 @@ type Status struct {
 
 	selectedView    Helper
 	requestedHeight int
+	notice          string
 
 	helpKeys []*key.Binding
 }
@@ -47,6 +48,11 @@ func (v *Status) SetCurrentView(r Helper) {
 // CurrentView is the view whose key help is shown
 func (v *Status) CurrentView() Helper {
 	return v.selectedView
+}
+
+// Notify shows msg in place of the key help on the next render only
+func (v *Status) Notify(msg string) {
+	v.notice = msg
 }
 
 func (v *Status) Name() string {
@@ -91,15 +97,21 @@ func (v *Status) OnLayoutChange() error {
 func (v *Status) Render() error {
 	v.logger.Trace("render()")
 
+	notice := v.notice
+	v.notice = ""
+
 	v.gui.Update(func(g *gocui.Gui) error {
 		v.view.Clear()
 
-		var selectedHelp string
+		help := v.KeyHelp()
 		if v.selectedView != nil {
-			selectedHelp = v.selectedView.KeyHelp()
+			help += v.selectedView.KeyHelp()
+		}
+		if notice != "" {
+			help = format.StatusControlNormal("▏" + notice + " ")
 		}
 
-		_, err := fmt.Fprintln(v.view, v.KeyHelp()+selectedHelp+format.StatusNormal("▏"+strings.Repeat(" ", 1000)))
+		_, err := fmt.Fprintln(v.view, help+format.StatusNormal("▏"+strings.Repeat(" ", 1000)))
 		if err != nil {
 			v.logger.WithFields("error", err).Debug("unable to write to buffer")
 		}
