@@ -18,6 +18,9 @@ import (
 	"sync/atomic"
 	"testing"
 
+	"github.com/google/go-containerregistry/pkg/name"
+	v1 "github.com/google/go-containerregistry/pkg/v1"
+	"github.com/google/go-containerregistry/pkg/v1/tarball"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -279,6 +282,31 @@ func fakeDockerDaemon(t *testing.T, tarball string) *atomic.Int32 {
 	t.Setenv("DOCKER_TLS_VERIFY", "")
 	t.Setenv("DOCKER_TLS", "")
 	return &saves
+}
+
+// regression for #318: kaniko's `--tarPath` archive (written by go-containerregistry's tarball writer) failed with
+// "could not find image config", since its config is named `sha256:<hex>` and its layers `<hex>.tar.gz`.
+func Test_Archive_KanikoTarPath(t *testing.T) {
+	plain := writeSpec(t, imagefixture.Fixtures()["legacy-save"])
+	want := exportArchive(t, "docker-archive:"+plain)
+
+	img, err := tarball.ImageFromPath(plain, nil)
+	require.NoError(t, err)
+	ref, err := name.ParseReference("image")
+	require.NoError(t, err)
+	kaniko := filepath.Join(t.TempDir(), "image.tar")
+	require.NoError(t, tarball.MultiRefWriteToFile(kaniko, map[name.Reference]v1.Image{ref: img}))
+
+	// the archive has kaniko's naming, not docker's
+	manifest, err := tarball.LoadManifest(func() (io.ReadCloser, error) { return os.Open(kaniko) })
+	require.NoError(t, err)
+	require.Len(t, manifest, 1)
+	assert.True(t, strings.HasPrefix(manifest[0].Config, "sha256:"), manifest[0].Config)
+	for _, l := range manifest[0].Layers {
+		assert.True(t, strings.HasSuffix(l, ".tar.gz"), l)
+	}
+
+	assert.Equal(t, want, exportArchive(t, "docker-archive://"+kaniko))
 }
 
 // writeSpec writes the spec's image tarball to a temp file.
