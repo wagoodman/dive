@@ -35,6 +35,10 @@ type Handler struct {
 	// taskIDs maps every task row ID handed out so far to the ID of its root task's tree (only touched from the
 	// bubbletea update loop)
 	taskIDs map[string]string
+
+	// attempt holds the progress of the stereoscope rows started since the last image source failed (only touched
+	// from the bubbletea update loop)
+	attempt []*failableProgress
 }
 
 func DefaultHandlerConfig() HandlerConfig {
@@ -61,6 +65,7 @@ func New(cfg HandlerConfig) *Handler {
 		stereoscopeEvent.ReadImage:           simpleHandler(h.handleReadImage),
 		stereoscopeEvent.ReadLayer:           h.handleReadLayer,
 		diveEvent.TaskStarted:                h.handleTaskStarted,
+		diveEvent.ImageSourceFailed:          h.handleSourceFailed,
 	})
 
 	return h

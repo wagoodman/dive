@@ -19,7 +19,10 @@ import (
 	"github.com/moby/moby/client"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/wagoodman/go-partybus"
 
+	"github.com/wagoodman/dive/internal/bus"
+	"github.com/wagoodman/dive/internal/bus/event"
 	"github.com/wagoodman/dive/internal/imagefixture"
 )
 
@@ -191,6 +194,26 @@ func TestLoad(t *testing.T) {
 			assert.Len(t, img.Layers, tt.wantLayers)
 		})
 	}
+}
+
+func TestLoad_publishesFailedSources(t *testing.T) {
+	prev := bus.Get()
+	t.Cleanup(func() { bus.Set(prev) })
+	b := partybus.NewBus()
+	sub := b.Subscribe(event.ImageSourceFailed)
+	bus.Set(b)
+
+	_, err := Load(context.Background(), filepath.Join(t.TempDir(), "nope.tar"), Config{Source: DockerArchive})
+	require.Error(t, err)
+	require.NoError(t, sub.Unsubscribe())
+
+	// the UI fails the rows of each attempt on these
+	var failed []any
+	for e := range sub.Events() {
+		assert.Error(t, e.Error)
+		failed = append(failed, e.Source)
+	}
+	assert.Equal(t, []any{"docker-archive", "oci-archive"}, failed)
 }
 
 func TestLoad_interrupted(t *testing.T) {

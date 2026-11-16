@@ -18,4 +18,8 @@ const (
 
 	// Notification is a partybus event that occurs when auxiliary information is ready for presentation to stderr
 	Notification partybus.EventType = typePrefix + "-notification"
+
+	// ImageSourceFailed is a partybus event that occurs when an image source (stereoscope provider) gave up on the
+	// image, possibly before the next source is tried. The source name is the event source, the reason its error.
+	ImageSourceFailed partybus.EventType = typePrefix + "-image-source-failed"
 )

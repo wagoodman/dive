@@ -57,7 +57,7 @@ func (m *Handler) handlePullDockerImage(e partybus.Event) []tea.Model {
 			Success: "Pulled image",
 		},
 		taskprogress.WithStagedProgressable(
-			newDockerPullProgressAdapter(pullStatus),
+			m.failable(newDockerPullProgressAdapter(pullStatus)),
 		),
 	)
 

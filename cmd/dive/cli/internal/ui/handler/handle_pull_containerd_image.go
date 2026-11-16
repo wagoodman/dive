@@ -60,7 +60,7 @@ func (m *Handler) handlePullContainerdImage(e partybus.Event) []tea.Model {
 			Success: "Pulled image",
 		},
 		taskprogress.WithStagedProgressable(
-			newContainerdPullProgressAdapter(pullStatus),
+			m.failable(newContainerdPullProgressAdapter(pullStatus)),
 		),
 	)
 
