@@ -72,6 +72,12 @@ func Build(ctx context.Context, engine string, args []string) (string, error) {
 		// containers-storage only resolves a bare hex ID, not "sha256:<hex>" (the podman socket takes either)
 		return Podman + "://" + strings.TrimPrefix(id, "sha256:"), nil
 	}
+
+	// a buildx builder other than the docker driver keeps the image in its own cache unless told to --load, and
+	// loading a missing ID from the daemon ends in a pull of "sha256:<id>" from Docker Hub
+	if out, err := exec.CommandContext(ctx, Docker, "image", "inspect", "--format", "{{.Id}}", id).CombinedOutput(); err != nil {
+		return "", fmt.Errorf("the built image %s is not in the docker daemon (add --load when building with a buildx builder that doesn't use the docker driver): %s", id, strings.TrimSpace(string(out)))
+	}
 	return Docker + "://" + id, nil
 }
 

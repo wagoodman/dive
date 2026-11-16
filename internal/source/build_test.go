@@ -91,7 +91,7 @@ func create(t testing.TB, fs afero.Fs, path, contents string) {
 }
 
 // fakeEngine puts an executable named engine on PATH that writes id to the --iidfile it is given. It returns a func
-// reporting the args the engine was last run with (one per line).
+// reporting the args the engine was last built with (one per line). "image inspect" exits with $FAKE_INSPECT_EXIT.
 func fakeEngine(t *testing.T, engine, id string) func() []string {
 	t.Helper()
 	if runtime.GOOS == "windows" {
@@ -99,7 +99,7 @@ func fakeEngine(t *testing.T, engine, id string) func() []string {
 	}
 	dir := t.TempDir()
 	argsFile := filepath.Join(dir, "args")
-	script := "#!/bin/sh\nprintf '%s\\n' \"$@\" > '" + argsFile + "'\nwhile [ $# -gt 0 ]; do\n  if [ \"$1\" = \"--iidfile\" ]; then printf '" + id + "\\n' > \"$2\"; fi\n  shift\ndone\n"
+	script := "#!/bin/sh\nif [ \"$1\" = image ]; then exit ${FAKE_INSPECT_EXIT:-0}; fi\nprintf '%s\\n' \"$@\" > '" + argsFile + "'\nwhile [ $# -gt 0 ]; do\n  if [ \"$1\" = \"--iidfile\" ]; then printf '" + id + "\\n' > \"$2\"; fi\n  shift\ndone\n"
 	require.NoError(t, os.WriteFile(filepath.Join(dir, engine), []byte(script), 0o755))
 	t.Setenv("PATH", dir)
 	return func() []string {
@@ -168,6 +168,14 @@ func TestBuild_dockerfileDetection(t *testing.T) {
 			assert.Equal(t, want, args()[3:])
 		})
 	}
+}
+
+func TestBuild_imageNotInDaemon(t *testing.T) {
+	// e.g. built with a docker-container buildx builder and no --load
+	fakeEngine(t, Docker, "sha256:abc")
+	t.Setenv("FAKE_INSPECT_EXIT", "1")
+	_, err := Build(context.Background(), Docker, []string{"-f", "Dockerfile", "."})
+	require.ErrorContains(t, err, "add --load")
 }
 
 func TestBuild_passesArgsUntouched(t *testing.T) {
