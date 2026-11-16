@@ -12,7 +12,8 @@ import (
 var _ progress.StagedProgressable = (*failableProgress)(nil)
 
 // failableProgress wraps the progress of a stereoscope row so the row can be failed when its image source gives up.
-// stereoscope marks a pull status complete on failure too, so the row would otherwise say it pulled the image.
+// stereoscope marks a pull status complete on failure too, so the row would otherwise say it pulled the image, and
+// never completes a failed fetch or read, which would spin (and hold the UI's wait group) forever.
 type failableProgress struct {
 	progress.Progressable
 	err atomic.Pointer[error]
