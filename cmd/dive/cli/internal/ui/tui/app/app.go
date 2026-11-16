@@ -3,9 +3,11 @@ package app
 import (
 	"context"
 	"errors"
+	"os"
 	"time"
 
 	"github.com/awesome-gocui/gocui"
+	"github.com/mattn/go-runewidth"
 
 	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/tui"
 	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/tui/key"
@@ -40,6 +42,8 @@ func Run(ctx context.Context, c tui.Config) error {
 	// enough sleep will prevent this behavior (todo: remove this hack)
 	time.Sleep(100 * time.Millisecond)
 
+	narrowAmbiguousWidth()
+
 	g, err := gocui.NewGui(outputMode, true)
 	if err != nil {
 		return err
@@ -71,6 +75,15 @@ func Run(ctx context.Context, c tui.Config) error {
 		return err
 	}
 	return nil
+}
+
+// narrowAmbiguousWidth counts east asian ambiguous width runes as one cell. go-runewidth counts them as two under a
+// CJK locale, but terminals draw the tree and border box drawing characters (│ ├ └ ─) one cell wide, so every row
+// would be laid out wrong. RUNEWIDTH_EASTASIAN still wins when it is set.
+func narrowAmbiguousWidth() {
+	if os.Getenv("RUNEWIDTH_EASTASIAN") == "" {
+		runewidth.DefaultCondition.EastAsianWidth = false
+	}
 }
 
 func newApp(gui *gocui.Gui, cfg tui.Config) (*app, error) {

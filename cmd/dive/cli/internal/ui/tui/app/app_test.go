@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/awesome-gocui/gocui"
+	"github.com/mattn/go-runewidth"
 	"github.com/stretchr/testify/require"
 
 	"github.com/wagoodman/dive/cmd/dive/cli/internal/options"
@@ -13,6 +14,23 @@ import (
 	"github.com/wagoodman/dive/dive"
 	"github.com/wagoodman/dive/internal/imagefixture"
 )
+
+func TestNarrowAmbiguousWidth(t *testing.T) {
+	orig := runewidth.DefaultCondition.EastAsianWidth
+	t.Cleanup(func() { runewidth.DefaultCondition.EastAsianWidth = orig })
+
+	// as go-runewidth sets it up under a CJK locale
+	runewidth.DefaultCondition.EastAsianWidth = true
+	t.Setenv("RUNEWIDTH_EASTASIAN", "")
+	narrowAmbiguousWidth()
+	require.Equal(t, 1, runewidth.RuneWidth('│'))
+
+	// an explicit choice is kept
+	runewidth.DefaultCondition.EastAsianWidth = true
+	t.Setenv("RUNEWIDTH_EASTASIAN", "1")
+	narrowAmbiguousWidth()
+	require.Equal(t, 2, runewidth.RuneWidth('│'))
+}
 
 func TestRun_noLayers(t *testing.T) {
 	outputMode = gocui.OutputSimulator

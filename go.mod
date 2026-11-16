@@ -23,6 +23,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/klauspost/compress v1.20.2
 	github.com/lunixbochs/vtclean v1.0.0
+	github.com/mattn/go-runewidth v0.0.29
 	github.com/moby/moby/client v0.6.0
 	github.com/muesli/termenv v0.16.0
 	github.com/pelletier/go-toml/v2 v2.4.3
@@ -111,7 +112,6 @@ require (
 	github.com/mattn/go-colorable v0.1.14 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mattn/go-localereader v0.0.2-0.20220822084749-2491eb6c1c75 // indirect
-	github.com/mattn/go-runewidth v0.0.29 // indirect
 	github.com/mattn/go-sqlite3 v1.14.48 // indirect
 	github.com/mgutz/ansi v0.0.0-20200706080929-d51e80ef957d // indirect
 	github.com/miekg/pkcs11 v1.1.2 // indirect
