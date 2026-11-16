@@ -404,6 +404,45 @@ func TestFileTreeCursorDownStopsAtLastRow(t *testing.T) {
 	assert.False(t, vm.CursorDown(), "cursor moved past the end of an empty tree")
 }
 
+func TestFileTreeCursorClampedOnUpdate(t *testing.T) {
+	vm := initializeTestViewModel(t)
+
+	width, height := 100, 20
+	vm.Setup(0, height)
+	require.NoError(t, vm.Update(nil, width, height))
+
+	assertCursorInPane := func(msg string) {
+		t.Helper()
+		assert.GreaterOrEqual(t, vm.bufferIndex, 0, msg)
+		assert.LessOrEqual(t, vm.bufferIndex, vm.height(), msg)
+		assert.Equal(t, vm.TreeIndex, vm.bufferIndexLowerBound+vm.bufferIndex, msg)
+		assert.NotNil(t, vm.CurrentNode(), msg)
+	}
+
+	for range 200 {
+		require.True(t, vm.CursorDown())
+	}
+
+	// shrinking the pane keeps the cursor on the same node, inside the pane
+	before := vm.CurrentNode()
+	require.NoError(t, vm.Update(nil, width, 10))
+	assertCursorInPane("after resize")
+	assert.Equal(t, before, vm.CurrentNode())
+
+	// filtering down to a handful of rows moves the cursor onto the last of them and shows them all
+	require.NoError(t, vm.Update(regexp.MustCompile("network"), width, 10))
+	assertCursorInPane("after filter")
+	assert.Equal(t, vm.ModelTree.VisibleSize(), vm.TreeIndex)
+	assert.Equal(t, 0, vm.bufferIndexLowerBound)
+
+	// hiding everything leaves the cursor at the top
+	vm.ToggleShowDiffType(filetree.Unmodified)
+	require.NoError(t, vm.Update(nil, width, 10))
+	assert.Equal(t, 0, vm.TreeIndex)
+	assert.Equal(t, 0, vm.bufferIndex)
+	assert.Equal(t, 0, vm.bufferIndexLowerBound)
+}
+
 func TestFileTreeHideAddedRemovedModified(t *testing.T) {
 	vm := initializeTestViewModel(t)
 

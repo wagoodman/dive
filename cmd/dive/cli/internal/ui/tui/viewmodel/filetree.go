@@ -433,7 +433,23 @@ func (vm *FileTreeViewModel) Update(filterRegex *regexp.Regexp, width, height in
 		return fmt.Errorf("unable to propagate vm view tree: %w", err)
 	}
 
+	vm.clampCursor()
 	return nil
+}
+
+// clampCursor keeps the cursor on a visible row and inside the pane after the number of visible rows or the pane
+// height changed (filter edits, hidden diff types, collapsing, resizing).
+func (vm *FileTreeViewModel) clampCursor() {
+	// note: VisibleSize is the index of the last visible row
+	last := max(vm.ModelTree.VisibleSize(), 0)
+	vm.TreeIndex = min(max(vm.TreeIndex, 0), last)
+
+	// don't leave blank rows at the bottom of the pane when there are rows above it to show instead
+	lower := min(vm.bufferIndexLowerBound, max(last-vm.height(), 0))
+	lower = min(max(lower, vm.TreeIndex-vm.height(), 0), vm.TreeIndex)
+
+	vm.bufferIndexLowerBound = lower
+	vm.bufferIndex = vm.TreeIndex - lower
 }
 
 // Render flushes the state objects (file tree) to the pane.
