@@ -2,9 +2,11 @@ package options
 
 import (
 	"fmt"
+	"os"
+	"strings"
+
 	"github.com/anchore/clio"
 	"gopkg.in/yaml.v3"
-	"os"
 )
 
 var _ interface {
@@ -93,12 +95,11 @@ func fileExists(path string) bool {
 	return true
 }
 
+// truthy matches CI env values case-insensitively, e.g. AppVeyor sets CI=True
 func truthy(value string) bool {
-	switch value {
+	switch strings.ToLower(strings.TrimSpace(value)) {
 	case "true", "1", "yes":
 		return true
-	case "false", "0", "no":
-		return false
 	default:
 		return false
 	}
