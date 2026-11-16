@@ -219,6 +219,8 @@ func TestComparer_Marks(t *testing.T) {
 				"/data/olddir/nested/y": Removed,
 				"/data/olddir/z":        Added,
 				"/data/keep.txt":        Unmodified,
+				// layer 2 re-created the dir layer 1 removed
+				"/data/olddir": Modified,
 			},
 		},
 	}

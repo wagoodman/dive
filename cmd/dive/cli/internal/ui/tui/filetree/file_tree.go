@@ -315,7 +315,8 @@ func (tree *FileTree) CompareAndMark(upper *FileTree, hash ContentHasher) ([]Pat
 			if err != nil {
 				return failed, err
 			}
-		} else if pair.lowerNode.Data.DiffType == Unmodified {
+		} else if pair.lowerNode.Data.DiffType == Unmodified || pair.lowerNode.Data.DiffType == Removed {
+			// a node an earlier top layer removed is back if this layer has it, re-derive it like an untouched one
 			err = pair.lowerNode.deriveDiffType(pair.tentative)
 			if err != nil {
 				return failed, err
