@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"bytes"
 	"os"
 	"path/filepath"
 	"testing"
@@ -12,6 +13,15 @@ import (
 
 	"github.com/wagoodman/dive/internal/log"
 )
+
+func Test_colorErrors(t *testing.T) {
+	var pipe bytes.Buffer
+	assert.False(t, colorErrors(nil, &pipe), "a pipe or file gets no ANSI codes")
+
+	t.Setenv("CLICOLOR_FORCE", "1")
+	assert.True(t, colorErrors(&clio.LoggingConfig{}, &pipe))
+	assert.False(t, colorErrors(&clio.LoggingConfig{FileLocation: "dive.log"}, &pipe), "the log file gets the same line")
+}
 
 func Test_newLogger_recordsLogFile(t *testing.T) {
 	t.Cleanup(func() { log.SetFile(nil) })

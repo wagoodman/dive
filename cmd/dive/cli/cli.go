@@ -9,6 +9,8 @@ import (
 	"github.com/anchore/go-logger"
 	"github.com/anchore/go-logger/adapter/redact"
 	"github.com/anchore/stereoscope"
+	"github.com/gookit/color"
+	"github.com/muesli/termenv"
 	"github.com/spf13/cobra"
 	"github.com/wagoodman/dive/cmd/dive/cli/internal/command"
 	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui"
@@ -41,6 +43,10 @@ func create(id clio.Identification) (clio.Application, *cobra.Command) {
 				// stereoscope publishes pull/fetch/read events on the same bus the UI listens to
 				stereoscope.SetBus(state.Bus)
 				stereoscope.SetLogger(state.Logger.Nested("from-lib", "stereoscope"))
+
+				if !colorErrors(state.Config.Log, os.Stderr) {
+					color.Enable = false
+				}
 				return nil
 			},
 		)
@@ -56,6 +62,16 @@ func create(id clio.Identification) (clio.Application, *cobra.Command) {
 	)
 
 	return app, rootCmd
+}
+
+// colorErrors reports whether clio may color the final error (gookit color, only NO_COLOR turns it off). It logs that
+// error to the console and the log file alike, so it should be plain unless stderr is a color terminal and there is no
+// log file.
+func colorErrors(cfg *clio.LoggingConfig, stderr io.Writer) bool {
+	if cfg != nil && cfg.FileLocation != "" {
+		return false
+	}
+	return termenv.NewOutput(stderr).EnvColorProfile() != termenv.Ascii
 }
 
 // newLogger is clio's default logger, except that it opens the log file itself and records it with log.SetFile. clio
