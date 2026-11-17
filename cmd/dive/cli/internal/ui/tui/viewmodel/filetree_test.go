@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"slices"
+	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -152,7 +153,7 @@ func TestFileTreeDirCollapse(t *testing.T) {
 	assertPath(t, vm, "/bin", "before toggle of bin")
 
 	// collapse /bin
-	err := vm.ToggleCollapse(nil)
+	err := vm.ToggleCollapse()
 	checkError(t, err, "unable to collapse /bin")
 	assertPath(t, vm, "/bin", "after toggle of bin")
 
@@ -165,7 +166,7 @@ func TestFileTreeDirCollapse(t *testing.T) {
 	assertPath(t, vm, "/etc", "down to etc")
 
 	// collapse /etc
-	err = vm.ToggleCollapse(nil)
+	err = vm.ToggleCollapse()
 	checkError(t, err, "unable to collapse /etc")
 	assertPath(t, vm, "/etc", "after toggle of etc")
 
@@ -174,9 +175,31 @@ func TestFileTreeDirCollapse(t *testing.T) {
 
 func assertPath(t *testing.T, vm *FileTreeViewModel, expected string, msg string) {
 	t.Helper()
-	n := vm.CurrentNode(nil)
+	n := vm.CurrentNode()
 	require.NotNil(t, n, "unable to get current node")
 	assert.Equal(t, expected, n.Path(), msg)
+}
+
+func TestFileTreeCursorLeft(t *testing.T) {
+	vm := initializeTestViewModel(t)
+
+	width, height := 100, 100
+	vm.Setup(0, height)
+	require.NoError(t, vm.Update(nil, width, height))
+
+	// /bin -> its first child
+	require.True(t, vm.CursorDown())
+	n := vm.CurrentNode()
+	require.NotNil(t, n)
+	assert.Equal(t, "/bin", n.Parent.Path())
+
+	require.NoError(t, vm.CursorLeft())
+	assertPath(t, vm, "/bin", "left to parent")
+	assert.Equal(t, 0, vm.TreeIndex)
+
+	// a top level entry has no parent row to move to, so the cursor stays put
+	require.NoError(t, vm.CursorLeft())
+	assertPath(t, vm, "/bin", "left at top level")
 }
 
 func TestFileTreeDirCollapseAll(t *testing.T) {
@@ -200,7 +223,7 @@ func TestFileTreeSelectLayer(t *testing.T) {
 	vm.ShowAttributes = true
 
 	// collapse /bin
-	err := vm.ToggleCollapse(nil)
+	err := vm.ToggleCollapse()
 	checkError(t, err, "unable to collapse /bin")
 
 	// select the next layer, compareMode = layer
@@ -211,6 +234,21 @@ func TestFileTreeSelectLayer(t *testing.T) {
 	runTestCase(t, vm, width, height, nil)
 }
 
+func TestFileTreeSortOrderKeptAcrossLayers(t *testing.T) {
+	vm := initializeTestViewModel(t)
+
+	require.NoError(t, vm.ToggleSortOrder())
+	require.Equal(t, filetree.SortOrder(filetree.BySizeDesc), vm.ModelTree.SortOrder)
+
+	require.NoError(t, vm.SetTreeByLayer(0, 0, 1, 1))
+	assert.Equal(t, filetree.SortOrder(filetree.BySizeDesc), vm.ModelTree.SortOrder)
+
+	// toggling back and revisiting a layer must not flip it again
+	require.NoError(t, vm.ToggleSortOrder())
+	require.NoError(t, vm.SetTreeByLayer(0, 0, 0, 0))
+	assert.Equal(t, filetree.SortOrder(filetree.ByName), vm.ModelTree.SortOrder)
+}
+
 func TestFileShowAggregateChanges(t *testing.T) {
 	vm := initializeTestViewModel(t)
 
@@ -219,7 +257,7 @@ func TestFileShowAggregateChanges(t *testing.T) {
 	vm.ShowAttributes = true
 
 	// collapse /bin
-	err := vm.ToggleCollapse(nil)
+	err := vm.ToggleCollapse()
 	checkError(t, err, "unable to collapse /bin")
 
 	// select the next layer, compareMode = layer
@@ -281,7 +319,7 @@ func TestFileTreeDirCursorRight(t *testing.T) {
 	vm.ShowAttributes = true
 
 	// collapse /bin
-	err := vm.ToggleCollapse(nil)
+	err := vm.ToggleCollapse()
 	checkError(t, err, "unable to collapse /bin")
 
 	moved := vm.CursorDown()
@@ -295,11 +333,11 @@ func TestFileTreeDirCursorRight(t *testing.T) {
 	}
 
 	// collapse /etc
-	err = vm.ToggleCollapse(nil)
+	err = vm.ToggleCollapse()
 	checkError(t, err, "unable to collapse /etc")
 
 	// expand /etc
-	err = vm.CursorRight(nil)
+	err = vm.CursorRight()
 	checkError(t, err, "unable to cursor right")
 
 	runTestCase(t, vm, width, height, nil)
@@ -320,6 +358,106 @@ func TestFileTreeFilterTree(t *testing.T) {
 	runTestCase(t, vm, width, height, regex)
 }
 
+func TestFileTreeNavigateWithActiveFilter(t *testing.T) {
+	vm := initializeTestViewModel(t)
+
+	width, height := 100, 1000
+	vm.Setup(0, height)
+
+	// /etc doesn't match but stays visible since a descendant does
+	require.NoError(t, vm.Update(regexp.MustCompile("network"), width, height))
+	node := vm.CurrentNode()
+	require.NotNil(t, node, "expected a selectable node under an active filter")
+	assert.Equal(t, "/etc", node.Path())
+
+	// the selection must line up with the rendered rows
+	require.True(t, vm.CursorDown())
+	assertPath(t, vm, "/etc/network", "down under filter")
+
+	require.NoError(t, vm.CursorLeft())
+	assertPath(t, vm, "/etc", "left under filter")
+
+	require.NoError(t, vm.ToggleCollapse())
+	assert.True(t, node.Data.ViewInfo.Collapsed, "expected /etc to collapse under the filter")
+
+	require.NoError(t, vm.CursorRight())
+	assert.False(t, node.Data.ViewInfo.Collapsed, "expected /etc to expand under the filter")
+	assertPath(t, vm, "/etc/network", "right under filter")
+}
+
+func TestFileTreeNavigateWithEmptyFilterResult(t *testing.T) {
+	vm := initializeTestViewModel(t)
+
+	width, height := 100, 1000
+	vm.Setup(0, height)
+
+	require.NoError(t, vm.Update(regexp.MustCompile("does-not-exist"), width, height))
+	assert.Nil(t, vm.CurrentNode())
+	require.NoError(t, vm.CursorLeft())
+	require.NoError(t, vm.CursorRight())
+	require.NoError(t, vm.ToggleCollapse())
+}
+
+func TestFileTreeCursorDownStopsAtLastRow(t *testing.T) {
+	vm := initializeTestViewModel(t)
+
+	width, height := 100, 1000
+	vm.Setup(0, height)
+
+	require.NoError(t, vm.ToggleCollapseAll())
+	require.NoError(t, vm.Update(nil, width, height))
+	rows := len(strings.Split(strings.TrimSuffix(vm.ViewTree.String(false), "\n"), "\n"))
+	for vm.CursorDown() {
+	}
+	assert.Equal(t, rows-1, vm.TreeIndex)
+	assert.NotNil(t, vm.CurrentNode())
+
+	// every collapsed dir is unmodified in the first layer, so nothing is left to select
+	vm.ToggleShowDiffType(filetree.Unmodified)
+	require.NoError(t, vm.Update(nil, width, height))
+	vm.ResetCursor()
+	assert.False(t, vm.CursorDown(), "cursor moved past the end of an empty tree")
+}
+
+func TestFileTreeCursorClampedOnUpdate(t *testing.T) {
+	vm := initializeTestViewModel(t)
+
+	width, height := 100, 20
+	vm.Setup(0, height)
+	require.NoError(t, vm.Update(nil, width, height))
+
+	assertCursorInPane := func(msg string) {
+		t.Helper()
+		assert.GreaterOrEqual(t, vm.bufferIndex, 0, msg)
+		assert.LessOrEqual(t, vm.bufferIndex, vm.height(), msg)
+		assert.Equal(t, vm.TreeIndex, vm.bufferIndexLowerBound+vm.bufferIndex, msg)
+		assert.NotNil(t, vm.CurrentNode(), msg)
+	}
+
+	for range 200 {
+		require.True(t, vm.CursorDown())
+	}
+
+	// shrinking the pane keeps the cursor on the same node, inside the pane
+	before := vm.CurrentNode()
+	require.NoError(t, vm.Update(nil, width, 10))
+	assertCursorInPane("after resize")
+	assert.Equal(t, before, vm.CurrentNode())
+
+	// filtering down to a handful of rows moves the cursor onto the last of them and shows them all
+	require.NoError(t, vm.Update(regexp.MustCompile("network"), width, 10))
+	assertCursorInPane("after filter")
+	assert.Equal(t, vm.ModelTree.VisibleSize(), vm.TreeIndex)
+	assert.Equal(t, 0, vm.bufferIndexLowerBound)
+
+	// hiding everything leaves the cursor at the top
+	vm.ToggleShowDiffType(filetree.Unmodified)
+	require.NoError(t, vm.Update(nil, width, 10))
+	assert.Equal(t, 0, vm.TreeIndex)
+	assert.Equal(t, 0, vm.bufferIndex)
+	assert.Equal(t, 0, vm.bufferIndexLowerBound)
+}
+
 func TestFileTreeHideAddedRemovedModified(t *testing.T) {
 	vm := initializeTestViewModel(t)
 
@@ -328,7 +466,7 @@ func TestFileTreeHideAddedRemovedModified(t *testing.T) {
 	vm.ShowAttributes = true
 
 	// collapse /bin
-	err := vm.ToggleCollapse(nil)
+	err := vm.ToggleCollapse()
 	checkError(t, err, "unable to collapse /bin")
 
 	// select the 7th layer, compareMode = layer
@@ -357,7 +495,7 @@ func TestFileTreeHideUnmodified(t *testing.T) {
 	vm.ShowAttributes = true
 
 	// collapse /bin
-	err := vm.ToggleCollapse(nil)
+	err := vm.ToggleCollapse()
 	checkError(t, err, "unable to collapse /bin")
 
 	// select the 7th layer, compareMode = layer
@@ -380,7 +518,7 @@ func TestFileTreeHideTypeWithFilter(t *testing.T) {
 	vm.ShowAttributes = true
 
 	// collapse /bin
-	err := vm.ToggleCollapse(nil)
+	err := vm.ToggleCollapse()
 	checkError(t, err, "unable to collapse /bin")
 
 	// select the 7th layer, compareMode = layer

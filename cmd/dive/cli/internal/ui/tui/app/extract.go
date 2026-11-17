@@ -55,7 +55,7 @@ func extract(img *image.Image, idx int, p, dst string) error {
 			errs = append(errs, fmt.Errorf("refusing to extract %q: not a relative path", hdr.Name))
 			return nil
 		}
-		if err := extractFile(img, root, *n.Reference, strings.TrimPrefix(realPath, "/")); err != nil {
+		if err := extractFile(img, root, *n.Reference, strings.TrimPrefix(realPath, "/"), hdr.FileInfo().Mode().Perm()); err != nil {
 			errs = append(errs, fmt.Errorf("unable to extract %q: %w", realPath, err))
 		}
 		return nil
@@ -66,7 +66,9 @@ func extract(img *image.Image, idx int, p, dst string) error {
 	return errors.Join(append(errs, err)...)
 }
 
-func extractFile(img *image.Image, root *os.Root, ref file.Reference, rel string) error {
+// extractFile writes the file with its permission bits from the image (setuid/setgid/sticky are dropped, the umask
+// still applies)
+func extractFile(img *image.Image, root *os.Root, ref file.Reference, rel string, perm fs.FileMode) error {
 	contents, err := img.OpenReference(ref)
 	if err != nil {
 		return err
@@ -79,7 +81,7 @@ func extractFile(img *image.Image, root *os.Root, ref file.Reference, rel string
 	}
 	// O_EXCL fails on anything already at the path, a symlink included (it is never followed), so nobody's file is
 	// replaced
-	out, err := root.OpenFile(name, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0o666)
+	out, err := root.OpenFile(name, os.O_WRONLY|os.O_CREATE|os.O_EXCL, perm)
 	if errors.Is(err, fs.ErrExist) {
 		return fmt.Errorf("%q exists, not overwritten", rel)
 	}

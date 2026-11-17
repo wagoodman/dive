@@ -101,22 +101,22 @@
   ],
   "image": {
     "sizeBytes": 58,
-    "inefficientBytes": 58,
+    "inefficientBytes": 29,
     "efficiencyScore": 0.5,
     "fileReference": [
       {
         "count": 2,
-        "sizeBytes": 36,
+        "sizeBytes": 18,
         "file": "/app/run.sh"
       },
       {
         "count": 2,
-        "sizeBytes": 12,
+        "sizeBytes": 6,
         "file": "/app/owned"
       },
       {
         "count": 2,
-        "sizeBytes": 10,
+        "sizeBytes": 5,
         "file": "/app/same"
       }
     ]

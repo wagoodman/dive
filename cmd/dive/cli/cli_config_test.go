@@ -47,3 +47,14 @@ func Test_Config_containerEngine(t *testing.T) {
 		assert.ErrorContains(t, run(t, "docker"), "cannot load image")
 	})
 }
+
+func Test_Config_LegacySource(t *testing.T) {
+	t.Setenv("DIVE_CONFIG", "./testdata/config/dive-legacy-source.yaml")
+
+	rootCmd := getTestCommand(t, "config --load")
+	all := Capture().All().Run(t, func() {
+		require.NoError(t, rootCmd.Execute())
+	})
+
+	assert.Contains(t, all, "container-engine: 'podman'")
+}

@@ -246,7 +246,7 @@ func (v *FileTree) CursorUp() error {
 
 // CursorLeft moves the cursor up until we reach the Parent Node or top of the tree
 func (v *FileTree) CursorLeft() error {
-	err := v.vm.CursorLeft(v.filterRegex)
+	err := v.vm.CursorLeft()
 	if err != nil {
 		return err
 	}
@@ -256,7 +256,7 @@ func (v *FileTree) CursorLeft() error {
 
 // CursorRight descends into directory expanding it if needed
 func (v *FileTree) CursorRight() error {
-	err := v.vm.CursorRight(v.filterRegex)
+	err := v.vm.CursorRight()
 	if err != nil {
 		return err
 	}
@@ -289,7 +289,7 @@ func (v *FileTree) PageUp() error {
 
 // ToggleCollapse will collapse/expand the selected FileNode.
 func (v *FileTree) toggleCollapse() error {
-	err := v.vm.ToggleCollapse(v.filterRegex)
+	err := v.vm.ToggleCollapse()
 	if err != nil {
 		return err
 	}
@@ -321,7 +321,11 @@ func (v *FileTree) toggleSortOrder() error {
 }
 
 func (v *FileTree) extractFile() error {
-	node := v.vm.CurrentNode(v.filterRegex)
+	node := v.vm.CurrentNode()
+	// nothing is selected when the tree is empty (e.g. a filter with no matches)
+	if node == nil {
+		return nil
+	}
 	for _, listener := range v.extractListeners {
 		err := listener(node.Path())
 		if err != nil {
@@ -422,30 +426,32 @@ func (v *FileTree) Update() error {
 func (v *FileTree) Render() error {
 	v.logger.Trace("render()")
 
+	// nothing to draw into until the layout has created the view
+	if v.view == nil {
+		return nil
+	}
+
 	title := v.title
 	isSelected := v.gui.CurrentView() == v.view
 
-	v.gui.Update(func(g *gocui.Gui) error {
-		// update the header
-		v.header.Clear()
-		width, _ := g.Size()
-		headerStr := format.RenderHeader(title, width, isSelected)
-		if v.vm.ShowAttributes {
-			headerStr += fmt.Sprintf(filetree.AttributeFormat+" %s", "P", "ermission", "UID:GID", "Size", "Filetree")
-		}
-		_, _ = fmt.Fprintln(v.header, headerStr)
+	// update the header
+	v.header.Clear()
+	width, _ := v.gui.Size()
+	headerStr := format.RenderHeader(title, width, isSelected)
+	if v.vm.ShowAttributes {
+		headerStr += fmt.Sprintf(filetree.AttributeFormat+" %s", "P", "ermission", "UID:GID", "Size", "Filetree")
+	}
+	_, _ = fmt.Fprintln(v.header, headerStr)
 
-		// update the contents
-		v.view.Clear()
-		err := v.vm.Render()
-		if err != nil {
-			return err
-		}
-		_, err = fmt.Fprint(v.view, v.vm.Buffer.String())
-
+	// update the contents
+	v.view.Clear()
+	err := v.vm.Render()
+	if err != nil {
 		return err
-	})
-	return nil
+	}
+	_, err = fmt.Fprint(v.view, v.vm.Buffer.String())
+
+	return err
 }
 
 // KeyHelp indicates all the possible actions a user can take while the current pane is selected.
@@ -490,7 +496,6 @@ func (v *FileTree) Layout(g *gocui.Gui, minX, minY, maxX, maxY int) error {
 }
 
 func (v *FileTree) RequestedSize(available int) *int {
-	// var requestedWidth = int(float64(available) * (1.0 - v.requestedWidthRatio))
-	// return &requestedWidth
-	return nil
+	requestedWidth := int(float64(available) * v.requestedWidthRatio)
+	return &requestedWidth
 }

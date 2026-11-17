@@ -24,7 +24,7 @@ func (m *Handler) handleFetchImage(e partybus.Event) []tea.Model {
 			Running: "Loading image",
 			Success: "Loaded image",
 		},
-		taskprogress.WithStagedProgressable(prog),
+		taskprogress.WithStagedProgressable(m.failable(prog)),
 	)
 	if imgName != "" {
 		tsk.Context = []string{imgName}

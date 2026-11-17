@@ -1,9 +1,12 @@
 package cli
 
 import (
+	"os"
+	"path/filepath"
+	"testing"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func Test_CI_DefaultCIConfig(t *testing.T) {
@@ -24,6 +27,22 @@ func Test_CI_DefaultCIConfig(t *testing.T) {
 	assert.Contains(t, combined, "PASS  lowestEfficiency (0.96)")
 	assert.Contains(t, combined, "PASS  highestWastedBytes (19Mb)")
 	assert.Contains(t, combined, "PASS  highestUserWastedPercent (0.6)")
+}
+
+func Test_CI_FlagsAndEnvOverrideCIConfig(t *testing.T) {
+	t.Setenv("DIVE_CONFIG", "-")
+	t.Setenv("DIVE_RULES_HIGHEST_USER_WASTED_PERCENT", "0.7")
+
+	// the .dive-ci in the working dir sets all three rules, the flag and env var outrank it
+	rootCmd := getTestCommand(t, "docker-archive:"+repoPath(t, ".data/test-docker-image.tar")+" --ci --lowestEfficiency 0.5")
+	cd(t, "testdata/default-ci-config")
+	combined := Capture().WithStdout().WithStderr().Run(t, func() {
+		require.NoError(t, rootCmd.Execute())
+	})
+
+	assert.Contains(t, combined, "PASS  lowestEfficiency (0.5)")
+	assert.Contains(t, combined, "PASS  highestWastedBytes (19Mb)")
+	assert.Contains(t, combined, "PASS  highestUserWastedPercent (0.7)")
 }
 
 func Test_CI_Fail(t *testing.T) {
@@ -51,4 +70,48 @@ func Test_CI_LegacyRules(t *testing.T) {
 	assert.Contains(t, all, "lowest-efficiency: '0.95'", "missing lowest-efficiency legacy rule")
 	assert.Contains(t, all, "highest-wasted-bytes: '20MB'", "missing highest-wasted-bytes legacy rule")
 	assert.Contains(t, all, "highest-user-wasted-percent: '0.2'", "missing highest-user-wasted-percent legacy rule")
+}
+
+func Test_CI_FlagOverridesEnv(t *testing.T) {
+	t.Setenv("DIVE_CONFIG", "-")
+	t.Setenv("CI", "true")
+
+	// this gate would fail if CI mode were on
+	file := filepath.Join(t.TempDir(), "output.json")
+	rootCmd := getTestCommand(t, "docker-archive:"+repoPath(t, ".data/test-docker-image.tar")+" --ci=false --lowestEfficiency 0.999 --json "+file)
+	combined := Capture().WithStdout().WithStderr().Run(t, func() {
+		require.NoError(t, rootCmd.Execute())
+	})
+
+	assert.FileExists(t, file)
+	assert.NotContains(t, combined, "lowestEfficiency")
+}
+
+func Test_CI_InvalidRulesFileOutsideCI(t *testing.T) {
+	t.Setenv("DIVE_CONFIG", "-")
+	t.Setenv("CI", "false")
+
+	// a broken .dive-ci in the working dir must not matter when CI mode is off
+	file := filepath.Join(t.TempDir(), "output.json")
+	rootCmd := getTestCommand(t, "docker-archive:"+repoPath(t, ".data/test-docker-image.tar")+" --json "+file)
+	dir := t.TempDir()
+	require.NoError(t, os.WriteFile(filepath.Join(dir, ".dive-ci"), []byte("rules:\n  lowestEfficiency: nope\n"), 0o600))
+	cd(t, dir)
+	Capture().WithSuppress().Run(t, func() {
+		require.NoError(t, rootCmd.Execute())
+	})
+
+	assert.FileExists(t, file)
+}
+
+func Test_CI_WithJsonExport(t *testing.T) {
+	// exporting must not skip the gate, CI=true turns CI mode on in pipelines that also export
+	file := filepath.Join(t.TempDir(), "output.json")
+	rootCmd := getTestCommand(t, "docker-archive:"+repoPath(t, ".data/test-docker-image.tar")+" --ci --lowestEfficiency 0.999 --json "+file)
+	combined := Capture().WithStdout().WithStderr().Run(t, func() {
+		require.ErrorContains(t, rootCmd.Execute(), "evaluation failed")
+	})
+
+	assert.FileExists(t, file)
+	assert.Contains(t, combined, "FAIL  lowestEfficiency")
 }

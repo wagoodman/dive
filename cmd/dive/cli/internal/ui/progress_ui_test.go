@@ -2,10 +2,12 @@ package ui
 
 import (
 	"bytes"
+	"errors"
 	"strings"
 	"sync"
 	"sync/atomic"
 	"testing"
+	"testing/iotest"
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -16,6 +18,7 @@ import (
 	"github.com/anchore/bubbly"
 	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/tui"
 	"github.com/wagoodman/dive/dive"
+	"github.com/wagoodman/dive/internal/bus"
 	"github.com/wagoodman/dive/internal/bus/event"
 	"github.com/wagoodman/dive/internal/bus/event/payload"
 )
@@ -100,6 +103,8 @@ func TestProgressUI_interruptSkipsTUI(t *testing.T) {
 
 	m.program.Send(tea.KeyMsg{Type: tea.KeyCtrlC})
 	require.Eventually(t, m.interrupted.Load, time.Second, 10*time.Millisecond)
+	// main exits 130 on this, like a ctrl-c outside raw mode
+	assert.True(t, bus.Interrupted())
 
 	// the explore event queued behind the ctrl-c releases the publisher without starting gocui (which would need a
 	// terminal here)
@@ -131,6 +136,18 @@ func TestProgressUI_notificationPrintsWhileRunning(t *testing.T) {
 	assert.Equal(t, 1, strings.Count(out, "auto detected"))
 	assert.Contains(t, out, `\x1b]0;pwned\a`)
 	assert.NotContains(t, out, "\x1b]0;pwned")
+}
+
+func TestProgressUI_startFailureIsTheCommandError(t *testing.T) {
+	m := newProgressUI(tui.DefaultPreferences(), &bytes.Buffer{})
+	m.err = &bytes.Buffer{}
+	m.in = iotest.ErrReader(errors.New("no tty"))
+	require.NoError(t, m.Setup(nil))
+
+	<-m.exited
+	err := m.Teardown(true)
+	require.Error(t, err, "a UI that never started must not exit 0")
+	assert.Contains(t, err.Error(), "no tty")
 }
 
 func TestDrain(t *testing.T) {

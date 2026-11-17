@@ -1,6 +1,7 @@
 package filetree
 
 import (
+	"archive/tar"
 	"testing"
 )
 
@@ -159,6 +160,47 @@ func TestDirSize(t *testing.T) {
 	expected, actual := "----------         0:0      600 B ", node.MetadataString()
 	if expected != actual {
 		t.Errorf("Expected metadata '%s' got '%s'", expected, actual)
+	}
+}
+
+func TestDirSizeAfterRemove(t *testing.T) {
+	tree := NewFileTree()
+	_, _, err := tree.AddPath("/etc/nginx/a", FileInfo{Size: 100})
+	checkError(t, err, "unable to setup test")
+	_, _, err = tree.AddPath("/etc/nginx/b", FileInfo{Size: 200})
+	checkError(t, err, "unable to setup test")
+
+	etc, _ := tree.GetNode("/etc")
+	if got := etc.GetSize(); got != 300 {
+		t.Fatalf("Expected size 300 got %d", got)
+	}
+	checkError(t, tree.RemovePath("/etc/nginx/b"), "unable to remove path")
+	// a size memoized before the removal (e.g. by sorting) must not stick
+	if got := etc.GetSize(); got != 100 {
+		t.Errorf("Expected size 100 after removal got %d", got)
+	}
+}
+
+func TestFileTypeDisplay(t *testing.T) {
+	tests := []struct {
+		info     FileInfo
+		typeChar string
+	}{
+		{FileInfo{TypeFlag: tar.TypeReg}, "-"},
+		{FileInfo{TypeFlag: tar.TypeLink, Linkname: "bin/a"}, "-"},
+		{FileInfo{TypeFlag: tar.TypeDir, IsDir: true}, "d"},
+		{FileInfo{TypeFlag: tar.TypeSymlink, Linkname: "../a"}, "l"},
+		{FileInfo{TypeFlag: tar.TypeChar}, "c"},
+		{FileInfo{TypeFlag: tar.TypeBlock}, "b"},
+		{FileInfo{TypeFlag: tar.TypeFifo}, "p"},
+	}
+	for _, tt := range tests {
+		tree := NewFileTree()
+		node, _, err := tree.AddPath("/f", tt.info)
+		checkError(t, err, "unable to setup test")
+		if got := node.MetadataString()[:1]; got != tt.typeChar {
+			t.Errorf("typeflag %q: expected type column %q got %q", tt.info.TypeFlag, tt.typeChar, got)
+		}
 	}
 }
 

@@ -60,7 +60,7 @@ func (m *Handler) handlePullContainerdImage(e partybus.Event) []tea.Model {
 			Success: "Pulled image",
 		},
 		taskprogress.WithStagedProgressable(
-			newContainerdPullProgressAdapter(pullStatus),
+			m.failable(newContainerdPullProgressAdapter(pullStatus)),
 		),
 	)
 
@@ -153,8 +153,13 @@ func (f containerdPullStatusFormatter) Render(pullStatus containerdPullStatus) s
 
 	for _, layer := range layers {
 		prog := status[layer]
-		size += uint64(prog.Size())
-		current += uint64(prog.Current())
+		// a layer without progress yet reports a size of -1
+		if s := prog.Size(); s > 0 {
+			size += uint64(s)
+		}
+		if c := prog.Current(); c > 0 {
+			current += uint64(c)
+		}
 	}
 
 	var progStr, auxInfo string

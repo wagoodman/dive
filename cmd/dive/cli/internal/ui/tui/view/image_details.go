@@ -80,15 +80,37 @@ func (v *ImageDetails) Setup(body, header *gocui.View) error {
 // 2. the estimated wasted image space
 // 3. a list of inefficient file allocations
 func (v *ImageDetails) Render() error {
+	// nothing to draw into until the layout has created the view
+	if v.body == nil {
+		return nil
+	}
+
+	width, _ := v.body.Size()
+
+	imageHeaderStr := format.RenderHeader("Image Details", width, v.gui.CurrentView() == v.body)
+
+	v.header.Clear()
+	_, err := fmt.Fprintln(v.header, imageHeaderStr)
+	if err != nil {
+		log.WithFields("error", err).Debug("unable to write to buffer")
+	}
+
+	// the body only depends on the image (gocui wraps it at draw time), so it's written once. This keeps
+	// renders cheap for images with lots of inefficiencies and keeps the scroll position between renders.
+	if v.body.LinesHeight() > 0 {
+		return nil
+	}
+
 	analysisTemplate := "%5s  %12s  %-s\n"
-	inefficiencyReport := fmt.Sprintf(format.Header(analysisTemplate), "Count", "Total Space", "Path")
+	var inefficiencyReport strings.Builder
+	_, _ = fmt.Fprintf(&inefficiencyReport, format.Header(analysisTemplate), "Count", "Wasted Space", "Path")
 
 	var wastedSpace uint64
 	// inefficiencies are already sorted largest first
 	for _, data := range v.inefficiencies {
 		wastedSpace += data.SizeBytes
 
-		inefficiencyReport += fmt.Sprintf(analysisTemplate, strconv.Itoa(data.Count), humanize.Bytes(data.SizeBytes), data.Path)
+		_, _ = fmt.Fprintf(&inefficiencyReport, analysisTemplate, strconv.Itoa(data.Count), humanize.Bytes(data.SizeBytes), data.Path)
 	}
 
 	imageNameStr := fmt.Sprintf("%s %s", format.Header("Image name:"), v.imageName)
@@ -96,35 +118,20 @@ func (v *ImageDetails) Render() error {
 	efficiencyStr := fmt.Sprintf("%s %d %%", format.Header("Image efficiency score:"), int(100.0*v.efficiency))
 	wastedSpaceStr := fmt.Sprintf("%s %s", format.Header("Potential wasted space:"), humanize.Bytes(wastedSpace))
 
-	v.gui.Update(func(g *gocui.Gui) error {
-		width, _ := v.body.Size()
+	var lines = []string{
+		imageNameStr,
+		imageSizeStr,
+		wastedSpaceStr,
+		efficiencyStr,
+		" ", // to avoid an empty line so CursorDown can work as expected
+		inefficiencyReport.String(),
+	}
 
-		imageHeaderStr := format.RenderHeader("Image Details", width, v.gui.CurrentView() == v.body)
-
-		v.header.Clear()
-		_, err := fmt.Fprintln(v.header, imageHeaderStr)
-		if err != nil {
-			log.WithFields("error", err).Debug("unable to write to buffer")
-		}
-
-		var lines = []string{
-			imageNameStr,
-			imageSizeStr,
-			wastedSpaceStr,
-			efficiencyStr,
-			" ", // to avoid an empty line so CursorDown can work as expected
-			inefficiencyReport,
-		}
-
-		v.body.Clear()
-		_, err = fmt.Fprintln(v.body, strings.Join(lines, "\n"))
-		if err != nil {
-			log.WithFields("error", err).Debug("unable to write to buffer")
-		}
-		return err
-	})
-
-	return nil
+	_, err = fmt.Fprintln(v.body, strings.Join(lines, "\n"))
+	if err != nil {
+		log.WithFields("error", err).Debug("unable to write to buffer")
+	}
+	return err
 }
 
 func (v *ImageDetails) OnLayoutChange() error {

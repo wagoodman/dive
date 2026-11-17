@@ -81,12 +81,12 @@
   ],
   "image": {
     "sizeBytes": 300,
-    "inefficientBytes": 250,
-    "efficiencyScore": 0.5,
+    "inefficientBytes": 100,
+    "efficiencyScore": 0.6666666666666666,
     "fileReference": [
       {
         "count": 2,
-        "sizeBytes": 250,
+        "sizeBytes": 100,
         "file": "/opt/a"
       }
     ]

@@ -3,6 +3,7 @@ package ci
 import (
 	"context"
 	"github.com/stretchr/testify/require"
+	"strings"
 	"testing"
 
 	"github.com/wagoodman/dive/dive"
@@ -151,6 +152,20 @@ func Test_Evaluator_Misconfigurations(t *testing.T) {
 			expectError:   true,
 		},
 		{
+			name:          "invalid_efficiency_nan",
+			efficiency:    "NaN", // fail!
+			wastedBytes:   "50kB",
+			wastedPercent: "0.5",
+			expectError:   true,
+		},
+		{
+			name:          "invalid_wasted_percent_nan",
+			efficiency:    "0.9",
+			wastedBytes:   "50kB",
+			wastedPercent: "nan", // fail!
+			expectError:   true,
+		},
+		{
 			name:          "invalid_wasted_percent_format",
 			efficiency:    "0.9",
 			wastedBytes:   "50kB",
@@ -169,4 +184,28 @@ func Test_Evaluator_Misconfigurations(t *testing.T) {
 			}
 		})
 	}
+}
+
+func Test_NewStats_NoUserBytes(t *testing.T) {
+	// the only user layer removes a base file, so it adds 0 bytes but still wastes the removed ones
+	img := imagefixture.LoadSpec(t, imagefixture.Spec{
+		Format: imagefixture.OCISave,
+		Layers: [][]imagefixture.Entry{
+			{{Name: "big", Content: strings.Repeat("b", 1000)}},
+			{{Name: ".wh.big"}},
+		},
+	})
+	analysis, err := dive.Analyze(context.Background(), "spec", img)
+	require.NoError(t, err)
+	require.Zero(t, analysis.UserSizeBytes)
+	require.NotZero(t, analysis.WastedBytes)
+
+	stats := NewStats(analysis)
+	require.Equal(t, analysis.WastedUserPercent, stats.WastedUserPercent)
+
+	rules, err := Rules("disabled", "disabled", "0.1")
+	require.NoError(t, err)
+	eval := NewEvaluator(rules).Evaluate(context.TODO(), stats)
+	require.NotContains(t, eval.Report, "Inf")
+	require.NotContains(t, eval.Report, "NaN")
 }

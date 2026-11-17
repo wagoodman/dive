@@ -1,6 +1,8 @@
 package log
 
 import (
+	"io"
+
 	"github.com/anchore/go-logger"
 	"github.com/anchore/go-logger/adapter/discard"
 )
@@ -16,6 +18,19 @@ func Set(l logger.Logger) {
 // Get returns the current logger instance.
 func Get() logger.Logger {
 	return log
+}
+
+// file is the configured log file (nil without one), which the logger writes to alongside the console
+var file io.Writer
+
+// SetFile records the log file the logger tees to, so a UI can mute the console half and keep the file.
+func SetFile(w io.Writer) {
+	file = w
+}
+
+// File returns the log file set with SetFile, nil when logs only go to the console.
+func File() io.Writer {
+	return file
 }
 
 // Errorf takes a formatted template string and template arguments for the error logging level.

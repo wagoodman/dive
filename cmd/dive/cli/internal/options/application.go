@@ -27,6 +27,6 @@ func (c Application) TUIPreferences() tui.Preferences {
 		ShowAggregatedLayerChanges: c.UI.Layer.ShowAggregatedChanges,
 		CollapseFiletreeDirectory:  c.UI.Filetree.CollapseDir,
 		FiletreePaneWidth:          c.UI.Filetree.PaneWidth,
-		FiletreeDiffHide:           nil,
+		FiletreeDiffHide:           c.UI.Diff.Hide,
 	}
 }

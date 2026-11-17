@@ -1,6 +1,7 @@
 package filetree
 
 import (
+	"archive/tar"
 	"fmt"
 	"testing"
 )
@@ -312,6 +313,47 @@ func TestCopy(t *testing.T) {
 		t.Errorf("Expected tree string:\n--->%s<---\nGot:\n--->%s<---", expected, actual)
 	}
 
+}
+
+func TestStringEscapesControlChars(t *testing.T) {
+	tree := NewFileTree()
+	_, _, err := tree.AddPath("/a\nb", FileInfo{})
+	checkError(t, err, "could not setup test")
+	_, _, err = tree.AddPath("/c", FileInfo{TypeFlag: tar.TypeSymlink, Linkname: "\x1b[31mred"})
+	checkError(t, err, "could not setup test")
+
+	// one row per node, nothing raw reaches the terminal
+	expected :=
+		`├── a\nb
+└── c → \x1b[31mred
+`
+	actual := tree.String(false)
+	if expected != actual {
+		t.Errorf("Expected tree string:\n--->%s<---\nGot:\n--->%s<---", expected, actual)
+	}
+}
+
+func TestCopyLeavesSourceParents(t *testing.T) {
+	tree := NewFileTree()
+	_, _, err := tree.AddPath("/etc/nginx/nginx.conf", FileInfo{})
+	checkError(t, err, "could not setup test")
+
+	cp := tree.Copy()
+
+	etc, _ := tree.GetNode("/etc")
+	nginx, _ := tree.GetNode("/etc/nginx")
+	if nginx.Parent != etc {
+		t.Errorf("copy rewired the source node's parent")
+	}
+
+	// removing from the source must not touch the copy
+	checkError(t, tree.RemovePath("/etc/nginx"), "could not remove path")
+	if _, err := tree.GetNode("/etc/nginx"); err == nil {
+		t.Errorf("expected /etc/nginx to be removed from the source tree")
+	}
+	if _, err := cp.GetNode("/etc/nginx/nginx.conf"); err != nil {
+		t.Errorf("expected the copy to keep /etc/nginx/nginx.conf: %v", err)
+	}
 }
 
 func TestCompareWithNoChanges(t *testing.T) {

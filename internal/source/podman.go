@@ -3,10 +3,12 @@ package source
 import (
 	"errors"
 	"fmt"
+	"maps"
 	"net/url"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"slices"
 	"strings"
 
 	"github.com/adrg/xdg"
@@ -14,18 +16,28 @@ import (
 	"github.com/pelletier/go-toml/v2"
 )
 
-// podman's containers.conf, least to most relevant
-var podmanConfigs = []string{
-	"/usr/share/containers/containers.conf",
-	"/etc/containers/containers.conf",
-	filepath.Join(xdg.Home, ".config", "containers", "containers.conf"),
+// podmanConfigs lists podman's containers.conf files, least to most relevant: each config dir's containers.conf
+// followed by its containers.conf.d drop-ins in name order.
+func podmanConfigs() []string {
+	// podman uses $XDG_CONFIG_HOME or ~/.config on every OS (xdg.ConfigHome is ~/Library/Application Support on macOS)
+	configHome := os.Getenv("XDG_CONFIG_HOME")
+	if configHome == "" {
+		configHome = filepath.Join(xdg.Home, ".config")
+	}
+	var files []string
+	for _, dir := range []string{"/usr/share/containers", "/etc/containers", filepath.Join(configHome, "containers")} {
+		// glob results are sorted
+		dropIns, _ := filepath.Glob(filepath.Join(dir, "containers.conf.d", "*.conf"))
+		files = append(append(files, filepath.Join(dir, "containers.conf")), dropIns...)
+	}
+	return files
 }
 
 // newPodmanClient builds the docker API client for the podman provider. It finds the socket the way stereoscope's
 // podman.GetClient does, minus its ssh fallback: that connection skips host key verification unless known_hosts has an
 // exact unhashed entry for the host (never for a host with a port), and a pull over it sends registry credentials.
 func newPodmanClient() (client.APIClient, error) {
-	host, err := podmanHost(podmanConfigs, xdg.RuntimeDir, podmanMachineSocket)
+	host, err := podmanHost(podmanConfigs(), xdg.RuntimeDir, podmanMachineSocket)
 	if err != nil {
 		return nil, err
 	}
@@ -106,8 +118,9 @@ func podmanConfigSocket(path string) string {
 	if h := unix(cc.Engine.ServiceDestinations[cc.Engine.ActiveService].URI); h != "" {
 		return h
 	}
-	for _, d := range cc.Engine.ServiceDestinations {
-		if h := unix(d.URI); h != "" {
+	// in name order, map order would pick a different socket from run to run
+	for _, name := range slices.Sorted(maps.Keys(cc.Engine.ServiceDestinations)) {
+		if h := unix(cc.Engine.ServiceDestinations[name].URI); h != "" {
 			return h
 		}
 	}

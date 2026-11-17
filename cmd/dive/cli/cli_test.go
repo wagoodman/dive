@@ -16,7 +16,6 @@ import (
 
 	"github.com/anchore/clio"
 	"github.com/charmbracelet/lipgloss"
-	cliconfig "github.com/docker/cli/cli/config"
 	snapsPkg "github.com/gkampitakis/go-snaps/snaps"
 	"github.com/google/shlex"
 	"github.com/muesli/termenv"
@@ -82,13 +81,8 @@ func requireEngine(t testing.TB, engine string) {
 
 var engineProbes sync.Map
 
-// requireDocker also needs the docker config to be readable: unlike the docker cli, dive won't pick a docker host
-// without it
 func requireDocker(t testing.TB) {
 	t.Helper()
-	if _, err := cliconfig.Load(""); err != nil {
-		t.Skipf("docker config is not readable, skipping: %v", err)
-	}
 	requireEngine(t, "docker")
 }
 

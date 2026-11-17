@@ -29,6 +29,16 @@ func Notify(message string) {
 	})
 }
 
+// SourceFailed tells the UI that an image source gave up, so it can fail the progress rows stereoscope left behind for
+// that attempt (a failed pull still reports complete).
+func SourceFailed(name string, err error) {
+	Publish(partybus.Event{
+		Type:   event.ImageSourceFailed,
+		Source: name,
+		Error:  err,
+	})
+}
+
 func StartTask(info payload.GenericTask) *payload.GenericProgress {
 	t := &payload.GenericProgress{
 		AtomicStage: progress.NewAtomicStage(""),

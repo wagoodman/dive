@@ -42,6 +42,8 @@ type format struct {
 }
 
 func NewLineUI(cfg tui.Preferences, out io.Writer, quiet bool, verbosity int) *LineUI {
+	// these styles are for stderr, so its terminal picks the colors. The default renderer follows stdout (the report).
+	r := lipgloss.NewRenderer(os.Stderr, termenv.WithEnvironment(environWithoutCI{}))
 	return &LineUI{
 		cfg:       cfg,
 		out:       out,
@@ -49,9 +51,9 @@ func NewLineUI(cfg tui.Preferences, out io.Writer, quiet bool, verbosity int) *L
 		quiet:     quiet,
 		verbosity: verbosity,
 		format: format{
-			Title:        lipgloss.NewStyle().Bold(true).Width(30),
-			Aux:          lipgloss.NewStyle().Faint(true),
-			Notification: lipgloss.NewStyle().Foreground(lipgloss.Color("#A77BCA")),
+			Title:        r.NewStyle().Bold(true).Width(30),
+			Aux:          r.NewStyle().Faint(true),
+			Notification: r.NewStyle().Foreground(lipgloss.Color("#A77BCA")),
 		},
 	}
 }
@@ -79,15 +81,16 @@ func (n *LineUI) Handle(e partybus.Event) error {
 		prog, task, err := parser.ParseTaskStarted(e)
 		if err != nil {
 			log.WithFields("error", err, "event", fmt.Sprintf("%#v", e)).Warn("failed to parse event")
+			return nil
 		}
 
 		var aux string
-		stage := prog.Stage()
 		switch {
 		case task.Context != "":
 			aux = task.Context
-		case stage != "":
-			aux = stage
+		case prog != nil && prog.Stage() != "":
+			// the progress is optional in the event
+			aux = prog.Stage()
 		}
 
 		if aux != "" {
@@ -108,9 +111,7 @@ func (n *LineUI) Handle(e partybus.Event) error {
 		// unlike the status lines this is nothing the logger says too, so it prints under -v as well
 		fmt.Fprintln(n.err, n.format.Notification.Render(text))
 	case event.Report:
-		if n.quiet {
-			return nil
-		}
+		// the report is the command's output, quiet only silences status on stderr
 		_, text, err := parser.ParseReport(e)
 		if err != nil {
 			log.WithFields("error", err, "event", fmt.Sprintf("%#v", e)).Warn("failed to parse event")

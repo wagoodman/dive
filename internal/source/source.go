@@ -153,6 +153,7 @@ func Load(ctx context.Context, input string, cfg Config) (*image.Image, error) {
 		}
 		img, err := p.Provide(ctx)
 		if err != nil {
+			bus.SourceFailed(p.Name(), err)
 			errs = append(errs, fmt.Errorf("%s: %w", p.Name(), err))
 			continue
 		}

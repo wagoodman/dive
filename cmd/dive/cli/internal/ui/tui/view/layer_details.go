@@ -69,39 +69,41 @@ func (v *LayerDetails) Setup(body, header *gocui.View) error {
 // 3. digest
 // 4. command
 func (v *LayerDetails) Render() error {
-	v.gui.Update(func(g *gocui.Gui) error {
-		v.header.Clear()
-		width, _ := v.body.Size()
-
-		layerHeaderStr := format.RenderHeader("Layer Details", width, v.gui.CurrentView() == v.body)
-
-		_, err := fmt.Fprintln(v.header, layerHeaderStr)
-		if err != nil {
-			return err
-		}
-
-		// this is for layer details
-		var lines = make([]string, 0)
-
-		tags := "(none)"
-		if len(v.CurrentLayer.Names) > 0 {
-			tags = strings.Join(v.CurrentLayer.Names, ", ")
-		}
-
-		lines = append(lines, []string{
-			format.Header("Tags:   ") + tags,
-			format.Header("Size:   ") + humanize.Bytes(v.CurrentLayer.Size),
-			format.Header("Digest: ") + v.CurrentLayer.Digest,
-			format.Header("Command:"),
-			v.CurrentLayer.Command,
-		}...)
-
-		v.body.Clear()
-		if _, err = fmt.Fprintln(v.body, strings.Join(lines, "\n")); err != nil {
-			log.WithFields("layer", v.CurrentLayer.Id, "error", err).Debug("unable to write to buffer")
-		}
+	// nothing to draw into until the layout has created the view
+	if v.body == nil {
 		return nil
-	})
+	}
+
+	v.header.Clear()
+	width, _ := v.body.Size()
+
+	layerHeaderStr := format.RenderHeader("Layer Details", width, v.gui.CurrentView() == v.body)
+
+	_, err := fmt.Fprintln(v.header, layerHeaderStr)
+	if err != nil {
+		return err
+	}
+
+	// this is for layer details
+	var lines = make([]string, 0)
+
+	tags := "(none)"
+	if len(v.CurrentLayer.Names) > 0 {
+		tags = strings.Join(v.CurrentLayer.Names, ", ")
+	}
+
+	lines = append(lines, []string{
+		format.Header("Tags:   ") + tags,
+		format.Header("Size:   ") + humanize.Bytes(v.CurrentLayer.Size),
+		format.Header("Digest: ") + v.CurrentLayer.Digest,
+		format.Header("Command:"),
+		v.CurrentLayer.Command,
+	}...)
+
+	v.body.Clear()
+	if _, err = fmt.Fprintln(v.body, strings.Join(lines, "\n")); err != nil {
+		log.WithFields("layer", v.CurrentLayer.Id, "error", err).Debug("unable to write to buffer")
+	}
 	return nil
 }
 

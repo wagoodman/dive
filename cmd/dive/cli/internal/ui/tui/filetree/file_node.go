@@ -3,7 +3,9 @@ package filetree
 import (
 	"archive/tar"
 	"fmt"
+	"strconv"
 	"strings"
+	"unicode"
 
 	"github.com/dustin/go-humanize"
 	"github.com/fatih/color"
@@ -82,7 +84,6 @@ func (node *FileNode) Copy(parent *FileNode) *FileNode {
 	newNode.Data.DiffType = node.Data.DiffType
 	for name, child := range node.Children {
 		newNode.Children[name] = child.Copy(newNode)
-		child.Parent = newNode
 	}
 	return newNode
 }
@@ -114,6 +115,10 @@ func (node *FileNode) Remove() error {
 	}
 	delete(node.Parent.Children, node.Name)
 	node.Tree.Size--
+	// the memoized sizes above this node included it
+	for p := node.Parent; p != nil; p = p.Parent {
+		p.Size = -1
+	}
 	return nil
 }
 
@@ -128,7 +133,25 @@ func (node *FileNode) String() string {
 	if node.Data.FileInfo.TypeFlag == tar.TypeSymlink || node.Data.FileInfo.TypeFlag == tar.TypeLink {
 		display += " → " + node.Data.FileInfo.Linkname
 	}
-	return diffTypeColor[node.Data.DiffType].Sprint(display)
+	return diffTypeColor[node.Data.DiffType].Sprint(escapeControl(display))
+}
+
+// escapeControl replaces control characters with their Go escape (e.g. a newline becomes `\n`), so a hostile file
+// name can't span rows or send escape sequences to the terminal.
+func escapeControl(s string) string {
+	if !strings.ContainsFunc(s, unicode.IsControl) {
+		return s
+	}
+	var b strings.Builder
+	for _, r := range s {
+		if unicode.IsControl(r) {
+			q := strconv.QuoteRune(r)
+			b.WriteString(q[1 : len(q)-1])
+			continue
+		}
+		b.WriteRune(r)
+	}
+	return b.String()
 }
 
 // MetadatString returns the FileNode metadata in a columnar string.
@@ -138,8 +161,17 @@ func (node *FileNode) MetadataString() string {
 	}
 
 	dir := "-"
-	if node.Data.FileInfo.IsDir {
+	switch {
+	case node.Data.FileInfo.IsDir:
 		dir = "d"
+	case node.Data.FileInfo.TypeFlag == tar.TypeSymlink:
+		dir = "l"
+	case node.Data.FileInfo.TypeFlag == tar.TypeChar:
+		dir = "c"
+	case node.Data.FileInfo.TypeFlag == tar.TypeBlock:
+		dir = "b"
+	case node.Data.FileInfo.TypeFlag == tar.TypeFifo:
+		dir = "p"
 	}
 
 	fm := permbits.FileMode(node.Data.FileInfo.Mode)

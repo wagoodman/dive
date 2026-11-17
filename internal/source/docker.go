@@ -10,6 +10,8 @@ import (
 	ddocker "github.com/docker/cli/cli/context/docker"
 	ctxstore "github.com/docker/cli/cli/context/store"
 	"github.com/moby/moby/client"
+
+	"github.com/wagoodman/dive/internal/log"
 )
 
 // newDockerClient builds the docker API client handed to stereoscope, using dive's host resolution instead of
@@ -89,7 +91,10 @@ func dockerEndpoint(configDir string) (ep ddocker.Endpoint, fromEnv bool, err er
 	if name == "" {
 		cf, err := cliconfig.Load(configDir)
 		if err != nil {
-			return ddocker.Endpoint{}, false, err
+			// same as the docker cli: an unreadable or malformed config (e.g. root owned after `sudo docker login`)
+			// only costs the current context
+			log.Warnf("unable to read the docker config, using the default docker host: %v", err)
+			return defaultHost, true, nil
 		}
 		name = cf.CurrentContext
 	}

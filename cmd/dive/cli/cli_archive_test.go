@@ -42,6 +42,8 @@ var archiveFixtures = []struct {
 func Test_Archive_JsonOutput(t *testing.T) {
 	for _, tt := range archiveFixtures {
 		t.Run(tt.fixture, func(t *testing.T) {
+			// this only checks the export, ci evaluation alongside --json is covered elsewhere
+			t.Setenv("DIVE_CONFIG", "./testdata/dive-disable-ci.yaml")
 			file := filepath.Join(t.TempDir(), "output.json")
 			// a longer file at the destination must not leave trailing bytes behind
 			require.NoError(t, os.WriteFile(file, make([]byte, 1<<20), 0o644))

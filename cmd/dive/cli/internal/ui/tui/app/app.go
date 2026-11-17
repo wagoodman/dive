@@ -3,9 +3,13 @@ package app
 import (
 	"context"
 	"errors"
+	"fmt"
+	"os"
 	"time"
 
 	"github.com/awesome-gocui/gocui"
+	"github.com/mattn/go-runewidth"
+	"golang.org/x/term"
 
 	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/tui"
 	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/tui/key"
@@ -18,6 +22,16 @@ const debug = false
 // outputMode is swapped for gocui's simulated screen in tests
 var outputMode = gocui.OutputNormal
 
+// termSize is the size of the terminal gocui draws on (it opens /dev/tty too), an error means it can't be checked
+var termSize = func() (int, int, error) {
+	f, err := os.Open("/dev/tty")
+	if err != nil {
+		return 0, 0, err
+	}
+	defer f.Close()
+	return term.GetSize(int(f.Fd()))
+}
+
 type app struct {
 	gui        *gocui.Gui
 	controller *controller
@@ -28,12 +42,26 @@ type app struct {
 func Run(ctx context.Context, c tui.Config) error {
 	var err error
 
+	// there is nothing to show (the layer and tree views need a selected layer)
+	if len(c.Analysis.Layers) == 0 {
+		return errors.New("image has no layers")
+	}
+
+	// gocui waits for a resize on a terminal without a size, and with the terminal in raw mode ctrl-c can't stop it
+	if outputMode == gocui.OutputNormal {
+		if w, h, err := termSize(); err == nil && (w == 0 || h == 0) {
+			return fmt.Errorf("the terminal has no size (%dx%d), set one (e.g. with `stty rows 40 cols 120`) and try again", w, h)
+		}
+	}
+
 	// it appears there is a race condition where termbox.Init() will
 	// block nearly indefinitely when running as the first process in
 	// a Docker container when started within ~25ms of container startup.
 	// I can't seem to determine the exact root cause, however, a large
 	// enough sleep will prevent this behavior (todo: remove this hack)
 	time.Sleep(100 * time.Millisecond)
+
+	narrowAmbiguousWidth()
 
 	g, err := gocui.NewGui(outputMode, true)
 	if err != nil {
@@ -66,6 +94,15 @@ func Run(ctx context.Context, c tui.Config) error {
 		return err
 	}
 	return nil
+}
+
+// narrowAmbiguousWidth counts east asian ambiguous width runes as one cell. go-runewidth counts them as two under a
+// CJK locale, but terminals draw the tree and border box drawing characters (│ ├ └ ─) one cell wide, so every row
+// would be laid out wrong. RUNEWIDTH_EASTASIAN still wins when it is set.
+func narrowAmbiguousWidth() {
+	if os.Getenv("RUNEWIDTH_EASTASIAN") == "" {
+		runewidth.DefaultCondition.EastAsianWidth = false
+	}
 }
 
 func newApp(gui *gocui.Gui, cfg tui.Config) (*app, error) {
