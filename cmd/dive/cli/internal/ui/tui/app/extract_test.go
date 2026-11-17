@@ -29,22 +29,28 @@ func readFile(t *testing.T, p string) string {
 	return string(b)
 }
 
+// also a regression for #687: extract wrote nothing from docker 25+ saves (OCI layout, blobs/sha256/<digest> layers)
 func TestExtract(t *testing.T) {
-	img := imagefixture.Load(t, "test-docker-image")
-	dirs(t)
+	// same Dockerfile, but the OCI save was built with a different README (somefile1.txt is a copy of it)
+	for fixture, size := range map[string]int{"test-docker-image": 6405, "test-oci-docker-image": 10169} {
+		t.Run(fixture, func(t *testing.T) {
+			img := imagefixture.Load(t, fixture)
+			dirs(t)
 
-	// layer 4 adds root/example/somefile1.txt (the chmod one)
-	require.NoError(t, extract(img, 4, "/root", "."))
+			// layer 4 adds root/example/somefile1.txt (the chmod one)
+			require.NoError(t, extract(img, 4, "/root", "."))
 
-	got, err := os.ReadFile(filepath.Join("root", "example", "somefile1.txt"))
-	require.NoError(t, err)
-	assert.Len(t, got, 6405)
+			got, err := os.ReadFile(filepath.Join("root", "example", "somefile1.txt"))
+			require.NoError(t, err)
+			assert.Len(t, got, size)
 
-	// the tree as of the selected layer (root/saved.txt is added by a later one), only under the selected path
-	_, err = os.Stat(filepath.Join("root", "saved.txt"))
-	assert.ErrorIs(t, err, os.ErrNotExist)
-	_, err = os.Stat("somefile.txt")
-	assert.ErrorIs(t, err, os.ErrNotExist)
+			// the tree as of the selected layer (root/saved.txt is added by a later one), only under the selected path
+			_, err = os.Stat(filepath.Join("root", "saved.txt"))
+			assert.ErrorIs(t, err, os.ErrNotExist)
+			_, err = os.Stat("somefile.txt")
+			assert.ErrorIs(t, err, os.ErrNotExist)
+		})
+	}
 }
 
 func TestExtract_SelectsPathNotPrefix(t *testing.T) {
@@ -108,6 +114,25 @@ func TestExtract_DoesNotEscape(t *testing.T) {
 
 	// entries that are safe still land
 	assert.Equal(t, "fine", readFile(t, "fine.txt"))
+}
+
+// regression for #722: the reported payload, a tar name sharing the selected path's prefix that climbs out of the cwd
+func TestExtract_PrefixSharingNameDoesNotEscape(t *testing.T) {
+	img := imagefixture.LoadSpec(t, imagefixture.Spec{Layers: [][]imagefixture.Entry{{
+		{Name: "etc/", Type: tar.TypeDir},
+		{Name: "etc/motd", Content: "motd"},
+		{Name: "etc/motd/../../../victim/.bashrc", Content: "pwned"},
+	}}})
+	base, _ := dirs(t)
+
+	// the old prefix check wrote base/victim/.bashrc when /etc/motd was selected
+	require.NoError(t, extract(img, 0, "/etc/motd", "."))
+	assert.Equal(t, "motd", readFile(t, filepath.Join("etc", "motd")))
+	// selecting a parent of where the name cleans to reaches it, and it is refused
+	assert.ErrorContains(t, extract(img, 0, "/", "."), "etc/motd/../../../victim/.bashrc")
+
+	_, err := os.Stat(filepath.Join(base, "victim"))
+	assert.ErrorIs(t, err, os.ErrNotExist)
 }
 
 func TestExtract_SquashedTree(t *testing.T) {
