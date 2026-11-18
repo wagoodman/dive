@@ -174,5 +174,6 @@ func (c *UIKeybindings) DescribeFields(descriptions clio.FieldDescriptionSet) {
 	descriptions.Add(&c.Filetree.ToggleUnmodifiedFiles, "toggle visibility of unmodified files (file view)")
 	descriptions.Add(&c.Filetree.ToggleTreeAttributes, "toggle display of file attributes (file view)")
 	descriptions.Add(&c.Filetree.ToggleSortOrder, "toggle sort order (file view)")
+	descriptions.Add(&c.Filetree.ToggleWrapTree, "toggle line wrapping of the file tree (file view)")
 	descriptions.Add(&c.Filetree.ExtractFile, "extract file contents (file view)")
 }

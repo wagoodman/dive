@@ -28,6 +28,7 @@ type FileTreeViewModel struct {
 	ShowAttributes              bool
 	unconstrainedShowAttributes bool
 	HiddenDiffTypes             []bool
+	sortOrder                   filetree.SortOrder
 	TreeIndex                   int
 	bufferIndex                 int
 	bufferIndexLowerBound       int
@@ -130,6 +131,8 @@ func (vm *FileTreeViewModel) SetTreeByLayer(bottomTreeStart, bottomTreeStop, top
 		return fmt.Errorf("unable to propagate layer tree: %w", err)
 	}
 
+	// cached trees carry their own sort order, the user's choice applies to all of them
+	newTree.SortOrder = vm.sortOrder
 	vm.ModelTree = newTree
 	return nil
 }
@@ -165,17 +168,16 @@ func (vm *FileTreeViewModel) CursorDown() bool {
 	return true
 }
 
-func (vm *FileTreeViewModel) CurrentNode(filterRegex *regexp.Regexp) *filetree.FileNode {
-	return vm.getAbsPositionNode(filterRegex)
+func (vm *FileTreeViewModel) CurrentNode() *filetree.FileNode {
+	return vm.getAbsPositionNode()
 }
 
 // CursorLeft moves the cursor up until we reach the Parent Node or top of the tree
-func (vm *FileTreeViewModel) CursorLeft(filterRegex *regexp.Regexp) error {
+func (vm *FileTreeViewModel) CursorLeft() error {
 	var visitor func(*filetree.FileNode) error
-	var evaluator func(*filetree.FileNode) bool
 	var dfsCounter, newIndex int
 	oldIndex := vm.TreeIndex
-	currentNode := vm.getAbsPositionNode(filterRegex)
+	currentNode := vm.getAbsPositionNode()
 
 	if currentNode == nil {
 		return nil
@@ -190,16 +192,7 @@ func (vm *FileTreeViewModel) CursorLeft(filterRegex *regexp.Regexp) error {
 		return nil
 	}
 
-	evaluator = func(curNode *filetree.FileNode) bool {
-		regexMatch := true
-		if filterRegex != nil {
-			match := filterRegex.Find([]byte(curNode.Path()))
-			regexMatch = match != nil
-		}
-		return !curNode.Parent.Data.ViewInfo.Collapsed && !curNode.Data.ViewInfo.Hidden && regexMatch
-	}
-
-	err := vm.ModelTree.VisitDepthParentFirst(visitor, evaluator)
+	err := vm.ModelTree.VisitDepthParentFirst(visitor, visibleRowEvaluator())
 	if err != nil {
 		return fmt.Errorf("unable to propagate tree on cursorLeft: %w", err)
 	}
@@ -220,8 +213,8 @@ func (vm *FileTreeViewModel) CursorLeft(filterRegex *regexp.Regexp) error {
 }
 
 // CursorRight descends into directory expanding it if needed
-func (vm *FileTreeViewModel) CursorRight(filterRegex *regexp.Regexp) error {
-	node := vm.getAbsPositionNode(filterRegex)
+func (vm *FileTreeViewModel) CursorRight() error {
+	node := vm.getAbsPositionNode()
 	if node == nil {
 		return nil
 	}
@@ -303,12 +296,10 @@ func (vm *FileTreeViewModel) PageUp() error {
 }
 
 // getAbsPositionNode determines the selected screen cursor's location in the file tree, returning the selected FileNode.
-func (vm *FileTreeViewModel) getAbsPositionNode(filterRegex *regexp.Regexp) (node *filetree.FileNode) {
-	var visitor func(*filetree.FileNode) error
-	var evaluator func(*filetree.FileNode) bool
+func (vm *FileTreeViewModel) getAbsPositionNode() (node *filetree.FileNode) {
 	var dfsCounter int
 
-	visitor = func(curNode *filetree.FileNode) error {
+	visitor := func(curNode *filetree.FileNode) error {
 		if dfsCounter == vm.TreeIndex {
 			node = curNode
 		}
@@ -316,20 +307,7 @@ func (vm *FileTreeViewModel) getAbsPositionNode(filterRegex *regexp.Regexp) (nod
 		return nil
 	}
 
-	evaluator = func(curNode *filetree.FileNode) bool {
-		regexMatch := true
-		if filterRegex != nil {
-			match := filterRegex.Find([]byte(curNode.Path()))
-			regexMatch = match != nil
-		}
-		parentCollapsed := false
-		if curNode.Parent != nil {
-			parentCollapsed = curNode.Parent.Data.ViewInfo.Collapsed
-		}
-		return !parentCollapsed && !curNode.Data.ViewInfo.Hidden && regexMatch
-	}
-
-	err := vm.ModelTree.VisitDepthParentFirst(visitor, evaluator)
+	err := vm.ModelTree.VisitDepthParentFirst(visitor, visibleRowEvaluator())
 	if err != nil {
 		log.WithFields("error", err).Debug("unable to propagate tree on getAbsPositionNode")
 	}
@@ -337,9 +315,20 @@ func (vm *FileTreeViewModel) getAbsPositionNode(filterRegex *regexp.Regexp) (nod
 	return node
 }
 
+// visibleRowEvaluator selects the nodes that take up a row in the rendered tree, so cursor indexes map to nodes
+// consistently across all navigation operations. The active filter is not checked here: Update already folds it
+// into the Hidden flag (keeping ancestors of matches visible), same as what gets rendered.
+func visibleRowEvaluator() filetree.VisitEvaluator {
+	return func(curNode *filetree.FileNode) bool {
+		// the tree root is evaluated too and has no parent
+		parentCollapsed := curNode.Parent != nil && curNode.Parent.Data.ViewInfo.Collapsed
+		return !parentCollapsed && !curNode.Data.ViewInfo.Hidden
+	}
+}
+
 // ToggleCollapse will collapse/expand the selected FileNode.
-func (vm *FileTreeViewModel) ToggleCollapse(filterRegex *regexp.Regexp) error {
-	node := vm.getAbsPositionNode(filterRegex)
+func (vm *FileTreeViewModel) ToggleCollapse() error {
+	node := vm.getAbsPositionNode()
 	if node != nil && node.Data.FileInfo.IsDir {
 		node.Data.ViewInfo.Collapsed = !node.Data.ViewInfo.Collapsed
 	}
@@ -369,7 +358,8 @@ func (vm *FileTreeViewModel) ToggleCollapseAll() error {
 
 // ToggleSortOrder will toggle the sort order in which files are displayed
 func (vm *FileTreeViewModel) ToggleSortOrder() error {
-	vm.ModelTree.SortOrder = (vm.ModelTree.SortOrder + 1) % filetree.NumSortOrderConventions
+	vm.sortOrder = (vm.sortOrder + 1) % filetree.NumSortOrderConventions
+	vm.ModelTree.SortOrder = vm.sortOrder
 
 	return nil
 }
@@ -447,7 +437,23 @@ func (vm *FileTreeViewModel) Update(filterRegex *regexp.Regexp, width, height in
 		return fmt.Errorf("unable to propagate vm view tree: %w", err)
 	}
 
+	vm.clampCursor()
 	return nil
+}
+
+// clampCursor keeps the cursor on a visible row and inside the pane after the number of visible rows or the pane
+// height changed (filter edits, hidden diff types, collapsing, resizing).
+func (vm *FileTreeViewModel) clampCursor() {
+	// note: VisibleSize is the index of the last visible row
+	last := max(vm.ModelTree.VisibleSize(), 0)
+	vm.TreeIndex = min(max(vm.TreeIndex, 0), last)
+
+	// don't leave blank rows at the bottom of the pane when there are rows above it to show instead
+	lower := min(vm.bufferIndexLowerBound, max(last-vm.height(), 0))
+	lower = min(max(lower, vm.TreeIndex-vm.height(), 0), vm.TreeIndex)
+
+	vm.bufferIndexLowerBound = lower
+	vm.bufferIndex = vm.TreeIndex - lower
 }
 
 // Render flushes the state objects (file tree) to the pane.

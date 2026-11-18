@@ -2,7 +2,9 @@ package app
 
 import (
 	"fmt"
+	"path/filepath"
 	"regexp"
+	"strings"
 
 	"github.com/awesome-gocui/gocui"
 
@@ -16,6 +18,10 @@ type controller struct {
 	gui    *gocui.Gui
 	views  *view.Views
 	config tui.Config
+
+	// the focused view (and its key help) from before the filter was opened, focus goes back to it on close
+	preFilterView string
+	preFilterHelp view.Helper
 }
 
 func newController(g *gocui.Gui, cfg tui.Config) (*controller, error) {
@@ -60,11 +66,18 @@ func newController(g *gocui.Gui, cfg tui.Config) (*controller, error) {
 
 func (c *controller) onFileTreeViewExtract(p string) error {
 	// files land relative to the current working directory, the same as before
-	if err := extract(c.config.Analysis.Image, c.views.LayerDetails.CurrentLayer.Index, p, "."); err != nil {
-		// an extract problem is not a reason to end the session, it is reported once the TUI exits
-		bus.Notify(fmt.Sprintf("extract of %s: %v", p, err))
+	dst, err := filepath.Abs(".")
+	if err == nil {
+		err = extract(c.config.Analysis.Image, c.views.LayerDetails.CurrentLayer.Index, p, dst)
 	}
-	return nil
+	if err != nil {
+		// an extract problem is not a reason to end the session, the full report is also shown once the TUI exits
+		bus.Notify(fmt.Sprintf("extract of %s: %v", p, err))
+		c.views.Status.Notify(fmt.Sprintf("extract of %s failed: %s", p, strings.ReplaceAll(err.Error(), "\n", "; ")))
+	} else {
+		c.views.Status.Notify(fmt.Sprintf("extracted %s to %s", p, dst))
+	}
+	return c.views.Status.Render()
 }
 
 func (c *controller) onFileTreeViewOptionChange() error {
@@ -230,23 +243,31 @@ func (c *controller) CloseFilterView() error {
 }
 
 func (c *controller) ToggleFilterView() error {
+	opening := !c.views.Filter.IsVisible()
+	if opening {
+		// the layout focuses the layer view before any key can be handled, so there is always a current view
+		c.preFilterView, c.preFilterHelp = c.gui.CurrentView().Name(), c.views.Status.CurrentView()
+	}
+
 	// delete all user input from the tree view
 	err := c.views.Filter.ToggleVisible()
 	if err != nil {
 		return fmt.Errorf("unable to toggle filter visibility: %w", err)
 	}
 
-	// we have just hidden the filter view...
-	if !c.views.Filter.IsVisible() {
-		// ...remove any filter from the tree
-		c.views.Tree.SetFilterRegex(nil)
-
-		// ...adjust focus to a valid (visible) view
-		err = c.ToggleView()
-		if err != nil {
-			return fmt.Errorf("unable to toggle filter view (back): %w", err)
-		}
+	if opening {
+		c.views.Status.SetCurrentView(c.views.Filter)
+		return c.UpdateAndRender()
 	}
+
+	// we have just hidden the filter view, remove any filter from the tree...
+	c.views.Tree.SetFilterRegex(nil)
+
+	// ...and give focus back to the view that had it
+	if _, err = c.gui.SetCurrentView(c.preFilterView); err != nil {
+		return fmt.Errorf("unable to toggle filter view (back): %w", err)
+	}
+	c.views.Status.SetCurrentView(c.preFilterHelp)
 
 	return c.UpdateAndRender()
 }

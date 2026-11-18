@@ -70,7 +70,8 @@ func (m *Handler) handleReadImage(e partybus.Event) []tea.Model {
 			Running: "Parsing image",
 			Success: "Parsed image",
 		},
-		taskprogress.WithProgress(prog),
+		// stereoscope never completes a read that failed, the source failing finishes the row instead
+		taskprogress.WithStagedProgressable(m.failable(prog)),
 	)
 
 	if imgMetadata != nil {
@@ -107,7 +108,7 @@ func (m *Handler) handleReadLayer(e partybus.Event) ([]tea.Model, tea.Cmd) {
 			Running: title,
 			Success: title,
 		},
-		taskprogress.WithStagedProgressable(layerReadProgress{Monitorable: mon}),
+		taskprogress.WithStagedProgressable(m.failable(layerReadProgress{Monitorable: mon})),
 	)
 	tsk.TitleStyle = lipgloss.NewStyle()
 	// finished layers drop out so a many layer image doesn't flood the screen, the parent row has the overall progress

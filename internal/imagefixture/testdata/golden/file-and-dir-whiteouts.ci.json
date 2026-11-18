@@ -1,16 +1,16 @@
 {
-  "efficiency": "0.8504672897196262",
+  "efficiency": "0.047619047619047616",
   "sizeBytes": 1575,
   "userSizeBytes": 70,
-  "wastedBytes": 400,
-  "wastedUserPercent": "5.714285714285714",
+  "wastedBytes": 1500,
+  "wastedUserPercent": "21.428571428571427",
   "evaluations": {
     "default": {
       "pass": false,
       "rules": {
         "highestUserWastedPercent": {
           "status": "FAIL",
-          "message": "too many bytes wasted, relative to the user bytes added (%-user-wasted-bytes=5.71 \u003e threshold=0.1)"
+          "message": "too many bytes wasted, relative to the user bytes added (%-user-wasted-bytes=21.43 \u003e threshold=0.1)"
         },
         "highestWastedBytes": {
           "status": "SKIP",
@@ -18,17 +18,17 @@
         },
         "lowestEfficiency": {
           "status": "FAIL",
-          "message": "image efficiency is too low (efficiency=0.85 \u003c threshold=0.9)"
+          "message": "image efficiency is too low (efficiency=0.05 \u003c threshold=0.9)"
         }
       },
-      "report": "Analysis:\n  efficiency:        85.05 %\n  wastedBytes:       400 bytes (400 B)\n  userWastedPercent: 571.43 %\n\nInefficient Files:\n  Count  Wasted Space  File Path\n  2      400 B         /data/remove.txt\n\nEvaluation:\n  FAIL  highestUserWastedPercent (too many bytes wasted, relative to the user bytes added (%-user-wasted-bytes=5.71 \u003e threshold=0.1))\n  SKIP  highestWastedBytes (disabled)\n  FAIL  lowestEfficiency (image efficiency is too low (efficiency=0.85 \u003c threshold=0.9))\n\nFAIL [fail:2 skip:1]"
+      "report": "Analysis:\n  efficiency:        4.76 %\n  wastedBytes:       1500 bytes (1.5 kB)\n  userWastedPercent: 2142.86 %\n\nInefficient Files:\n  Count  Wasted Space  File Path\n  2      600 B         /data/olddir/nested/y\n  2      500 B         /data/olddir/x\n  2      400 B         /data/remove.txt\n\nEvaluation:\n  FAIL  highestUserWastedPercent (too many bytes wasted, relative to the user bytes added (%-user-wasted-bytes=21.43 \u003e threshold=0.1))\n  SKIP  highestWastedBytes (disabled)\n  FAIL  lowestEfficiency (image efficiency is too low (efficiency=0.05 \u003c threshold=0.9))\n\nFAIL [fail:2 skip:1]"
     },
     "dive-ci": {
       "pass": false,
       "rules": {
         "highestUserWastedPercent": {
           "status": "FAIL",
-          "message": "too many bytes wasted, relative to the user bytes added (%-user-wasted-bytes=5.71 \u003e threshold=0.5)"
+          "message": "too many bytes wasted, relative to the user bytes added (%-user-wasted-bytes=21.43 \u003e threshold=0.5)"
         },
         "highestWastedBytes": {
           "status": "PASS",
@@ -36,10 +36,10 @@
         },
         "lowestEfficiency": {
           "status": "FAIL",
-          "message": "image efficiency is too low (efficiency=0.85 \u003c threshold=0.95)"
+          "message": "image efficiency is too low (efficiency=0.05 \u003c threshold=0.95)"
         }
       },
-      "report": "Analysis:\n  efficiency:        85.05 %\n  wastedBytes:       400 bytes (400 B)\n  userWastedPercent: 571.43 %\n\nInefficient Files:\n  Count  Wasted Space  File Path\n  2      400 B         /data/remove.txt\n\nEvaluation:\n  FAIL  highestUserWastedPercent (too many bytes wasted, relative to the user bytes added (%-user-wasted-bytes=5.71 \u003e threshold=0.5))\n  PASS  highestWastedBytes (20Mb)\n  FAIL  lowestEfficiency (image efficiency is too low (efficiency=0.85 \u003c threshold=0.95))\n\nFAIL [pass:1 fail:2]"
+      "report": "Analysis:\n  efficiency:        4.76 %\n  wastedBytes:       1500 bytes (1.5 kB)\n  userWastedPercent: 2142.86 %\n\nInefficient Files:\n  Count  Wasted Space  File Path\n  2      600 B         /data/olddir/nested/y\n  2      500 B         /data/olddir/x\n  2      400 B         /data/remove.txt\n\nEvaluation:\n  FAIL  highestUserWastedPercent (too many bytes wasted, relative to the user bytes added (%-user-wasted-bytes=21.43 \u003e threshold=0.5))\n  PASS  highestWastedBytes (20Mb)\n  FAIL  lowestEfficiency (image efficiency is too low (efficiency=0.05 \u003c threshold=0.95))\n\nFAIL [pass:1 fail:2]"
     }
   }
 }

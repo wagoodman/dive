@@ -40,8 +40,7 @@ func runExplore(e partybus.Event, prefs tui.Preferences) error {
 
 // muteConsoleLogs stops log lines from drawing over a UI and returns the func that brings them back. dive and
 // stereoscope log through clio's logger, which also reports the command's final error once the UI is gone, so the
-// restore has to run when the UI hands the terminal back. A configured log file shares the writer with stderr, so it
-// misses the lines in between too.
+// restore has to run when the UI hands the terminal back. A configured log file keeps getting every line.
 func muteConsoleLogs() (restore func()) {
 	c, ok := log.Get().(logger.Controller)
 	if !ok {
@@ -49,6 +48,10 @@ func muteConsoleLogs() (restore func()) {
 		return func() {}
 	}
 	out := c.GetOutput()
-	c.SetOutput(io.Discard)
+	muted := io.Discard
+	if f := log.File(); f != nil {
+		muted = f
+	}
+	c.SetOutput(muted)
 	return func() { c.SetOutput(out) }
 }

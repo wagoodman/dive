@@ -31,7 +31,7 @@ vars:
 
   # used for acceptance tests
   TEST_IMAGE: busybox:latest
-  DOCKER_CLI_VERSION: 28.0.0
+  DOCKER_CLI_VERSION: 29.10.0
 
 env:
   GNUMAKEFLAGS: '--no-print-directory'
@@ -293,10 +293,11 @@ tasks:
         {{ .SNAPSHOT_DIR }}/linux-build_linux_amd64_v1/dive '{{ .TEST_IMAGE }}' --ci && \
         {{ .SNAPSHOT_DIR }}/linux-build_linux_amd64_v1/dive --source docker-archive .data/test-kaniko-image.tar --ci --ci-config .data/.dive-ci
       - |
+        set -e
         for alg in uncompressed gzip estargz zstd; do \
           for exporter in docker image; do \
             {{ .SNAPSHOT_DIR }}/linux-build_linux_amd64_v1/dive "test-dive-${exporter}:${alg}" --ci ; \
-          done && \
+          done ; \
           {{ .SNAPSHOT_DIR }}/linux-build_linux_amd64_v1/dive --source docker-archive .data/test-oci-${alg}-image.tar --ci --ci-config .data/.dive-ci; \
         done
 

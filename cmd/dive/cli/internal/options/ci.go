@@ -2,9 +2,13 @@ package options
 
 import (
 	"fmt"
+	"os"
+	"strings"
+
 	"github.com/anchore/clio"
 	"gopkg.in/yaml.v3"
-	"os"
+
+	"github.com/wagoodman/dive/internal/log"
 )
 
 var _ interface {
@@ -23,7 +27,8 @@ type CI struct {
 
 func DefaultCI() CI {
 	return CI{
-		Enabled:    false,
+		// the CI env var only sets the default, so --ci, DIVE_CI and the config file can still override it
+		Enabled:    truthy(os.Getenv("CI")),
 		ConfigPath: defaultCIConfigPath,
 		Rules:      DefaultCIRules(),
 	}
@@ -36,54 +41,59 @@ func (c *CI) DescribeFields(descriptions clio.FieldDescriptionSet) {
 
 func (c *CI) AddFlags(flags clio.FlagSet) {
 	flags.BoolVarP(&c.Enabled, "ci", "", "skip the interactive TUI and validate against CI rules (same as env var CI=true)")
-	flags.StringVarP(&c.ConfigPath, "ci-config", "", "if CI=true in the environment, use the given yaml to drive validation rules.")
+	flags.StringVarP(&c.ConfigPath, "ci-config", "", "yaml file with the CI validation rules, used with --ci or CI=true in the environment")
 }
 
 func (c *CI) PostLoad() error {
-	enabledFromEnv := truthy(os.Getenv("CI"))
-	if !c.Enabled && enabledFromEnv {
-		c.Enabled = true
+	// the rules file only matters in CI mode, so a broken one can't break the TUI or --json
+	if !c.Enabled {
+		return nil
+	}
+
+	// only the default file is optional, a path the user gave has to exist
+	if c.ConfigPath != "" && c.ConfigPath != defaultCIConfigPath && !fileExists(c.ConfigPath) {
+		return fmt.Errorf("CI config file does not exist: %s", c.ConfigPath)
 	}
 
 	if c.ConfigPath != "" {
 		if fileExists(c.ConfigPath) {
-			// if a config file is provided, load it and override any values provided in the application config.
-			// If we're hitting this case we should pretend that only the config file was provided and applied
-			// on top of the default config values.
+			// a file with rules is the whole rule set: it replaces the app config rules and the defaults, and rules
+			// it leaves out are skipped. Rule flags and env vars still win over it, as they do over any config file
 			yamlFile, err := os.ReadFile(c.ConfigPath)
 			if err != nil {
 				return fmt.Errorf("failed to read CI config file %s: %w", c.ConfigPath, err)
 			}
-			def := DefaultCIRules()
-			r := legacyRuleFile{
-				LowestEfficiencyThresholdString: def.LowestEfficiencyThresholdString,
-				HighestWastedBytesString:        def.HighestWastedBytesString,
-				HighestUserWastedPercentString:  def.HighestUserWastedPercentString,
+			var file struct {
+				Rules map[string]string `yaml:"rules"`
 			}
-			wrapper := struct {
-				Rules *legacyRuleFile `yaml:"rules"`
-			}{
-				Rules: &r,
-			}
-			if err := yaml.Unmarshal(yamlFile, &wrapper); err != nil {
+			if err := yaml.Unmarshal(yamlFile, &file); err != nil {
 				return fmt.Errorf("failed to unmarshal CI config file %s: %w", c.ConfigPath, err)
 			}
-			// TODO: should this be a deprecated use warning in the future?
-			c.Rules = CIRules{
-				LowestEfficiencyThresholdString: r.LowestEfficiencyThresholdString,
-				HighestWastedBytesString:        r.HighestWastedBytesString,
-				HighestUserWastedPercentString:  r.HighestUserWastedPercentString,
+			if len(file.Rules) == 0 {
+				return nil
+			}
+			for _, r := range c.Rules.keys() {
+				v := "disabled"
+				// the file has always used camelCase keys, snake-case (like the app config) wins when both are set
+				for _, key := range []string{r.camel, r.snake} {
+					if fv, ok := file.Rules[key]; ok {
+						v = fv
+					}
+					delete(file.Rules, key)
+				}
+				if c.Rules.explicit(r) {
+					continue
+				}
+				*r.value = v
+				*r.legacy = ""
+			}
+			for key := range file.Rules {
+				log.Warnf("unknown rule %q in CI config file %s", key, c.ConfigPath)
 			}
 		}
 	}
 
 	return nil
-}
-
-type legacyRuleFile struct {
-	LowestEfficiencyThresholdString string `yaml:"lowestEfficiency"`
-	HighestWastedBytesString        string `yaml:"highestWastedBytes"`
-	HighestUserWastedPercentString  string `yaml:"highestUserWastedPercent"`
 }
 
 func fileExists(path string) bool {
@@ -93,12 +103,11 @@ func fileExists(path string) bool {
 	return true
 }
 
+// truthy matches CI env values case-insensitively, e.g. AppVeyor sets CI=True
 func truthy(value string) bool {
-	switch value {
+	switch strings.ToLower(strings.TrimSpace(value)) {
 	case "true", "1", "yes":
 		return true
-	case "false", "0", "no":
-		return false
 	default:
 		return false
 	}

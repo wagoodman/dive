@@ -19,7 +19,10 @@ import (
 	"github.com/moby/moby/client"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/wagoodman/go-partybus"
 
+	"github.com/wagoodman/dive/internal/bus"
+	"github.com/wagoodman/dive/internal/bus/event"
 	"github.com/wagoodman/dive/internal/imagefixture"
 )
 
@@ -193,6 +196,26 @@ func TestLoad(t *testing.T) {
 	}
 }
 
+func TestLoad_publishesFailedSources(t *testing.T) {
+	prev := bus.Get()
+	t.Cleanup(func() { bus.Set(prev) })
+	b := partybus.NewBus()
+	sub := b.Subscribe(event.ImageSourceFailed)
+	bus.Set(b)
+
+	_, err := Load(context.Background(), filepath.Join(t.TempDir(), "nope.tar"), Config{Source: DockerArchive})
+	require.Error(t, err)
+	require.NoError(t, sub.Unsubscribe())
+
+	// the UI fails the rows of each attempt on these
+	var failed []any
+	for e := range sub.Events() {
+		assert.Error(t, e.Error)
+		failed = append(failed, e.Source)
+	}
+	assert.Equal(t, []any{"docker-archive", "oci-archive"}, failed)
+}
+
 func TestLoad_interrupted(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
@@ -364,8 +387,11 @@ func TestDockerHost_badConfig(t *testing.T) {
 	t.Setenv("DOCKER_CONTEXT", "")
 	dir := t.TempDir()
 	require.NoError(t, os.WriteFile(filepath.Join(dir, "config.json"), []byte("{not json"), 0o600))
-	_, _, err := dockerEndpoint(dir)
-	require.Error(t, err)
+	// like the docker cli, a bad config falls back to the default host instead of failing
+	ep, fromEnv, err := dockerEndpoint(dir)
+	require.NoError(t, err)
+	assert.Equal(t, client.DefaultDockerHost, ep.Host)
+	assert.True(t, fromEnv)
 }
 
 func TestNewDockerClient_TLS(t *testing.T) {
@@ -498,4 +524,38 @@ uri = "unix:///run/user/1000/podman/podman.sock"
 			assert.Equal(t, tt.want, got)
 		})
 	}
+}
+
+func TestPodmanConfigSocket_severalUnixDestinations(t *testing.T) {
+	p := filepath.Join(t.TempDir(), "containers.conf")
+	require.NoError(t, os.WriteFile(p, []byte(`[engine.service_destinations.c]
+uri = "unix:///run/c.sock"
+[engine.service_destinations.a]
+uri = "unix:///run/a.sock"
+[engine.service_destinations.b]
+uri = "unix:///run/b.sock"
+[engine.service_destinations.d]
+uri = "unix:///run/d.sock"
+`), 0o600))
+	// without an active service the first by name wins, every time
+	for range 50 {
+		require.Equal(t, "unix:///run/a.sock", podmanConfigSocket(p))
+	}
+}
+
+func TestPodmanConfigs(t *testing.T) {
+	home := t.TempDir()
+	t.Setenv("XDG_CONFIG_HOME", home)
+	dropIns := filepath.Join(home, "containers", "containers.conf.d")
+	require.NoError(t, os.MkdirAll(dropIns, 0o700))
+	for _, name := range []string{"20-b.conf", "10-a.conf", "ignored.txt"} {
+		require.NoError(t, os.WriteFile(filepath.Join(dropIns, name), nil, 0o600))
+	}
+
+	got := podmanConfigs()
+	assert.Equal(t, []string{
+		filepath.Join(home, "containers", "containers.conf"),
+		filepath.Join(dropIns, "10-a.conf"),
+		filepath.Join(dropIns, "20-b.conf"),
+	}, got[len(got)-3:])
 }

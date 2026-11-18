@@ -1,6 +1,8 @@
 package options
 
 import (
+	"strings"
+
 	"github.com/anchore/clio"
 	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui/tui"
 	"github.com/wagoodman/dive/internal/log"
@@ -29,11 +31,16 @@ func (c *UIDiff) DescribeFields(descriptions clio.FieldDescriptionSet) {
 
 func (c *UIDiff) PostLoad() error {
 	validHideValues := map[string]bool{"added": true, "removed": true, "modified": true, "unmodified": true}
+	// drop invalid values, the TUI refuses to start on any it doesn't know
+	var hide []string
 	for _, value := range c.Hide {
-		if _, ok := validHideValues[value]; !ok {
+		if !validHideValues[strings.ToLower(value)] {
 			log.Warnf("invalid diff hide value: %s (valid values: added, removed, modified, unmodified)", value)
+			continue
 		}
+		hide = append(hide, value)
 	}
+	c.Hide = hide
 
 	return nil
 }

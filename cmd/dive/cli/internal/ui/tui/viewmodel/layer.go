@@ -40,9 +40,13 @@ func (l *Layer) ShortId() string {
 	return l.Id[:min(15, len(l.Id))]
 }
 
+// lineBreaks folds every line break (including CRLF and a bare CR, which would send the terminal cursor back over
+// the row's other columns) into a single marker.
+var lineBreaks = strings.NewReplacer("\r\n", "↵", "\r", "↵", "\n", "↵")
+
 func (l *Layer) commandPreview() string {
 	// layers using heredocs can be multiple lines, rendering relies on String() being a single line
-	return strings.ReplaceAll(l.Command, "\n", "↵")
+	return lineBreaks.Replace(l.Command)
 }
 
 func (l *Layer) String() string {

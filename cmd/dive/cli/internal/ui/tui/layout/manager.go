@@ -8,6 +8,10 @@ import (
 
 type Constraint func(int) int
 
+// minWidth is the narrowest screen the views can be laid out on: the filter footer puts its input view after the
+// "Path Filter: " label, and gocui refuses a view whose left edge is not before its right edge.
+const minWidth = 12
+
 type Manager struct {
 	lastX, lastY                                   int
 	lastHeaderArea, lastFooterArea, lastColumnArea Area
@@ -198,6 +202,10 @@ func (lm *Manager) Layout(g *gocui.Gui) error {
 func (lm *Manager) layout(g *gocui.Gui, curMaxX, curMaxY int) error {
 	var headerAreaChanged, footerAreaChanged, columnAreaChanged bool
 
+	// on a narrower screen lay out as if it were the minimum width and let the views get clipped, otherwise views
+	// fail to be created and are left nil
+	curMaxX = max(curMaxX, minWidth)
+
 	// compare current screen size with the last known size at time of layout
 	area := Area{
 		minX: -1,
@@ -238,7 +246,7 @@ func (lm *Manager) layout(g *gocui.Gui, curMaxX, curMaxY int) error {
 	// columns...
 	area, err = lm.planAndLayoutColumns(g, area)
 	if err != nil {
-		return nil
+		return err
 	}
 
 	if area != lm.lastColumnArea {
@@ -249,7 +257,7 @@ func (lm *Manager) layout(g *gocui.Gui, curMaxX, curMaxY int) error {
 	// footers... layout according to the original available area and planned heights
 	err = lm.layoutFooters(g, footerArea, footerHeights)
 	if err != nil {
-		return nil
+		return err
 	}
 
 	// pass 2: notify everyone of a layout change (allow to update and render)

@@ -2,6 +2,7 @@ package filetree
 
 import (
 	"archive/tar"
+	"os"
 	"testing"
 
 	"github.com/anchore/stereoscope/pkg/file"
@@ -218,6 +219,8 @@ func TestComparer_Marks(t *testing.T) {
 				"/data/olddir/nested/y": Removed,
 				"/data/olddir/z":        Added,
 				"/data/keep.txt":        Unmodified,
+				// layer 2 re-created the dir layer 1 removed
+				"/data/olddir": Modified,
 			},
 		},
 	}
@@ -251,12 +254,83 @@ func TestComparer_Marks(t *testing.T) {
 	}
 }
 
+func TestComparer_DirReplacedByLink(t *testing.T) {
+	img := imagefixture.LoadSpec(t, imagefixture.Spec{Layers: [][]imagefixture.Entry{
+		{
+			{Name: "bin/", Type: tar.TypeDir},
+			{Name: "bin/sh", Content: "sh"},
+			{Name: "bin/ls", Content: "ls"},
+			{Name: "usr/", Type: tar.TypeDir},
+			{Name: "usr/bin/", Type: tar.TypeDir},
+		},
+		{
+			{Name: "bin", Type: tar.TypeSymlink, Linkname: "usr/bin"},
+		},
+	}})
+	tree, err := NewComparer(img).GetTree(NewTreeIndexKey(0, 0, 1, 1))
+	require.NoError(t, err)
+
+	bin, err := tree.GetNode("/bin")
+	require.NoError(t, err)
+	assert.Equal(t, Modified, bin.Data.DiffType)
+	assert.Equal(t, byte(tar.TypeSymlink), bin.Data.FileInfo.TypeFlag)
+	assert.Empty(t, bin.Children, "the old dir contents are gone")
+}
+
+func TestComparer_ImplicitDirKeepsLowerMetadata(t *testing.T) {
+	// layer 1 adds files under dirs it has no entry for
+	img := imagefixture.LoadSpec(t, imagefixture.Spec{Layers: [][]imagefixture.Entry{
+		{
+			{Name: "app/", Type: tar.TypeDir, Mode: 0o700, UID: 1000, GID: 1000},
+			{Name: "app/same.txt", Content: "same"},
+			{Name: "keep/", Type: tar.TypeDir, Mode: 0o750},
+			{Name: "keep/same.txt", Content: "same"},
+		},
+		{
+			{Name: "app/new.txt", Content: "new"},
+			{Name: "keep/same.txt", Content: "same"},
+			{Name: "implied/only.txt", Content: "only"},
+		},
+	}})
+	tree, err := NewComparer(img).GetTree(NewTreeIndexKey(0, 0, 1, 1))
+	require.NoError(t, err)
+
+	assert.Equal(t, map[string]DiffType{
+		"/app":           Modified,
+		"/app/new.txt":   Added,
+		"/keep":          Unmodified,
+		"/keep/same.txt": Unmodified,
+		"/implied":       Added,
+	}, diffTypes(t, tree, "/app", "/app/new.txt", "/keep", "/keep/same.txt", "/implied"))
+
+	app, err := tree.GetNode("/app")
+	require.NoError(t, err)
+	assert.True(t, app.Data.FileInfo.IsDir)
+	assert.Equal(t, os.ModeDir|0o700, app.Data.FileInfo.Mode)
+	assert.Equal(t, 1000, app.Data.FileInfo.Uid)
+
+	// a dir only implied in the image still shows as a dir
+	implied, err := tree.GetNode("/implied")
+	require.NoError(t, err)
+	assert.True(t, implied.Data.FileInfo.IsDir)
+	assert.Equal(t, "d", implied.MetadataString()[:1])
+}
+
 func TestComparer_HashesOnlyWhenNeeded(t *testing.T) {
 	cmp := NewComparer(imagefixture.Load(t, "mode-uid-only-change"))
 	_, err := cmp.GetTree(NewTreeIndexKey(0, 0, 1, 1))
 	require.NoError(t, err)
 	// run.sh and owned differ by metadata, so only the two copies of /app/same get read
 	assert.Len(t, cmp.hashes, 2)
+}
+
+func TestComparer_LayerAgainstItselfReadsNothing(t *testing.T) {
+	cmp := NewComparer(imagefixture.Load(t, "legacy-save"))
+	// the startup view: layer 0 compared with itself
+	tree, err := cmp.GetTree(NewTreeIndexKey(0, 0, 0, 0))
+	require.NoError(t, err)
+	assert.Empty(t, cmp.hashes)
+	assert.Equal(t, map[string]DiffType{"/bin/sh": Unmodified}, diffTypes(t, tree, "/bin/sh"))
 }
 
 func TestComparer_HashFailureIsModified(t *testing.T) {
@@ -268,7 +342,9 @@ func TestComparer_HashFailureIsModified(t *testing.T) {
 	_, ok := cmp.contentHash(f)
 	assert.False(t, ok)
 	assert.Empty(t, cmp.hashes, "a failed read is retried, not cached")
-	assert.Equal(t, Modified, f.Compare(f, cmp.contentHash))
+	other := f
+	other.ref = file.NewFileReference("/nope")
+	assert.Equal(t, Modified, f.Compare(other, cmp.contentHash))
 }
 
 func TestFileInfo_Compare(t *testing.T) {
@@ -290,7 +366,18 @@ func TestFileInfo_Compare(t *testing.T) {
 	assert.Equal(t, Modified, link.Compare(retargeted, noHash(t)))
 	assert.Equal(t, Unmodified, link.Compare(link, noHash(t)), "links have no content to read")
 
+	// a setcap only changes the xattrs
+	capped := reg
+	capped.xattrs = xattrs(&tar.Header{PAXRecords: map[string]string{
+		"SCHILY.xattr.security.capability": "\x01\x00\x00\x02",
+		"mtime":                            "1",
+	}})
+	assert.Equal(t, map[string]string{"security.capability": "\x01\x00\x00\x02"}, capped.xattrs)
+	assert.Equal(t, Modified, reg.Compare(capped, noHash(t)))
+	assert.Equal(t, Modified, capped.Compare(reg, noHash(t)))
+
 	same := func(FileInfo) (uint64, bool) { return 1, true }
 	assert.Equal(t, Unmodified, reg.Compare(reg, same))
+	assert.Equal(t, Unmodified, capped.Compare(capped, same))
 	assert.Equal(t, Modified, reg.Compare(reg, func(FileInfo) (uint64, bool) { return 0, false }))
 }

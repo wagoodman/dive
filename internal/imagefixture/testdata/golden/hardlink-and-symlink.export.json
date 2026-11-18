@@ -161,14 +161,8 @@
   ],
   "image": {
     "sizeBytes": 1411,
-    "inefficientBytes": 11,
-    "efficiencyScore": 0.9922041105598866,
-    "fileReference": [
-      {
-        "count": 2,
-        "sizeBytes": 11,
-        "file": "/usr/bin/tool-rel"
-      }
-    ]
+    "inefficientBytes": 0,
+    "efficiencyScore": 1,
+    "fileReference": []
   }
 }

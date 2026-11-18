@@ -1,8 +1,16 @@
 package cli
 
 import (
+	"fmt"
+	"io"
+	"os"
+
 	"github.com/anchore/clio"
+	"github.com/anchore/go-logger"
+	"github.com/anchore/go-logger/adapter/redact"
 	"github.com/anchore/stereoscope"
+	"github.com/gookit/color"
+	"github.com/muesli/termenv"
 	"github.com/spf13/cobra"
 	"github.com/wagoodman/dive/cmd/dive/cli/internal/command"
 	"github.com/wagoodman/dive/cmd/dive/cli/internal/ui"
@@ -26,6 +34,7 @@ func create(id clio.Identification) (clio.Application, *cobra.Command) {
 		WithGlobalLoggingFlags(). // add persistent -v and -q flags tied to the logging config
 		WithConfigInRootHelp().   // --help on the root command renders the full application config in the help text
 		WithUI(ui.None()).
+		WithLoggerConstructor(newLogger).
 		WithInitializers(
 			func(state *clio.State) error {
 				bus.Set(state.Bus)
@@ -34,6 +43,10 @@ func create(id clio.Identification) (clio.Application, *cobra.Command) {
 				// stereoscope publishes pull/fetch/read events on the same bus the UI listens to
 				stereoscope.SetBus(state.Bus)
 				stereoscope.SetLogger(state.Logger.Nested("from-lib", "stereoscope"))
+
+				if !colorErrors(state.Config.Log, os.Stderr) {
+					color.Enable = false
+				}
 				return nil
 			},
 		)
@@ -49,4 +62,47 @@ func create(id clio.Identification) (clio.Application, *cobra.Command) {
 	)
 
 	return app, rootCmd
+}
+
+// colorErrors reports whether clio may color the final error (gookit color, only NO_COLOR turns it off). It logs that
+// error to the console and the log file alike, so it should be plain unless stderr is a color terminal and there is no
+// log file.
+func colorErrors(cfg *clio.LoggingConfig, stderr io.Writer) bool {
+	if cfg != nil && cfg.FileLocation != "" {
+		return false
+	}
+	return termenv.NewOutput(stderr).EnvColorProfile() != termenv.Ascii
+}
+
+// newLogger is clio's default logger, except that it opens the log file itself and records it with log.SetFile. clio
+// tees the console and the file through one writer, so muting the console while a UI draws would drop the file too.
+func newLogger(cfg clio.Config, store redact.Store) (logger.Logger, error) {
+	if cfg.Log == nil || cfg.Log.FileLocation == "" {
+		return clio.DefaultLogger(cfg, store)
+	}
+	path := cfg.Log.FileLocation
+	consoleOnly := *cfg.Log
+	consoleOnly.FileLocation = ""
+	cfg.Log = &consoleOnly
+
+	l, err := clio.DefaultLogger(cfg, store)
+	if err != nil {
+		return nil, err
+	}
+	c, ok := l.(logger.Controller)
+	if !ok {
+		return nil, fmt.Errorf("unable to setup log file: logger %T has no settable output", l)
+	}
+	// same flags and mode clio opens it with
+	f, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0o644)
+	if err != nil {
+		return nil, fmt.Errorf("unable to setup log file: %w", err)
+	}
+	out := io.Writer(f)
+	if !consoleOnly.Quiet {
+		out = io.MultiWriter(os.Stderr, f)
+	}
+	c.SetOutput(out)
+	log.SetFile(f)
+	return l, nil
 }

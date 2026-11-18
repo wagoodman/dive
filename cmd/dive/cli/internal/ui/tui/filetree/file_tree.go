@@ -130,8 +130,8 @@ func (tree *FileTree) VisibleSize() int {
 	}
 	visitEvaluator := func(node *FileNode) bool {
 		if node.Data.FileInfo.IsDir {
-			// we won't visit a collapsed dir, but we need to count it
-			if node.Data.ViewInfo.Collapsed {
+			// we won't visit a collapsed dir, but we need to count it (unless it's hidden)
+			if node.Data.ViewInfo.Collapsed && !node.Data.ViewInfo.Hidden {
 				size++
 			}
 			return !node.Data.ViewInfo.Collapsed && !node.Data.ViewInfo.Hidden
@@ -315,15 +315,27 @@ func (tree *FileTree) CompareAndMark(upper *FileTree, hash ContentHasher) ([]Pat
 			if err != nil {
 				return failed, err
 			}
-		} else if pair.lowerNode.Data.DiffType == Unmodified {
+		} else if pair.lowerNode.Data.DiffType == Unmodified || pair.lowerNode.Data.DiffType == Removed {
+			// a node an earlier top layer removed is back if this layer has it, re-derive it like an untouched one
 			err = pair.lowerNode.deriveDiffType(pair.tentative)
 			if err != nil {
 				return failed, err
 			}
 		}
 
-		// persist the upper's payload on the owning tree
-		pair.lowerNode.Data.FileInfo = *pair.upperNode.Data.FileInfo.Copy()
+		// a dir replaced by a file or link has nothing below it anymore
+		if pair.lowerNode.Data.FileInfo.IsDir && !pair.upperNode.Data.FileInfo.IsDir {
+			for _, child := range pair.lowerNode.Children {
+				if err := child.Remove(); err != nil {
+					return failed, err
+				}
+			}
+		}
+
+		// persist the upper's payload on the owning tree, unless the upper only implies a dir that is already there
+		if !pair.upperNode.Data.FileInfo.implicit || !pair.lowerNode.Data.FileInfo.IsDir {
+			pair.lowerNode.Data.FileInfo = *pair.upperNode.Data.FileInfo.Copy()
+		}
 	}
 	return failed, nil
 }

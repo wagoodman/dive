@@ -102,6 +102,7 @@ func NewLowestEfficiencyRule(configValue string) (Rule, error) {
 			ciKeyLowestEfficiencyThreshold, configValue, err)
 	}
 
+	// NaN fails every comparison, so it would never trip the rule
 	if math.IsNaN(threshold) || threshold < 0 || threshold > 1 {
 		return nil, fmt.Errorf("%s config value is outside allowed range (0-1), given '%f'",
 			ciKeyLowestEfficiencyThreshold, threshold)

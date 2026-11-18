@@ -232,7 +232,8 @@ func (v *Layer) SetOrigin(x, y int) error {
 
 // SetCursor resets the cursor and orients the file tree view based on the given layer index.
 func (v *Layer) SetCursor(layer int) error {
-	v.vm.LayerIndex = layer
+	// clamp here so every caller (paging especially) stays on a real layer
+	v.vm.LayerIndex = max(0, min(layer, len(v.vm.Layers)-1))
 	err := v.notifyLayerChangeListeners()
 	if err != nil {
 		return err
@@ -301,64 +302,67 @@ func (v *Layer) Update() error {
 func (v *Layer) Render() error {
 	v.logger.Trace("render()")
 
+	// nothing to draw into until the layout has created the view
+	if v.body == nil {
+		return nil
+	}
+
 	// indicate when selected
 	title := "Layers"
 	isSelected := v.gui.CurrentView() == v.body
 
-	v.gui.Update(func(g *gocui.Gui) error {
-		var err error
-		// update header
-		v.header.Clear()
-		width, _ := g.Size()
+	var err error
+	// update header
+	v.header.Clear()
+	width, _ := v.gui.Size()
+	if v.constrainedRealEstate {
+		headerStr := format.RenderNoHeader(width, isSelected)
+		headerStr += "\nLayer"
+		_, err := fmt.Fprintln(v.header, headerStr)
+		if err != nil {
+			return err
+		}
+	} else {
+		headerStr := format.RenderHeader(title, width, isSelected)
+		headerStr += fmt.Sprintf("Cmp"+viewmodel.LayerFormat, "Size", "Command")
+		_, err := fmt.Fprintln(v.header, headerStr)
+		if err != nil {
+			return err
+		}
+	}
+
+	// update contents (Clear resets the origin, so remember the scroll position first)
+	_, oy := v.body.Origin()
+	v.body.Clear()
+	for idx, layer := range v.vm.Layers {
+		var layerStr string
 		if v.constrainedRealEstate {
-			headerStr := format.RenderNoHeader(width, isSelected)
-			headerStr += "\nLayer"
-			_, err := fmt.Fprintln(v.header, headerStr)
-			if err != nil {
-				return err
-			}
+			layerStr = fmt.Sprintf("%-4d", layer.Index)
 		} else {
-			headerStr := format.RenderHeader(title, width, isSelected)
-			headerStr += fmt.Sprintf("Cmp"+viewmodel.LayerFormat, "Size", "Command")
-			_, err := fmt.Fprintln(v.header, headerStr)
-			if err != nil {
-				return err
-			}
+			layerStr = layer.String()
 		}
 
-		// update contents
-		v.body.Clear()
-		for idx, layer := range v.vm.Layers {
-			var layerStr string
-			if v.constrainedRealEstate {
-				layerStr = fmt.Sprintf("%-4d", layer.Index)
-			} else {
-				layerStr = layer.String()
-			}
+		compareBar := v.renderCompareBar(idx)
 
-			compareBar := v.renderCompareBar(idx)
-
-			if idx == v.vm.LayerIndex {
-				_, err = fmt.Fprintln(v.body, compareBar+" "+format.Selected(layerStr))
-			} else {
-				_, err = fmt.Fprintln(v.body, compareBar+" "+layerStr)
-			}
-
-			if err != nil {
-				return err
-			}
+		if idx == v.vm.LayerIndex {
+			_, err = fmt.Fprintln(v.body, compareBar+" "+format.Selected(layerStr))
+		} else {
+			_, err = fmt.Fprintln(v.body, compareBar+" "+layerStr)
 		}
 
-		// Adjust origin, if necessary
-		maxBodyDisplayHeight := int(v.height())
-		if v.vm.LayerIndex > maxBodyDisplayHeight {
-			if err := v.SetOrigin(0, v.vm.LayerIndex-maxBodyDisplayHeight); err != nil {
-				return err
-			}
+		if err != nil {
+			return err
 		}
+	}
 
-		return nil
-	})
+	// keep the scroll position, only moving it when the selected layer would leave the pane
+	maxBodyDisplayHeight := int(v.height())
+	oy = min(oy, v.vm.LayerIndex, max(0, len(v.vm.Layers)-1-maxBodyDisplayHeight))
+	oy = max(oy, v.vm.LayerIndex-maxBodyDisplayHeight, 0)
+	if err := v.SetOrigin(0, oy); err != nil {
+		return err
+	}
+
 	return nil
 }
 

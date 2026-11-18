@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/awesome-gocui/gocui"
+	"github.com/mattn/go-runewidth"
 	"github.com/stretchr/testify/require"
 
 	"github.com/wagoodman/dive/cmd/dive/cli/internal/options"
@@ -13,6 +14,48 @@ import (
 	"github.com/wagoodman/dive/dive"
 	"github.com/wagoodman/dive/internal/imagefixture"
 )
+
+func TestNarrowAmbiguousWidth(t *testing.T) {
+	orig := runewidth.DefaultCondition.EastAsianWidth
+	t.Cleanup(func() { runewidth.DefaultCondition.EastAsianWidth = orig })
+
+	// as go-runewidth sets it up under a CJK locale
+	runewidth.DefaultCondition.EastAsianWidth = true
+	t.Setenv("RUNEWIDTH_EASTASIAN", "")
+	narrowAmbiguousWidth()
+	require.Equal(t, 1, runewidth.RuneWidth('│'))
+
+	// an explicit choice is kept
+	runewidth.DefaultCondition.EastAsianWidth = true
+	t.Setenv("RUNEWIDTH_EASTASIAN", "1")
+	narrowAmbiguousWidth()
+	require.Equal(t, 2, runewidth.RuneWidth('│'))
+}
+
+func TestRun_noTerminalSize(t *testing.T) {
+	orig := termSize
+	t.Cleanup(func() { termSize = orig })
+	termSize = func() (int, int, error) { return 0, 0, nil }
+
+	// returns before gocui takes the terminal (which would wait for a resize)
+	err := Run(context.Background(), tui.Config{Analysis: &dive.Analysis{Layers: make([]dive.Layer, 1)}})
+	require.ErrorContains(t, err, "the terminal has no size (0x0)")
+}
+
+func TestRun_noLayers(t *testing.T) {
+	outputMode = gocui.OutputSimulator
+	t.Cleanup(func() { outputMode = gocui.OutputNormal })
+
+	img := imagefixture.LoadSpec(t, imagefixture.Spec{})
+	analysis, err := dive.Analyze(context.Background(), "empty", img)
+	require.NoError(t, err)
+
+	opts := options.DefaultApplication()
+	require.NoError(t, opts.UI.Keybinding.PostLoad())
+
+	err = Run(context.Background(), tui.Config{Analysis: analysis, Preferences: opts.TUIPreferences()})
+	require.EqualError(t, err, "image has no layers")
+}
 
 func TestRun_quitsOnCancel(t *testing.T) {
 	outputMode = gocui.OutputSimulator

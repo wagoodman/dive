@@ -2,15 +2,15 @@
   "efficiency": "0.10526315789473684",
   "sizeBytes": 38000,
   "userSizeBytes": 24000,
-  "wastedBytes": 38000,
-  "wastedUserPercent": "1.5833333333333333",
+  "wastedBytes": 34000,
+  "wastedUserPercent": "1.4166666666666667",
   "evaluations": {
     "default": {
       "pass": false,
       "rules": {
         "highestUserWastedPercent": {
           "status": "FAIL",
-          "message": "too many bytes wasted, relative to the user bytes added (%-user-wasted-bytes=1.58 \u003e threshold=0.1)"
+          "message": "too many bytes wasted, relative to the user bytes added (%-user-wasted-bytes=1.42 \u003e threshold=0.1)"
         },
         "highestWastedBytes": {
           "status": "SKIP",
@@ -21,14 +21,14 @@
           "message": "image efficiency is too low (efficiency=0.11 \u003c threshold=0.9)"
         }
       },
-      "report": "Analysis:\n  efficiency:        10.53 %\n  wastedBytes:       38000 bytes (38 kB)\n  userWastedPercent: 158.33 %\n\nInefficient Files:\n  Count  Wasted Space  File Path\n  4      30 kB         /var/cache/big.bin\n  2      6.0 kB        /var/cache/medium.bin\n  2      1.0 kB        /var/cache/tie-a\n  2      1.0 kB        /var/cache/tie-b\n\nEvaluation:\n  FAIL  highestUserWastedPercent (too many bytes wasted, relative to the user bytes added (%-user-wasted-bytes=1.58 \u003e threshold=0.1))\n  SKIP  highestWastedBytes (disabled)\n  FAIL  lowestEfficiency (image efficiency is too low (efficiency=0.11 \u003c threshold=0.9))\n\nFAIL [fail:2 skip:1]"
+      "report": "Analysis:\n  efficiency:        10.53 %\n  wastedBytes:       34000 bytes (34 kB)\n  userWastedPercent: 141.67 %\n\nInefficient Files:\n  Count  Wasted Space  File Path\n  4      30 kB         /var/cache/big.bin\n  2      3.0 kB        /var/cache/medium.bin\n  2      500 B         /var/cache/tie-a\n  2      500 B         /var/cache/tie-b\n\nEvaluation:\n  FAIL  highestUserWastedPercent (too many bytes wasted, relative to the user bytes added (%-user-wasted-bytes=1.42 \u003e threshold=0.1))\n  SKIP  highestWastedBytes (disabled)\n  FAIL  lowestEfficiency (image efficiency is too low (efficiency=0.11 \u003c threshold=0.9))\n\nFAIL [fail:2 skip:1]"
     },
     "dive-ci": {
       "pass": false,
       "rules": {
         "highestUserWastedPercent": {
           "status": "FAIL",
-          "message": "too many bytes wasted, relative to the user bytes added (%-user-wasted-bytes=1.58 \u003e threshold=0.5)"
+          "message": "too many bytes wasted, relative to the user bytes added (%-user-wasted-bytes=1.42 \u003e threshold=0.5)"
         },
         "highestWastedBytes": {
           "status": "PASS",
@@ -39,7 +39,7 @@
           "message": "image efficiency is too low (efficiency=0.11 \u003c threshold=0.95)"
         }
       },
-      "report": "Analysis:\n  efficiency:        10.53 %\n  wastedBytes:       38000 bytes (38 kB)\n  userWastedPercent: 158.33 %\n\nInefficient Files:\n  Count  Wasted Space  File Path\n  4      30 kB         /var/cache/big.bin\n  2      6.0 kB        /var/cache/medium.bin\n  2      1.0 kB        /var/cache/tie-a\n  2      1.0 kB        /var/cache/tie-b\n\nEvaluation:\n  FAIL  highestUserWastedPercent (too many bytes wasted, relative to the user bytes added (%-user-wasted-bytes=1.58 \u003e threshold=0.5))\n  PASS  highestWastedBytes (20Mb)\n  FAIL  lowestEfficiency (image efficiency is too low (efficiency=0.11 \u003c threshold=0.95))\n\nFAIL [pass:1 fail:2]"
+      "report": "Analysis:\n  efficiency:        10.53 %\n  wastedBytes:       34000 bytes (34 kB)\n  userWastedPercent: 141.67 %\n\nInefficient Files:\n  Count  Wasted Space  File Path\n  4      30 kB         /var/cache/big.bin\n  2      3.0 kB        /var/cache/medium.bin\n  2      500 B         /var/cache/tie-a\n  2      500 B         /var/cache/tie-b\n\nEvaluation:\n  FAIL  highestUserWastedPercent (too many bytes wasted, relative to the user bytes added (%-user-wasted-bytes=1.42 \u003e threshold=0.5))\n  PASS  highestWastedBytes (20Mb)\n  FAIL  lowestEfficiency (image efficiency is too low (efficiency=0.11 \u003c threshold=0.95))\n\nFAIL [pass:1 fail:2]"
     }
   }
 }

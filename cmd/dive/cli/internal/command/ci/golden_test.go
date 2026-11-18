@@ -39,7 +39,7 @@ type evalGolden struct {
 }
 
 type ciGolden struct {
-	// floats are strings since a single layer image has a NaN user wasted percent
+	// floats are strings so they compare exactly
 	Efficiency        string                `json:"efficiency,omitempty"`
 	SizeBytes         uint64                `json:"sizeBytes,omitempty"`
 	UserSizeBytes     uint64                `json:"userSizeBytes,omitempty"`
@@ -57,6 +57,7 @@ func Test_CIGoldens(t *testing.T) {
 	require.NoError(t, defaultRules.PostLoad())
 
 	fileCfg := options.DefaultCI()
+	fileCfg.Enabled = true
 	fileCfg.ConfigPath = imagefixture.RepoPath(".data/.dive-ci")
 	require.NoError(t, fileCfg.PostLoad())
 	require.NoError(t, fileCfg.Rules.PostLoad())

@@ -1,7 +1,12 @@
 package options
 
 import (
+	"os"
+	"strings"
+
 	"github.com/anchore/clio"
+	"github.com/spf13/pflag"
+
 	"github.com/wagoodman/dive/cmd/dive/cli/internal/command/ci"
 	"github.com/wagoodman/dive/internal/log"
 )
@@ -17,6 +22,9 @@ type CIRules struct {
 	LegacyHighestUserWastedPercentString string `yaml:"-" mapstructure:"highestUserWastedPercent"`
 
 	List []ci.Rule `yaml:"-" mapstructure:"-"`
+
+	// flags is where the rule flags were registered, to tell which ones were given on the command line
+	flags *pflag.FlagSet
 }
 
 func DefaultCIRules() CIRules {
@@ -37,6 +45,33 @@ func (c *CIRules) AddFlags(flags clio.FlagSet) {
 	flags.StringVarP(&c.LowestEfficiencyThresholdString, "lowestEfficiency", "", "(only valid with --ci given) lowest allowable image efficiency (as a ratio between 0-1), otherwise CI validation will fail.")
 	flags.StringVarP(&c.HighestWastedBytesString, "highestWastedBytes", "", "(only valid with --ci given) highest allowable bytes wasted, otherwise CI validation will fail.")
 	flags.StringVarP(&c.HighestUserWastedPercentString, "highestUserWastedPercent", "", "(only valid with --ci given) highest allowable percentage of bytes wasted (as a ratio between 0-1), otherwise CI validation will fail.")
+
+	if p, ok := flags.(interface{ PFlagSet() *pflag.FlagSet }); ok {
+		c.flags = p.PFlagSet()
+	}
+}
+
+// ruleKey names one rule in each of its spellings, camel is also the flag name
+type ruleKey struct {
+	snake, camel  string
+	value, legacy *string
+}
+
+func (c *CIRules) keys() []ruleKey {
+	return []ruleKey{
+		{snake: "lowest-efficiency", camel: "lowestEfficiency", value: &c.LowestEfficiencyThresholdString, legacy: &c.LegacyLowestEfficiencyThresholdString},
+		{snake: "highest-wasted-bytes", camel: "highestWastedBytes", value: &c.HighestWastedBytesString, legacy: &c.LegacyHighestWastedBytesString},
+		{snake: "highest-user-wasted-percent", camel: "highestUserWastedPercent", value: &c.HighestUserWastedPercentString, legacy: &c.LegacyHighestUserWastedPercentString},
+	}
+}
+
+// explicit reports whether the rule was set by its flag or env var, which outrank any config file
+func (c *CIRules) explicit(r ruleKey) bool {
+	if c.flags != nil && c.flags.Changed(r.camel) {
+		return true
+	}
+	_, ok := os.LookupEnv("DIVE_RULES_" + strings.ToUpper(strings.ReplaceAll(r.snake, "-", "_")))
+	return ok
 }
 
 func (c CIRules) hasLegacyOptionsInUse() bool {
@@ -51,16 +86,11 @@ func (c *CIRules) PostLoad() error {
 		log.Warnf("please specify ci rules in snake-case (the legacy camelCase format is deprecated)")
 	}
 
-	if c.LegacyLowestEfficiencyThresholdString != "" {
-		c.LowestEfficiencyThresholdString = c.LegacyLowestEfficiencyThresholdString
-	}
-
-	if c.LegacyHighestWastedBytesString != "" {
-		c.HighestWastedBytesString = c.LegacyHighestWastedBytesString
-	}
-
-	if c.LegacyHighestUserWastedPercentString != "" {
-		c.HighestUserWastedPercentString = c.LegacyHighestUserWastedPercentString
+	// the legacy keys only come from config files, so a flag or env var still wins over them
+	for _, r := range c.keys() {
+		if *r.legacy != "" && !c.explicit(r) {
+			*r.value = *r.legacy
+		}
 	}
 
 	rules, err := ci.Rules(c.LowestEfficiencyThresholdString, c.HighestWastedBytesString, c.HighestUserWastedPercentString)

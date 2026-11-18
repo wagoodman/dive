@@ -89,7 +89,7 @@ func DefaultBindings() Bindings {
 			ToggleCollapseAllDir:  Config{Input: "ctrl+space"},
 			ToggleAddedFiles:      Config{Input: "ctrl+a"},
 			ToggleRemovedFiles:    Config{Input: "ctrl+r"},
-			ToggleModifiedFiles:   Config{Input: "ctrl+m"},
+			ToggleModifiedFiles:   Config{Input: "ctrl+n"},
 			ToggleUnmodifiedFiles: Config{Input: "ctrl+u"},
 			ToggleTreeAttributes:  Config{Input: "ctrl+b"},
 			ToggleWrapTree:        Config{Input: "ctrl+p"},

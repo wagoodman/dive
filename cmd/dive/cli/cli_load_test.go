@@ -1,11 +1,19 @@
 package cli
 
 import (
+	"encoding/json"
 	"fmt"
+	"github.com/google/go-containerregistry/pkg/crane"
+	v1 "github.com/google/go-containerregistry/pkg/v1"
+	"github.com/google/go-containerregistry/pkg/v1/empty"
+	"github.com/google/go-containerregistry/pkg/v1/layout"
+	"github.com/google/go-containerregistry/pkg/v1/mutate"
+	"github.com/google/go-containerregistry/pkg/v1/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"testing"
 )
 
@@ -47,6 +55,59 @@ func Test_LoadImage(t *testing.T) {
 	t.Run("from archive (flag)", func(t *testing.T) {
 		runWithCombinedOutput(t, fmt.Sprintf("--source docker-archive %s", archive))
 	})
+}
+
+// regression for #442: `dive --platform <os/arch> <multi-arch image>` analyzes that platform's image
+func Test_LoadImage_platform(t *testing.T) {
+	// an OCI layout holding a linux/amd64 + linux/arm64 index, each image's only file is named after its arch
+	idx := mutate.IndexMediaType(empty.Index, types.OCIImageIndex)
+	for _, arch := range []string{"amd64", "arm64"} {
+		layer, err := crane.Layer(map[string][]byte{arch: []byte(arch)})
+		require.NoError(t, err)
+		img, err := mutate.AppendLayers(empty.Image, layer)
+		require.NoError(t, err)
+		cf, err := img.ConfigFile()
+		require.NoError(t, err)
+		cf = cf.DeepCopy()
+		cf.OS, cf.Architecture = "linux", arch
+		img, err = mutate.ConfigFile(img, cf)
+		require.NoError(t, err)
+		idx = mutate.AppendManifests(idx, mutate.IndexAddendum{
+			Add:        img,
+			Descriptor: v1.Descriptor{Platform: &v1.Platform{OS: "linux", Architecture: arch}},
+		})
+	}
+	dir := t.TempDir()
+	_, err := layout.Write(dir, idx)
+	require.NoError(t, err)
+
+	for _, arch := range []string{"amd64", "arm64"} {
+		t.Run(arch, func(t *testing.T) {
+			out := filepath.Join(t.TempDir(), "out.json")
+			rootCmd := getTestCommand(t, fmt.Sprintf("--platform linux/%s --json %s oci-dir:%s", arch, out, dir))
+			Capture().WithStdout().WithStderr().Run(t, func() {
+				require.NoError(t, rootCmd.Execute())
+			})
+
+			data, err := os.ReadFile(out)
+			require.NoError(t, err)
+			var got struct {
+				Layer []struct {
+					FileList []struct {
+						Path string `json:"path"`
+					} `json:"fileList"`
+				} `json:"layer"`
+			}
+			require.NoError(t, json.Unmarshal(data, &got))
+			var paths []string
+			for _, l := range got.Layer {
+				for _, f := range l.FileList {
+					paths = append(paths, f.Path)
+				}
+			}
+			assert.Equal(t, []string{arch}, paths)
+		})
+	}
 }
 
 func runWithCombinedOutput(t testing.TB, cmd string) {

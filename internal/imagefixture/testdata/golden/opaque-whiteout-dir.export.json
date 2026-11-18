@@ -121,8 +121,24 @@
   ],
   "image": {
     "sizeBytes": 655,
-    "inefficientBytes": 0,
-    "efficiencyScore": 1,
-    "fileReference": []
+    "inefficientBytes": 600,
+    "efficiencyScore": 0.08396946564885496,
+    "fileReference": [
+      {
+        "count": 2,
+        "sizeBytes": 300,
+        "file": "/etc/app/sub/c.conf"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 200,
+        "file": "/etc/app/b.conf"
+      },
+      {
+        "count": 2,
+        "sizeBytes": 100,
+        "file": "/etc/app/a.conf"
+      }
+    ]
   }
 }

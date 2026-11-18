@@ -79,16 +79,18 @@ func run(ctx context.Context, opts options.Application, input string) (err error
 		return fmt.Errorf("cannot analyze image: %w", err)
 	}
 
-	switch {
-	case opts.Export.JsonPath != "":
+	// export and evaluation aren't exclusive: CI=true turns on CI mode in pipelines that also export
+	if opts.Export.JsonPath != "" {
 		if err := exportTo(analysis, opts.Export.JsonPath); err != nil {
 			return fmt.Errorf("cannot export analysis: %w", err)
 		}
-		return nil
-	case opts.CI.Enabled:
+	}
+	if opts.CI.Enabled {
 		if !evaluate(ctx, analysis, opts.CI.Rules.List) {
 			return errors.New("evaluation failed")
 		}
+	}
+	if opts.Export.JsonPath != "" || opts.CI.Enabled {
 		return nil
 	}
 

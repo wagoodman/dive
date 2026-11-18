@@ -380,3 +380,14 @@ func Test_layout(t *testing.T) {
 		}
 	}
 }
+
+func Test_layout_narrowScreen(t *testing.T) {
+	lm := NewManager()
+	// a screen narrower than the minimum is laid out as if it were the minimum width
+	lm.Add(newTestElement(t, 1, Area{minX: -1, minY: 18, maxX: minWidth, maxY: 20}, LocationFooter), LocationFooter)
+	lm.Add(newTestElement(t, -1, Area{minX: -1, minY: -1, maxX: minWidth, maxY: 19}, LocationColumn), LocationColumn)
+
+	if err := lm.layout(nil, 5, 20); err != nil {
+		t.Fatalf("unexpected error: %+v", err)
+	}
+}
