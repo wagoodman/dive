@@ -15,9 +15,12 @@ To analyze a Docker image simply run dive with an image tag/id/digest:
 dive <your-image-tag>
 ```
 
-or you can dive with Docker directly:
+or you can dive with Podman/Docker directly:
 ```
+alias dive="podman run -ti --rm -v /run/user/$(id -u)/podman/podman.sock:/run/podman/podman.sock -e DOCKER_HOST=unix:///run/podman/podman.sock docker.io/wagoodman/dive"
+
 alias dive="docker run -ti --rm  -v /var/run/docker.sock:/var/run/docker.sock docker.io/wagoodman/dive"
+
 dive <your-image-tag>
 
 # for example
