@@ -25,6 +25,7 @@ builds:
       - amd64
       - arm64
       - ppc64le
+      - s390x
     # compiles in stereoscope's containers-storage provider (podman/buildah stores). btrfs needs cgo, so drop it (same as syft)
     tags: [containers_image_openpgp, exclude_graphdriver_btrfs]
     ldflags: &build-ldflags
