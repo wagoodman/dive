@@ -40,6 +40,7 @@ type app struct {
 
 // Run is the UI entrypoint. It returns when the user quits or ctx is done.
 func Run(ctx context.Context, c tui.Config) error {
+	c.Preferences.Colors.Apply()
 	var err error
 
 	// there is nothing to show (the layer and tree views need a selected layer)

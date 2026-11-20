@@ -127,4 +127,26 @@ layer:
   # show aggregated changes across all previous layers (env: DIVE_LAYER_SHOW_AGGREGATED_CHANGES)
   show-aggregated-changes: false
 
+colors:
+  # color for selected items in the UI (e.g. bright-white, reverse, bold) (env: DIVE_COLORS_SELECTED)
+  selected: ''
+
+  # color for added files in the filetree (e.g. green) (env: DIVE_COLORS_ADDED)
+  added: ''
+
+  # color for removed files in the filetree (e.g. red) (env: DIVE_COLORS_REMOVED)
+  removed: ''
+
+  # color for modified files in the filetree (e.g. yellow) (env: DIVE_COLORS_MODIFIED)
+  modified: ''
+
+  # color for unmodified files in the filetree (env: DIVE_COLORS_UNMODIFIED)
+  unmodified: ''
+
+  # color for layer items in the layer pane (e.g. yellow) (env: DIVE_COLORS_LAYER)
+  layer: ''
+
+  # color for pane headers (e.g. bold) (env: DIVE_COLORS_HEADER)
+  header: ''
+
 ---
